@@ -8,6 +8,7 @@
   TODO:
     (- Peak Finder/Analyzer)
     - Sort Table
+    - Screen Size Warning
 */
 
 const SpectrumData = function() { // Will hold the measurement data globally.
