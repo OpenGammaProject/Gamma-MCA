@@ -409,7 +409,7 @@
                   <tbody id="iso-table"></tbody>
 
                   <caption>
-                    List of gamma-ray energies of common isotopes
+                    List of gamma-ray energies of common isotopes.
                   </caption>
                 </table>
               </div>
@@ -434,7 +434,7 @@
             <p>
               <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" role="switch" id="edit-plot" onclick="changeSettings('editMode', this.checked, 'boolean');">
-                <label class="form-check-label" for="flexSwitchCheckDefault">Editable Plot Labels (axes labels and headline)</label>
+                <label class="form-check-label" for="flexSwitchCheckDefault">Editable Plot Labels (Axes Labels and Headline)</label>
               </div>
             </p>
 
@@ -468,7 +468,7 @@
                 <input type="number" class="form-control" id="custom-file-adc">
                 <button class="btn btn-primary" type="button" onclick="changeSettings('fileChannels', parseInt(document.getElementById('custom-file-adc').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
-              <i>No of (ADC) channels of the original device. Any integer bigger than zero is accepted.</i>
+              <i>No of (ADC) channels of the original device. Any positive integer is valid.</i>
             </p>
 
             <hr>
@@ -485,7 +485,7 @@
                 <label class="input-group-text" for="ser-limit">Recording Time Limit</label>
                 <input type="number" class="form-control" id="ser-limit" disabled>
                 <button class="btn btn-primary" type="button" onclick="changeSettings('timeLimit', parseInt(document.getElementById('ser-limit').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
-                <i>Input in milliseconds. Any integer bigger than zero is accepted. Serial recording will stop automatically when time runs out.</i>
+                <i>Input in milliseconds. Any positive integer is valid. Serial recording will stop automatically when time runs out.</i>
               </div>
 
             </p>
@@ -496,7 +496,7 @@
                 <input type="number" class="form-control" id="custom-ser-refresh">
                 <button class="btn btn-primary" type="button" onclick="changeSettings('plotRefresh', parseInt(document.getElementById('custom-ser-refresh').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
-              <i>Input in milliseconds. Any integer bigger than zero is accepted, however, keep an eye on performance for small times.</i>
+              <i>Input in milliseconds. Any positive integer is valid.</i>
             </p>
 
             <p>
@@ -505,7 +505,7 @@
                 <input type="number" class="form-control" id="custom-ser-buffer">
                 <button class="btn btn-primary" type="button" onclick="changeSettings('serBuffer', parseInt(document.getElementById('custom-ser-buffer').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
-              <i>Max. No of serial input events buffered between plot refreshes.</i>
+              <i>Max No of serial input events buffered between plot refreshes. Any positive integer is valid.</i>
             </p>
 
             <p>
@@ -514,7 +514,7 @@
                 <input type="number" class="form-control" id="custom-ser-adc">
                 <button class="btn btn-primary" type="button" onclick="changeSettings('serChannels', parseInt(document.getElementById('custom-ser-adc').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
-              <i>No of (ADC) channels of the serial device. Any integer bigger than zero is accepted.</i>
+              <i>No of (ADC) channels of the serial device. Any positive integer is valid.</i>
             </p>
 
           </div>
