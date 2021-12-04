@@ -277,7 +277,7 @@ function SpectrumPlot(divId) {
         opacity: 0.35,
         sizex: 0.12,
         sizey: 0.12,
-        source: "/assets/favicon/android-chrome-192x192.png",
+        source: "/assets/logo.svg",
         xanchor: "right",
         xref: "paper",
         yanchor: "top",
