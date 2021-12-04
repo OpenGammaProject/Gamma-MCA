@@ -8,7 +8,6 @@
   TODO:
     (- Peak Finder/Analyzer)
     - Sort Table
-    - Screen Size Warning
     - Save Settings with Cookies
 */
 
@@ -76,7 +75,7 @@ document.body.onload = function() {
 
   bindPlotEvents(); // Bind click and hover events provided by plotly
 
-  const loadingSpinner = document.getElementById('loading')
+  const loadingSpinner = document.getElementById('loading');
   loadingSpinner.parentNode.removeChild(loadingSpinner); // Delete Loading Thingymajig
 
   popupNotification('welcomeMsg');
