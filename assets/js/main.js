@@ -60,11 +60,11 @@ document.body.onload = function() {
   stopEnabled.checked = maxRecTimeEnabled;
   autoStop.disabled = !maxRecTimeEnabled;
 
-  document.getElementById('smaVal').value = plot.smaLength
+  document.getElementById('smaVal').value = plot.smaLength;
   plot.resetPlot(spectrumData);
 
   if (!("serial" in navigator)) {
-    const serError = document.getElementById('serial-error')
+    const serError = document.getElementById('serial-error');
     serError.className = serError.className.replaceAll('visually-hidden', '');
   } else {
     document.getElementById('serial-div').className = 'visible';
@@ -102,7 +102,7 @@ function getFileData(input, background = false) { // Gets called when a file has
   reader.readAsText(file);
 
   reader.onload = function() {
-    const result = reader.result.trim()
+    const result = reader.result.trim();
 
     /*
       TODO: FileType über Dateiendung?
@@ -330,7 +330,7 @@ function importCal(input) {
 
   reader.onload = function() {
     try {
-      const result = reader.result.trim()
+      const result = reader.result.trim();
       const obj = JSON.parse(result);
 
       let readoutArray = [
@@ -478,7 +478,7 @@ function plotIsotope(checkbox) {
 function selectAll(selectBox) {
   // Bad performance ofc
   const tableElement = selectBox.closest('table');
-  const tableBody = tableElement.tBodies[0]
+  const tableBody = tableElement.tBodies[0];
   const tableRows = tableBody.rows;
 
   for (row of tableRows) {
@@ -513,7 +513,7 @@ function changeSettings(name, value, type) {
       const pre = document.getElementById('custom-url-pre').innerText;
 
       try {
-        const newUrl = new URL(pre + value)
+        const newUrl = new URL(pre + value);
         isoListURL = newUrl.href;
 
         loadedIsos = false;
@@ -745,7 +745,7 @@ function disconnectPort(stop = false) {
     timeDone = 0;
 
     const cpsButton = document.getElementById('plot-cps');
-    toggleCps(cpsButton, true) // Disable CPS again
+    toggleCps(cpsButton, true); // Disable CPS again
   } else {
     document.getElementById('resume-button').className = document.getElementById('resume-button').className.replaceAll('visually-hidden','');
   }
@@ -789,7 +789,7 @@ function refreshRender(type) {
     const newData = ser.getData();
 
     spectrumData[type] = ser.updateData(spectrumData[type], newData); // Depends on Background/Spectrum Aufnahme
-    spectrumData[type + 'Cps'] = spectrumData[type].map(val => val/delta.getTime()*1000) ;
+    spectrumData[type + 'Cps'] = spectrumData[type].map(val => val/delta.getTime()*1000);
 
     plot.updatePlot(spectrumData);
 
