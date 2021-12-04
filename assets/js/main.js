@@ -526,6 +526,8 @@ function changeSettings(name, value, type) {
     case 'timeLimitBool':
       const a = document.getElementById('ser-limit');
       a.disabled = !value;
+      const b = document.getElementById('ser-limit-btn');
+      b.disabled = !value;
 
       maxRecTimeEnabled = value;
       break;
