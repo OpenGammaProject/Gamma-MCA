@@ -80,6 +80,7 @@ document.body.onload = function() {
   loadingSpinner.parentNode.removeChild(loadingSpinner); // Delete Loading Thingymajig
 
   popupNotification('welcomeMsg');
+  sizeCheck();
 };
 
 
@@ -154,6 +155,15 @@ function fixHeight(parentId, contentId) {
   contentElement.style['overflow-y'] = 'scroll';
 }
 */
+
+function sizeCheck() {
+  const viewportWidth = document.documentElement.clientWidth;
+  const viewportHeight = document.documentElement.clientHeight;
+  if (viewportWidth < 1230 || viewportHeight < 730) {
+    popupNotification('screen-size-warning');
+  }
+}
+
 
 function removeFile(id) {
   spectrumData[id] = [];
