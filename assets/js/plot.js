@@ -274,9 +274,9 @@ function SpectrumPlot(divId) {
       images: [{
         x: 0.99,
         y: 0.99,
-        opacity: 0.35,
-        sizex: 0.12,
-        sizey: 0.12,
+        opacity: 0.4,
+        sizex: 0.15,
+        sizey: 0.15,
         source: "/assets/logo.svg",
         xanchor: "right",
         xref: "paper",
