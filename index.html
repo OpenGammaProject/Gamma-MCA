@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <meta http-equiv="expires" content="43200"> <!-- 12h cached -->
+    <meta name="KEYWORDS" content="gamma, spectroscopy, mca, open-source">
+    <meta name="DESCRIPTION" content="Gamma MCA is a free and open-source web application to do gamma spectroscopy.">
+    <!--
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self';">
+    -->
+
+    <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/assets/css/fontawesome-all.min.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16.png">
+    <link rel="manifest" href="/assets/favicon/site.webmanifest">
+    <link rel="mask-icon" href="/assets/favicon/safari-pinned-tab.svg" color="#5bbad5">
+    <link rel="shortcut icon" href="/assets/favicon/favicon.ico">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="msapplication-config" content="/assets/favicon/browserconfig.xml">
+    <meta name="theme-color" content="#ffffff">
+
+    <title>Gamma MCA</title>
+  </head>
+  <body>
+
+    <!--
+
+      LOADING AN NOSCRIPT ALERT
+
+    -->
+    <div id="loading" class="fixed-top p-5 text-center bg-light border border-1 border-secondary">
+      <noscript>
+        <h1 class="bg-danger text-white text-center">
+          This website only works with Javascript enabled. You need to enable it in your browser to be able to use this site!
+          Instructions on how to do this can be found <a href="//enable-javascript.com/" target="_blank">here</a>.
+        </h1>
+      </noscript>
+
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <h1>Loading...</h1>
+    </div>
+
+    <!--
+
+      MAIN PAGE CONTENT
+
+    -->
+    <!-- w-75 -->
+    <div class="container-fluid flex-column d-flex vh-100 p-1 text-dark lh-sm" style="width:80%;max-width:2000px;">
+
+      <div class="row border border-1 border-secondary rounded-0 bg-light">
+
+        <div class="col-md">
+
+          <h3><u>File Import</u></h3>
+
+          <p>
+            <b>Spectrum File:</b>
+          </p>
+
+          <p>
+            <div class="input-group input-group-sm">
+              <input class="form-control form-control-sm" type="file" id="data" accept=".csv, .TKA" onchange="getFileData(this);">
+              <button class="btn btn-primary btn-sm" type="button" onclick="removeFile('data');" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
+            </div>
+          </p>
+
+          <hr>
+
+          <p>
+            <b>Background File:</b>
+          </p>
+
+          <p>
+            <div class="input-group input-group-sm">
+              <input class="form-control form-control-sm" type="file" id="background" accept=".csv, .TKA" onchange="getFileData(this, true);">
+              <button class="btn btn-primary btn-sm" type="button" onclick="removeFile('background');" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
+            </div>
+          </p>
+
+          <hr>
+
+          <p><b>File Type:</b></p>
+
+          <p>
+            <input id="r1" class="form-check-input" type="radio" value="2" name="filetype" onchange="selectFileType(this);">
+            <label class="form-check-label align-middle" for="r1">RAW Stream (e.g. OSC, Serial)</label>
+          </p>
+
+          <p>
+            <input id="r2" class="form-check-input" type="radio" value="1" name="filetype" checked="checked" onchange="selectFileType(this);">
+            <label class="form-check-label align-middle" for="r2">Histogram (e.g. CSV, RadiaCode, TKA)</label>
+          </p>
+
+        </div>
+
+        <div class="col-md-auto">
+          <div class="vr h-100"></div>
+        </div>
+
+        <div class="col-md">
+
+          <h3><u>Serial Connection</u></h3>
+
+          <span class="bg-warning visually-hidden" id="serial-error">
+            Looks like Web Serial API is not supported. Please switch to the latest Chromium-based browser or enable it in your browser's settings.
+          </span>
+
+          <div id="serial-div" class="invisible">
+
+            <p>
+              <b>Select Port:</b>
+            </p>
+
+            <div class="input-group input-group-sm">
+
+              <button class="btn btn-primary btn-sm" type="button" onclick="listSerial();" title="Refresh List"> <i class="fas fa-sync"></i> </button>
+              <select class="form-select form-select-sm ser-settings" id="port_selector" aria-label=".form-select-sm example" title="Choose a serial device">
+                <!-- NOTHING -->
+              </select>
+              <button class="btn btn-primary btn-sm" type="button" onclick="requestSerial();" title="Add new device"> <i class="fas fa-plus"></i> Add </button>
+
+            </div>
+
+            <hr>
+
+
+            <!-- Record Modal -->
+            <div class="modal fade" id="recordModal" tabindex="-1" aria-labelledby="exportModal" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Record Spectrum</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    What do you want to record?
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Cancel </button>
+                    <button type="button" class="btn btn-primary ser-settings" data-bs-dismiss="modal" onclick="startRecord(false, 'data');"> Spectrum </button>
+                    <button type="button" class="btn btn-primary ser-settings" data-bs-dismiss="modal" onclick="startRecord(false, 'background');"> Background </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button class="btn btn-primary btn-sm ser-settings" id="record-button" type="button" data-bs-toggle="modal" data-bs-target="#recordModal" title="Start recording"> <i class="fas fa-play"></i> Record </button>
+            <button class="btn btn-primary btn-sm ser-settings visually-hidden" id="pause-button" type="button" onclick="disconnectPort();" title="Pause recording"> <i class="fas fa-pause"></i> Pause </button>
+            <button class="btn btn-primary btn-sm ser-settings visually-hidden" id="resume-button" type="button" onclick="startRecord(true);" title="Resume recording"> <i class="fas fa-play"></i> Resume </button>
+            <button class="btn btn-primary btn-sm" id="stop-button" type="button" onclick="disconnectPort(true);" title="Stop recording" disabled> <i class="fas fa-stop"></i> Stop </button>
+
+            <div id="recording-spinner" class="spinner-grow spinner-grow-sm text-danger align-middle visually-hidden" role="status">
+              <span class="visually-hidden">Recording...</span>
+            </div>
+
+            <b><span class="align-middle" id="record-time"></span></b>
+
+            <hr>
+
+            <!-- Export Modal -->
+            <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModal" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Export File</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    What do you want to export?
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Cancel </button>
+                    <button type="button" class="btn btn-primary" onclick="downloadData('spectrum', 'data');"> Spectrum </button>
+                    <button type="button" class="btn btn-primary" onclick="downloadData('background', 'background');"> Background </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button class="btn btn-primary btn-sm" id="export-button" type="button" data-bs-toggle="modal" data-bs-target="#exportModal" title="Export spectrum" disabled>
+              <i class="fas fa-file-export"></i> Export
+            </button>
+
+            <b><span class="align-middle" id="cps"></span></b>
+
+          </div>
+
+        </div>
+
+        <div class="col-md-auto">
+          <div class="vr h-100"></div>
+        </div>
+
+        <div class="col-sm">
+
+          <h3><u>Calibration</u></h3>
+
+          <p>
+            <div class="input-group input-group-sm">
+              <label class="input-group-text" for="adc_a">Point A</label>
+              <input class="form-control form-control-sm" type="number" id="adc_a" min="0" value="" title="Input ADC Channel A">
+              <input type="checkbox" class="btn-check" id="select_a" autocomplete="off" onclick="toggleCalClick('a', this.checked);">
+              <label class="btn btn-outline-primary" for="select_a" title="Select from plot"> <i class="fas fa-chart-bar"></i> Select </label>
+
+            </div>
+          </p>
+
+          <p>
+            <div class="input-group input-group-sm">
+              <label class="input-group-text" for="cal_a"> <i class="fas fa-arrow-right"></i> </label>
+              <input class="form-control form-control-sm" type="number" id="cal_a" min="1" value="" title="Energy for channel A">
+              <label class="input-group-text" for="cal_a">keV</label>
+            </div>
+          </p>
+
+          <hr>
+
+          <p>
+            <div class="input-group input-group-sm">
+              <label class="input-group-text" for="adc_b">Point B</label>
+              <input class="form-control form-control-sm" type="number" id="adc_b" min="0" value="" title="Input ADC Channel B">
+              <input type="checkbox" class="btn-check" id="select_b" autocomplete="off" onclick="toggleCalClick('b', this.checked);">
+              <label class="btn btn-outline-primary" for="select_b" title="Select from plot"> <i class="fas fa-chart-bar"></i> Select </label>
+            </div>
+          </p>
+
+          <p>
+            <div class="input-group input-group-sm">
+              <label class="input-group-text" for="cal_b"> <i class="fas fa-arrow-right"></i> </label>
+              <input class="form-control form-control-sm" type="number" id="cal_b" min="1" value="" title="Energy for channel B">
+              <label class="input-group-text" for="cal_b">keV</label>
+            </div>
+          </p>
+
+          <hr>
+
+          <p>
+            <button class="btn btn-primary btn-sm" type="button" onclick="toggleCal(true);" title="Apply calibration">Calibrate</button>
+            <button class="btn btn-primary btn-sm" type="button" onclick="toggleCal();" title="Remove calibration"> <i class="fas fa-trash"></i> Clear</button>
+
+            <label for="cal-input" class="btn btn-primary btn-sm" type="button" title="Import a calibration.json"> <i class="fas fa-file-import"></i> Import </label>
+            <input id="cal-input" class="visually-hidden" type="file" name="name" onchange="importCal(this);">
+
+            <button class="btn btn-primary btn-sm" type="button" onclick="downloadCal();" title="Export the calibration.json"> <i class="fas fa-file-export"></i> Export </button>
+          </p>
+
+        </div>
+
+        <div class="col-md-auto">
+          <div class="vr h-100"></div>
+        </div>
+
+        <div class="col-sm-1 ">
+
+          <h3><u>Info</u></h3>
+
+          <b>Hover:</b>
+          <p><span id="hover_data">None</span></p>
+
+          <b>Click:</b>
+          <p><span id="click_data">None</span></p>
+
+        </div>
+
+      </div>
+
+      <div class="row mt-1 bg-light flex-grow-1" style="min-height:300px;max-height:1200px;"> <!-- flex-fill -->
+        <div class="col border border-1 border-secondary rounded-0">
+
+          <!--
+            PLOT DIV
+          -->
+          <div class="w-100 h-100" id="plot"></div>
+
+        </div>
+      </div>
+
+      <div class="plot-tools row mt-1 p-1 border border-1 border-secondary rounded-0 bg-light">
+
+        <div class="col-md-auto">
+          <button class="btn btn-primary btn-sm" type="button" onclick="resetPlot();" title="Reset plot settings"> <i class="fas fa-redo"></i> Reset Plot </button>
+        </div>
+
+        <div class="col-md-auto">
+          <div class="vr h-100"></div>
+        </div>
+
+        <div class="col-md-auto">
+
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">X</span>
+            <button class="btn btn-primary btn-sm" type="button" id="xAxis" onclick="changeAxis(this);" title="Toggle x-axis scale">Linear</button>
+          </div>
+
+        </div>
+
+        <div class="col-md-auto">
+
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">Y</span>
+            <button class="btn btn-primary btn-sm" type="button" id="yAxis" onclick="changeAxis(this);" title="Toggle y-axis scale">Linear</button>
+          </div>
+
+        </div>
+
+        <div class="col-md-auto">
+          <div class="vr h-100"></div>
+        </div>
+
+        <div class="col-md-auto">
+
+          <div class="input-group input-group-sm">
+            <label class="input-group-text" for="smaVal">SMA Length</label>
+            <input class="form-control form-control-sm" type="number" id="smaVal" min="1" max="1000" value="" oninput="changeSma(this);" title="Width of simple moving average">
+
+            <input type="checkbox" class="btn-check" id="sma" autocomplete="off" onclick="toggleSma(this.checked);">
+            <label class="btn btn-outline-primary" for="sma" title="Toggle simple moving average">Enable</label>
+          </div>
+
+        </div>
+
+        <div class="col-md-auto">
+          <div class="vr h-100"></div>
+        </div>
+
+        <div class="col-md-auto">
+
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">Plot Type</span>
+            <button class="btn btn-primary btn-sm" type="button" id="plotType" onclick="changeType(this);" title="Switch plot type"><i class="fas fa-chart-line"></i> Line</button>
+          </div>
+
+        </div>
+
+        <div class="col-md-auto">
+          <div class="vr h-100"></div>
+        </div>
+
+        <div class="col-md-auto">
+
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">Counts</span>
+            <button class="btn btn-primary btn-sm ser-settings" type="button" id="plot-cps" onclick="toggleCps(this);" title="Switch total or counts per second"> Total </button>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!--
+
+      BOOTSTRAP OFFCANVAS FOR SETTINGS, INFO AND ISOTOPE VIEWER
+
+    -->
+    <p class="position-absolute top-50 start-0">
+      <button class="btn btn-primary rounded-0 rounded-end pt-5 pb-5" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvas" aria-controls="offcanvasExample" title="Open Settings Panel" onclick="loadIsotopes();">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+    </p>
+
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvas" aria-labelledby="offcanvasLabel">
+      <div class="offcanvas-header">
+        <img src="/assets/favicon/android-chrome-192x192.png" alt="Logo" style="width:27%;max-height:192px;">
+        <h4 class="offcanvas-title">Gamma MCA</h4>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+
+      <div class="offcanvas-body" id="offbody">
+
+        <ul class="nav nav-tabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#isotopes" type="button" role="tab" aria-controls="isotopes" aria-selected="true">Isotopes</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="false">Settings</button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="false">Info</button>
+          </li>
+        </ul>
+        <div class="tab-content" id="tabcontent">
+
+          <div class="tab-pane fade show active me-2" id="isotopes" role="tabpanel" aria-labelledby="home-tab">
+            <br>
+
+            <h5>Common Gamma-Ray Energies</h5>
+
+            <p>
+              <div class="table-responsive"> <!-- style="max-height:70vh;" -->
+                <table class="table table-hover align-middle">
+                  <thead class="table-light"> <!-- style="box-shadow: inset 1px 1px #000, 0 2px #000;" -->
+                    <tr>
+                      <th> <input class="form-check-input" type="checkbox" value="" onclick="selectAll(this)"> </th>
+                      <th>Isotope</th>
+                      <th>Energy [keV]</th>
+                    </tr>
+                  </thead>
+
+                  <tbody id="iso-table"></tbody>
+
+                  <caption>
+                    List of gamma-ray energies of common isotopes
+                  </caption>
+                </table>
+              </div>
+            </p>
+
+            <div class="text-center">
+              <p class="bg-danger text-white" id="iso-load-error"></p>
+
+              <div id="iso-loading" class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+            </div>
+
+
+          </div>
+
+          <div class="tab-pane fade me-2" id="settings" role="tabpanel" aria-labelledby="profile-tab">
+            <br>
+
+            <h5><u>Plot Settings</u></h5>
+
+            <p>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="edit-plot" onclick="changeSettings('editMode', this.checked, 'boolean');">
+                <label class="form-check-label" for="flexSwitchCheckDefault">Editable Plot Labels (axes labels and headline)</label>
+              </div>
+            </p>
+
+            <p>
+              <b>Custom Isotope List:</b>
+
+              <div class="input-group input-group-sm">
+                <label class="input-group-text" for="custom-url" id="custom-url-pre">https://</label>
+                <input type="text" class="form-control" id="custom-url">
+                <button class="btn btn-primary" type="button" onclick="changeSettings('customURL', document.getElementById('custom-url').value, 'string');" title="Apply"> <i class="fas fa-check"></i> </button>
+              </div>
+              <i>File must be of valid JSON format.</i>
+            </p>
+
+            <hr>
+
+            <h5><u>File Settings</u></h5>
+
+            <p>
+              <div class="input-group input-group-sm">
+                <label class="input-group-text" for="custom-delimiter">CSV File Delimiter</label>
+                <input type="text" class="form-control" id="custom-delimiter">
+                <button class="btn btn-primary" type="button" onclick="changeSettings('delimiter', document.getElementById('custom-delimiter').value, 'string');" title="Apply"> <i class="fas fa-check"></i> </button>
+              </div>
+              <i>Any letter is accepted.</i>
+            </p>
+
+            <p>
+              <div class="input-group input-group-sm">
+                <label class="input-group-text" for="custom-file-adc">RAW Stream Channel No</label>
+                <input type="number" class="form-control" id="custom-file-adc">
+                <button class="btn btn-primary" type="button" onclick="changeSettings('fileChannels', parseInt(document.getElementById('custom-file-adc').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
+              </div>
+              <i>No of (ADC) channels of the original device. Any integer bigger than zero is accepted.</i>
+            </p>
+
+            <hr>
+
+            <h5><u>Serial Settings</u></h5>
+
+            <p>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" id="toggle-time-limit" onclick="changeSettings('timeLimitBool', this.checked, 'boolean');">
+                <label class="form-check-label" for="toggle-time-limit">Enable Time Limit</label>
+              </div>
+
+              <div class="input-group input-group-sm">
+                <label class="input-group-text" for="ser-limit">Recording Time Limit</label>
+                <input type="number" class="form-control" id="ser-limit" disabled>
+                <button class="btn btn-primary" type="button" onclick="changeSettings('timeLimit', parseInt(document.getElementById('ser-limit').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
+                <i>Input in milliseconds. Any integer bigger than zero is accepted. Serial recording will stop automatically when time runs out.</i>
+              </div>
+
+            </p>
+
+            <p>
+              <div class="input-group input-group-sm">
+                <label class="input-group-text" for="custom-ser-refresh">Plot Refresh Time</label>
+                <input type="number" class="form-control" id="custom-ser-refresh">
+                <button class="btn btn-primary" type="button" onclick="changeSettings('plotRefresh', parseInt(document.getElementById('custom-ser-refresh').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
+              </div>
+              <i>Input in milliseconds. Any integer bigger than zero is accepted, however, keep an eye on performance for small times.</i>
+            </p>
+
+            <p>
+              <div class="input-group input-group-sm">
+                <label class="input-group-text" for="custom-ser-buffer">Max Serial Buffer</label>
+                <input type="number" class="form-control" id="custom-ser-buffer">
+                <button class="btn btn-primary" type="button" onclick="changeSettings('serBuffer', parseInt(document.getElementById('custom-ser-buffer').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
+              </div>
+              <i>Max. No of serial input events buffered between plot refreshes.</i>
+            </p>
+
+            <p>
+              <div class="input-group input-group-sm">
+                <label class="input-group-text" for="custom-ser-adc">Serial Channel No</label>
+                <input type="number" class="form-control" id="custom-ser-adc">
+                <button class="btn btn-primary" type="button" onclick="changeSettings('serChannels', parseInt(document.getElementById('custom-ser-adc').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
+              </div>
+              <i>No of (ADC) channels of the serial device. Any integer bigger than zero is accepted.</i>
+            </p>
+
+          </div>
+
+          <div class="tab-pane fade me-2" id="info" role="tabpanel" aria-labelledby="contact-tab">
+            <br>
+            <p>Gamma MCA made free and open-source by <a href="https://nuclearphoenix.xyz" target="_blank">NuclearPhoenix</a> using Bootstrap, Plotly & Font Awesome.</p>
+
+            <p>Get the source code on <a href="#"><i class="fab fa-github"></i> Github</a>.</p>
+            <p>Report issues and bugs <a href="#"><i class="fas fa-bug"></i> here</a>.</p>
+            <p>Discussions, Q&A, etc. can also be found <a href="#"><i class="fas fa-comments"></i> here</a>.</p>
+
+            <hr>
+
+            <p>Version 2021-12-03.</p>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!--
+
+      BOOTSTRAP TOASTS FOR NOTIFICATIONS
+
+    -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1111;">
+      <div id="welcomeMsg" class="toast text-white bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+        <div class="toast-header">
+          <i class="fas fa-radiation me-2"></i>
+          <strong class="me-auto">Welcome!</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          Thanks for using Gamma MCA, please report any bugs or issues <a class="text-white" href="#" target="_blank">here</a>. Thank you.
+        </div>
+      </div>
+
+      <div id="file-error" class="toast bg-danger text-white" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
+        <div class="toast-header">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          <strong class="me-auto">File Error</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          Something went wrong, please reload and try again or report this issue.
+        </div>
+      </div>
+
+      <div id="data-error" class="toast bg-danger text-white" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
+        <div class="toast-header">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          <strong class="me-auto">File Error</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          Background and spectrum have a different number of channels. They must be same for this to work.
+        </div>
+      </div>
+
+      <div id="sma-error" class="toast bg-danger text-white" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
+        <div class="toast-header">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          <strong class="me-auto">SMA Error</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          SMA input is invalid. Input must be an <i>integer</i>!
+        </div>
+      </div>
+
+      <div id="cal-error" class="toast bg-danger text-white" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
+        <div class="toast-header">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          <strong class="me-auto">Calibration Error</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          Cannot calibrate. Input is not a valid number!
+        </div>
+      </div>
+
+      <div id="cal-import-error" class="toast bg-danger text-white" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
+        <div class="toast-header">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          <strong class="me-auto">Calibration Import Error</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          Something went wrong when importing the calibration. Please reload and try again or report this issue.
+        </div>
+      </div>
+
+      <div id="serial-connect" class="toast bg-info text-white" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+        <div class="toast-header">
+          <i class="fas fa-info-circle me-2"></i>
+          <strong class="me-auto">Serial Connect</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          Detected a new serial device.
+        </div>
+      </div>
+
+      <div id="auto-stop" class="toast bg-info text-white" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="8000">
+        <div class="toast-header">
+          <i class="fas fa-info-circle me-2"></i>
+          <strong class="me-auto">Recording Stopped</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          Your set time-limit has run out. The recording has been automatically stopped. Changing this limit can be done in the settings.
+        </div>
+      </div>
+
+      <div id="serial-disconnect" class="toast bg-info text-white" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+        <div class="toast-header">
+          <i class="fas fa-info-circle me-2"></i>
+          <strong class="me-auto">Serial Disconnect</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          A serial device was removed.
+        </div>
+      </div>
+
+      <div id="misc-ser-error" class="toast bg-danger text-white" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="8000">
+        <div class="toast-header">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          <strong class="me-auto">Serial Error</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          Something went terribly wrong when trying to read from the serial port! Did you disconnect the device? Please try again.
+        </div>
+      </div>
+
+      <div id="serial-connect-error" class="toast bg-danger text-white" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="8000">
+        <div class="toast-header">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          <strong class="me-auto">Serial Connection Error</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          Could not connect to the serial device. Maybe the port is already in use?
+        </div>
+      </div>
+
+      <div id="setting-success" class="toast bg-success text-white" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
+        <div class="toast-header">
+          <i class="fas fa-check-circle me-2"></i>
+          <strong class="me-auto">Changed setting</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          A settings value has been changed successfully.
+        </div>
+      </div>
+
+      <div id="setting-type" class="toast bg-danger text-white" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
+        <div class="toast-header">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          <strong class="me-auto">Wrong Datatype</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          A settings value cannot be changed because the input value datatype is not correct.
+        </div>
+      </div>
+
+      <div id="setting-error" class="toast bg-danger text-white" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
+        <div class="toast-header">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          <strong class="me-auto">Settings Error</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          Something went wrong when trying to change a settings value, please reload and try again or report this issue.
+        </div>
+      </div>
+
+    </div>
+
+    <script type="text/javascript" src="/assets/js/external/bootstrap.min.js"></script>
+    <script type="text/javascript" src="/assets/js/external/plotly-basic.min.js"></script>
+    <script type="text/javascript" src="/assets/js/raw-data.js"></script>
+    <script type="text/javascript" src="/assets/js/plot.js"></script>
+    <script type="text/javascript" src="/assets/js/serial.js"></script>
+    <script type="text/javascript" src="/assets/js/main.js"></script>
+  </body>
+</html>
