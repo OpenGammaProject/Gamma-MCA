@@ -9,7 +9,6 @@
     (- Peak Finder/Analyzer)
     (- Sort Iso Table)
     (- Save Settings with Cookies)
-    (- Click in plot to place a mark)
     - Isotope search mode when hovering shows closest isotopes
     - Share Social Links
     - More Backlinks
@@ -349,6 +348,9 @@ function importCal(input) {
       for (index in inputArr) {
         readoutArray[index].value = parseFloat(obj[inputArr[index]]);
       }
+
+      oldCalVals.a = readoutArray[0].value;
+      oldCalVals.b = readoutArray[2].value;
 
     } catch(e) {
       console.log('Calibration Import Error:', e);
