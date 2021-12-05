@@ -80,14 +80,15 @@ document.body.onload = function() {
   const loadingSpinner = document.getElementById('loading');
   loadingSpinner.parentNode.removeChild(loadingSpinner); // Delete Loading Thingymajig
 
-  popupNotification('welcomeMsg');
   sizeCheck();
+  popupNotification('welcomeMsg');
 };
 
 
 // Needed For Responsiveness! DO NOT REMOVE OR THE LAYOUT GOES TO SHIT!!!
 document.body.onresize = function() {
   plot.updatePlot(spectrumData);
+  sizeCheck();
   //fixHeight('offbody', 'tabcontent');
 };
 
