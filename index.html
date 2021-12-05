@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width">
     <meta http-equiv="expires" content="43200"> <!-- 12h cached -->
-    <meta name="KEYWORDS" content="gamma, spectroscopy, spectrometry, scintillator, mca, open-source, physics, science, web, application, particle-physics, nuclear, radiation">
+    <meta name="KEYWORDS" content="gamma, spectroscopy, spectrometry, scintillator, mca, open-source, physics, science, web, application, particle-physics, nuclear, radiation, serial, spectrum">
     <meta name="DESCRIPTION" content="Gamma MCA is a free, open-source and complete web application for gamma spectroscopy. You can import your own spectrum files or even record new ones using the serial interface.">
     <!--
     <meta http-equiv="Content-Security-Policy" content="default-src 'self';">
@@ -37,14 +37,14 @@
       <noscript>
         <h1 class="bg-danger text-white text-center">
           This website only works with Javascript enabled. You need to enable it in your browser to be able to use this site!
-          Instructions on how to do this can be found <a href="//enable-javascript.com/" target="_blank">here</a>.
+          Instructions on how to do this can be found <a title="Enable-Javascript.com" href="https://enable-javascript.com/" target="_blank">here</a>.
         </h1>
       </noscript>
 
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Loading...</span>
       </div>
-      <h1>Loading...</h1>
+      <h1>Loading, please wait...</h1>
     </div>
 
     <!--
@@ -362,7 +362,7 @@
 
     -->
     <p class="position-absolute top-50 start-0">
-      <button class="btn btn-primary rounded-0 rounded-end pt-5 pb-5" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvas" aria-controls="offcanvasExample" title="Open Settings Panel" onclick="loadIsotopes();">
+      <button class="btn btn-primary rounded-0 rounded-end pt-5 pb-5" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvas" aria-controls="offcanvas" title="Open Settings Panel" onclick="loadIsotopes();">
         <i class="fas fa-sliders-h"></i>
         <i class="fas fa-chevron-right"></i>
       </button>
@@ -370,7 +370,7 @@
 
     <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvas" aria-labelledby="offcanvasLabel">
       <div class="offcanvas-header">
-        <img src="/assets/logo.svg" alt="Logo" style="width:27%;max-height:192px;">
+        <img src="/assets/logo.svg" alt="Logo" title="Gamma MCA Logo" style="width:27%;max-height:192px;">
         <h4 class="offcanvas-title">Gamma MCA</h4>
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div>
@@ -390,7 +390,7 @@
         </ul>
         <div class="tab-content" id="tabcontent">
 
-          <div class="tab-pane fade show active me-2" id="isotopes" role="tabpanel" aria-labelledby="home-tab">
+          <div class="tab-pane fade show active me-2" id="isotopes" role="tabpanel" aria-labelledby="isotopes">
             <br>
 
             <h5>Common Gamma-Ray Energies</h5>
@@ -426,7 +426,7 @@
 
           </div>
 
-          <div class="tab-pane fade me-2" id="settings" role="tabpanel" aria-labelledby="profile-tab">
+          <div class="tab-pane fade me-2" id="settings" role="tabpanel" aria-labelledby="settings">
             <br>
 
             <h5><u>Plot Settings</u></h5>
@@ -434,7 +434,7 @@
             <p>
               <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" role="switch" id="edit-plot" onclick="changeSettings('editMode', this.checked, 'boolean');">
-                <label class="form-check-label" for="flexSwitchCheckDefault">Editable Plot Labels (Axes Labels and Headline)</label>
+                <label class="form-check-label" for="edit-plot">Editable Plot Labels (Axes Labels and Headline)</label>
               </div>
             </p>
 
@@ -519,15 +519,15 @@
 
           </div>
 
-          <div class="tab-pane fade me-2" id="info" role="tabpanel" aria-labelledby="contact-tab">
+          <div class="tab-pane fade me-2" id="info" role="tabpanel" aria-labelledby="info">
             <br>
-            <p>Gamma MCA made free and open-source by <a href="https://nuclearphoenix.xyz" target="_blank">NuclearPhoenix</a> using Bootstrap, Plotly & Font Awesome.</p>
+            <p>Gamma MCA made free and open-source by <a title="NuclearPhoenix.xyz" href="https://nuclearphoenix.xyz" target="_blank">NuclearPhoenix</a> using Bootstrap, Plotly & Font Awesome.</p>
 
-            <p>This site is part of the <a href="https://github.com/Open-Gamma-Project" target="_blank">Open Gamma Project</a>.</p>
+            <p>This site is part of the <a title="Open Gamma Project" href="https://github.com/Open-Gamma-Project" target="_blank">Open Gamma Project</a> to provide modern and open-source resources for accessible gamma-spectroscopy.</p>
 
-            <p>Get the source code on <a href="https://github.com/Open-Gamma-Project/Gamma-MCA" target="_blank"><i class="fab fa-github"></i> Github</a>.</p>
-            <p>Report issues and bugs <a href="https://github.com/Open-Gamma-Project/Gamma-MCA/issues" target="_blank"><i class="fas fa-bug"></i> here</a>.</p>
-            <p>Discussions, Q&A, etc. can also be found <a href="https://github.com/Open-Gamma-Project/Gamma-MCA/discussions" target="_blank"><i class="fas fa-comments"></i> here</a>.</p>
+            <p>Get the source code on <a title="Github/Gamma-MCA" href="https://github.com/Open-Gamma-Project/Gamma-MCA" target="_blank"><i class="fab fa-github"></i> Github</a>.</p>
+            <p>Report issues and bugs <a title="Github/Issues" href="https://github.com/Open-Gamma-Project/Gamma-MCA/issues" target="_blank"><i class="fas fa-bug"></i> here</a>.</p>
+            <p>Discussions, Q&A, etc. can also be found <a title="Github/Discussions" href="https://github.com/Open-Gamma-Project/Gamma-MCA/discussions" target="_blank"><i class="fas fa-comments"></i> here</a>.</p>
 
             <hr>
 
@@ -552,7 +552,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
         <div class="toast-body">
-          Thanks for using Gamma MCA, please report any bugs or issues <a class="text-white" href="https://github.com/Open-Gamma-Project/Gamma-MCA/issues" target="_blank">here</a>. Thank you.
+          Thanks for using Gamma MCA, please report any bugs or issues <a title="Github/Issues" class="text-white" href="https://github.com/Open-Gamma-Project/Gamma-MCA/issues" target="_blank">here</a>. Thank you.
         </div>
       </div>
 
@@ -712,11 +712,11 @@
 
     </div>
 
-    <script type="text/javascript" src="/assets/js/external/bootstrap.min.js"></script>
-    <script type="text/javascript" src="/assets/js/external/plotly-basic.min.js"></script>
-    <script type="text/javascript" src="/assets/js/raw-data.js"></script>
-    <script type="text/javascript" src="/assets/js/plot.js"></script>
-    <script type="text/javascript" src="/assets/js/serial.js"></script>
-    <script type="text/javascript" src="/assets/js/main.js"></script>
+    <script src="/assets/js/external/bootstrap.min.js"></script>
+    <script src="/assets/js/external/plotly-basic.min.js"></script>
+    <script src="/assets/js/raw-data.js"></script>
+    <script src="/assets/js/plot.js"></script>
+    <script src="/assets/js/serial.js"></script>
+    <script src="/assets/js/main.js"></script>
   </body>
 </html>

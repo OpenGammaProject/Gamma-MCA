@@ -7,10 +7,12 @@
 /*
   TODO:
     (- Peak Finder/Analyzer)
-    - Sort Iso Table
-    - Save Settings with Cookies
-    - Click in plot to place a mark
+    (- Sort Iso Table)
+    (- Save Settings with Cookies)
+    (- Click in plot to place a mark)
     - Isotope search mode when hovering shows closest isotopes
+    - Share Social Links
+    - More Backlinks
 */
 
 const SpectrumData = function() { // Will hold the measurement data globally.
