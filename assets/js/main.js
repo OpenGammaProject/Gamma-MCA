@@ -9,8 +9,8 @@
     - Peak Finder/Analyzer
     (- Sort Iso Table)
     (- Save Settings with Cookies)
-    - Isotope search mode when hovering shows closest isotopes
     - Share Social Links
+    - Settings for Iso Hightlighting
 */
 
 const SpectrumData = function() { // Will hold the measurement data globally.
@@ -31,7 +31,11 @@ let portsAvail = {};
 let refreshRate = 1000; // Delay in ms between serial plot updates
 let maxRecTimeEnabled = false;
 let maxRecTime = 1800000; // 30 mins
+
 let isoListURL = '/assets/isotopes_energies_min.json';
+let isoList = {};
+let checkNearIso = false;
+let maxDist = 100; // Max energy distance to highlight
 
 /*
   Startup of the page
@@ -244,6 +248,10 @@ function hoverEvent(data) {
       document.getElementById('adc_' + key).value = data.points[0].x.toFixed(2);
     }
   }
+
+  if (checkNearIso) {
+    closestIso(data.points[0].x.toFixed(2));
+  }
 }
 
 
@@ -255,6 +263,10 @@ function unHover(data) {
     if (calClick[key]) {
       document.getElementById('adc_' + key).value = oldCalVals[key];
     }
+  }
+
+  if (Object.keys(prevIso).length > 0) {
+    closestIso(-maxDist); // Force Reset Iso Highlighting
   }
 }
 
@@ -427,6 +439,8 @@ async function loadIsotopes() { // Load Isotope Energies JSON ONCE
     intKeys.sort((a, b) => a - b); // Sort Energies numerically
 
     for (key of intKeys) {
+      isoList[key] = json[key];
+
       const row = tableElement.insertRow();
       const cell1 = row.insertCell(0);
       const cell2 = row.insertCell(1);
@@ -472,6 +486,38 @@ async function loadIsotopes() { // Load Isotope Energies JSON ONCE
   } catch (e) {
     ; // Do nothing
   }
+}
+
+
+let prevIso = {};
+
+async function closestIso(value) {
+  // VERY BAD PERFORMANCE, EXPERIMENTAL FEATURE!
+  if (!loadedIsos) { // User has not yet opened the settings panel
+    await loadIsotopes();
+
+  }
+
+  const keys = Object.keys(isoList);
+
+  let closest = keys.reduce(function(prev, curr) {
+    return (Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
+  });
+
+  plot.toggleLine(Object.keys(prevIso)[0], Object.values(prevIso)[0], false);
+
+  if (Math.abs(closest - value) <= maxDist) {
+    let newIso = {};
+    newIso[parseFloat(closest).toFixed(2)] = isoList[closest];
+
+    if (prevIso !== newIso) {
+      prevIso = newIso;
+    }
+
+    plot.toggleLine(parseFloat(closest).toFixed(2), isoList[closest], true);
+  }
+
+  plot.updatePlot(spectrumData);
 }
 
 
