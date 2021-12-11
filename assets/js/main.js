@@ -6,12 +6,11 @@
 
 /*
   TODO:
-    (- Peak Finder/Analyzer)
+    - Peak Finder/Analyzer
     (- Sort Iso Table)
     (- Save Settings with Cookies)
     - Isotope search mode when hovering shows closest isotopes
     - Share Social Links
-    - More Backlinks
 */
 
 const SpectrumData = function() { // Will hold the measurement data globally.
