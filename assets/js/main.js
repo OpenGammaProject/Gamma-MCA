@@ -9,7 +9,7 @@
     - Peak Finder/Analyzer
     (- Sort Iso Table)
     (- Save Settings with Cookies)
-    - Share Social Links
+    (- Share Social Links)
     - Settings for Iso Hightlighting
 */
 
