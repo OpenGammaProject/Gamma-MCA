@@ -11,3 +11,8 @@ body {
 h3 {
   font-size: 22px;
 }
+
+.main {
+  width: 80%;
+  max-width: 2000px;
+}
