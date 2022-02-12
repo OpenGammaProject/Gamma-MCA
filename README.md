@@ -24,7 +24,7 @@ There are essentially two types of files you can use - both being text files, e.
 
 Thanks to the Web Serial API you can use any serial device capable of doing gamma spectroscopy to plot your data. The are only two requirements for this to work:
 
-1. The API is currently only supported by Chromium-based (desktop) browsers. This includes most browsers except Safari and Firefox. The feature is either enabled on default or you have to enable it in the settings.
+1. The API is currently only supported by Chromium-based (desktop) browsers. This includes most browsers except Safari and Firefox. The feature is either enabled on default or you have to enable it in the settings. See [Can I Use?](https://caniuse.com/web-serial)
 2. Your device has to print a newline (`\n`) after every single event and must not print other data than the detected energy.
 
 ---
