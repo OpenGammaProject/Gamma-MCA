@@ -1,16 +1,20 @@
 /*
 
-  Gamma MCA: free, open-source Web-MCA for gamma spectroscopy
-  2021, NuclearPhoenix.-
+  Gamma MCA: free, open-source web-MCA for gamma spectroscopy
+  2022, NuclearPhoenix.- Phoenix1747
   https://nuclearphoenix.xyz
 
 /*
-  TODO:
+
+  Possible Future Improvements:
+    - Sort common isotope energies list
+    - Save settings with cookies
+    - Social media share function
     - Peak Finder/Analyzer
-    (- Sort Iso Table)
-    (- Save Settings with Cookies)
-    (- Share Social Links)
-    - Settings for Iso Hightlighting
+
+  Known Performance Issues:
+    - Isotope hightlighting
+    - (Un)Selecting all isotopes from gamma-ray energies list
 */
 
 const SpectrumData = function() { // Will hold the measurement data globally.
@@ -65,6 +69,8 @@ document.body.onload = function() {
   const stopEnabled = document.getElementById('toggle-time-limit');
   stopEnabled.checked = maxRecTimeEnabled;
   autoStop.disabled = !maxRecTimeEnabled;
+  const hoverProx = document.getElementById('iso-hover-prox');
+  hoverProx.value = maxDist;
 
   document.getElementById('smaVal').value = plot.smaLength;
   plot.resetPlot(spectrumData);
@@ -265,9 +271,11 @@ function unHover(data) {
     }
   }
 
+  /*
   if (Object.keys(prevIso).length > 0) {
     closestIso(-maxDist); // Force Reset Iso Highlighting
   }
+  */
 }
 
 
@@ -491,22 +499,28 @@ async function loadIsotopes() { // Load Isotope Energies JSON ONCE
 
 let prevIso = {};
 
+function toggleIsoHover() {
+  checkNearIso = !checkNearIso;
+  closestIso(-100000);
+}
+
+
 async function closestIso(value) {
   // VERY BAD PERFORMANCE, EXPERIMENTAL FEATURE!
   if (!loadedIsos) { // User has not yet opened the settings panel
     await loadIsotopes();
-
   }
 
   const keys = Object.keys(isoList);
+  const closeKeys = keys.filter((energy) => {return Math.abs(energy - value) <= maxDist});
 
-  let closest = keys.reduce(function(prev, curr) {
-    return (Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
-  });
+  if (closeKeys.length !== 0) {
+    let closest = closeKeys.reduce(function(prev, curr) {
+      return (Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
+    });
 
-  plot.toggleLine(Object.keys(prevIso)[0], Object.values(prevIso)[0], false);
+    plot.toggleLine(Object.keys(prevIso)[0], Object.values(prevIso)[0], false);
 
-  if (Math.abs(closest - value) <= maxDist) {
     let newIso = {};
     newIso[parseFloat(closest).toFixed(2)] = isoList[closest];
 
@@ -515,9 +529,12 @@ async function closestIso(value) {
     }
 
     plot.toggleLine(parseFloat(closest).toFixed(2), isoList[closest], true);
+    plot.updatePlot(spectrumData);
+  } else if (Object.keys(prevIso).length !== 0) {
+    plot.toggleLine(Object.keys(prevIso)[0], Object.values(prevIso)[0], false);
+    plot.updatePlot(spectrumData);
   }
 
-  plot.updatePlot(spectrumData);
 }
 
 
@@ -596,6 +613,10 @@ function changeSettings(name, value, type) {
 
     case 'timeLimit':
       maxRecTime = value;
+      break;
+
+    case 'hoverProx':
+      maxDist = value;
       break;
 
     case 'plotRefresh':
