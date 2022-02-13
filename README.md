@@ -4,6 +4,8 @@ Web application for gamma spectroscopy including file and live plot support via 
 
 ![example spectrum](/docs/screenshot.PNG)
 
+Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://github.com/plotly/plotly.js) and [Font Awesome](https://github.com/FortAwesome/Font-Awesome).
+
 ## Feature Overview
 
 * No installation required - accessible on every internet-connected device
