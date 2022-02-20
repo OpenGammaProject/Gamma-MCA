@@ -11,6 +11,7 @@
     - Save settings with cookies
     - Social media share function
     - Peak Finder/Analyzer
+    - Polynomial Calibration!
 
   Known Performance Issues:
     - Isotope hightlighting
