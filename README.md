@@ -19,7 +19,7 @@ Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://
 
 There are essentially two types of files you can use - both being text files, e.g. CSVs:
 
-1. _Dumped serial streams_ with a new energy event on each line. This includes streams from our [Open Scintillation Counter](https://github.com/Open-Gamma-Project/Open-Scintillation-Counter) or any other serial device. **Important:** If your file is CSV-formatted only the first element will be read. The delimiter can be changed in the settings.
+1. _Dumped serial streams_ with a new energy event on each line. This includes streams from our [Open Gamma Detector](https://github.com/Open-Gamma-Project/Open-Gamma-Detector) or any other serial device. **Important:** If your file is CSV-formatted only the first element will be read. The delimiter can be changed in the settings.
 2. Ready-to-use _histograms_. This includes common file types like TKAs, CSVs and also RadiaCode exports. **Important:** If your file has more than one element per line, the first one will be regarded as channel index/energy and the second as the number of counts. If there's one element only, it will be regarded as index instead.
 
 ## Using Serial
