@@ -247,7 +247,7 @@
             <button class="btn btn-primary btn-sm" type="button" onclick="toggleCal();" title="Remove calibration"> <i class="fas fa-trash"></i> Clear</button>
 
             <label for="cal-input" class="btn btn-primary btn-sm" type="button" title="Import a calibration.json"> <i class="fas fa-file-import"></i> Import </label>
-            <input id="cal-input" class="visually-hidden" type="file" name="name" onchange="importCal(this);">
+            <input id="cal-input" class="visually-hidden" type="file" accept=".json" name="name" onchange="importCal(this);">
 
             <button class="btn btn-primary btn-sm" type="button" onclick="downloadCal();" title="Export the calibration.json"> <i class="fas fa-file-export"></i> Export </button>
           </p>
