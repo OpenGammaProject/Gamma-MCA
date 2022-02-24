@@ -4,6 +4,7 @@ function SerialData() {
   this.maxSize = 1000; // Maximum number of pulses/events to hold in the buffer
   this.port = null;
   this.adcChannels = 4096; // For OSC
+  this.maxLength = 20; // Maximum number of characters for a valid string/number
 
   this.rawData = ""; // Raw String Input from Serial Reading
   this.serData = []; // Ready to use Integer Pulse Heights, could use a setget meh
@@ -21,31 +22,37 @@ function SerialData() {
 
     this.rawData += string;
 
-    // Fail-Safe if the code below brakes
-    if (this.rawData.length >= 500) {
-      return;
-    }
+    let stringArr = this.rawData.split(';'); //('\r\n');
+    stringArr.pop(); // Delete last entry to avoid counting unfinished transmissions
 
-    const stringArr = this.rawData.split('\r\n');
     if (stringArr.length <= 1) {
+      if (this.rawData.length > this.maxLength) {
+        this.rawData = ""; // String too long without an EOL char, obvious error, delete.
+      }
       return;
     } else {
       for (element of stringArr) {
-        this.rawData = this.rawData.replaceAll(element + '\r\n', '');
+        //this.rawData = this.rawData.replaceAll(element + '\r\n', '');
+        this.rawData = this.rawData.replace(element + ';', '');
+        const trimString = element.trim(); // Delete whitespace and line breaks
 
-        if (isNaN(parseInt(element))) {
+        if (trimString.length == 0 || trimString.length >= this.maxLength) {
+          continue; // String is empty or longer than maxLength --> Invalid, disregard
+        }
+
+        const parsedInt = parseInt(trimString);
+
+        if (isNaN(parsedInt)) {
           continue; // Not an integer -> throw away
         } else {
           // Protect from overflow and crashes
           if (this.serData.length > this.maxSize) {
             return;
           }
-          this.serData.push(parseInt(element));
-
-          // OPTIONAL
-          if (parseInt(element) < 100) {
-            console.log('Invalid Event F');
+          if (parsedInt < 0) {
+            continue;
           }
+          this.serData.push(parsedInt);
         }
       }
     }

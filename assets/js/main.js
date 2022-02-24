@@ -7,11 +7,12 @@
 /*
 
   Possible Future Improvements:
-    - Sort common isotope energies list
+    - Sorting isotope list
     - Save settings with cookies
     - Social media share function
     - Peak Finder/Analyzer
     - Polynomial Calibration!
+    - Add serial EOL char selection
 
   Known Performance Issues:
     - Isotope hightlighting
