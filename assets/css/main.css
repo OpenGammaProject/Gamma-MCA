@@ -16,3 +16,13 @@ h3 {
   width: 80%;
   max-width: 2000px;
 }
+
+.plot-div {
+  min-height: 300px;
+  max-height: 1200px;
+}
+
+.logo {
+  width: 27%;
+  max-height: 192px;
+}
