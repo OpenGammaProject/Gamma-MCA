@@ -96,7 +96,7 @@ function SpectrumPlot(divId) {
         //fillcolor: 'black',
         line: {
             color: 'blue',
-            width: .8,
+            width: .5,
             dash: 'solid'
           },
       };
@@ -110,6 +110,10 @@ function SpectrumPlot(divId) {
         arrowhead: 7,
         ax: 0,
         ay: -20,
+        hovertext: parseFloat(energy).toFixed(2),
+        font: {
+          size: 11,
+        },
       };
 
       if (!this.shapes.includes(newLine)) {
