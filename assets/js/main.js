@@ -381,16 +381,29 @@ function importCal(input) {
 }
 
 
-function downloadCal() {
+function addLeadingZero(timeNumber) {
+  if (timeNumber < 10) {
+    return '0' + timeNumber;
+  } else {
+    return timeNumber;
+  }
+}
+
+
+function getDateString() {
   const time = new Date();
-  filename = 'calibration_' + time.getFullYear() + time.getDate() + time.getDay() + time.getHours() + time.getMinutes() + '.json';
+  return time.getFullYear() + addLeadingZero(time.getMonth() + 1) + addLeadingZero(time.getDate()) + addLeadingZero(time.getHours()) + addLeadingZero(time.getMinutes());
+}
+
+
+function downloadCal() {
+  filename = 'calibration_' + getDateString() + '.json';
   download(filename, plot.calibration, true);
 }
 
 
 function downloadData(filename, data) {
-  const time = new Date();
-  filename += '_' + time.getFullYear() + time.getDate() + time.getDay() + time.getHours() + time.getMinutes() + '.csv';
+  filename += '_' + getDateString() + '.csv';
 
   text = '';
   spectrumData[data].forEach(item => {
@@ -843,7 +856,7 @@ function refreshMeta(type) {
     const timeElement = document.getElementById('record-time');
     const nowTime = new Date();
     const delta = new Date(nowTime.getTime() - startTime + timeDone);
-    timeElement.innerText = delta.getUTCHours() + ' : ' + delta.getUTCMinutes() + ' : ' + delta.getUTCSeconds();
+    timeElement.innerText = addLeadingZero(delta.getUTCHours()) + ' : ' + addLeadingZero(delta.getUTCMinutes()) + ' : ' + addLeadingZero(delta.getUTCSeconds());
 
     if (delta > maxRecTime && maxRecTimeEnabled) {
       disconnectPort(true);
