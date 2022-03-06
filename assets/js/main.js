@@ -449,8 +449,14 @@ async function loadIsotopes() { // Load Isotope Energies JSON ONCE
   }
 
   //fixHeight('offbody', 'tabcontent');
+  const options = {
+    cache: 'no-cache',
+    headers: {
+      'Content-Type': 'application/json;charset=UTF-8',
+    },
+  };
 
-  let response = await fetch(isoListURL);
+  let response = await fetch(isoListURL, options);
 
   if (response.ok) { // If HTTP-status is 200-299
     const json = await response.json();
