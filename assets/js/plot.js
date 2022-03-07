@@ -143,7 +143,7 @@ function SpectrumPlot(divId) {
   */
   this.plotData = function(dataObj, update = true) {
     let trace = {
-      name: 'Corrected Spectrum',
+      name: 'Clean Spectrum',
       stackgroup: 'data', // Stack line charts on top of each other
 
       x: getXAxis(dataObj.data.length),
