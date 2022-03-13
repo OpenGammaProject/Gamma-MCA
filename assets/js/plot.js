@@ -229,7 +229,7 @@ function SpectrumPlot(divId) {
       barmode: 'stack',
 
       xaxis: {
-        title: 'ADC Channels',
+        title: 'ADC Channel [1]',
         mirror: true,
         linewidth: 2,
         autorange: true,
@@ -249,7 +249,7 @@ function SpectrumPlot(divId) {
         //exponentformat: "SI",
       },
       yaxis: {
-        title: 'Number Of Events',
+        title: 'Counts [1]',
         mirror: true,
         linewidth: 2,
         autorange: true,
@@ -297,13 +297,14 @@ function SpectrumPlot(divId) {
       for (element of data) {
         element.x = this.getCalAxis(element.x.length);
       }
+      layout.xaxis.title = 'Energy [keV]';
       layout.xaxis.ticksuffix = ' keV';
     }
     /*
       CPS enabled
     */
     if (this.cps) {
-      layout.yaxis.title = 'Counts Per Second';
+      layout.yaxis.title = 'Counts Per Second [Hz]';
       layout.yaxis.ticksuffix = ' cps';
     }
 
