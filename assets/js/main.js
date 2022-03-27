@@ -80,6 +80,12 @@ document.body.onload = function() {
   if (!("serial" in navigator)) {
     const serError = document.getElementById('serial-error');
     serError.className = serError.className.replaceAll('visually-hidden', '');
+
+    const serSettingsElements = document.getElementsByClassName('ser-settings');
+    for (element of serSettingsElements) { // Disable serial controls
+      element.disabled = true;
+    }
+
   } else {
     document.getElementById('serial-div').className = 'visible';
     navigator.serial.addEventListener("connect", serialConnect);
