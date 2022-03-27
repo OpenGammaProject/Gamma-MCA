@@ -11,8 +11,9 @@
     - Save settings with cookies
     - Social media share function
     - Peak Finder/Analyzer
-    - Polynomial Calibration!
+    - (!) Polynomial Calibration!
     - Add serial EOL char selection
+    - (!) Simple Serial Console to send commands
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -880,6 +881,8 @@ function refreshMeta(type) {
 }
 
 
+let lastUpdate = new Date();
+
 function refreshRender(type) {
   if (ser.port.readable && keepReading) {
     const timeElement = document.getElementById('record-time');
@@ -893,7 +896,10 @@ function refreshRender(type) {
 
     plot.updatePlot(spectrumData);
 
-    document.getElementById('cps').innerText = (newData.length/refreshRate*1000) + ' cps';
+    const deltaLastRefresh = new Date(nowTime.getTime() - lastUpdate.getTime());
+    lastUpdate = nowTime;
+
+    document.getElementById('cps').innerText = (newData.length/deltaLastRefresh.getTime()*1000).toFixed(1) + ' cps';
 
     setTimeout(refreshRender, refreshRate, type); // Only re-schedule if still avail
   }
