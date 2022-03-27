@@ -9,14 +9,6 @@ function SerialData() {
   this.rawData = ""; // Raw String Input from Serial Reading
   this.serData = []; // Ready to use Integer Pulse Heights, could use a setget meh
 
-  let generateEmptyArr = function(len) {
-    let arr = [];
-    for(let i = 0; i < len; i++) {
-      arr.push(0);
-    }
-    return arr;
-  };
-
   this.addRaw = function(uintArray) {
     const string = String.fromCharCode(...uintArray);
 
@@ -72,7 +64,7 @@ function SerialData() {
 
   this.updateData = function(oldDataArr, newDataArr) {
     if(oldDataArr.length == 0) {
-      oldDataArr = generateEmptyArr(this.adcChannels);
+      oldDataArr = Array(this.adcChannels).fill(0);
     }
 
     for (value of newDataArr) {

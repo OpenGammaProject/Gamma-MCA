@@ -8,14 +8,6 @@ function RawData(valueIndex, delimiter = ',') {
 
   this.tempValIndex = valueIndex;
 
-  let generateEmptyArr = function(len) {
-    let xArray = [];
-    for(let i = 0; i < len; i++) {
-      xArray.push(0);
-    }
-    return xArray;
-  };
-
   this.checkLines = function(value) {
     const values = value.split(this.delimiter);
 
@@ -36,7 +28,7 @@ function RawData(valueIndex, delimiter = ',') {
       return dataArr;
     }
 
-    let xArray = generateEmptyArr(this.adcChannels);
+    let xArray = Array(this.adcChannels).fill(0);
 
     for(element of dataArr) {
       xArray[element] += 1;
