@@ -1,7 +1,7 @@
 /* Serial Capability and Management */
 
 function SerialData() {
-  this.maxSize = 1000; // Maximum number of pulses/events to hold in the buffer
+  this.maxSize = 10000; // Maximum number of pulses/events to hold in the buffer
   this.port = null;
   this.adcChannels = 4096; // For OSC
   this.maxLength = 20; // Maximum number of characters for a valid string/number
