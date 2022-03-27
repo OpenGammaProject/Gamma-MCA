@@ -61,13 +61,13 @@ document.body.onload = function() {
   const fileADCNo = document.getElementById('custom-file-adc');
   fileADCNo.value = raw.adcChannels;
   const serRefresh = document.getElementById('custom-ser-refresh');
-  serRefresh.value = refreshRate;
+  serRefresh.value = refreshRate / 1000; // convert ms to s
   const serBuffer = document.getElementById('custom-ser-buffer');
   serBuffer.value = ser.maxSize;
   const serADCNo = document.getElementById('custom-ser-adc');
   serADCNo.value = ser.adcChannels;
   const autoStop = document.getElementById('ser-limit');
-  autoStop.value = maxRecTime;
+  autoStop.value = maxRecTime / 1000; // convert ms to s
   const stopEnabled = document.getElementById('toggle-time-limit');
   stopEnabled.checked = maxRecTimeEnabled;
   autoStop.disabled = !maxRecTimeEnabled;
@@ -633,7 +633,7 @@ function changeSettings(name, value, type) {
       break;
 
     case 'timeLimit':
-      maxRecTime = value;
+      maxRecTime = value * 1000; // convert s to ms
       break;
 
     case 'hoverProx':
@@ -641,7 +641,7 @@ function changeSettings(name, value, type) {
       break;
 
     case 'plotRefresh':
-      refreshRate = value;
+      refreshRate = value * 1000; // convert s to ms
       break;
 
     case 'serBuffer':

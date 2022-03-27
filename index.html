@@ -506,7 +506,7 @@
                 <label class="input-group-text" for="ser-limit">Recording Time Limit</label>
                 <input type="number" class="form-control" id="ser-limit" disabled>
                 <button class="btn btn-primary" id="ser-limit-btn" type="button" onclick="changeSettings('timeLimit', parseInt(document.getElementById('ser-limit').value), 'number');" title="Apply" disabled> <i class="fas fa-check"></i> </button>
-                <i>Input in milliseconds. Any positive integer is valid. Serial recording will stop automatically when time runs out.</i>
+                <i>Input in seconds. Any positive integer is valid. Serial recording will stop automatically when time runs out.</i>
               </div>
 
             </p>
@@ -517,7 +517,7 @@
                 <input type="number" class="form-control" id="custom-ser-refresh">
                 <button class="btn btn-primary" type="button" onclick="changeSettings('plotRefresh', parseInt(document.getElementById('custom-ser-refresh').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
-              <i>Input in milliseconds. Any positive integer is valid.</i>
+              <i>Input in seconds. Any positive integer is valid.</i>
             </p>
 
             <p>
