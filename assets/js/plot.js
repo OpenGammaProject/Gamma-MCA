@@ -159,6 +159,7 @@ function SpectrumPlot(divId) {
       marker: {
         color: 'orangered',
       },
+      width: 1,
     };
 
     let data = [trace];
