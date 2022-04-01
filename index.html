@@ -152,16 +152,22 @@
               </div>
             </div>
 
-            <button class="btn btn-primary btn-sm ser-settings" id="record-button" type="button" data-bs-toggle="modal" data-bs-target="#recordModal" title="Start recording"> <i class="fas fa-play"></i> Record </button>
-            <button class="btn btn-primary btn-sm ser-settings visually-hidden" id="pause-button" type="button" onclick="disconnectPort();" title="Pause recording"> <i class="fas fa-pause"></i> Pause </button>
-            <button class="btn btn-primary btn-sm ser-settings visually-hidden" id="resume-button" type="button" onclick="startRecord(true);" title="Resume recording"> <i class="fas fa-play"></i> Resume </button>
-            <button class="btn btn-primary btn-sm" id="stop-button" type="button" onclick="disconnectPort(true);" title="Stop recording" disabled> <i class="fas fa-stop"></i> Stop </button>
+            <div class="clearfix pe-3">
 
-            <div id="recording-spinner" class="spinner-grow spinner-grow-sm text-danger align-middle visually-hidden" role="status">
-              <span class="visually-hidden">Recording...</span>
+              <button class="btn btn-primary btn-sm ser-settings" id="record-button" type="button" data-bs-toggle="modal" data-bs-target="#recordModal" title="Start recording"> <i class="fas fa-play"></i> Record </button>
+              <button class="btn btn-primary btn-sm ser-settings visually-hidden" id="pause-button" type="button" onclick="disconnectPort();" title="Pause recording"> <i class="fas fa-pause"></i> Pause </button>
+              <button class="btn btn-primary btn-sm ser-settings visually-hidden" id="resume-button" type="button" onclick="startRecord(true);" title="Resume recording"> <i class="fas fa-play"></i> Resume </button>
+              <button class="btn btn-primary btn-sm" id="stop-button" type="button" onclick="disconnectPort(true);" title="Stop recording" disabled> <i class="fas fa-stop"></i> Stop </button>
+
+              <div class="float-end">
+                <div id="recording-spinner" class="spinner-grow spinner-grow-sm text-danger visually-hidden align-middle" role="status">
+                  <span class="visually-hidden">Recording...</span>
+                </div>
+
+                <b><span class="align-middle" id="record-time"></span></b>
+              </div>
+
             </div>
-
-            <b><span class="align-middle" id="record-time"></span></b>
 
             <hr>
 
@@ -185,11 +191,16 @@
               </div>
             </div>
 
-            <button class="btn btn-primary btn-sm" id="export-button" type="button" data-bs-toggle="modal" data-bs-target="#exportModal" title="Export spectrum" disabled>
-              <i class="fas fa-file-export"></i> Export
-            </button>
+            <div class="clearfix pe-3">
 
-            <b><span class="align-middle" id="cps"></span></b>
+              <button class="btn btn-primary btn-sm" id="export-button" type="button" data-bs-toggle="modal" data-bs-target="#exportModal" title="Export spectrum" disabled>
+                <i class="fas fa-file-export"></i> Export
+              </button>
+
+              <b><span class="float-end align-middle" id="cps"></span></b>
+
+            </div>
+
 
           </div>
 
