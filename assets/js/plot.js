@@ -219,7 +219,7 @@ function SpectrumPlot(divId) {
     /*
       All The Layout Stuff
     */
-    const layout = {
+    let layout = {
       autosize: true, // Needed for resizing on update
       title: 'Energy Spectrum',
       hovermode: 'x',
@@ -289,7 +289,7 @@ function SpectrumPlot(divId) {
         yref: "paper",
       }],
       shapes: this.shapes,
-      annotations: this.annotations,
+      annotations: JSON.parse(JSON.stringify(this.annotations)), // Copy array but do not reference
     };
     /*
       Set calibrated x-axis
@@ -300,6 +300,9 @@ function SpectrumPlot(divId) {
       }
       layout.xaxis.title = 'Energy [keV]';
       layout.xaxis.ticksuffix = ' keV';
+      for (anno of layout.annotations) {
+        anno.hovertext += layout.xaxis.ticksuffix;
+      }
     }
     /*
       CPS enabled
