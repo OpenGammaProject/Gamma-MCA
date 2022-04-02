@@ -258,12 +258,12 @@ function changeSma(input) {
 
 
 function hoverEvent(data) {
-  const hoverData = document.getElementById('hover_data');
+  const hoverData = document.getElementById('hover-data');
   hoverData.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
 
   for (key in calClick) {
     if (calClick[key]) {
-      document.getElementById('adc_' + key).value = data.points[0].x.toFixed(2);
+      document.getElementById('adc-' + key).value = data.points[0].x.toFixed(2);
     }
   }
 
@@ -274,12 +274,12 @@ function hoverEvent(data) {
 
 
 function unHover(data) {
-  const hoverData = document.getElementById('hover_data');
+  const hoverData = document.getElementById('hover-data');
   hoverData.innerText = 'None';
 
   for (key in calClick) {
     if (calClick[key]) {
-      document.getElementById('adc_' + key).value = oldCalVals[key];
+      document.getElementById('adc-' + key).value = oldCalVals[key];
     }
   }
 
@@ -292,15 +292,15 @@ function unHover(data) {
 
 
 function clickEvent(data) {
-  const clickData = document.getElementById('click_data');
+  const clickData = document.getElementById('click-data');
   clickData.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
 
   for (key in calClick) {
     if (calClick[key]) {
-      document.getElementById('adc_' + key).value = data.points[0].x.toFixed(2);
+      document.getElementById('adc-' + key).value = data.points[0].x.toFixed(2);
       oldCalVals[key] = data.points[0].x.toFixed(2);
       calClick[key] = false;
-      document.getElementById('select_' + key).checked = calClick[key];
+      document.getElementById('select-' + key).checked = calClick[key];
     }
   }
 }
@@ -314,10 +314,10 @@ function toggleCal(enabled = false) {
   */
   if (enabled) {
     const readoutArray = [
-      document.getElementById('adc_a').value,
-      document.getElementById('adc_b').value,
-      document.getElementById('cal_a').value,
-      document.getElementById('cal_b').value
+      document.getElementById('adc-a').value,
+      document.getElementById('adc-b').value,
+      document.getElementById('cal-a').value,
+      document.getElementById('cal-b').value
     ];
 
     for (value of readoutArray) {
@@ -369,10 +369,10 @@ function importCal(input) {
       const obj = JSON.parse(result);
 
       let readoutArray = [
-        document.getElementById('adc_a'),
-        document.getElementById('cal_a'),
-        document.getElementById('adc_b'),
-        document.getElementById('cal_b')
+        document.getElementById('adc-a'),
+        document.getElementById('cal-a'),
+        document.getElementById('adc-b'),
+        document.getElementById('cal-b')
       ];
 
       const inputArr = ['aFrom', 'aTo', 'bFrom', 'bTo'];
@@ -700,7 +700,7 @@ function serialDisconnect(event) {
 
 
 async function listSerial() {
-  const portSelector = document.getElementById('port_selector');
+  const portSelector = document.getElementById('port-selector');
   for (index in portSelector.options) { // Remove all "old" ports
     portSelector.remove(index);
   }
@@ -774,7 +774,7 @@ let timeDone = 0;
 
 async function startRecord(pause = false, type = recordingType) {
   try {
-    const selector = document.getElementById('port_selector');
+    const selector = document.getElementById('port-selector');
     const index = selector.selectedIndex;
     ser.port = portsAvail[index];
 
