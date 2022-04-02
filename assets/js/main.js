@@ -25,7 +25,16 @@ const SpectrumData = function() { // Will hold the measurement data globally.
   this.background = [];
   this.dataCps = [];
   this.backgroundCps = [];
+
+  this.getTotalCounts = function(data) {
+    let sum = 0;
+    data.forEach((item, i) => {
+      sum += item;
+    });
+    return sum;
+  };
 };
+
 let spectrumData = new SpectrumData();
 let plot = new SpectrumPlot('plot');
 let raw = new RawData(1); // 2=raw, 1=hist
@@ -138,6 +147,8 @@ function getFileData(input, background = false) { // Gets called when a file has
     } else {
       spectrumData.data = raw.csvToArray(result, fileEnding);
     }
+    document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts(spectrumData.data);
+    document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts(spectrumData.background);
 
     /*
       Error Msg Problem with RAW Stream selection?
@@ -193,6 +204,9 @@ function removeFile(id) {
   spectrumData[id] = [];
   document.getElementById(id).value = '';
   plot.resetPlot(spectrumData);
+
+  document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts(spectrumData.data);
+  document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts(spectrumData.background);
 
   bindPlotEvents(); // Re-Bind Events for new plot
 }
@@ -915,7 +929,7 @@ function refreshRender(type) {
     const newData = ser.getData();
 
     spectrumData[type] = ser.updateData(spectrumData[type], newData); // Depends on Background/Spectrum Aufnahme
-    spectrumData[type + 'Cps'] = spectrumData[type].map(val => val/delta.getTime()*1000);
+    spectrumData[type + 'Cps'] = spectrumData[type].map(val => val / delta.getTime() * 1000);
 
     plot.updatePlot(spectrumData);
 
@@ -943,6 +957,9 @@ function refreshRender(type) {
     std = Math.sqrt(std);
 
     document.getElementById('avg-cps-std').innerHTML = ' &plusmn; ' + std.toFixed(1) + ' cps' + ' (&#916; ' + Math.round(std/mean*100) + '%)';
+
+    document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts(spectrumData.data);
+    document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts(spectrumData.background);
 
     setTimeout(refreshRender, refreshRate, type); // Only re-schedule if still avail
   }
