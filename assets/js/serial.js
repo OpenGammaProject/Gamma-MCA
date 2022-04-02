@@ -39,6 +39,7 @@ function SerialData() {
         } else {
           // Protect from overflow and crashes
           if (this.serData.length > this.maxSize) {
+            console.log('Warning: You are saturating the serial buffer. Please increase the limit!');
             return;
           }
           if (parsedInt < 0) {
