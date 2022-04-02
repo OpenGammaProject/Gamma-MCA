@@ -38,6 +38,9 @@ let portsAvail = {};
 let refreshRate = 1000; // Delay in ms between serial plot updates
 let maxRecTimeEnabled = false;
 let maxRecTime = 1800000; // 30 mins
+const refreshMetaTime = 100; // 100 ms
+
+let cpsValues = [];
 
 let isoListURL = '/assets/isotopes_energies_min.json';
 let isoList = {};
@@ -844,6 +847,7 @@ function disconnectPort(stop = false) {
     document.getElementById('resume-button').className += ' visually-hidden';
     recordingType = '';
     timeDone = 0;
+    cpsValues = [];
 
     const cpsButton = document.getElementById('plot-cps');
     toggleCps(cpsButton, true); // Disable CPS again
@@ -866,16 +870,35 @@ function disconnectPort(stop = false) {
 
 function refreshMeta(type) {
   if (ser.port.readable && keepReading) {
+    const totalTimeElement = document.getElementById('total-record-time');
     const timeElement = document.getElementById('record-time');
+    const progressBar = document.getElementById('ser-time-progress-bar');
+
     const nowTime = new Date();
     const delta = new Date(nowTime.getTime() - startTime + timeDone);
-    timeElement.innerText = addLeadingZero(delta.getUTCHours()) + ' : ' + addLeadingZero(delta.getUTCMinutes()) + ' : ' + addLeadingZero(delta.getUTCSeconds());
+
+    timeElement.innerText = addLeadingZero(delta.getUTCHours()) + ':' + addLeadingZero(delta.getUTCMinutes()) + ':' + addLeadingZero(delta.getUTCSeconds());
+
+    if (maxRecTimeEnabled) {
+      const progressElement = document.getElementById('ser-time-progress');
+      const progress = Math.round(delta.getTime() / maxRecTime * 100);
+      progressElement.style.width = progress + '%';
+      //progressElement.innerText = progress + '%';
+      progressElement.setAttribute('aria-valuenow', progress)
+
+      const totalTime = new Date(maxRecTime);
+      totalTimeElement.innerText = ' / ' +  addLeadingZero(totalTime.getUTCHours()) + ':' + addLeadingZero(totalTime.getUTCMinutes()) + ':' + addLeadingZero(totalTime.getUTCSeconds());
+      progressBar.className = progressBar.className.replaceAll(' visually-hidden','');
+    } else {
+      totalTimeElement.innerText = '';
+      progressBar.className += ' visually-hidden';
+    }
 
     if (delta > maxRecTime && maxRecTimeEnabled) {
       disconnectPort(true);
       popupNotification('auto-stop');
     } else {
-      setTimeout(refreshMeta, 1000, type); // 1s, only re-schedule if still valid
+      setTimeout(refreshMeta, refreshMetaTime, type); // Only re-schedule if still valid
     }
   }
 }
@@ -899,7 +922,27 @@ function refreshRender(type) {
     const deltaLastRefresh = new Date(nowTime.getTime() - lastUpdate.getTime());
     lastUpdate = nowTime;
 
-    document.getElementById('cps').innerText = (newData.length/deltaLastRefresh.getTime()*1000).toFixed(1) + ' cps';
+    const cpsValue = newData.length / deltaLastRefresh.getTime() * 1000;
+    document.getElementById('cps').innerText = cpsValue.toFixed(1) + ' cps';
+
+    cpsValues.push(cpsValue);
+
+    let mean = 0;
+    cpsValues.forEach((item, i) => {
+      mean += item;
+    });
+    mean /= cpsValues.length;
+
+    document.getElementById('avg-cps').innerHTML = 'Avg: ' + mean.toFixed(1);
+
+    let std = 0;
+    cpsValues.forEach((item, i) => {
+      std += Math.pow(item - mean, 2);
+    });
+    std /= (cpsValues.length - 1);
+    std = Math.sqrt(std);
+
+    document.getElementById('avg-cps-std').innerHTML = ' &plusmn; ' + std.toFixed(1) + ' cps' + ' (&#916; ' + Math.round(std/mean*100) + '%)';
 
     setTimeout(refreshRender, refreshRate, type); // Only re-schedule if still avail
   }

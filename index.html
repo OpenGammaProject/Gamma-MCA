@@ -131,65 +131,32 @@
 
             <hr>
 
-
-            <!-- Record Modal -->
-            <div class="modal fade" id="recordModal" tabindex="-1" aria-labelledby="exportModal" aria-hidden="true">
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title">Record Spectrum</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body">
-                    What do you want to record?
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Cancel </button>
-                    <button type="button" class="btn btn-primary ser-settings" data-bs-dismiss="modal" onclick="startRecord(false, 'data');"> Spectrum </button>
-                    <button type="button" class="btn btn-primary ser-settings" data-bs-dismiss="modal" onclick="startRecord(false, 'background');"> Background </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="clearfix pe-3">
+            <div class="clearfix pe-3 align-middle">
 
               <button class="btn btn-primary btn-sm ser-settings" id="record-button" type="button" data-bs-toggle="modal" data-bs-target="#recordModal" title="Start recording"> <i class="fas fa-play"></i> Record </button>
               <button class="btn btn-primary btn-sm ser-settings visually-hidden" id="pause-button" type="button" onclick="disconnectPort();" title="Pause recording"> <i class="fas fa-pause"></i> Pause </button>
               <button class="btn btn-primary btn-sm ser-settings visually-hidden" id="resume-button" type="button" onclick="startRecord(true);" title="Resume recording"> <i class="fas fa-play"></i> Resume </button>
               <button class="btn btn-primary btn-sm" id="stop-button" type="button" onclick="disconnectPort(true);" title="Stop recording" disabled> <i class="fas fa-stop"></i> Stop </button>
 
-              <div class="float-end">
-                <div id="recording-spinner" class="spinner-grow spinner-grow-sm text-danger visually-hidden align-middle" role="status">
-                  <span class="visually-hidden">Recording...</span>
+              <div id="recording-spinner" class="spinner-grow spinner-grow-sm text-danger visually-hidden align-middle" role="status">
+                <span class="visually-hidden">Recording...</span>
+              </div>
+
+              <div class="float-end align-middle">
+
+                <div class="vstack align-middle">
+                  <span class="align-middle fw-bold"><span id="record-time"></span><span id="total-record-time"></span></span>
+
+                  <div class="progress mt-1" id="ser-time-progress-bar" style="height: 10px">
+                    <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="ser-time-progress"></div>
+                  </div>
                 </div>
 
-                <b><span class="align-middle" id="record-time"></span></b>
               </div>
 
             </div>
 
             <hr>
-
-            <!-- Export Modal -->
-            <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModal" aria-hidden="true">
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title">Export File</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body">
-                    What do you want to export?
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Cancel </button>
-                    <button type="button" class="btn btn-primary" onclick="downloadData('spectrum', 'data');"> Spectrum </button>
-                    <button type="button" class="btn btn-primary" onclick="downloadData('background', 'background');"> Background </button>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             <div class="clearfix pe-3">
 
@@ -197,10 +164,18 @@
                 <i class="fas fa-file-export"></i> Export
               </button>
 
-              <b><span class="float-end align-middle" id="cps"></span></b>
+              <div class="float-end align-middle">
+
+                <div class="vstack align-middle text-end">
+
+                  <span class="align-middle fw-bold" id="cps"></span>
+                  <span class="align-middle"><span id="avg-cps"></span><span id="avg-cps-std"></span></span>
+
+                </div>
+
+              </div>
 
             </div>
-
 
           </div>
 
@@ -377,6 +352,52 @@
 
       </div>
 
+    </div>
+
+    <!--
+
+      BOOTSTRAP MODELS FOR SELECTION SCREENS,
+
+    -->
+
+    <!-- Record Modal -->
+    <div class="modal fade" id="recordModal" tabindex="-1" aria-labelledby="exportModal" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Record Spectrum</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            What do you want to record?
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Cancel </button>
+            <button type="button" class="btn btn-primary ser-settings" data-bs-dismiss="modal" onclick="startRecord(false, 'data');"> Spectrum </button>
+            <button type="button" class="btn btn-primary ser-settings" data-bs-dismiss="modal" onclick="startRecord(false, 'background');"> Background </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModal" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Export File</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            What do you want to export?
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Cancel </button>
+            <button type="button" class="btn btn-primary" onclick="downloadData('spectrum', 'data');"> Spectrum </button>
+            <button type="button" class="btn btn-primary" onclick="downloadData('background', 'background');"> Background </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!--
@@ -563,7 +584,7 @@
 
             <hr>
 
-            <p>Version 2022-03-27.</p>
+            <p>Version 2022-04-02.</p>
           </div>
 
         </div>
