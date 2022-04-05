@@ -569,6 +569,15 @@
             <h5><u>Serial Settings</u></h5>
 
             <p>
+              <div class="input-group input-group-sm">
+                <label class="input-group-text" for="custom-baud">Baud Rate</label>
+                <input type="number" class="form-control" id="custom-baud">
+                <button class="btn btn-primary" type="button" onclick="changeSettings('baudRate', parseInt(document.getElementById('custom-baud').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
+              </div>
+              <i>Input in bps. Any positive integer is valid.</i>
+            </p>
+
+            <p>
               <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" role="switch" id="toggle-time-limit" onclick="changeSettings('timeLimitBool', this.checked, 'boolean');">
                 <label class="form-check-label" for="toggle-time-limit">Enable Time Limit</label>

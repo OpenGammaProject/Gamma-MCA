@@ -12,8 +12,8 @@
     - Social media share function
     - Peak Finder/Analyzer
     - (!) Polynomial Calibration!
-    - Add serial EOL char selection
-    - (!) Simple Serial Console to send commands
+    - (?) Add serial EOL char selection
+    - (!) FWHM calculation for peaks
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -70,23 +70,17 @@ document.body.onload = function() {
 
   isoURL.value = domain + isoListURL;
 
-  const fileDeli = document.getElementById('custom-delimiter');
-  fileDeli.value = raw.delimiter;
-  const fileADCNo = document.getElementById('custom-file-adc');
-  fileADCNo.value = raw.adcChannels;
-  const serRefresh = document.getElementById('custom-ser-refresh');
-  serRefresh.value = refreshRate / 1000; // convert ms to s
-  const serBuffer = document.getElementById('custom-ser-buffer');
-  serBuffer.value = ser.maxSize;
-  const serADCNo = document.getElementById('custom-ser-adc');
-  serADCNo.value = ser.adcChannels;
+  document.getElementById('custom-delimiter').value = raw.delimiter;
+  document.getElementById('custom-file-adc').value = raw.adcChannels;
+  document.getElementById('custom-ser-refresh').value = refreshRate / 1000; // convert ms to s
+  document.getElementById('custom-ser-buffer').value = ser.maxSize;
+  document.getElementById('custom-ser-adc').value = ser.adcChannels;
   const autoStop = document.getElementById('ser-limit');
   autoStop.value = maxRecTime / 1000; // convert ms to s
-  const stopEnabled = document.getElementById('toggle-time-limit');
-  stopEnabled.checked = maxRecTimeEnabled;
   autoStop.disabled = !maxRecTimeEnabled;
-  const hoverProx = document.getElementById('iso-hover-prox');
-  hoverProx.value = maxDist;
+  document.getElementById('toggle-time-limit').checked = maxRecTimeEnabled;
+  document.getElementById('iso-hover-prox').value = maxDist;
+  document.getElementById('custom-baud').value = serOptions.baudRate;
 
   document.getElementById('smaVal').value = plot.smaLength;
   plot.resetPlot(spectrumData);
@@ -671,6 +665,10 @@ function changeSettings(name, value, type) {
 
     case 'serBuffer':
       ser.maxSize = value;
+      break;
+
+    case 'baudRate':
+      serOptions.baudRate = value;
       break;
 
     case 'serChannels':
