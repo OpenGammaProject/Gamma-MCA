@@ -867,7 +867,7 @@ async function sendSerial(command) {
     if (wasReading) {
       await disconnectPort();
     }
-    
+
     selectPort();
     await ser.port.open(serOptions); // Baud-Rate optional
 
@@ -927,16 +927,24 @@ async function disconnectPort(stop = false) {
   ser.flushData(); // Remove all old data
 
   try {
+    clearTimeout(refreshTimeout);
+    clearTimeout(metaTimeout);
+  } catch (err) {
+    console.log('No timeout to clear.', err);
+  }
+
+  try {
     if (typeof reader !== undefined) {
       reader.cancel();
     }
-
-  await closed;
   } catch(err) {
     console.log('Nothing to disconnect.', err);
   }
+  await closed;
 }
 
+
+let metaTimeout;
 
 function refreshMeta(type) {
   if (ser.port.readable && keepReading) {
@@ -968,13 +976,14 @@ function refreshMeta(type) {
       disconnectPort(true);
       popupNotification('auto-stop');
     } else {
-      setTimeout(refreshMeta, refreshMetaTime, type); // Only re-schedule if still valid
+      metaTimeout = setTimeout(refreshMeta, refreshMetaTime, type); // Only re-schedule if still valid
     }
   }
 }
 
 
 let lastUpdate = new Date();
+let refreshTimeout;
 
 function refreshRender(type) {
   if (ser.port.readable && keepReading) {
@@ -1017,6 +1026,6 @@ function refreshRender(type) {
     document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts(spectrumData.data);
     document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts(spectrumData.background);
 
-    setTimeout(refreshRender, refreshRate, type); // Only re-schedule if still avail
+    refreshTimeout = setTimeout(refreshRender, refreshRate, type); // Only re-schedule if still avail
   }
 }
