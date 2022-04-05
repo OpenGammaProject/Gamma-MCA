@@ -44,6 +44,7 @@ let calClick = { a: false, b: false };
 let oldCalVals = { a: '', b: '' };
 let portsAvail = {};
 
+let serOptions = { baudRate: 9600 }; // Standard baud-rate of 9600 bps
 let refreshRate = 1000; // Delay in ms between serial plot updates
 let maxRecTimeEnabled = false;
 let maxRecTime = 1800000; // 30 mins
@@ -780,19 +781,56 @@ function toggleCps(button, off = false) {
 }
 
 
-let keepReading = true;
+async function selectPort() {
+  const selector = document.getElementById('port-selector');
+  const index = selector.selectedIndex;
+  ser.port = portsAvail[index];
+}
+
+
+let keepReading = false;
 let reader;
 let recordingType = '';
 let startTime = 0;
 let timeDone = 0;
 
+async function readUntilClosed() {
+  while (ser.port.readable && keepReading) {
+    try {
+      reader = ser.port.readable.getReader();
+
+      while (true) {
+        const {value, done} = await reader.read();
+        if (value) {
+          // value is a Uint8Array.
+          ser.addRaw(value);
+        }
+        if (done) {
+          // reader.cancel() has been called.
+          break;
+        }
+      }
+    } catch (err) {
+      // Sudden device disconnect can cause this
+      console.log('Misc Serial Read Error:', err);
+      popupNotification('misc-ser-error');
+    } finally {
+      // Allow the serial port to be closed later.
+      reader.releaseLock();
+      reader = undefined;
+    }
+  }
+
+  await ser.port.close();
+}
+
+
+let closed;
+
 async function startRecord(pause = false, type = recordingType) {
   try {
-    const selector = document.getElementById('port-selector');
-    const index = selector.selectedIndex;
-    ser.port = portsAvail[index];
-
-    await ser.port.open({ baudRate: 115200 }); // Baud-Rate optional
+    selectPort();
+    await ser.port.open(serOptions); // Baud-Rate optional
 
     keepReading = true; // Reset keepReading
     recordingType = type;
@@ -814,33 +852,7 @@ async function startRecord(pause = false, type = recordingType) {
     refreshRender(recordingType); // Start updating the plot
     refreshMeta(recordingType); // Start updating the meta data
 
-    while (ser.port.readable && keepReading) {
-      try {
-        reader = ser.port.readable.getReader();
-
-        while (true) {
-          const {value, done} = await reader.read();
-          if (value) {
-            // value is a Uint8Array.
-            ser.addRaw(value);
-          }
-          if (done) {
-            // reader.cancel() has been called.
-            break;
-          }
-        }
-      } catch (err) {
-        // Sudden device disconnect can cause this
-        console.log('Misc Serial Read Error:', err);
-        popupNotification('misc-ser-error');
-      } finally {
-        // Allow the serial port to be closed later.
-        reader.releaseLock();
-        reader = undefined;
-      }
-    }
-
-    await ser.port.close();
+    closed = readUntilClosed();
   } catch(err) {
     console.log('Connection Error:', err);
     popupNotification('serial-connect-error');
@@ -848,7 +860,49 @@ async function startRecord(pause = false, type = recordingType) {
 }
 
 
-function disconnectPort(stop = false) {
+async function sendSerial(command) {
+  const wasReading = keepReading;
+
+  try {
+    if (wasReading) {
+      await disconnectPort();
+    }
+    
+    selectPort();
+    await ser.port.open(serOptions); // Baud-Rate optional
+
+    const textEncoder = new TextEncoderStream();
+    const writer = textEncoder.writable.getWriter();
+    const writableStreamClosed = textEncoder.readable.pipeTo(ser.port.writable);
+
+    let formatCommand = command.trim() + '\n';
+
+    writer.write(formatCommand);
+    //writer.write('\x03\n');
+
+    //writer.releaseLock();
+    await writer.close();
+    await writableStreamClosed;
+
+    document.getElementById('ser-output').innerText += '> ' + formatCommand.trim() + '\n';
+    document.getElementById('ser-command').value = "";
+
+  } catch (err) {
+    console.log('Connection Error:', err);
+    popupNotification('serial-connect-error');
+  } finally {
+
+    await ser.port.close();
+
+    if (wasReading) {
+      startRecord(true);
+    }
+
+  }
+}
+
+
+async function disconnectPort(stop = false) {
   const nowTime = new Date();
   timeDone += nowTime.getTime() - startTime;
 
@@ -876,6 +930,8 @@ function disconnectPort(stop = false) {
     if (typeof reader !== undefined) {
       reader.cancel();
     }
+
+  await closed;
   } catch(err) {
     console.log('Nothing to disconnect.', err);
   }

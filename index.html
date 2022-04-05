@@ -165,17 +165,21 @@
               </button>
 
               <div class="float-end align-middle">
-
                 <div class="vstack align-middle text-end">
 
                   <span class="align-middle fw-bold" id="cps"></span>
                   <span class="align-middle"><span id="avg-cps"></span><span id="avg-cps-std"></span></span>
 
                 </div>
-
               </div>
 
             </div>
+
+            <p class="mt-1">
+              <button class="btn btn-primary btn-sm ser-settings" type="button" data-bs-toggle="modal" data-bs-target="#serialConsoleModal" title="Serial Console" disabled>
+                <i class="fa-solid fa-terminal"></i> Console
+              </button>
+            </p>
 
           </div>
 
@@ -408,6 +412,34 @@
       </div>
     </div>
 
+    <!-- Export Modal -->
+    <div class="modal fade" id="serialConsoleModal" tabindex="-1" aria-labelledby="serialConsoleModal" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Serial Console</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+
+            <div class="input-group input-group-md">
+              <label class="input-group-text" for="ser-command"> <i class="fa-solid fa-terminal"></i> </label>
+              <input type="text" class="form-control" id="ser-command">
+              <button class="btn btn-primary" onclick="sendSerial(document.getElementById('ser-command').value);" onkeypress="">Send</button>
+            </div>
+
+            <hr>
+
+            <p class="font-monospace" id="ser-output"></p>
+
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Close </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!--
 
       BOOTSTRAP OFFCANVAS FOR SETTINGS, INFO AND ISOTOPE VIEWER
@@ -592,7 +624,7 @@
 
             <hr>
 
-            <p>Version 2022-04-02.</p>
+            <p>Version 2022-04-05.</p>
           </div>
 
         </div>
