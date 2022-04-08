@@ -623,9 +623,9 @@
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="custom-ser-refresh">Plot Refresh Time</label>
                 <input type="number" class="form-control" id="custom-ser-refresh" min="1" onkeypress="enterPress(event, 'setting6');">
-                <button class="btn btn-primary" type="button" id="setting6" onclick="changeSettings('plotRefresh', parseInt(document.getElementById('custom-ser-refresh').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
+                <button class="btn btn-primary" type="button" id="setting6" onclick="changeSettings('plotRefresh', parseFloat(document.getElementById('custom-ser-refresh').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
-              <i>Input in seconds. Any positive integer is valid.</i>
+              <i>Input in seconds. Any positive float is valid, use integers for best performance.</i>
             </p>
 
             <p>
