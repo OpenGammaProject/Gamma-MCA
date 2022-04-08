@@ -89,7 +89,7 @@ document.body.onload = function() {
     serError.className = serError.className.replaceAll('visually-hidden', '');
 
     const serSettingsElements = document.getElementsByClassName('ser-settings');
-    for (element of serSettingsElements) { // Disable serial controls
+    for (const element of serSettingsElements) { // Disable serial controls
       element.disabled = true;
     }
 
@@ -278,7 +278,7 @@ function hoverEvent(data) {
   const hoverData = document.getElementById('hover-data');
   hoverData.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
 
-  for (key in calClick) {
+  for (const key in calClick) {
     if (calClick[key]) {
       document.getElementById('adc-' + key).value = data.points[0].x.toFixed(2);
     }
@@ -294,7 +294,7 @@ function unHover(data) {
   const hoverData = document.getElementById('hover-data');
   hoverData.innerText = 'None';
 
-  for (key in calClick) {
+  for (const key in calClick) {
     if (calClick[key]) {
       document.getElementById('adc-' + key).value = oldCalVals[key];
     }
@@ -312,7 +312,7 @@ function clickEvent(data) {
   const clickData = document.getElementById('click-data');
   clickData.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
 
-  for (key in calClick) {
+  for (const key in calClick) {
     if (calClick[key]) {
       document.getElementById('adc-' + key).value = data.points[0].x.toFixed(2);
       oldCalVals[key] = data.points[0].x.toFixed(2);
@@ -344,7 +344,7 @@ function toggleCal(enabled) {
     let invalid = 0;
     let validArray = [];
 
-    for (pair of readoutArray) {
+    for (const pair of readoutArray) {
       const float1 = parseFloat(pair[0]);
       const float2 = parseFloat(pair[1]);
 
@@ -382,7 +382,7 @@ function toggleCal(enabled) {
 
 
 function resetCal() {
-  for (point in calClick) {
+  for (const point in calClick) {
     calClick[point] = false;
   }
   toggleCal(false);
@@ -427,7 +427,7 @@ function importCal(input) {
       ];
 
       const inputArr = ['aFrom', 'aTo', 'bFrom', 'bTo', 'cFrom', 'cTo'];
-      for (index in inputArr) {
+      for (const index in inputArr) {
         readoutArray[index].value = parseFloat(obj[inputArr[index]]);
       }
 
@@ -529,7 +529,7 @@ async function loadIsotopes() { // Load Isotope Energies JSON ONCE
     let intKeys = Object.keys(json);
     intKeys.sort((a, b) => a - b); // Sort Energies numerically
 
-    for (key of intKeys) {
+    for (const key of intKeys) {
       isoList[key] = json[key];
 
       const row = tableElement.insertRow();
@@ -633,7 +633,7 @@ function selectAll(selectBox) {
   const tableBody = tableElement.tBodies[0];
   const tableRows = tableBody.rows;
 
-  for (row of tableRows) {
+  for (const row of tableRows) {
     const checkBox = row.cells[0].firstChild;
     checkBox.checked = selectBox.checked;
     if (selectBox.checked) {
@@ -739,7 +739,7 @@ function serialConnect(event) {
 
 
 function serialDisconnect(event) {
-  for (key in portsAvail) {
+  for (const key in portsAvail) {
     if (portsAvail[key] == event.target) {
       delete portsAvail[key];
       break;
@@ -757,13 +757,13 @@ function serialDisconnect(event) {
 
 async function listSerial() {
   const portSelector = document.getElementById('port-selector');
-  for (index in portSelector.options) { // Remove all "old" ports
+  for (const index in portSelector.options) { // Remove all "old" ports
     portSelector.remove(index);
   }
 
   const ports = await navigator.serial.getPorts();
 
-  for (index in ports) { // List new Ports
+  for (const index in ports) { // List new Ports
     portsAvail[index] = ports[index];
 
     const option = document.createElement("option");
@@ -778,11 +778,11 @@ async function listSerial() {
     option.text = 'No Ports Available';
     portSelector.add(option, index);
 
-    for (element of serSettingsElements) {
+    for (const element of serSettingsElements) {
       element.disabled = true;
     }
   } else {
-    for (element of serSettingsElements) {
+    for (const element of serSettingsElements) {
       element.disabled = false;
     }
   }
