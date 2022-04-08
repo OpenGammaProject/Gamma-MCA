@@ -9,10 +9,13 @@ function SpectrumPlot(divId) {
   this.smaLength = 20;
   this.calibration = {
     enabled: false,
+    points: 0,
     aFrom: 0,
     aTo: 0,
     bFrom: 0,
     bTo: 0,
+    cFrom: 0,
+    cTo: 0,
   };
   this.cps = false;
   this.shapes = [];
@@ -34,12 +37,38 @@ function SpectrumPlot(divId) {
   */
   this.getCalAxis = function(len) {
     let calArray = [];
-    let a = (this.calibration.aTo - this.calibration.bTo)/(this.calibration.aFrom - this.calibration.bFrom);
-    let d = this.calibration.aTo - a * this.calibration.aFrom;
 
-    for(let i = 0; i < len; i++) {
-      calArray.push(a * i + d);
+    if (this.calibration.points == 3) { // Pretty ugly hard scripted, could be dynamically calculated for n-poly using Math.js and matrices. Meh.
+
+      const denom = (this.calibration.aFrom - this.calibration.bFrom) * (this.calibration.aFrom - this.calibration.cFrom) * (this.calibration.bFrom - this.calibration.cFrom);
+
+      const k = (Math.pow(this.calibration.cFrom,2) * (this.calibration.aTo - this.calibration.bTo) + Math.pow(this.calibration.aFrom,2) * (this.calibration.bTo - this.calibration.cTo) + Math.pow(this.calibration.bFrom,2) * (this.calibration.cTo - this.calibration.aTo)) / denom;
+      const d = (this.calibration.bFrom * (this.calibration.bFrom - this.calibration.cFrom) * this.calibration.cFrom * this.calibration.aTo + this.calibration.aFrom * this.calibration.cFrom * (this.calibration.cFrom - this.calibration.aFrom) * this.calibration.bTo + this.calibration.aFrom * (this.calibration.aFrom - this.calibration.bFrom) * this.calibration.bFrom * this.calibration.cTo) / denom;
+      const a = (this.calibration.cFrom * (this.calibration.bTo - this.calibration.aTo) + this.calibration.bFrom * (this.calibration.aTo - this.calibration.cTo) + this.calibration.aFrom * (this.calibration.cTo - this.calibration.bTo)) / denom;
+
+      for(let i = 0; i < len; i++) {
+        calArray.push(a * Math.pow(i,2) + k * i + d);
+      }
+
+      console.log('c1',a);
+      console.log('c2',k);
+      console.log('c3',d);
+
+    } else {
+
+      const k = (this.calibration.aTo - this.calibration.bTo)/(this.calibration.aFrom - this.calibration.bFrom);
+      const d = this.calibration.aTo - k * this.calibration.aFrom;
+
+      for(let i = 0; i < len; i++) {
+        calArray.push(k * i + d);
+      }
+
+      console.log('c1',0);
+      console.log('c2',k);
+      console.log('c3',d);
+
     }
+
     return calArray;
   };
   /*

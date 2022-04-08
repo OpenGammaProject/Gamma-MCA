@@ -11,9 +11,12 @@
     - Save settings with cookies
     - Social media share function
     - Peak Finder/Analyzer
-    - (!) Polynomial Calibration!
     - (?) Add serial EOL char selection
     - (!) FWHM calculation for peaks
+    - Press ENTER to accept
+    - Input type URL
+    - Checkbox Calibration
+    - Reset Button Hover Bug
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -40,8 +43,8 @@ let plot = new SpectrumPlot('plot');
 let raw = new RawData(1); // 2=raw, 1=hist
 let ser = new SerialData();
 
-let calClick = { a: false, b: false };
-let oldCalVals = { a: '', b: '' };
+let calClick = { a: false, b: false, c: false };
+let oldCalVals = { a: '', b: '', c: ''};
 let portsAvail = {};
 
 let serOptions = { baudRate: 9600 }; // Standard baud-rate of 9600 bps
@@ -322,26 +325,45 @@ function toggleCal(enabled = false) {
     Reset Plot beforehand, to prevent x-range from dying when zoomed?
   */
   if (enabled) {
-    const readoutArray = [
-      document.getElementById('adc-a').value,
-      document.getElementById('adc-b').value,
-      document.getElementById('cal-a').value,
-      document.getElementById('cal-b').value
+    let readoutArray = [
+      [document.getElementById('adc-a').value, document.getElementById('cal-a').value],
+      [document.getElementById('adc-b').value, document.getElementById('cal-b').value],
+      [document.getElementById('adc-c').value, document.getElementById('cal-c').value]
     ];
 
-    for (value of readoutArray) {
-      if (isNaN(parseFloat(value))) {
+    let invalid = 0;
+    let validArray = [];
+
+    for (pair of readoutArray) {
+      const float1 = parseFloat(pair[0]);
+      const float2 = parseFloat(pair[1]);
+
+      if (isNaN(float1) || isNaN(float2)) {
+        //pair[0] = undefined;
+        //pair[1] = undefined;
+        invalid += 1;
+      } else {
+        validArray.push([float1, float2]);
+      }
+      if (invalid > 1) {
         popupNotification('cal-error');
         return;
       }
     }
 
     plot.calibration.enabled = enabled;
+    plot.calibration.points = validArray.length;
 
-    plot.calibration.aFrom = readoutArray[0];
-    plot.calibration.bFrom = readoutArray[1];
-    plot.calibration.aTo = readoutArray[2];
-    plot.calibration.bTo = readoutArray[3];
+    if (validArray.length == 2) {
+      validArray.push([undefined, undefined]);
+    }
+
+    plot.calibration.aFrom = validArray[0][0];
+    plot.calibration.bFrom = validArray[1][0];
+    plot.calibration.cFrom = validArray[2][0];
+    plot.calibration.aTo = validArray[0][1];
+    plot.calibration.bTo = validArray[1][1];
+    plot.calibration.cTo = validArray[2][1];
   } else {
     plot.calibration.enabled = enabled;
   }

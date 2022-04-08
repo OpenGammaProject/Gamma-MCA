@@ -193,42 +193,65 @@
 
           <h3><u>Calibration</u></h3>
 
-          <p>
-            <div class="input-group input-group-sm">
-              <label class="input-group-text" for="adc-a">Point A</label>
-              <input class="form-control form-control-sm" type="number" id="adc-a" min="0" value="" title="Input ADC Channel A">
-              <input type="checkbox" class="btn-check" id="select-a" autocomplete="off" onclick="toggleCalClick('a', this.checked);">
-              <label class="btn btn-outline-primary" for="select-a" title="Select from plot"> <i class="fas fa-chart-bar"></i> Select </label>
+          <div class="vstack gap-1">
+            <div class="hstack gap-2">
+              <div class="input-group input-group-sm">
+                <label class="input-group-text" for="adc-a">A:</label>
+                <input class="form-control form-control-sm" type="number" id="adc-a" min="0" value="" title="Input ADC Channel A" placeholder="Data Point A">
+                <input type="checkbox" class="btn-check" id="select-a" autocomplete="off" onclick="toggleCalClick('a', this.checked);">
+                <label class="btn btn-outline-primary" for="select-a" title="Select from plot"> <i class="fa-solid fa-arrow-pointer"></i> </label>
+              </div>
 
-            </div>
-          </p>
+              <span> <i class="fa-solid fa-angles-right"></i> </span>
 
-          <p>
-            <div class="input-group input-group-sm">
-              <label class="input-group-text" for="cal-a"> <i class="fas fa-arrow-right"></i> </label>
-              <input class="form-control form-control-sm" type="number" id="cal-a" min="1" value="" title="Energy for channel A">
-              <label class="input-group-text" for="cal-a">keV</label>
+              <div class="input-group input-group-sm">
+                <input class="form-control form-control-sm" type="number" id="cal-a" min="1" value="" title="Energy for channel A" placeholder="Target Energy A">
+                <label class="input-group-text" for="cal-a">keV</label>
+              </div>
             </div>
-          </p>
+
+            <div class="hstack gap-2">
+              <div class="input-group input-group-sm">
+                <label class="input-group-text" for="adc-b">B:</label>
+                <input class="form-control form-control-sm" type="number" id="adc-b" min="0" value="" title="Input ADC Channel B" placeholder="Data Point B">
+                <input type="checkbox" class="btn-check" id="select-b" autocomplete="off" onclick="toggleCalClick('b', this.checked);">
+                <label class="btn btn-outline-primary" for="select-b" title="Select from plot"> <i class="fa-solid fa-arrow-pointer"></i> </label>
+              </div>
+
+              <span> <i class="fa-solid fa-angles-right"></i> </span>
+
+              <div class="input-group input-group-sm">
+                <input class="form-control form-control-sm" type="number" id="cal-b" min="1" value="" title="Energy for channel B" placeholder="Target Energy B">
+                <label class="input-group-text" for="cal-b">keV</label>
+              </div>
+            </div>
+
+            <div class="hstack gap-2">
+              <div class="input-group input-group-sm">
+                <label class="input-group-text" for="adc-c">C:</label>
+                <input class="form-control form-control-sm" type="number" id="adc-c" min="0" value="" title="Input ADC Channel C" placeholder="Data Point C">
+                <input type="checkbox" class="btn-check" id="select-c" autocomplete="off" onclick="toggleCalClick('c', this.checked);">
+                <label class="btn btn-outline-primary" for="select-c" title="Select from plot"> <i class="fa-solid fa-arrow-pointer"></i> </label>
+              </div>
+
+              <span> <i class="fa-solid fa-angles-right"></i> </span>
+
+              <div class="input-group input-group-sm">
+                <input class="form-control form-control-sm" type="number" id="cal-c" min="1" value="" title="Energy for channel C" placeholder="Target Energy C">
+                <label class="input-group-text" for="cal-c">keV</label>
+              </div>
+            </div>
+          </div>
 
           <hr>
 
-          <p>
-            <div class="input-group input-group-sm">
-              <label class="input-group-text" for="adc-b">Point B</label>
-              <input class="form-control form-control-sm" type="number" id="adc-b" min="0" value="" title="Input ADC Channel B">
-              <input type="checkbox" class="btn-check" id="select-b" autocomplete="off" onclick="toggleCalClick('b', this.checked);">
-              <label class="btn btn-outline-primary" for="select-b" title="Select from plot"> <i class="fas fa-chart-bar"></i> Select </label>
-            </div>
-          </p>
+          <div class="lh-1">
 
-          <p>
-            <div class="input-group input-group-sm">
-              <label class="input-group-text" for="cal-b"> <i class="fas fa-arrow-right"></i> </label>
-              <input class="form-control form-control-sm" type="number" id="cal-b" min="1" value="" title="Energy for channel B">
-              <label class="input-group-text" for="cal-b">keV</label>
-            </div>
-          </p>
+            <p>Calibration E[keV] = c1 x^2 + c2 x + c3; x ... Channel No.</p>
+            <p>Coefficients will be computed automatically.</p>
+
+          </div>
+
 
           <hr>
 
@@ -524,11 +547,11 @@
             <p>
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="iso-hover-prox">Iso Hover Proximity</label>
-                <input type="number" class="form-control" id="iso-hover-prox">
+                <input type="number" class="form-control" id="iso-hover-prox" min="1" max="10000">
                 <label class="input-group-text" for="iso-hover-prox">keV</label>
                 <button class="btn btn-primary" type="button" onclick="changeSettings('hoverProx', parseInt(document.getElementById('iso-hover-prox').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
-              <i>Any number is valid.</i>
+              <i>Any positive integer is valid.</i>
             </p>
 
             <p>
@@ -558,7 +581,7 @@
             <p>
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="custom-file-adc">RAW Stream Channel No</label>
-                <input type="number" class="form-control" id="custom-file-adc">
+                <input type="number" class="form-control" id="custom-file-adc" min="1" max="16384">
                 <button class="btn btn-primary" type="button" onclick="changeSettings('fileChannels', parseInt(document.getElementById('custom-file-adc').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
               <i>No of (ADC) channels of the original device. Any positive integer is valid.</i>
@@ -571,7 +594,7 @@
             <p>
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="custom-baud">Baud Rate</label>
-                <input type="number" class="form-control" id="custom-baud">
+                <input type="number" class="form-control" id="custom-baud" min="1">
                 <button class="btn btn-primary" type="button" onclick="changeSettings('baudRate', parseInt(document.getElementById('custom-baud').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
               <i>Input in bps. Any positive integer is valid.</i>
@@ -585,7 +608,7 @@
 
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="ser-limit">Recording Time Limit</label>
-                <input type="number" class="form-control" id="ser-limit" disabled>
+                <input type="number" class="form-control" id="ser-limit"  min="1" disabled>
                 <button class="btn btn-primary" id="ser-limit-btn" type="button" onclick="changeSettings('timeLimit', parseInt(document.getElementById('ser-limit').value), 'number');" title="Apply" disabled> <i class="fas fa-check"></i> </button>
               </div>
               <i>Input in seconds. Any positive integer is valid. Serial recording will stop automatically when time runs out.</i>
@@ -595,7 +618,7 @@
             <p>
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="custom-ser-refresh">Plot Refresh Time</label>
-                <input type="number" class="form-control" id="custom-ser-refresh">
+                <input type="number" class="form-control" id="custom-ser-refresh" min="1">
                 <button class="btn btn-primary" type="button" onclick="changeSettings('plotRefresh', parseInt(document.getElementById('custom-ser-refresh').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
               <i>Input in seconds. Any positive integer is valid.</i>
@@ -604,7 +627,7 @@
             <p>
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="custom-ser-buffer">Max Serial Buffer</label>
-                <input type="number" class="form-control" id="custom-ser-buffer">
+                <input type="number" class="form-control" id="custom-ser-buffer" min="1">
                 <button class="btn btn-primary" type="button" onclick="changeSettings('serBuffer', parseInt(document.getElementById('custom-ser-buffer').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
               <i>Max No of serial input events buffered between plot refreshes. Any positive integer is valid.</i>
@@ -613,7 +636,7 @@
             <p>
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="custom-ser-adc">Serial Channel No</label>
-                <input type="number" class="form-control" id="custom-ser-adc">
+                <input type="number" class="form-control" id="custom-ser-adc" min="1" max="16384">
                 <button class="btn btn-primary" type="button" onclick="changeSettings('serChannels', parseInt(document.getElementById('custom-ser-adc').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
               <i>No of (ADC) channels of the serial device. Any positive integer is valid.</i>
@@ -633,7 +656,7 @@
 
             <hr>
 
-            <p>Version 2022-04-05.</p>
+            <p>Version 2022-04-08.</p>
           </div>
 
         </div>
@@ -709,7 +732,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
         <div class="toast-body">
-          Cannot calibrate. Input is not a valid number!
+          Cannot calibrate. Need at least two calibration points with valid numbers!
         </div>
       </div>
 
