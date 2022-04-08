@@ -12,8 +12,9 @@ Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://
 * Straightforward interface to get down to business
 * File import of common data formats
 * Live plotting of any serial device using the Web Serial API
-* Linear energy calibration
+* Linear and quadratic energy calibration
 * Customizable list of common gamma-ray energies
+* ... and much more!
 
 ## Importing Spectra
 
