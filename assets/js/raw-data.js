@@ -30,7 +30,7 @@ function RawData(valueIndex, delimiter = ',') {
 
     let xArray = Array(this.adcChannels).fill(0);
 
-    for(element of dataArr) {
+    for(const element of dataArr) {
       xArray[element] += 1;
     }
     return xArray;

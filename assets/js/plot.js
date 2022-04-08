@@ -77,7 +77,7 @@ function SpectrumPlot(divId) {
   this.computeMovingAverage = function(target) {
     let newData = getXAxis(target.length);
 
-    for(i in newData) {
+    for(const i in newData) {
       let val = 0;
 
       for(let j = 0; j < this.smaLength; j++){
@@ -154,12 +154,12 @@ function SpectrumPlot(divId) {
         console.log('yes');
       }
     } else {
-      for (i in this.shapes) {
+      for (const i in this.shapes) {
         if (this.shapes[i].x0 == energy) {
           this.shapes.splice(i,1);
         }
       }
-      for (i in this.annotations) {
+      for (const i in this.annotations) {
         if (this.annotations[i].x == energy) {
           this.annotations.splice(i,1);
         }
@@ -241,7 +241,7 @@ function SpectrumPlot(divId) {
       Set Simple Moving Average
     */
     if (this.sma) { // SIMPLE MOVING AVERAGE. MAYBE PLOT IT AS DIFFERENT LINE?
-      for (element of data) {
+      for (const element of data) {
         element.y = this.computeMovingAverage(element.y);
       }
     }
@@ -324,12 +324,12 @@ function SpectrumPlot(divId) {
       Set calibrated x-axis
     */
     if (this.calibration.enabled) {
-      for (element of data) {
+      for (const element of data) {
         element.x = this.getCalAxis(element.x.length);
       }
       layout.xaxis.title = 'Energy [keV]';
       layout.xaxis.ticksuffix = ' keV';
-      for (anno of layout.annotations) {
+      for (const anno of layout.annotations) {
         anno.hovertext += layout.xaxis.ticksuffix;
       }
     }

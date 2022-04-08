@@ -23,7 +23,7 @@ function SerialData() {
       }
       return;
     } else {
-      for (element of stringArr) {
+      for (const element of stringArr) {
         //this.rawData = this.rawData.replaceAll(element + '\r\n', '');
         this.rawData = this.rawData.replace(element + ';', '');
         const trimString = element.trim(); // Delete whitespace and line breaks
@@ -68,7 +68,7 @@ function SerialData() {
       oldDataArr = Array(this.adcChannels).fill(0);
     }
 
-    for (value of newDataArr) {
+    for (const value of newDataArr) {
       oldDataArr[value] += 1;
     }
     return oldDataArr;
