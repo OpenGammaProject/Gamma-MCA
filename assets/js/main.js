@@ -13,6 +13,7 @@
     - Peak Finder/Analyzer
     - (?) Add serial EOL char selection
     - (!) FWHM calculation for peaks
+    - (?) Serial console read capability
 
   Known Performance Issues:
     - Isotope hightlighting
