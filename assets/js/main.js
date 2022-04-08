@@ -16,7 +16,6 @@
     - Press ENTER to accept
     - Input type URL
     - Checkbox Calibration
-    - Reset Button Hover Bug
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -235,6 +234,7 @@ function resetPlot() {
     toggleSma(false, document.getElementById('sma'));
   }
   plot.resetPlot(spectrumData);
+  bindPlotEvents(); // Fix Reset Bug: Hovering and Clicking not working.
 }
 
 
