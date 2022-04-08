@@ -553,10 +553,9 @@
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="iso-hover-prox">Iso Hover Proximity</label>
                 <input type="number" class="form-control" id="iso-hover-prox" min="1" max="10000" onkeypress="enterPress(event, 'setting1');">
-                <label class="input-group-text" for="iso-hover-prox">keV</label>
                 <button class="btn btn-primary" type="button" id="setting1" onclick="changeSettings('hoverProx', parseInt(document.getElementById('iso-hover-prox').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
-              <i>Any positive integer is valid.</i>
+              <i>Input in keV. Any positive integer is valid.</i>
             </p>
 
             <p>
