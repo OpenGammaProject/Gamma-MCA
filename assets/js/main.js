@@ -14,7 +14,6 @@
     - (?) Add serial EOL char selection
     - (!) FWHM calculation for peaks
     - Press ENTER to accept
-    - Input type URL
     - Checkbox Calibration
 
   Known Performance Issues:
@@ -493,7 +492,7 @@ async function loadIsotopes() { // Load Isotope Energies JSON ONCE
   const options = {
     cache: 'no-cache',
     headers: {
-      'Content-Type': 'application/json;charset=UTF-8',
+      'Content-Type': 'text/plain; application/json; charset=UTF-8',
     },
   };
 
