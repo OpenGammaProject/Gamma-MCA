@@ -13,7 +13,6 @@
     - Peak Finder/Analyzer
     - (?) Add serial EOL char selection
     - (!) FWHM calculation for peaks
-    - Press ENTER to accept
     - Checkbox Calibration
 
   Known Performance Issues:
@@ -246,6 +245,14 @@ function changeAxis(button) {
     button.innerText = 'Linear';
   }
   plot.updatePlot(spectrumData);
+}
+
+
+function enterPress(event, id) {
+  if (event.keyCode == 13) { // ENTER key
+    const button = document.getElementById(id);
+    button.click();
+  }
 }
 
 
