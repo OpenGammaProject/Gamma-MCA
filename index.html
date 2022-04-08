@@ -193,77 +193,82 @@
 
           <h3><u>Calibration</u></h3>
 
-          <div class="vstack gap-1">
-            <div class="hstack gap-2">
-              <div class="input-group input-group-sm">
-                <label class="input-group-text" for="adc-a">A:</label>
-                <input class="form-control form-control-sm" type="number" id="adc-a" min="0" value="" title="Input ADC Channel A" placeholder="Data Point A">
-                <input type="checkbox" class="btn-check" id="select-a" autocomplete="off" onclick="toggleCalClick('a', this.checked);">
-                <label class="btn btn-outline-primary" for="select-a" title="Select from plot"> <i class="fa-solid fa-arrow-pointer"></i> </label>
+          <form>
+
+            <div class="vstack gap-1">
+
+              <div class="hstack gap-2">
+                <div class="input-group input-group-sm">
+                  <label class="input-group-text" for="adc-a">A:</label>
+                  <input class="form-control form-control-sm" type="number" id="adc-a" min="0" value="" title="Input ADC Channel A" placeholder="Data Point A">
+                  <input type="checkbox" class="btn-check" id="select-a" autocomplete="off" onclick="toggleCalClick('a', this.checked);">
+                  <label class="btn btn-outline-primary" for="select-a" title="Select from plot"> <i class="fa-solid fa-arrow-pointer"></i> </label>
+                </div>
+
+                <span> <i class="fa-solid fa-angles-right"></i> </span>
+
+                <div class="input-group input-group-sm">
+                  <input class="form-control form-control-sm" type="number" id="cal-a" min="1" value="" title="Energy for channel A" placeholder="Target Energy A">
+                  <label class="input-group-text" for="cal-a">keV</label>
+                </div>
               </div>
 
-              <span> <i class="fa-solid fa-angles-right"></i> </span>
+              <div class="hstack gap-2">
+                <div class="input-group input-group-sm">
+                  <label class="input-group-text" for="adc-b">B:</label>
+                  <input class="form-control form-control-sm" type="number" id="adc-b" min="0" value="" title="Input ADC Channel B" placeholder="Data Point B">
+                  <input type="checkbox" class="btn-check" id="select-b" autocomplete="off" onclick="toggleCalClick('b', this.checked);">
+                  <label class="btn btn-outline-primary" for="select-b" title="Select from plot"> <i class="fa-solid fa-arrow-pointer"></i> </label>
+                </div>
 
-              <div class="input-group input-group-sm">
-                <input class="form-control form-control-sm" type="number" id="cal-a" min="1" value="" title="Energy for channel A" placeholder="Target Energy A">
-                <label class="input-group-text" for="cal-a">keV</label>
+                <span> <i class="fa-solid fa-angles-right"></i> </span>
+
+                <div class="input-group input-group-sm">
+                  <input class="form-control form-control-sm" type="number" id="cal-b" min="1" value="" title="Energy for channel B" placeholder="Target Energy B">
+                  <label class="input-group-text" for="cal-b">keV</label>
+                </div>
               </div>
+
+              <div class="hstack gap-2">
+                <div class="input-group input-group-sm">
+                  <label class="input-group-text" for="adc-c">C:</label>
+                  <input class="form-control form-control-sm" type="number" id="adc-c" min="0" value="" title="Input ADC Channel C" placeholder="Data Point C">
+                  <input type="checkbox" class="btn-check" id="select-c" autocomplete="off" onclick="toggleCalClick('c', this.checked);">
+                  <label class="btn btn-outline-primary" for="select-c" title="Select from plot"> <i class="fa-solid fa-arrow-pointer"></i> </label>
+                </div>
+
+                <span> <i class="fa-solid fa-angles-right"></i> </span>
+
+                <div class="input-group input-group-sm">
+                  <input class="form-control form-control-sm" type="number" id="cal-c" min="1" value="" title="Energy for channel C" placeholder="Target Energy C">
+                  <label class="input-group-text" for="cal-c">keV</label>
+                </div>
+              </div>
+
             </div>
 
-            <div class="hstack gap-2">
-              <div class="input-group input-group-sm">
-                <label class="input-group-text" for="adc-b">B:</label>
-                <input class="form-control form-control-sm" type="number" id="adc-b" min="0" value="" title="Input ADC Channel B" placeholder="Data Point B">
-                <input type="checkbox" class="btn-check" id="select-b" autocomplete="off" onclick="toggleCalClick('b', this.checked);">
-                <label class="btn btn-outline-primary" for="select-b" title="Select from plot"> <i class="fa-solid fa-arrow-pointer"></i> </label>
-              </div>
+            <hr>
 
-              <span> <i class="fa-solid fa-angles-right"></i> </span>
-
-              <div class="input-group input-group-sm">
-                <input class="form-control form-control-sm" type="number" id="cal-b" min="1" value="" title="Energy for channel B" placeholder="Target Energy B">
-                <label class="input-group-text" for="cal-b">keV</label>
-              </div>
+            <div class="lh-1">
+              <p>Calibration E[keV] = c1 x^2 + c2 x + c3; x ... Channel No.</p>
+              <p>Coefficients will be computed automatically.</p>
             </div>
 
-            <div class="hstack gap-2">
-              <div class="input-group input-group-sm">
-                <label class="input-group-text" for="adc-c">C:</label>
-                <input class="form-control form-control-sm" type="number" id="adc-c" min="0" value="" title="Input ADC Channel C" placeholder="Data Point C">
-                <input type="checkbox" class="btn-check" id="select-c" autocomplete="off" onclick="toggleCalClick('c', this.checked);">
-                <label class="btn btn-outline-primary" for="select-c" title="Select from plot"> <i class="fa-solid fa-arrow-pointer"></i> </label>
-              </div>
+            <hr>
 
-              <span> <i class="fa-solid fa-angles-right"></i> </span>
+            <p>
+              <input type="checkbox" class="btn-check" id="apply-cal" onclick="toggleCal(this.checked);" autocomplete="off">
+              <label class="btn btn-outline-primary btn-sm" title="Toggle plot calibration" id="calibration-label" for="apply-cal"> <i class="fa-solid fa-check"></i> Calibrate </label>
 
-              <div class="input-group input-group-sm">
-                <input class="form-control form-control-sm" type="number" id="cal-c" min="1" value="" title="Energy for channel C" placeholder="Target Energy C">
-                <label class="input-group-text" for="cal-c">keV</label>
-              </div>
-            </div>
-          </div>
+              <button class="btn btn-primary btn-sm" type="reset" onclick="resetCal();" title="Clear calibration"> <i class="fas fa-trash"></i> Clear</button>
 
-          <hr>
+              <label for="cal-input" class="btn btn-primary btn-sm" type="button" title="Import a calibration.json"> <i class="fas fa-file-import"></i> Import </label>
+              <input id="cal-input" class="visually-hidden" type="file" accept=".json" name="name" onchange="importCal(this);">
 
-          <div class="lh-1">
+              <button class="btn btn-primary btn-sm" type="button" onclick="downloadCal();" title="Export the calibration.json"> <i class="fas fa-file-export"></i> Export </button>
+            </p>
 
-            <p>Calibration E[keV] = c1 x^2 + c2 x + c3; x ... Channel No.</p>
-            <p>Coefficients will be computed automatically.</p>
-
-          </div>
-
-
-          <hr>
-
-          <p>
-            <button class="btn btn-primary btn-sm" type="button" onclick="toggleCal(true);" title="Apply calibration">Calibrate</button>
-            <button class="btn btn-primary btn-sm" type="button" onclick="toggleCal();" title="Remove calibration"> <i class="fas fa-trash"></i> Clear</button>
-
-            <label for="cal-input" class="btn btn-primary btn-sm" type="button" title="Import a calibration.json"> <i class="fas fa-file-import"></i> Import </label>
-            <input id="cal-input" class="visually-hidden" type="file" accept=".json" name="name" onchange="importCal(this);">
-
-            <button class="btn btn-primary btn-sm" type="button" onclick="downloadCal();" title="Export the calibration.json"> <i class="fas fa-file-export"></i> Export </button>
-          </p>
+          </form>
 
         </div>
 

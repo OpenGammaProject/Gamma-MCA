@@ -13,7 +13,7 @@
     - Peak Finder/Analyzer
     - (?) Add serial EOL char selection
     - (!) FWHM calculation for peaks
-    - Checkbox Calibration
+    - Fix Calibration Import / Export
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -324,10 +324,15 @@ function clickEvent(data) {
 }
 
 
-function toggleCal(enabled = false) {
-  /*
-    Weird code, use checkbox instead?
+function toggleCal(enabled) {
+  const button = document.getElementById('calibration-label');
 
+  if (enabled) {
+    button.innerHTML = '<i class="fa-solid fa-rotate-left"></i> Reset';
+  } else {
+    button.innerHTML = '<i class="fa-solid fa-check"></i> Calibrate';
+  }
+  /*
     Reset Plot beforehand, to prevent x-range from dying when zoomed?
   */
   if (enabled) {
@@ -374,6 +379,14 @@ function toggleCal(enabled = false) {
     plot.calibration.enabled = enabled;
   }
   plot.updatePlot(spectrumData);
+}
+
+
+function resetCal() {
+  for (point in calClick) {
+    calClick[point] = false;
+  }
+  toggleCal(false);
 }
 
 
