@@ -13,7 +13,6 @@
     - Peak Finder/Analyzer
     - (?) Add serial EOL char selection
     - (!) FWHM calculation for peaks
-    - Fix Calibration Import / Export
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -422,16 +421,19 @@ function importCal(input) {
         document.getElementById('adc-a'),
         document.getElementById('cal-a'),
         document.getElementById('adc-b'),
-        document.getElementById('cal-b')
+        document.getElementById('cal-b'),
+        document.getElementById('adc-c'),
+        document.getElementById('cal-c')
       ];
 
-      const inputArr = ['aFrom', 'aTo', 'bFrom', 'bTo'];
+      const inputArr = ['aFrom', 'aTo', 'bFrom', 'bTo', 'cFrom', 'cTo'];
       for (index in inputArr) {
         readoutArray[index].value = parseFloat(obj[inputArr[index]]);
       }
 
       oldCalVals.a = readoutArray[0].value;
       oldCalVals.b = readoutArray[2].value;
+      oldCalVals.c = readoutArray[4].value;
 
     } catch(e) {
       console.log('Calibration Import Error:', e);
