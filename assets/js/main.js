@@ -777,7 +777,7 @@ async function listSerial() {
   if (ports.length == 0) {
     const option = document.createElement("option");
     option.text = 'No Ports Available';
-    portSelector.add(option, index);
+    portSelector.add(option);
 
     for (const element of serSettingsElements) {
       element.disabled = true;
