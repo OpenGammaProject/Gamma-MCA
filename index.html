@@ -33,18 +33,24 @@
       LOADING AN NOSCRIPT ALERT
 
     -->
-    <div id="loading" class="fixed-top p-5 text-center bg-light border border-1 border-secondary">
-      <noscript>
-        <h1 class="bg-danger text-white text-center">
-          This website only works with Javascript enabled. You need to enable it in your browser to be able to use this site!
-          Instructions on how to do this can be found <a title="Enable-Javascript.com" href="https://enable-javascript.com/" target="_blank">here</a>.
-        </h1>
-      </noscript>
+    <div id="loading" class="vh-100 vw-100 fixed-top">
+      <div id="text-window" class="fixed-top m-5 p-5 text-center bg-light border border-3 rounded-3 border-primary">
 
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
+        <noscript>
+          <h2 class="bg-danger text-white text-center">
+            This website only works with Javascript enabled! You need to enable it in your browser to be able to use this site!
+            Instructions on how to do this can be found <a class="link-light" title="Enable-Javascript.com" href="https://enable-javascript.com/" target="_blank">here</a>.
+          </h2>
+        </noscript>
+
+        <h1>Loading, please wait...</h1>
+        <div class="spinner-border spinner-border-lg text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+
       </div>
-      <h1>Loading, please wait...</h1>
+
+      <div class="vh-100 vw-100 bg-dark bg-opacity-75"></div>
     </div>
 
     <!--
@@ -660,7 +666,7 @@
 
             <hr>
 
-            <p>Version 2022-04-08.</p>
+            <p>Version 2022-04-09.</p>
           </div>
 
         </div>
