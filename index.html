@@ -452,7 +452,7 @@
 
             <div class="input-group input-group-md">
               <label class="input-group-text" for="ser-command"> <i class="fa-solid fa-terminal"></i> </label>
-              <input type="text" class="form-control" id="ser-command" onkeypress="enterPress(event, 'send-command');">
+              <input type="text" class="form-control" id="ser-command" onkeypress="enterPress(event, 'send-command');" spellcheck="false">
               <button class="btn btn-primary" id="send-command" onclick="sendSerial(document.getElementById('ser-command').value);">Send</button>
             </div>
 
@@ -563,7 +563,7 @@
 
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="custom-url" id="custom-url-pre">https://</label>
-                <input type="url" class="form-control" id="custom-url" onkeypress="enterPress(event, 'setting2');">
+                <input type="url" class="form-control" id="custom-url" onkeypress="enterPress(event, 'setting2');" spellcheck="false">
                 <button class="btn btn-primary" type="button" id="setting2" onclick="changeSettings('customURL', document.getElementById('custom-url').value, 'string');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
               <i>File must be of valid JSON format.</i>
@@ -576,7 +576,7 @@
             <p>
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="custom-delimiter">CSV File Delimiter</label>
-                <input type="text" class="form-control" id="custom-delimiter" onkeypress="enterPress(event, 'setting3');">
+                <input type="text" class="form-control" id="custom-delimiter" onkeypress="enterPress(event, 'setting3');" spellcheck="false">
                 <button class="btn btn-primary" type="button" id="setting3" onclick="changeSettings('delimiter', document.getElementById('custom-delimiter').value, 'string');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
               <i>Any letter is valid.</i>
