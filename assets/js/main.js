@@ -557,7 +557,9 @@ async function loadIsotopes() { // Load Isotope Energies JSON ONCE
       cell3.style.cursor = 'pointer';
 
       const energy = parseFloat(key.trim());
-      const name = json[key].trim();
+      const dirtyName = json[key].toLowerCase();
+      const lowercaseName = dirtyName.replace(/[^a-z0-9 -]/gi, '').trim(); // Fixes security issue. See GitHub: #2
+      const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1);
 
       cell1.innerHTML = '<input class="form-check-input" id="' + name + '" type="checkbox" value="' + energy + '" onclick="plotIsotope(this)">';
       cell3.innerText = energy.toFixed(2);
