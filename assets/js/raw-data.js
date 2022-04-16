@@ -36,7 +36,7 @@ function RawData(valueIndex, delimiter = ',') {
     return xArray;
   };
 
-  this.csvToArray = function(data, fileEnding = 'csv') {
+  this.csvToArray = function(data) {
     this.tempValIndex = this.valueIndex; // RESET VALUE INDEX
 
     const allLines = data.split('\n');

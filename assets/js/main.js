@@ -137,10 +137,10 @@ function getFileData(input, background = false) { // Gets called when a file has
       TODO: FileType über Dateiendung?
     */
     if (background) {
-      const bg = raw.csvToArray(result, fileEnding);
+      const bg = raw.csvToArray(result);
       spectrumData.background = bg;
     } else {
-      spectrumData.data = raw.csvToArray(result, fileEnding);
+      spectrumData.data = raw.csvToArray(result);
     }
     document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts(spectrumData.data);
     document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts(spectrumData.background);
