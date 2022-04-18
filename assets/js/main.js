@@ -16,7 +16,6 @@
     - Add Loading indication on new IsoList URL
     - Catch custom URL fetch error
     - Remove custom URL fetch error message on new load
-    - Add danger zone: reset localStorage
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -859,8 +858,15 @@ function changeSettings(name, value, type) {
       popupNotification('setting-error');
       return;
   }
-  popupNotification('setting-success');
-  // Success Toast
+  popupNotification('setting-success'); // Success Toast
+}
+
+
+function resetMCA() {
+  if (localStorageAvailable) {
+    localStorage.clear();
+  }
+  location.reload();
 }
 
 /*
