@@ -95,12 +95,7 @@ document.body.onload = function() {
   plot.resetPlot(spectrumData);
   bindPlotEvents(); // Bind click and hover events provided by plotly
 
-  const loadingSpinner = document.getElementById('loading');
-  loadingSpinner.parentNode.removeChild(loadingSpinner); // Delete Loading Thingymajig
-
   document.getElementById('version-tag').innerText += ' ' + appVersion + '.';
-
-  sizeCheck();
 
   if (localStorageAvailable) {
     if (loadJSON('lastVisit') <= 0) {
@@ -109,11 +104,19 @@ document.body.onload = function() {
     const time = new Date();
     saveJSON('lastVisit', time.getTime());
     saveJSON('lastUsedVersion', appVersion);
+
+    const settingsNotSaveAlert = document.getElementById('ls-unavailable'); // Remove saving alert
+    settingsNotSaveAlert.parentNode.removeChild(settingsNotSaveAlert);
   } else {
     const settingsSaveAlert = document.getElementById('ls-available'); // Remove saving alert
     settingsSaveAlert.parentNode.removeChild(settingsSaveAlert);
     popupNotification('welcomeMsg');
   }
+
+  sizeCheck();
+
+  const loadingSpinner = document.getElementById('loading');
+  loadingSpinner.parentNode.removeChild(loadingSpinner); // Delete Loading Thingymajig
 };
 
 
