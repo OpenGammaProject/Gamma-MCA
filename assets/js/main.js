@@ -57,6 +57,8 @@ let isoList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
+const appVersion = '2022-04-18';
+
 /*
   Startup of the page
 */
@@ -105,6 +107,8 @@ document.body.onload = function() {
 
   const loadingSpinner = document.getElementById('loading');
   loadingSpinner.parentNode.removeChild(loadingSpinner); // Delete Loading Thingymajig
+
+  document.getElementById('version-tag').innerText += ' ' + appVersion + '.';
 
   sizeCheck();
   popupNotification('welcomeMsg');
