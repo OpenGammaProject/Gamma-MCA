@@ -13,6 +13,10 @@
     - (?) Add serial EOL char selection
     - (!) FWHM calculation for peaks
     - (?) Serial console read capability
+    - Add Loading indication on new IsoList URL
+    - Catch custom URL fetch error
+    - Remove custom URL fetch error message on new load
+    - Add danger zone: reset localStorage
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -51,7 +55,7 @@ const refreshMetaTime = 100; // 100 ms
 
 let cpsValues = [];
 
-let isoListURL = '/assets/isotopes_energies_min.json';
+let isoListURL = 'assets/isotopes_energies_min.json';
 let isoList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
@@ -63,8 +67,16 @@ let localStorageAvailable = false;
   Startup of the page
 */
 document.body.onload = function() {
+  const domain = new URL(window.location.href + isoListURL);
+  isoListURL = domain.href;
+
   localStorageAvailable = ('localStorage' in window); // Test for localStorage, for old browsers
-  loadSettings();
+
+  if (localStorageAvailable) {
+    loadSettingsStorage();
+  } else {
+    loadSettingsDefault();
+  }
 
   if (!('serial' in navigator)) {
     const serError = document.getElementById('serial-error');
@@ -92,15 +104,16 @@ document.body.onload = function() {
   sizeCheck();
 
   if (localStorageAvailable) {
-    if (localStorage.getItem('lastVisit') <= 0) {
+    if (loadJSON('lastVisit') <= 0) {
       popupNotification('welcomeMsg');
     }
     const time = new Date();
-    localStorage.setItem('lastVisit', time.getTime());
-    localStorage.setItem('lastUsedVersion', appVersion);
-
-    const settingsSaveAlert = document.getElementById('ls-available')
-    settingsSaveAlert.className = settingsSaveAlert.className.replaceAll('visually-hidden', '');
+    saveJSON('lastVisit', time.getTime());
+    saveJSON('lastUsedVersion', appVersion);
+  } else {
+    const settingsSaveAlert = document.getElementById('ls-available'); // Remove saving alert
+    settingsSaveAlert.parentNode.removeChild(settingsSaveAlert);
+    popupNotification('welcomeMsg');
   }
 };
 
@@ -645,17 +658,25 @@ function selectAll(selectBox) {
   plot.updatePlot(spectrumData);
 }
 
+/*
+=========================================
+  LOADING AND SAVING
+=========================================
+*/
 
-function loadSettings() {
-  const editPlot = document.getElementById('edit-plot');
-  editPlot.checked = plot.editableMode;
-  const isoURL = document.getElementById('custom-url');
-  const url = window.location.href;
-  let domain = new URL(url);
-  domain = domain.hostname;
+function saveJSON(name, value) {
+  localStorage.setItem(name, JSON.stringify(value));
+}
 
-  isoURL.value = domain + isoListURL;
 
+function loadJSON(name) {
+  return JSON.parse(localStorage.getItem(name));
+}
+
+
+function loadSettingsDefault() {
+  document.getElementById('custom-url').value = isoListURL;
+  document.getElementById('edit-plot').checked = plot.editableMode;
   document.getElementById('custom-delimiter').value = raw.delimiter;
   document.getElementById('custom-file-adc').value = raw.adcChannels;
   document.getElementById('custom-ser-refresh').value = refreshRate / 1000; // convert ms to s
@@ -664,11 +685,63 @@ function loadSettings() {
   const autoStop = document.getElementById('ser-limit');
   autoStop.value = maxRecTime / 1000; // convert ms to s
   autoStop.disabled = !maxRecTimeEnabled;
+  document.getElementById('ser-limit-btn').disabled = !maxRecTimeEnabled;
   document.getElementById('toggle-time-limit').checked = maxRecTimeEnabled;
   document.getElementById('iso-hover-prox').value = maxDist;
   document.getElementById('custom-baud').value = serOptions.baudRate;
 
   document.getElementById('smaVal').value = plot.smaLength;
+}
+
+
+function loadSettingsStorage() {
+  let setting = loadJSON('isoListURL');
+  if (setting) {
+    const newUrl = new URL(setting);
+    isoListURL = newUrl.href;
+  }
+  setting = loadJSON('editableMode');
+  if (setting) {
+    plot.editableMode = setting;
+  }
+  setting = loadJSON('rawDelimiter');
+  if (setting) {
+    raw.delimiter = setting;
+  }
+  setting = loadJSON('rawADC');
+  if (setting) {
+    raw.adcChannels = setting;
+  }
+  setting = loadJSON('plotRefreshRate');
+  if (setting) {
+    refreshRate = setting;
+  }
+  setting = loadJSON('serMaxBufferSize');
+  if (setting) {
+    ser.maxSize = setting;
+  }
+  setting = loadJSON('serADC');
+  if (setting) {
+    ser.adcChannels = setting;
+  }
+  setting = loadJSON('enableTimeLimit');
+  if (setting) {
+    maxRecTimeEnabled = setting;
+  }
+  setting = loadJSON('timelimit');
+  if (setting) {
+    maxRecTime = setting;
+  }
+  setting = loadJSON('maxIsoDist');
+  if (setting) {
+    maxDist = setting;
+  }
+  setting = loadJSON('baudRate');
+  if (setting) {
+    serOptions.baudRate = setting;
+  }
+
+  loadSettingsDefault();
 }
 
 
@@ -682,18 +755,25 @@ function changeSettings(name, value, type) {
     case 'editMode':
       plot.editableMode = value;
       plot.resetPlot(spectrumData);
+
+      if (localStorageAvailable) {
+        saveJSON('editableMode', value);
+      }
       break;
 
     case 'customURL':
-      const pre = document.getElementById('custom-url-pre').innerText;
-
       try {
-        const newUrl = new URL(pre + value);
+        const newUrl = new URL(value);
         isoListURL = newUrl.href;
 
         loadedIsos = false;
-        document.getElementById('iso-table').innerHTML = '';
+        document.getElementById('iso-table').innerHTML = ''; // ADD LOADING INDICATION
         loadIsotopes();
+
+        if (localStorageAvailable) {
+          saveJSON('isoListURL', isoListURL);
+        }
+
       } catch(e) {
         popupNotification('setting-error');
         console.log('Custom URL Error', e);
@@ -702,43 +782,77 @@ function changeSettings(name, value, type) {
 
     case 'delimiter':
       raw.delimiter = value;
+
+      if (localStorageAvailable) {
+        saveJSON('rawDelimiter', value);
+      }
       break;
 
     case 'fileChannels':
       raw.adcChannels = value;
+
+      if (localStorageAvailable) {
+        saveJSON('rawADC', value);
+      }
       break;
 
     case 'timeLimitBool':
-      const a = document.getElementById('ser-limit');
-      a.disabled = !value;
-      const b = document.getElementById('ser-limit-btn');
-      b.disabled = !value;
+      document.getElementById('ser-limit').disabled = !value;
+      document.getElementById('ser-limit-btn').disabled = !value;
 
       maxRecTimeEnabled = value;
+
+      if (localStorageAvailable) {
+        saveJSON('enableTimeLimit', value);
+      }
       break;
 
     case 'timeLimit':
       maxRecTime = value * 1000; // convert s to ms
+
+      if (localStorageAvailable) {
+        saveJSON('timelimit', maxRecTime);
+      }
       break;
 
     case 'hoverProx':
       maxDist = value;
+
+      if (localStorageAvailable) {
+        saveJSON('maxIsoDist', value);
+      }
       break;
 
     case 'plotRefresh':
       refreshRate = value * 1000; // convert s to ms
+
+      if (localStorageAvailable) {
+        saveJSON('plotRefreshRate', refreshRate);
+      }
       break;
 
     case 'serBuffer':
       ser.maxSize = value;
+
+      if (localStorageAvailable) {
+        saveJSON('serMaxBufferSize', value);
+      }
       break;
 
     case 'baudRate':
       serOptions.baudRate = value;
+
+      if (localStorageAvailable) {
+        saveJSON('baudRate', value);
+      }
       break;
 
     case 'serChannels':
       ser.adcChannels = value;
+
+      if (localStorageAvailable) {
+        saveJSON('serADC', value);
+      }
       break;
 
     default:
