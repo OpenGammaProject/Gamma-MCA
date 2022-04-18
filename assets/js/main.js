@@ -8,7 +8,6 @@
 
   Possible Future Improvements:
     - Sorting isotope list
-    - Save settings with cookies
     - Social media share function
     - Peak Finder/Analyzer
     - (?) Add serial EOL char selection
@@ -58,36 +57,16 @@ let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
 const appVersion = '2022-04-18';
+let localStorageAvailable = false;
 
 /*
   Startup of the page
 */
 document.body.onload = function() {
-  const editPlot = document.getElementById('edit-plot');
-  editPlot.checked = plot.editableMode;
-  const isoURL = document.getElementById('custom-url');
-  const url = window.location.href;
-  let domain = new URL(url);
-  domain = domain.hostname;
+  localStorageAvailable = ('localStorage' in window); // Test for localStorage, for old browsers
+  loadSettings();
 
-  isoURL.value = domain + isoListURL;
-
-  document.getElementById('custom-delimiter').value = raw.delimiter;
-  document.getElementById('custom-file-adc').value = raw.adcChannels;
-  document.getElementById('custom-ser-refresh').value = refreshRate / 1000; // convert ms to s
-  document.getElementById('custom-ser-buffer').value = ser.maxSize;
-  document.getElementById('custom-ser-adc').value = ser.adcChannels;
-  const autoStop = document.getElementById('ser-limit');
-  autoStop.value = maxRecTime / 1000; // convert ms to s
-  autoStop.disabled = !maxRecTimeEnabled;
-  document.getElementById('toggle-time-limit').checked = maxRecTimeEnabled;
-  document.getElementById('iso-hover-prox').value = maxDist;
-  document.getElementById('custom-baud').value = serOptions.baudRate;
-
-  document.getElementById('smaVal').value = plot.smaLength;
-  plot.resetPlot(spectrumData);
-
-  if (!("serial" in navigator)) {
+  if (!('serial' in navigator)) {
     const serError = document.getElementById('serial-error');
     serError.className = serError.className.replaceAll('visually-hidden', '');
 
@@ -95,7 +74,6 @@ document.body.onload = function() {
     for (const element of serSettingsElements) { // Disable serial controls
       element.disabled = true;
     }
-
   } else {
     document.getElementById('serial-div').className = 'visible';
     navigator.serial.addEventListener("connect", serialConnect);
@@ -103,6 +81,7 @@ document.body.onload = function() {
     listSerial(); // List Available Serial Ports
   }
 
+  plot.resetPlot(spectrumData);
   bindPlotEvents(); // Bind click and hover events provided by plotly
 
   const loadingSpinner = document.getElementById('loading');
@@ -111,7 +90,15 @@ document.body.onload = function() {
   document.getElementById('version-tag').innerText += ' ' + appVersion + '.';
 
   sizeCheck();
-  popupNotification('welcomeMsg');
+
+  if (localStorageAvailable) {
+    if (localStorage.getItem('lastVisit') <= 0) {
+      popupNotification('welcomeMsg');
+    }
+    const time = new Date();
+    localStorage.setItem('lastVisit', time.getTime());
+    localStorage.setItem('lastUsedVersion', appVersion);
+  }
 };
 
 
@@ -653,6 +640,32 @@ function selectAll(selectBox) {
   }
 
   plot.updatePlot(spectrumData);
+}
+
+
+function loadSettings() {
+  const editPlot = document.getElementById('edit-plot');
+  editPlot.checked = plot.editableMode;
+  const isoURL = document.getElementById('custom-url');
+  const url = window.location.href;
+  let domain = new URL(url);
+  domain = domain.hostname;
+
+  isoURL.value = domain + isoListURL;
+
+  document.getElementById('custom-delimiter').value = raw.delimiter;
+  document.getElementById('custom-file-adc').value = raw.adcChannels;
+  document.getElementById('custom-ser-refresh').value = refreshRate / 1000; // convert ms to s
+  document.getElementById('custom-ser-buffer').value = ser.maxSize;
+  document.getElementById('custom-ser-adc').value = ser.adcChannels;
+  const autoStop = document.getElementById('ser-limit');
+  autoStop.value = maxRecTime / 1000; // convert ms to s
+  autoStop.disabled = !maxRecTimeEnabled;
+  document.getElementById('toggle-time-limit').checked = maxRecTimeEnabled;
+  document.getElementById('iso-hover-prox').value = maxDist;
+  document.getElementById('custom-baud').value = serOptions.baudRate;
+
+  document.getElementById('smaVal').value = plot.smaLength;
 }
 
 
