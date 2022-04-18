@@ -98,6 +98,9 @@ document.body.onload = function() {
     const time = new Date();
     localStorage.setItem('lastVisit', time.getTime());
     localStorage.setItem('lastUsedVersion', appVersion);
+
+    const settingsSaveAlert = document.getElementById('ls-available')
+    settingsSaveAlert.className = settingsSaveAlert.className.replaceAll('visually-hidden', '');
   }
 };
 

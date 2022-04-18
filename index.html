@@ -549,6 +549,11 @@
           <div class="tab-pane fade me-2" id="settings" role="tabpanel" aria-labelledby="settings">
             <br>
 
+            <div class="alert alert-success alert-dismissible fade show visually-hidden" role="alert" id="ls-available">
+              <i class="fa-solid fa-floppy-disk"></i> Settings will be saved automatically in this browser without the use of cookies.
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
             <h5><u>Plot Settings</u></h5>
 
             <p>
@@ -683,7 +688,7 @@
 
     -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1111;">
-      <div id="welcomeMsg" class="toast text-white bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+      <div id="welcomeMsg" class="toast text-white bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="10000">
         <div class="toast-header">
           <i class="fas fa-radiation me-2"></i>
           <strong class="me-auto">Welcome!</strong>
