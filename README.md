@@ -1,5 +1,7 @@
 # Gamma MCA
 
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/Open-Gamma-Project/Gamma-MCA?style=flat-square) ![GitHub](https://img.shields.io/github/license/Open-Gamma-Project/Gamma-MCA?style=flat-square) ![Website](https://img.shields.io/website?url=https%3A%2F%2Fspectrum.nuclearphoenix.xyz&style=flat-square) ![GitHub deployments](https://img.shields.io/github/deployments/Open-Gamma-Project/Gamma-MCA/github-pages?label=GitHub%20%20Pages&style=flat-square)
+
 Web application for gamma spectroscopy including file and live plot support via the serial interface.
 
 ![example spectrum](/docs/screenshot.PNG)
