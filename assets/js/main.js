@@ -69,7 +69,7 @@ document.body.onload = function() {
   const domain = new URL(window.location.href + isoListURL);
   isoListURL = domain.href;
 
-  localStorageAvailable = ('localStorage' in window); // Test for localStorage, for old browsers
+  localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 
   if (localStorageAvailable) {
     loadSettingsStorage();
