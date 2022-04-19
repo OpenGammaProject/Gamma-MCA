@@ -9,9 +9,10 @@
     <meta name="description" content="Gamma MCA is a free, open-source and complete web application for gamma spectroscopy. You can import your own spectrum files or even record new ones using the serial interface.">
     <meta name="author" content="NuclearPhoenix">
     <!--
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self';">
+      CSP: Only allow loading resources from this website.
+      Connect-src is used for fetch (Custom isotope list URL) - allow all...
     -->
-    <meta http-equiv="Cache-Control" content="max-age=86400, stale-if-error=86400">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src *">
 
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png">
