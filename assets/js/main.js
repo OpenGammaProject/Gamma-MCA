@@ -73,9 +73,8 @@ document.body.onload = function() {
 
   if (localStorageAvailable) {
     loadSettingsStorage();
-  } else {
-    loadSettingsDefault();
   }
+  loadSettingsDefault();
 
   if ('serial' in navigator) {
     document.getElementById('serial-div').className = 'visible';
@@ -746,8 +745,6 @@ function loadSettingsStorage() {
   if (setting) {
     serOptions.baudRate = setting;
   }
-
-  loadSettingsDefault();
 }
 
 
@@ -873,7 +870,7 @@ function resetMCA() {
   if (localStorageAvailable) {
     localStorage.clear();
   }
-  location.reload();
+  window.location.reload();
 }
 
 /*
