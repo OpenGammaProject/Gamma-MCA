@@ -614,22 +614,22 @@
             <p>
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="custom-baud">Baud Rate</label>
-                <input type="number" class="form-control" id="custom-baud" min="1" onkeypress="enterPress(event, 'setting5');">
-                <button class="btn btn-primary" type="button" id="setting5" onclick="changeSettings('baudRate', parseInt(document.getElementById('custom-baud').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
+                <input type="number" class="form-control serial-controls" id="custom-baud" min="1" onkeypress="enterPress(event, 'setting5');">
+                <button class="btn btn-primary serial-controls" type="button" id="setting5" onclick="changeSettings('baudRate', parseInt(document.getElementById('custom-baud').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
               <small>Input in bits per second. Any positive integer is valid.</small>
             </p>
 
             <p>
               <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" role="switch" id="toggle-time-limit" onclick="changeSettings('timeLimitBool', this.checked, 'boolean');">
+                <input class="form-check-input serial-controls" type="checkbox" role="switch" id="toggle-time-limit" onclick="changeSettings('timeLimitBool', this.checked, 'boolean');">
                 <label class="form-check-label" for="toggle-time-limit">Enable Time Limit</label>
               </div>
 
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="ser-limit">Recording Time Limit</label>
-                <input type="number" class="form-control" id="ser-limit"  min="1" onkeypress="enterPress(event, 'ser-limit-btn');" disabled>
-                <button class="btn btn-primary" id="ser-limit-btn" type="button" onclick="changeSettings('timeLimit', parseInt(document.getElementById('ser-limit').value), 'number');" title="Apply" disabled> <i class="fas fa-check"></i> </button>
+                <input type="number" class="form-control serial-controls" id="ser-limit"  min="1" onkeypress="enterPress(event, 'ser-limit-btn');" disabled>
+                <button class="btn btn-primary serial-controls" id="ser-limit-btn" type="button" onclick="changeSettings('timeLimit', parseInt(document.getElementById('ser-limit').value), 'number');" title="Apply" disabled> <i class="fas fa-check"></i> </button>
               </div>
               <small>Input in seconds. Any positive integer is valid. Serial recording will stop automatically when time runs out.</small>
 
@@ -638,8 +638,8 @@
             <p>
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="custom-ser-refresh">Plot Refresh Time</label>
-                <input type="number" class="form-control" id="custom-ser-refresh" min="1" onkeypress="enterPress(event, 'setting6');">
-                <button class="btn btn-primary" type="button" id="setting6" onclick="changeSettings('plotRefresh', parseFloat(document.getElementById('custom-ser-refresh').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
+                <input type="number" class="form-control serial-controls" id="custom-ser-refresh" min="1" onkeypress="enterPress(event, 'setting6');">
+                <button class="btn btn-primary serial-controls" type="button" id="setting6" onclick="changeSettings('plotRefresh', parseFloat(document.getElementById('custom-ser-refresh').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
               <small>Input in seconds. Any positive float is valid, use integers for best performance.</small>
             </p>
@@ -647,8 +647,8 @@
             <p>
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="custom-ser-buffer">Max Serial Buffer</label>
-                <input type="number" class="form-control" id="custom-ser-buffer" min="1" onkeypress="enterPress(event, 'setting7');">
-                <button class="btn btn-primary" type="button" id="setting7" onclick="changeSettings('serBuffer', parseInt(document.getElementById('custom-ser-buffer').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
+                <input type="number" class="form-control serial-controls" id="custom-ser-buffer" min="1" onkeypress="enterPress(event, 'setting7');">
+                <button class="btn btn-primary serial-controls" type="button" id="setting7" onclick="changeSettings('serBuffer', parseInt(document.getElementById('custom-ser-buffer').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
               <small>Max number of serial input events buffered between plot refreshes. Any positive integer is valid.</small>
             </p>
@@ -656,8 +656,8 @@
             <p>
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="custom-ser-adc">Serial Channel No</label>
-                <input type="number" class="form-control" id="custom-ser-adc" min="1" max="16384" onkeypress="enterPress(event, 'setting8');">
-                <button class="btn btn-primary" type="button" id="setting8" onclick="changeSettings('serChannels', parseInt(document.getElementById('custom-ser-adc').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
+                <input type="number" class="form-control serial-controls" id="custom-ser-adc" min="1" max="16384" onkeypress="enterPress(event, 'setting8');">
+                <button class="btn btn-primary serial-controls" type="button" id="setting8" onclick="changeSettings('serChannels', parseInt(document.getElementById('custom-ser-adc').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
               <small>Number of (ADC) channels of the serial device. Any positive integer is valid.</small>
             </p>

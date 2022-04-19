@@ -59,7 +59,7 @@ let isoList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const appVersion = '2022-04-18';
+const appVersion = '2022-04-19';
 let localStorageAvailable = false;
 
 /*
@@ -77,19 +77,23 @@ document.body.onload = function() {
     loadSettingsDefault();
   }
 
-  if (!('serial' in navigator)) {
-    const serError = document.getElementById('serial-error');
-    serError.className = serError.className.replaceAll('visually-hidden', '');
-
-    const serSettingsElements = document.getElementsByClassName('ser-settings');
-    for (const element of serSettingsElements) { // Disable serial controls
-      element.disabled = true;
-    }
-  } else {
+  if ('serial' in navigator) {
     document.getElementById('serial-div').className = 'visible';
     navigator.serial.addEventListener("connect", serialConnect);
     navigator.serial.addEventListener("disconnect", serialDisconnect);
     listSerial(); // List Available Serial Ports
+  } else {
+    const serError = document.getElementById('serial-error');
+    serError.className = serError.className.replaceAll('visually-hidden', '');
+
+    const serSettingsElements = document.getElementsByClassName('ser-settings');
+    for (const element of serSettingsElements) { // Disable serial settings
+      element.disabled = true;
+    }
+    const serControlsElements = document.getElementsByClassName('serial-controls');
+    for (const element of serControlsElements) { // Disable serial controls
+      element.disabled = true;
+    }
   }
 
   plot.resetPlot(spectrumData);
