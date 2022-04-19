@@ -258,10 +258,9 @@
 
             <hr>
 
-            <div class="lh-1">
-              <p>Calibration E[keV] = c1 x^2 + c2 x + c3; x ... Channel No.</p>
-              <p>Coefficients will be computed automatically.</p>
-            </div>
+            <p class="mb-1">Linear (2-point) or quadratic (3-point) calibration is supported.</p>
+            <p class="mb-1">E[keV] = c1 x^2 + c2 x + c3; with x ... Channel No.</p>
+            <p>Coefficients will be computed automatically.</p>
 
             <hr>
 
@@ -574,7 +573,7 @@
                 <input type="number" class="form-control" id="iso-hover-prox" min="1" max="10000" onkeypress="enterPress(event, 'setting1');">
                 <button class="btn btn-primary" type="button" id="setting1" onclick="changeSettings('hoverProx', parseInt(document.getElementById('iso-hover-prox').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
-              <i>Input in keV. Any positive integer is valid.</i>
+              <small>Input in keV. Any positive integer is valid.</small>
             </p>
 
             <p>
@@ -583,7 +582,7 @@
                 <input type="url" class="form-control" id="custom-url" onkeypress="enterPress(event, 'setting2');" spellcheck="false">
                 <button class="btn btn-primary" type="button" id="setting2" onclick="changeSettings('customURL', document.getElementById('custom-url').value, 'string');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
-              <i>File must be of valid JSON format. Use only trusted sources.</i>
+              <small>File must be of valid JSON format. Use only trusted sources!</small>
             </p>
 
             <hr>
@@ -596,7 +595,7 @@
                 <input type="text" class="form-control" id="custom-delimiter" onkeypress="enterPress(event, 'setting3');" spellcheck="false">
                 <button class="btn btn-primary" type="button" id="setting3" onclick="changeSettings('delimiter', document.getElementById('custom-delimiter').value, 'string');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
-              <i>Any letter is valid.</i>
+              <small>Any character is valid.</small>
             </p>
 
             <p>
@@ -605,7 +604,7 @@
                 <input type="number" class="form-control" id="custom-file-adc" min="1" max="16384" onkeypress="enterPress(event, 'setting4');">
                 <button class="btn btn-primary" type="button" id="setting4" onclick="changeSettings('fileChannels', parseInt(document.getElementById('custom-file-adc').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
-              <i>No of (ADC) channels of the original device. Any positive integer is valid.</i>
+              <small>Number of (ADC) channels of the original device. Any positive integer is valid.</small>
             </p>
 
             <hr>
@@ -618,7 +617,7 @@
                 <input type="number" class="form-control" id="custom-baud" min="1" onkeypress="enterPress(event, 'setting5');">
                 <button class="btn btn-primary" type="button" id="setting5" onclick="changeSettings('baudRate', parseInt(document.getElementById('custom-baud').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
-              <i>Input in bps. Any positive integer is valid.</i>
+              <small>Input in bits per second. Any positive integer is valid.</small>
             </p>
 
             <p>
@@ -632,7 +631,7 @@
                 <input type="number" class="form-control" id="ser-limit"  min="1" onkeypress="enterPress(event, 'ser-limit-btn');" disabled>
                 <button class="btn btn-primary" id="ser-limit-btn" type="button" onclick="changeSettings('timeLimit', parseInt(document.getElementById('ser-limit').value), 'number');" title="Apply" disabled> <i class="fas fa-check"></i> </button>
               </div>
-              <i>Input in seconds. Any positive integer is valid. Serial recording will stop automatically when time runs out.</i>
+              <small>Input in seconds. Any positive integer is valid. Serial recording will stop automatically when time runs out.</small>
 
             </p>
 
@@ -642,7 +641,7 @@
                 <input type="number" class="form-control" id="custom-ser-refresh" min="1" onkeypress="enterPress(event, 'setting6');">
                 <button class="btn btn-primary" type="button" id="setting6" onclick="changeSettings('plotRefresh', parseFloat(document.getElementById('custom-ser-refresh').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
-              <i>Input in seconds. Any positive float is valid, use integers for best performance.</i>
+              <small>Input in seconds. Any positive float is valid, use integers for best performance.</small>
             </p>
 
             <p>
@@ -651,7 +650,7 @@
                 <input type="number" class="form-control" id="custom-ser-buffer" min="1" onkeypress="enterPress(event, 'setting7');">
                 <button class="btn btn-primary" type="button" id="setting7" onclick="changeSettings('serBuffer', parseInt(document.getElementById('custom-ser-buffer').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
-              <i>Max No of serial input events buffered between plot refreshes. Any positive integer is valid.</i>
+              <small>Max number of serial input events buffered between plot refreshes. Any positive integer is valid.</small>
             </p>
 
             <p>
@@ -660,20 +659,20 @@
                 <input type="number" class="form-control" id="custom-ser-adc" min="1" max="16384" onkeypress="enterPress(event, 'setting8');">
                 <button class="btn btn-primary" type="button" id="setting8" onclick="changeSettings('serChannels', parseInt(document.getElementById('custom-ser-adc').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
-              <i>No of (ADC) channels of the serial device. Any positive integer is valid.</i>
+              <small>Number of (ADC) channels of the serial device. Any positive integer is valid.</small>
             </p>
 
           </div>
 
           <div class="tab-pane fade me-2" id="info" role="tabpanel" aria-labelledby="info">
             <br>
-            <p>Gamma MCA made free and open-source by <a title="NuclearPhoenix.xyz" href="https://nuclearphoenix.xyz" target="_blank">NuclearPhoenix</a> using Bootstrap, Plotly & Font Awesome.</p>
+            <p>Gamma MCA made free and open-source by <a title="NuclearPhoenix.xyz" href="https://nuclearphoenix.xyz" target="_blank">NuclearPhoenix</a> using Bootstrap, Plotly & Font Awesome. Licensed under the <a title="GitHub/License" href="https://github.com/Open-Gamma-Project/Gamma-MCA/blob/main/LICENSE" target="_blank">GNU General Public License v3.0</a>.</p>
 
             <p>This site is part of the <a title="Open Gamma Project" href="https://github.com/Open-Gamma-Project" target="_blank">Open Gamma Project</a> to provide modern and open-source resources for accessible gamma-spectroscopy.</p>
 
-            <p>Get the source code on <a title="Github/Gamma-MCA" href="https://github.com/Open-Gamma-Project/Gamma-MCA" target="_blank"><i class="fab fa-github"></i> Github</a>.</p>
-            <p>Report issues and bugs <a title="Github/Issues" href="https://github.com/Open-Gamma-Project/Gamma-MCA/issues" target="_blank"><i class="fas fa-bug"></i> here</a>.</p>
-            <p>Discussions, Q&A, etc. can also be found <a title="Github/Discussions" href="https://github.com/Open-Gamma-Project/Gamma-MCA/discussions" target="_blank"><i class="fas fa-comments"></i> here</a>.</p>
+            <p>Get the source code on <a title="GitHub/Gamma-MCA" href="https://github.com/Open-Gamma-Project/Gamma-MCA" target="_blank"><i class="fab fa-github"></i> GitHub</a>.</p>
+            <p>Report issues and bugs <a title="GitHub/Issues" href="https://github.com/Open-Gamma-Project/Gamma-MCA/issues" target="_blank"><i class="fas fa-bug"></i> here</a>.</p>
+            <p>Discussions, Q&A, etc. can also be found <a title="GitHub/Discussions" href="https://github.com/Open-Gamma-Project/Gamma-MCA/discussions" target="_blank"><i class="fas fa-comments"></i> here</a>.</p>
 
             <hr>
 
@@ -681,9 +680,9 @@
 
             <hr>
 
-            <button type="button" class="btn btn-danger btn-sm" onclick="resetMCA();">Reset MCA</button>
+            <button type="button" class="btn btn-danger btn-sm" title="Reset Gamma MCA" onclick="resetMCA();">Reset MCA</button>
 
-            <i>Clears all settings, browser storage and reloads the page.</i>
+            <p><small>Clears all settings, browser storage and reloads the page.</small></p>
 
           </div>
 
@@ -698,14 +697,15 @@
 
     -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1111;">
-      <div id="welcomeMsg" class="toast text-white bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="10000">
+      <div id="welcomeMsg" class="toast text-white bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
         <div class="toast-header">
           <i class="fas fa-radiation me-2"></i>
           <strong class="me-auto">Welcome!</strong>
           <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
         <div class="toast-body">
-          Thanks for using Gamma MCA, please report any bugs or issues <a title="Github/Issues" class="text-white" href="https://github.com/Open-Gamma-Project/Gamma-MCA/issues" target="_blank">here</a>. Thank you.
+          <p>Thanks for using Gamma MCA, please report any bugs or issues <a title="GitHub/Issues" class="text-white" href="https://github.com/Open-Gamma-Project/Gamma-MCA/issues" target="_blank"><small><i class="fa-solid fa-link"></i></small> here</a>. Thank you.</p>
+          <p>By using the website and source code, you agree to the <a  title="GitHub/License" class="text-white" href="https://github.com/Open-Gamma-Project/Gamma-MCA/blob/main/LICENSE" target="_blank"><small><i class="fa-solid fa-link"></i></small> license</a>.</p>
         </div>
       </div>
 
