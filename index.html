@@ -10,15 +10,15 @@
     <meta name="author" content="NuclearPhoenix">
     <!--
       CSP: Only allow loading resources from this website.
-      Connect-src is used for fetch (Custom isotope list URL) - allow all...
+      Connect-src is used for fetch (Custom isotope list URL) - * allow all.
+      Script-src and Style-src: 'unsafe-inline' is bad practice, but better than having no CSP for now.
+      Img-src needs data:, otherwise it cannot load some images
     -->
-    <meta http-equiv="Content-Security-Policy" content="
-            default-src 'self';
-            script-src 'self' 'unsafe-inline';
-            style-src 'self' 'unsafe-inline';
-            img-src 'self' data:;
-            connect-src *
-    ">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self';
+                                                        script-src 'self' 'unsafe-inline';
+                                                        style-src 'self' 'unsafe-inline';
+                                                        img-src 'self' data:;
+                                                        connect-src * ">
 
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png">
