@@ -1,0 +1,28 @@
+{
+  "short_name": "Gamma MCA",
+  "name": "Gamma MCA | Gamma-ray spectroscopy web application",
+  "icons": [
+    {
+      "src": "/assets/logo.svg",
+      "type": "image/svg+xml",
+      "sizes": "400x400"
+    },
+    {
+      "src": "/assets/favicon/android-chrome-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/assets/favicon/android-chrome-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#ffffff",
+  "display_override": ["window-control-overlay", "minimal-ui"],
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#f6bd16",
+  "description": "Progressive web app for gamma spectroscopy including file and live plot support via the serial interface."
+}
