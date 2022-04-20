@@ -10,9 +10,10 @@
     <meta name="author" content="NuclearPhoenix">
     <!--
       CSP: Only allow loading resources from this website.
+      Script-src: unsafe-inline for now. Bad practice, but better than not having any CSP at all.
+      Style-src: unsafe-inline needed for Plotly.js styles.
+      Img-src needs data: otherwise it cannot load some images.
       Connect-src is used for fetch (Custom isotope list URL) - * allow all.
-      Script-src and Style-src: 'unsafe-inline' is bad practice, but better than having no CSP for now.
-      Img-src needs data:, otherwise it cannot load some images
     -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self';
                                                         script-src 'self' 'unsafe-inline';
@@ -164,7 +165,7 @@
                 <div class="vstack align-middle">
                   <span class="align-middle fw-bold"><span id="record-time"></span><span id="total-record-time"></span></span>
 
-                  <div class="progress mt-1" id="ser-time-progress-bar" style="height: 10px">
+                  <div class="progress mt-1" id="ser-time-progress-bar">
                     <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="ser-time-progress" title="Serial recording progress"></div>
                   </div>
                 </div>
@@ -704,7 +705,7 @@
       BOOTSTRAP TOASTS FOR NOTIFICATIONS
 
     -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1111;">
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
       <div id="welcomeMsg" class="toast text-white bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
         <div class="toast-header">
           <i class="fas fa-radiation me-2"></i>

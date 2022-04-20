@@ -26,3 +26,11 @@ h3 {
   width: 27%;
   max-height: 192px;
 }
+
+#ser-time-progress-bar {
+  height: 10px;
+}
+
+.toast-container {
+  z-index: 1111;
+}
