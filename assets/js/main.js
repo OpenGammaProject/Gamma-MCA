@@ -59,7 +59,7 @@ let isoList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const appVersion = '2022-04-19';
+const appVersion = '2022-04-20';
 let localStorageAvailable = false;
 
 /*
@@ -278,11 +278,13 @@ function toggleSma(value, thisValue = null) {
 
 
 function changeSma(input) {
-  if (isNaN(parseInt(input.value))) {
+  const parsedInput = parseInt(input.value);
+  if (isNaN(parsedInput)) {
     popupNotification('sma-error');
   } else {
-    plot.smaLength = parseInt(input.value);
+    plot.smaLength = parsedInput;
     plot.updatePlot(spectrumData);
+    saveJSON('smaLength', parsedInput);
   }
 }
 
@@ -744,6 +746,10 @@ function loadSettingsStorage() {
   setting = loadJSON('baudRate');
   if (setting) {
     serOptions.baudRate = setting;
+  }
+  setting = loadJSON('smaLength');
+  if (setting) {
+    plot.smaLength = setting;
   }
 }
 
