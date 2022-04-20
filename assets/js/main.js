@@ -66,6 +66,10 @@ let localStorageAvailable = false;
   Startup of the page
 */
 document.body.onload = function() {
+  if ("serviceWorker" in navigator) { // Add service worker for PWA
+    navigator.serviceWorker.register("service-worker.js");
+  }
+
   const domain = new URL(window.location.href + isoListURL);
   isoListURL = domain.href;
 
