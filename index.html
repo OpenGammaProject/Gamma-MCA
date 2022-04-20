@@ -4,13 +4,22 @@
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="expires" content="43200"> <!-- 12h cached -->
+    <meta http-equiv="expires" content="86400"> <!-- 24h cached -->
     <meta name="keywords" content="gamma, spectroscopy, spectrometry, scintillator, mca, open-source, physics, science, web, application, particle-physics, nuclear, radiation, serial, spectrum, radiation">
     <meta name="description" content="Gamma MCA is a free, open-source and complete web application for gamma spectroscopy. You can import your own spectrum files or even record new ones using the serial interface.">
     <meta name="author" content="NuclearPhoenix">
     <!--
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self';">
+      CSP: Only allow loading resources from this website.
+      Script-src: unsafe-inline for now. Bad practice, but better than not having any CSP at all.
+      Style-src: unsafe-inline needed for Plotly.js styles.
+      Img-src needs data: and blob: otherwise it cannot load some images.
+      Connect-src is used for fetch (Custom isotope list URL) - * allow all.
     -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self';
+                                                        script-src 'self' 'unsafe-inline';
+                                                        style-src 'self' 'unsafe-inline';
+                                                        img-src 'self' data: blob:;
+                                                        connect-src * ">
 
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png">
@@ -62,7 +71,6 @@
       MAIN PAGE CONTENT
 
     -->
-    <!-- w-75 -->
     <div class="container-fluid flex-column d-flex vh-100 p-1 text-dark lh-sm main">
 
       <div class="row border border-1 border-secondary rounded-top bg-light">
@@ -157,7 +165,7 @@
                 <div class="vstack align-middle">
                   <span class="align-middle fw-bold"><span id="record-time"></span><span id="total-record-time"></span></span>
 
-                  <div class="progress mt-1" id="ser-time-progress-bar" style="height: 10px">
+                  <div class="progress mt-1" id="ser-time-progress-bar">
                     <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="ser-time-progress" title="Serial recording progress"></div>
                   </div>
                 </div>
@@ -672,8 +680,8 @@
             <p>This site is part of the <a title="Open Gamma Project" href="https://github.com/Open-Gamma-Project" target="_blank">Open Gamma Project</a> to provide modern and open-source resources for accessible gamma-spectroscopy.</p>
 
             <p>Get the source code on <a title="GitHub/Gamma-MCA" href="https://github.com/Open-Gamma-Project/Gamma-MCA" target="_blank"><i class="fab fa-github"></i> GitHub</a>.</p>
-            <p>Report issues and bugs <a title="GitHub/Issues" href="https://github.com/Open-Gamma-Project/Gamma-MCA/issues" target="_blank"><i class="fas fa-bug"></i> here</a>.</p>
-            <p>Discussions, Q&A, etc. can also be found <a title="GitHub/Discussions" href="https://github.com/Open-Gamma-Project/Gamma-MCA/discussions" target="_blank"><i class="fas fa-comments"></i> here</a>.</p>
+            <p>Report issues and bugs on <a title="GitHub/Issues" href="https://github.com/Open-Gamma-Project/Gamma-MCA/issues" target="_blank"><i class="fas fa-bug"></i> GitHub/Issues</a>.</p>
+            <p>Questions? Discussions, Q&As and more can be found on <a title="GitHub/Discussions" href="https://github.com/Open-Gamma-Project/Gamma-MCA/discussions" target="_blank"><i class="fas fa-comments"></i> GitHub/Discussions</a>.</p>
 
             <hr>
 
@@ -697,7 +705,7 @@
       BOOTSTRAP TOASTS FOR NOTIFICATIONS
 
     -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1111;">
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
       <div id="welcomeMsg" class="toast text-white bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
         <div class="toast-header">
           <i class="fas fa-radiation me-2"></i>
@@ -705,7 +713,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
         <div class="toast-body">
-          <p>Thanks for using Gamma MCA, please report any bugs or issues <a title="GitHub/Issues" class="text-white" href="https://github.com/Open-Gamma-Project/Gamma-MCA/issues" target="_blank"><small><i class="fa-solid fa-link"></i></small> here</a>. Thank you.</p>
+          <p>Thanks for using Gamma MCA, please report any bugs or issues on <a title="GitHub/Issues" class="text-white" href="https://github.com/Open-Gamma-Project/Gamma-MCA/issues" target="_blank"><small><i class="fa-solid fa-link"></i></small> GitHub/Issues</a>. Thank you.</p>
           <p>By using the website and source code, you agree to the <a  title="GitHub/License" class="text-white" href="https://github.com/Open-Gamma-Project/Gamma-MCA/blob/main/LICENSE" target="_blank"><small><i class="fa-solid fa-link"></i></small> license</a>.</p>
         </div>
       </div>

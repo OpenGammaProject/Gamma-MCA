@@ -1,21 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
-    <meta http-equiv="expires" content="43200"> <!-- 12h cached -->
-    <!--
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self';">
-    -->
 
-    <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/assets/css/all.min.css">
-    <link rel="stylesheet" href="/assets/css/main.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="expires" content="86400"> <!-- 24h cached -->
+    <meta name="author" content="NuclearPhoenix">
+    <!--
+      CSP: Only allow loading resources from this website.
+    -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'">
 
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16.png">
-    <link rel="manifest" href="/assets/favicon/site.webmanifest">
     <link rel="mask-icon" href="/assets/favicon/safari-pinned-tab.svg" color="#5bbad5">
     <link rel="shortcut icon" href="/assets/favicon/favicon.ico">
     <meta name="msapplication-TileColor" content="#da532c">
@@ -23,13 +21,18 @@
     <meta name="theme-color" content="#ffffff">
 
     <title>404 - Gamma MCA</title>
+
+    <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/assets/css/all.min.css">
+    <link rel="stylesheet" href="/assets/css/main.css">
+
   </head>
   <body class="text-dark bg-light">
 
     <div class="container-fluid flex-column d-flex p-2">
       <div class="p-5 text-center">
 
-        <img src="/assets/logo.svg" alt="Logo" title="Gamma MCA Logo" style="width:10%;max-height:192px;">
+        <img src="/assets/logo.svg" alt="Logo" title="Gamma MCA Logo" class="logo-404">
 
         <h1>Page Not Found!</h1>
 

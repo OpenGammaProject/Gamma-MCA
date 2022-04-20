@@ -26,3 +26,16 @@ h3 {
   width: 27%;
   max-height: 192px;
 }
+
+.logo-404 {
+  width: 10%;
+  max-height: 400px;
+}
+
+#ser-time-progress-bar {
+  height: 10px;
+}
+
+.toast-container {
+  z-index: 1111;
+}

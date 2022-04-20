@@ -69,13 +69,12 @@ document.body.onload = function() {
   const domain = new URL(window.location.href + isoListURL);
   isoListURL = domain.href;
 
-  localStorageAvailable = ('localStorage' in window); // Test for localStorage, for old browsers
+  localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 
   if (localStorageAvailable) {
     loadSettingsStorage();
-  } else {
-    loadSettingsDefault();
   }
+  loadSettingsDefault();
 
   if ('serial' in navigator) {
     document.getElementById('serial-div').className = 'visible';
@@ -746,8 +745,6 @@ function loadSettingsStorage() {
   if (setting) {
     serOptions.baudRate = setting;
   }
-
-  loadSettingsDefault();
 }
 
 
@@ -873,7 +870,7 @@ function resetMCA() {
   if (localStorageAvailable) {
     localStorage.clear();
   }
-  location.reload();
+  window.location.reload();
 }
 
 /*
