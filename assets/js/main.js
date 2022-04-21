@@ -537,7 +537,8 @@ async function loadIsotopes(reload = false) { // Load Isotope Energies JSON ONCE
   };
 
   const isoError = document.getElementById('iso-load-error');
-  isoError.innerText = ''; // Remove any old error msges
+  //isoError.innerText = ''; // Remove any old error msges
+  isoError.className += ' visually-hidden'; // Hide any old errors
   let successFlag = true; // Ideally no errors
 
   try {
@@ -593,10 +594,12 @@ async function loadIsotopes(reload = false) { // Load Isotope Energies JSON ONCE
       }
     } else {
       isoError.innerText = 'Could not load isotope list! HTTP Error: ' + response.status + '. Please try again.';
+      isoError.className = isoError.className.replaceAll(' visually-hidden', '');
       successFlag = false;
     }
   } catch (err) { // No network connection!
     isoError.innerText = 'Could not load isotope list! Connection refused - you are probably offline.';
+    isoError.className = isoError.className.replaceAll(' visually-hidden', '');
     successFlag = false;
   }
 
