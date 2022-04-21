@@ -522,7 +522,20 @@
           <div class="tab-pane fade show active me-2" id="isotopes" role="tabpanel" aria-labelledby="isotopes">
             <br>
 
-            <h5>Common Gamma-Ray Energies</h5>
+            <h5>
+              Common Gamma-Ray Energies <button type="button" class="btn btn-outline-primary btn-sm float-end" title="Reload Isotope List" onclick="reloadIsotopes();"><i class="fa-solid fa-arrow-rotate-right"></i></button>
+            </h5>
+
+            <div class="text-center">
+              <p class="bg-danger text-white" id="iso-load-error"></p>
+
+              <div id="iso-loading" class=" visually-hidden">
+                <div class="spinner-border" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <p><b>Loading...</b></p>
+              </div>
+            </div>
 
             <p>
               <div class="table-responsive"> <!-- style="max-height:70vh;" -->
@@ -543,14 +556,6 @@
                 </table>
               </div>
             </p>
-
-            <div class="text-center">
-              <p class="bg-danger text-white" id="iso-load-error"></p>
-
-              <div id="iso-loading" class="spinner-border" role="status">
-                <span class="visually-hidden">Loading...</span>
-              </div>
-            </div>
 
           </div>
 
