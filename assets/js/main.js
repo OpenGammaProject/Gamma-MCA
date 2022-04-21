@@ -13,7 +13,6 @@
     - (?) Add serial EOL char selection
     - (!) FWHM calculation for peaks
     - (?) Serial console read capability
-    - Bug: constant fetch error when iso hover enabled, no list loaded, and offline!
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -57,7 +56,7 @@ let isoList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const appVersion = '2022-04-20';
+const appVersion = '2022-04-21';
 let localStorageAvailable = false;
 
 /*
@@ -520,7 +519,7 @@ let loadedIsos = false;
 
 async function loadIsotopes() { // Load Isotope Energies JSON ONCE
   if (loadedIsos) { // Isotopes already loaded
-    return;
+    return true;
   }
 
   const loadingElement = document.getElementById('iso-loading');
@@ -535,7 +534,8 @@ async function loadIsotopes() { // Load Isotope Energies JSON ONCE
   };
 
   const isoError = document.getElementById('iso-load-error');
-  isoError.innerText = ''; // No error
+  isoError.innerText = ''; // Remove any old error msges
+  let successFlag = true; // Ideally no errors
 
   try {
     let response = await fetch(isoListURL, options);
@@ -590,13 +590,15 @@ async function loadIsotopes() { // Load Isotope Energies JSON ONCE
       }
     } else {
       isoError.innerText = 'Could not load isotope list! HTTP Error: ' + response.status + '. Please try again.';
+      successFlag = false;
     }
   } catch (err) { // No network connection!
     isoError.innerText = 'Could not load isotope list! Connection refused - you are probably offline.';
-    console.log(err);
+    successFlag = false;
   }
 
   loadingElement.className += ' visually-hidden';
+  return successFlag;
 }
 
 
@@ -616,7 +618,9 @@ function toggleIsoHover() {
 
 async function closestIso(value) {
   // VERY BAD PERFORMANCE, EXPERIMENTAL FEATURE!
-  await loadIsotopes(); // User has not yet opened the settings panel
+  if(!await loadIsotopes()) { // User has not yet opened the settings panel
+    return;
+  }
 
   const keys = Object.keys(isoList);
   const closeKeys = keys.filter((energy) => {return Math.abs(energy - value) <= maxDist});
