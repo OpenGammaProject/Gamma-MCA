@@ -517,8 +517,8 @@ function popupNotification(id) {
 
 let loadedIsos = false;
 
-async function loadIsotopes() { // Load Isotope Energies JSON ONCE
-  if (loadedIsos) { // Isotopes already loaded
+async function loadIsotopes(reload = false) { // Load Isotope Energies JSON ONCE
+  if (loadedIsos && !reload) { // Isotopes already loaded
     return true;
   }
 
@@ -603,8 +603,8 @@ async function loadIsotopes() { // Load Isotope Energies JSON ONCE
 
 
 function reloadIsotopes() {
-  loadedIsos = false;
-  loadIsotopes();
+  //loadedIsos = false;
+  loadIsotopes(true);
 }
 
 
