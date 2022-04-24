@@ -76,24 +76,38 @@ function SpectrumPlot(divId) {
   */
   this.computeMovingAverage = function(target) {
     let newData = getXAxis(target.length);
+    const half = Math.round(this.smaLength/2);
 
-    for(const i in newData) {
+    for(const i in newData) { // Compute the central moving average
+      const intIndex = parseInt(i); // Gotcha, I wasted sooo much time on this -_-
+
+      if (intIndex >= half && intIndex <= target.length - half) { // Shortcut
+        const remainderIndexFactor = this.smaLength % 2;
+
+        const addVal = target[intIndex+half-remainderIndexFactor];
+        const removeVal = target[intIndex-half];
+
+        newData[intIndex] = newData[intIndex - 1] + (addVal - removeVal) / this.smaLength;
+        continue; // Skip other computation.
+      }
+
       let val = 0;
+      let divider = 0;
 
-      for(let j = 0; j < this.smaLength; j++){
-        // Moving Average symmetrically around each point
-        if (j < this.smaLength/2) {
-          if ((i - j) >= 0){
+      for(let j = 0; j < this.smaLength; j++) { // Slightly asymetrical to the right with even numbers of smaLength
+        if (j < half) {
+          if ((i - j) >= 0) {
             val += target[i - j];
+            divider++;
           }
         } else {
-          if ((i - Math.round(this.smaLength/2)+1 + j) <= newData.length){
-            val += target[i - Math.round(this.smaLength/2)+1 + j];
+          if ((i - half+1 + j) < newData.length) {
+            val += target[i - half+1 + j];
+            divider++;
           }
         }
       }
-      val *= 1/this.smaLength;
-      newData[i] = val;
+      newData[i] = val / divider;
     }
     return newData;
   };

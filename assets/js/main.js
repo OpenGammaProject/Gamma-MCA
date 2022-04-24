@@ -56,7 +56,7 @@ let isoList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const appVersion = '2022-04-21';
+const appVersion = '2022-04-24';
 let localStorageAvailable = false;
 
 /*
