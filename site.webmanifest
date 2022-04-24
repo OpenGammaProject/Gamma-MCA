@@ -1,6 +1,6 @@
 {
   "short_name": "Gamma MCA",
-  "name": "Gamma MCA | Gamma-ray spectroscopy web application",
+  "name": "Gamma MCA",
   "icons": [
     {
       "src": "/assets/logo.svg",
@@ -20,7 +20,7 @@
   ],
   "start_url": "/",
   "background_color": "#ffffff",
-  "display_override": ["window-control-overlay", "minimal-ui"],
+  //"display_override": ["window-control-overlay", "minimal-ui"],
   "display": "standalone",
   "scope": "/",
   "theme_color": "#f6bd16",
