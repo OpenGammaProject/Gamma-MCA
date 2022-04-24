@@ -145,8 +145,9 @@ window.onbeforeinstallprompt = function(event) {
   deferredPrompt = event;
 
   if (localStorageAvailable) {
-    if (loadJSON('lastVisit') <= 0) {
+    if (!loadJSON('installPrompt')) {
       popupNotification('pwa-installer'); // Show notification on first visit
+      saveJSON('installPrompt', true);
     }
   }
 };
