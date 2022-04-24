@@ -4,7 +4,7 @@
   2022, NuclearPhoenix.- Phoenix1747
   https://nuclearphoenix.xyz
 
-/*
+  ===============================
 
   Possible Future Improvements:
     - Sorting isotope list
@@ -13,6 +13,7 @@
     - (?) Add serial EOL char selection
     - (!) FWHM calculation for peaks
     - (?) Serial console read capability
+    - Remove all isotope lines when refreshing the isotope list
 
   Known Performance Issues:
     - Isotope hightlighting
