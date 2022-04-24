@@ -13,9 +13,6 @@
     - (?) Add serial EOL char selection
     - (!) FWHM calculation for peaks
     - (?) Serial console read capability
-    - Add Loading indication on new IsoList URL
-    - Catch custom URL fetch error
-    - Remove custom URL fetch error message on new load
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -59,7 +56,7 @@ let isoList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const appVersion = '2022-04-19';
+const appVersion = '2022-04-24';
 let localStorageAvailable = false;
 
 /*
@@ -81,13 +78,16 @@ document.body.onload = function() {
   loadSettingsDefault();
 
   if ('serial' in navigator) {
-    document.getElementById('serial-div').className = 'visible';
+    document.getElementById('serial-div').className = ''; // Remove visually-hidden and invisible
     navigator.serial.addEventListener("connect", serialConnect);
     navigator.serial.addEventListener("disconnect", serialDisconnect);
     listSerial(); // List Available Serial Ports
   } else {
+    //const serDivElement = document.getElementById('serial-div'); // Delete serial control div
+    //serDivElement.parentNode.removeChild(serDivElement);
+
     const serError = document.getElementById('serial-error');
-    serError.className = serError.className.replaceAll('visually-hidden', '');
+    serError.className = serError.className.replaceAll(' visually-hidden', '');
 
     const serSettingsElements = document.getElementsByClassName('ser-settings');
     for (const element of serSettingsElements) { // Disable serial settings
@@ -282,11 +282,13 @@ function toggleSma(value, thisValue = null) {
 
 
 function changeSma(input) {
-  if (isNaN(parseInt(input.value))) {
+  const parsedInput = parseInt(input.value);
+  if (isNaN(parsedInput)) {
     popupNotification('sma-error');
   } else {
-    plot.smaLength = parseInt(input.value);
+    plot.smaLength = parsedInput;
     plot.updatePlot(spectrumData);
+    saveJSON('smaLength', parsedInput);
   }
 }
 
@@ -522,10 +524,13 @@ function popupNotification(id) {
 
 let loadedIsos = false;
 
-async function loadIsotopes() { // Load Isotope Energies JSON ONCE
-  if (loadedIsos) { // Isotopes already loaded
-    return;
+async function loadIsotopes(reload = false) { // Load Isotope Energies JSON ONCE
+  if (loadedIsos && !reload) { // Isotopes already loaded
+    return true;
   }
+
+  const loadingElement = document.getElementById('iso-loading');
+  loadingElement.className = loadingElement.className.replaceAll(' visually-hidden', '');
 
   //fixHeight('offbody', 'tabcontent');
   const options = {
@@ -535,67 +540,81 @@ async function loadIsotopes() { // Load Isotope Energies JSON ONCE
     },
   };
 
-  let response = await fetch(isoListURL, options);
-
-  if (response.ok) { // If HTTP-status is 200-299
-    const json = await response.json();
-    loadedIsos = true;
-
-    const tableElement = document.getElementById('iso-table');
-
-    let intKeys = Object.keys(json);
-    intKeys.sort((a, b) => a - b); // Sort Energies numerically
-
-    for (const key of intKeys) {
-      isoList[key] = json[key];
-
-      const row = tableElement.insertRow();
-      const cell1 = row.insertCell(0);
-      const cell2 = row.insertCell(1);
-      const cell3 = row.insertCell(2);
-
-      cell2.addEventListener('click', function(evnt) {
-        try {
-          evnt.target.parentNode.firstChild.firstChild.click();
-        } catch(e) { // Catch press on <sup> element
-          evnt.target.parentNode.parentNode.firstChild.firstChild.click();
-        }
-      });
-      cell3.addEventListener('click', function(evnt) {
-        try {
-          evnt.target.parentNode.firstChild.firstChild.click();
-        } catch(e) { // Catch press on <sup> element
-          evnt.target.parentNode.parentNode.firstChild.firstChild.click();
-        }
-      });
-
-      cell2.style.cursor = 'pointer'; // change cursor pointer
-      cell3.style.cursor = 'pointer';
-
-      const energy = parseFloat(key.trim());
-      const dirtyName = json[key].toLowerCase();
-      const lowercaseName = dirtyName.replace(/[^a-z0-9 -]/gi, '').trim(); // Fixes security issue. See GitHub: #2
-      const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1);
-
-      cell1.innerHTML = '<input class="form-check-input" id="' + name + '" type="checkbox" value="' + energy + '" onclick="plotIsotope(this)">';
-      cell3.innerText = energy.toFixed(2);
-
-      const strArr = name.split('-');
-
-      cell2.innerHTML = '<sup>' + strArr[1] + '</sup>' + strArr[0];
-    }
-
-  } else {
-    const isoError = document.getElementById('iso-load-error');
-    isoError.innerText = 'Could not load isotope list! Please try again. HTTP Error: ' + response.status;
-  }
+  const isoError = document.getElementById('iso-load-error');
+  //isoError.innerText = ''; // Remove any old error msges
+  isoError.className += ' visually-hidden'; // Hide any old errors
+  let successFlag = true; // Ideally no errors
 
   try {
-    const isoLoading = document.getElementById('iso-loading');
-    isoLoading.parentNode.removeChild(isoLoading);
-  } catch (e) {
-    ; // Do nothing
+    let response = await fetch(isoListURL, options);
+
+    if (response.ok) { // If HTTP-status is 200-299
+      const json = await response.json();
+      loadedIsos = true;
+
+      const tableElement = document.getElementById('iso-table');
+      tableElement.innerHTML = ''; // Delete old table
+
+      let intKeys = Object.keys(json);
+      intKeys.sort((a, b) => a - b); // Sort Energies numerically
+
+      for (const key of intKeys) {
+        isoList[key] = json[key];
+
+        const row = tableElement.insertRow();
+        const cell1 = row.insertCell(0);
+        const cell2 = row.insertCell(1);
+        const cell3 = row.insertCell(2);
+
+        cell2.addEventListener('click', function(evnt) {
+          try {
+            evnt.target.parentNode.firstChild.firstChild.click();
+          } catch(e) { // Catch press on <sup> element
+            evnt.target.parentNode.parentNode.firstChild.firstChild.click();
+          }
+        });
+        cell3.addEventListener('click', function(evnt) {
+          try {
+            evnt.target.parentNode.firstChild.firstChild.click();
+          } catch(e) { // Catch press on <sup> element
+            evnt.target.parentNode.parentNode.firstChild.firstChild.click();
+          }
+        });
+
+        cell2.style.cursor = 'pointer'; // change cursor pointer
+        cell3.style.cursor = 'pointer';
+
+        const energy = parseFloat(key.trim());
+        const dirtyName = json[key].toLowerCase();
+        const lowercaseName = dirtyName.replace(/[^a-z0-9 -]/gi, '').trim(); // Fixes security issue. See GitHub: #2
+        const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1);
+
+        cell1.innerHTML = '<input class="form-check-input" id="' + name + '" type="checkbox" value="' + energy + '" onclick="plotIsotope(this)">';
+        cell3.innerText = energy.toFixed(2);
+
+        const strArr = name.split('-');
+
+        cell2.innerHTML = '<sup>' + strArr[1] + '</sup>' + strArr[0];
+      }
+    } else {
+      isoError.innerText = 'Could not load isotope list! HTTP Error: ' + response.status + '. Please try again.';
+      isoError.className = isoError.className.replaceAll(' visually-hidden', '');
+      successFlag = false;
+    }
+  } catch (err) { // No network connection!
+    isoError.innerText = 'Could not load isotope list! Connection refused - you are probably offline.';
+    isoError.className = isoError.className.replaceAll(' visually-hidden', '');
+    successFlag = false;
   }
+
+  loadingElement.className += ' visually-hidden';
+  return successFlag;
+}
+
+
+function reloadIsotopes() {
+  //loadedIsos = false;
+  loadIsotopes(true);
 }
 
 
@@ -609,8 +628,8 @@ function toggleIsoHover() {
 
 async function closestIso(value) {
   // VERY BAD PERFORMANCE, EXPERIMENTAL FEATURE!
-  if (!loadedIsos) { // User has not yet opened the settings panel
-    await loadIsotopes();
+  if(!await loadIsotopes()) { // User has not yet opened the settings panel
+    return;
   }
 
   const keys = Object.keys(isoList);
@@ -749,6 +768,10 @@ function loadSettingsStorage() {
   if (setting) {
     serOptions.baudRate = setting;
   }
+  setting = loadJSON('smaLength');
+  if (setting) {
+    plot.smaLength = setting;
+  }
 }
 
 
@@ -773,9 +796,7 @@ function changeSettings(name, value, type) {
         const newUrl = new URL(value);
         isoListURL = newUrl.href;
 
-        loadedIsos = false;
-        document.getElementById('iso-table').innerHTML = ''; // ADD LOADING INDICATION
-        loadIsotopes();
+        reloadIsotopes();
 
         if (localStorageAvailable) {
           saveJSON('isoListURL', isoListURL);
@@ -1114,7 +1135,7 @@ async function disconnectPort(stop = false) {
     const cpsButton = document.getElementById('plot-cps');
     toggleCps(cpsButton, true); // Disable CPS again
   } else {
-    document.getElementById('resume-button').className = document.getElementById('resume-button').className.replaceAll('visually-hidden','');
+    document.getElementById('resume-button').className = document.getElementById('resume-button').className.replaceAll(' visually-hidden','');
   }
 
   keepReading = false;
