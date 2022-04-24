@@ -13,18 +13,18 @@ h3 {
 }
 
 .main {
-  width: 85%;
+  width: 98%;
   /*max-width: 2000px;*/
 }
 
 .plot-div {
   min-height: 300px;
-  max-height: 1200px;
+  /*max-height: 1200px;*/
 }
 
 .logo {
   width: 27%;
-  max-height: 192px;
+  max-height: 400px;
 }
 
 .logo-404 {

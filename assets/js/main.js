@@ -206,7 +206,7 @@ function fixHeight(parentId, contentId) {
 function sizeCheck() {
   const viewportWidth = document.documentElement.clientWidth;
   const viewportHeight = document.documentElement.clientHeight;
-  if (viewportWidth < 1230 || viewportHeight < 730) {
+  if (viewportWidth < 1200 || viewportHeight < 750) {
     popupNotification('screen-size-warning');
   }
 }

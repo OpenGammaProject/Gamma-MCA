@@ -43,6 +43,8 @@ self.addEventListener("activate", function(event) {
 
 
 self.addEventListener("fetch", function(event) {
+  //console.log('mode', event.request.mode);
+
   event.respondWith(async function() {
     const cache = await caches.open(CACHE_NAME);
     const cachedResponse = await cache.match(event.request);
