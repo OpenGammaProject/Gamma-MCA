@@ -11,9 +11,11 @@
     - Social media share function
     - Peak Finder/Analyzer
     - (?) Add serial EOL char selection
-    - (!) FWHM calculation for peaks
+    - FWHM calculation for peaks
     - (?) Serial console read capability
-    - Remove all isotope lines when refreshing the isotope list
+    - !!! Remove all isotope lines when refreshing the isotope list
+    - Search for updates regularly and push a notification
+    - Add separate install button in settings
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -134,6 +136,34 @@ document.body.onresize = function() {
   sizeCheck();
   //fixHeight('offbody', 'tabcontent');
 };
+
+
+let deferredPrompt;
+
+window.onbeforeinstallprompt = function(event) {
+  //event.preventDefault(); // Prevent the mini-infobar from appearing on mobile
+  deferredPrompt = event;
+
+  if (localStorageAvailable) {
+    if (loadJSON('lastVisit') <= 0) {
+      popupNotification('pwa-installer'); // Show notification on first visit
+    }
+  }
+};
+
+
+async function installPWA() {
+  hideNotification('pwa-installer');
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+}
+
+/*
+window.onappinstalled = function() {
+  hideNotification('pwa-installer');
+};
+*/
 
 
 function getFileData(input, background = false) { // Gets called when a file has been selected.
@@ -520,6 +550,13 @@ function popupNotification(id) {
   const element = document.getElementById(id);
   const toast = new bootstrap.Toast(element);
   toast.show();
+}
+
+
+function hideNotification(id) {
+  const element = document.getElementById(id);
+  const toast = new bootstrap.Toast(element);
+  toast.hide();
 }
 
 

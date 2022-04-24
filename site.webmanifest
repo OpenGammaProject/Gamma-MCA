@@ -20,7 +20,6 @@
   ],
   "start_url": "/",
   "background_color": "#ffffff",
-  //"display_override": ["window-control-overlay", "minimal-ui"],
   "display": "standalone",
   "scope": "/",
   "theme_color": "#f6bd16",

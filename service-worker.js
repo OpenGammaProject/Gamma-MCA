@@ -13,11 +13,12 @@
     - Update cache on page load or refresh?
 
 */
-const CACHE_NAME = "offline"; // A random name for the cache
+const OFFLINE_VERSION = 1;
+const CACHE_NAME = "gamma-static"; // A random name for the cache
 const OFFLINE_RESOURCES = ['/', '/index.html', '/404.html'];
 
 
-self.addEventListener("install", function(event) { // Precache on install (first time)
+self.addEventListener("install", function(event) { // First time install of a worker
   console.log('Installing service worker.');
 
   event.waitUntil(
@@ -36,7 +37,7 @@ self.addEventListener("install", function(event) { // Precache on install (first
 });
 
 
-self.addEventListener("activate", function(event) {
+self.addEventListener("activate", function(event) { // New worker takes over
   console.log('Activating service worker.');
   self.clients.claim(); // Allows an active service worker to set itself as the controller for all clients within its scope
 });
@@ -50,7 +51,7 @@ self.addEventListener("fetch", function(event) {
     const cachedResponse = await cache.match(event.request);
 
     if (cachedResponse) { // Try to load from cache first, way faster
-      console.log('Cache Response!', cachedResponse);
+      //console.log('Cache Response!', cachedResponse);
       updateCache(event.request); // Always also try to update the cache, dont wait for it though
       return cachedResponse;
     };
@@ -58,7 +59,7 @@ self.addEventListener("fetch", function(event) {
     try {  // Not found in cache -- request from network
       const networkResponse = await fetch(event.request);
 
-      console.log('Network Response!', networkResponse);
+      //console.log('Network Response!', networkResponse);
       cache.put(event.request, networkResponse.clone());
       return networkResponse;
     } catch (error) { // Did not find in cache or network, probably new page and offline access!
@@ -73,6 +74,7 @@ async function clearCache() {
 
   cache.keys().then(function(keys) { // Delete the whole cache
     keys.forEach(function(request, index, array) {
+      //console.log('Clearing cache!', request);
       cache.delete(request);
     });
   });
@@ -83,7 +85,7 @@ async function updateCache(request) {
   try {
     const response = await fetch(request);
 
-    console.log('Updating Cache!', response);
+    //console.log('Updating Cache!', response);
     cache.put(request, response.clone());
   } catch (e) {
     ; // Ignore, not critical after all. Probably just offline
