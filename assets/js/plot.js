@@ -364,7 +364,7 @@ function SpectrumPlot(divId) {
     }
 
     let config = {
-      //responsive: true,
+      responsive: true,
       scrollZoom: true,
       displayModeBar: true,
       displaylogo: false,

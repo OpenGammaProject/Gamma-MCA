@@ -15,7 +15,6 @@
     - (?) Serial console read capability
     - Search for updates regularly and push a notification
     - Add separate install button in settings (only show with onbeforeinstallprompt)
-    - Window size increase also increases plot size, but it does not decrease again?!
     - Plotly white margins around the main plot
     - Webmanifest, screenshots, theme colors, ...
     - Settings button location?
