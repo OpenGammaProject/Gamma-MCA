@@ -180,7 +180,7 @@ function SpectrumPlot(divId) {
       }
     }
 
-  }
+  };
   /*
     Clear annotations and shapes
   */
@@ -188,7 +188,7 @@ function SpectrumPlot(divId) {
     this.shapes = [];
     this.annotations = [];
     this.updatePlot(dataObj);
-  }
+  };
   /*
     Plot All The Data
   */

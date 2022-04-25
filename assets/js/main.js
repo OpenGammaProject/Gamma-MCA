@@ -13,7 +13,6 @@
     - (?) Add serial EOL char selection
     - FWHM calculation for peaks
     - (?) Serial console read capability
-    - !!! Remove all isotope lines when refreshing the isotope list
     - Search for updates regularly and push a notification
     - Add separate install button in settings (only show with onbeforeinstallprompt)
     - Window size increase also increases plot size, but it does not decrease again?!
