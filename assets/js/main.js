@@ -16,6 +16,8 @@
     - !!! Remove all isotope lines when refreshing the isotope list
     - Search for updates regularly and push a notification
     - Add separate install button in settings
+    - Window size increase also increases plot size, but it does not decrease again?!
+    - Plotly margins around the main plot
 
   Known Performance Issues:
     - Isotope hightlighting
