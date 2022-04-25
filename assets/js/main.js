@@ -15,8 +15,8 @@
     - (?) Serial console read capability
     - Search for updates regularly and push a notification
     - Add separate install button in settings (only show with onbeforeinstallprompt)
-    - Webmanifest, screenshots, theme colors, ...
     - Settings button location?
+    - !!! Webmanifest add screenshots
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -60,7 +60,7 @@ let isoList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2022-04-24';
+const APP_VERSION = '2022-04-25';
 let localStorageAvailable = false;
 
 /*

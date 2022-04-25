@@ -5,7 +5,7 @@
     {
       "src": "/assets/logo.svg",
       "type": "image/svg+xml",
-      "sizes": "400x400"
+      "sizes": "any"
     },
     {
       "src": "/assets/favicon/android-chrome-192x192.png",
@@ -23,5 +23,9 @@
   "display": "standalone",
   "scope": "/",
   "theme_color": "#f6bd16",
-  "description": "Progressive web app for gamma spectroscopy including file and live plot support via the serial interface."
+  "description": "Progressive web application for gamma(-ray) spectroscopy including file import/export and live plotting support via the serial interface.",
+  "categories": ["nuclear physics", "radiation", "gamma spectroscopy", "science", "gamma-ray", "physics", "geiger", "spectrometry"],
+  "screenshots": [
+
+  ]
 }
