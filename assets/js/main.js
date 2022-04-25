@@ -240,6 +240,8 @@ function sizeCheck() {
   const viewportHeight = document.documentElement.clientHeight;
   if (viewportWidth < 1200 || viewportHeight < 750) {
     popupNotification('screen-size-warning');
+  } else {
+    hideNotification('screen-size-warning');
   }
 }
 
