@@ -17,6 +17,7 @@
     - Add separate install button in settings (only show with onbeforeinstallprompt)
     - Settings button location?
     - !!! Webmanifest add screenshots
+    - Change width and padding in web vs app (css detect user client)
 
   Known Performance Issues:
     - Isotope hightlighting
