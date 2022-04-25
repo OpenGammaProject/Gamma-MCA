@@ -598,6 +598,7 @@ async function loadIsotopes(reload = false) { // Load Isotope Energies JSON ONCE
 
       const tableElement = document.getElementById('iso-table');
       tableElement.innerHTML = ''; // Delete old table
+      plot.clearAnnos(spectrumData); // Delete all isotope lines
 
       let intKeys = Object.keys(json);
       intKeys.sort((a, b) => a - b); // Sort Energies numerically

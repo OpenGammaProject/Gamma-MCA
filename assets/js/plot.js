@@ -182,6 +182,14 @@ function SpectrumPlot(divId) {
 
   }
   /*
+    Clear annotations and shapes
+  */
+  this.clearAnnos = function(dataObj) {
+    this.shapes = [];
+    this.annotations = [];
+    this.updatePlot(dataObj);
+  }
+  /*
     Plot All The Data
   */
   this.plotData = function(dataObj, update = true) {
