@@ -15,10 +15,8 @@
     - (?) Serial console read capability
     - Search for updates regularly and push a notification
     - Add separate install button in settings (only show with onbeforeinstallprompt)
-    - Plotly white margins around the main plot
     - Webmanifest, screenshots, theme colors, ...
     - Settings button location?
-    - Rename constants (uppercase naming convention)
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -53,7 +51,7 @@ let serOptions = { baudRate: 9600 }; // Standard baud-rate of 9600 bps
 let refreshRate = 1000; // Delay in ms between serial plot updates
 let maxRecTimeEnabled = false;
 let maxRecTime = 1800000; // 30 mins
-const refreshMetaTime = 100; // 100 ms
+const REFRESH_META_TIME = 100; // 100 ms
 
 let cpsValues = [];
 
@@ -62,7 +60,7 @@ let isoList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const appVersion = '2022-04-24';
+const APP_VERSION = '2022-04-24';
 let localStorageAvailable = false;
 
 /*
@@ -108,7 +106,7 @@ document.body.onload = function() {
   plot.resetPlot(spectrumData);
   bindPlotEvents(); // Bind click and hover events provided by plotly
 
-  document.getElementById('version-tag').innerText += ' ' + appVersion + '.';
+  document.getElementById('version-tag').innerText += ' ' + APP_VERSION + '.';
 
   if (localStorageAvailable) {
     if (loadJSON('lastVisit') <= 0) {
@@ -116,7 +114,7 @@ document.body.onload = function() {
     }
     const time = new Date();
     saveJSON('lastVisit', time.getTime());
-    saveJSON('lastUsedVersion', appVersion);
+    saveJSON('lastUsedVersion', APP_VERSION);
 
     const settingsNotSaveAlert = document.getElementById('ls-unavailable'); // Remove saving alert
     settingsNotSaveAlert.parentNode.removeChild(settingsNotSaveAlert);
@@ -1234,7 +1232,7 @@ function refreshMeta(type) {
       disconnectPort(true);
       popupNotification('auto-stop');
     } else {
-      metaTimeout = setTimeout(refreshMeta, refreshMetaTime, type); // Only re-schedule if still valid
+      metaTimeout = setTimeout(refreshMeta, REFRESH_META_TIME, type); // Only re-schedule if still valid
     }
   }
 }
