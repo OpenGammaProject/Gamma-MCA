@@ -152,6 +152,18 @@ document.body.onresize = function() {
 };
 
 
+// User changed from browser window to PWA (after installation) or backwards
+window.matchMedia('(display-mode: standalone)').addEventListener('change', (evt) => {
+  /*
+  let displayMode = 'browser';
+  if (evt.matches) {
+    displayMode = 'standalone';
+  }
+  */
+  window.location.reload(); // Just reload the page?
+});
+
+
 let deferredPrompt;
 
 window.onbeforeinstallprompt = function(event) {
@@ -165,7 +177,7 @@ window.onbeforeinstallprompt = function(event) {
     }
   }
 
-  document.getElementById('manual-inst-btn').className -= 'visually-hidden';
+  document.getElementById('manual-install').className -= 'visually-hidden';
 };
 
 
