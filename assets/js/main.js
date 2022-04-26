@@ -182,6 +182,19 @@ window.onappinstalled = function() {
   document.getElementById('manual-install').className += 'visually-hidden';
 };
 
+/*
+document.onkeydown = async function(event) {
+  console.log(event.keyCode);
+  if (event.keyCode === 27) { // ESC
+    const offcanvasElement = document.getElementById('offcanvas');
+    const offcanvas = new bootstrap.Offcanvas(offcanvasElement);
+
+    //event.preventDefault();
+
+    await offcanvas.toggle();
+  }
+};
+*/
 
 function getFileData(input, background = false) { // Gets called when a file has been selected.
   if (input.files.length == 0) { // File selection has been canceled

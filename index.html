@@ -328,6 +328,17 @@
 
       <div class="plot-tools row border border-top-0 border-1 border-secondary bg-light">
 
+        <div class="col-md-auto d-md-flex">
+          <button class="btn btn-primary ps-2 pe-2 pt-1 pb-1 rounded-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvas" aria-controls="offcanvas" title="Open Settings Menu" onclick="loadIsotopes();">
+            <i class="fas fa-sliders-h"></i> Settings
+          </button>
+        </div>
+
+        <div class="col-md-auto g-0">
+          <div class="vr h-100"></div>
+          <div class="vr h-100"></div>
+        </div>
+
         <div class="col-md-auto pt-1 pb-1">
           <button class="btn btn-primary btn-sm" type="button" onclick="resetPlot();" title="Reset plot settings"> <i class="fas fa-redo"></i> Reset Plot </button>
         </div>
@@ -406,6 +417,12 @@
           <label class="btn btn-outline-primary btn-sm" title="Show closest isotope when hovering (experimental)" for="iso-hover"> <i class="fa-solid fa-magnifying-glass"></i> Isotopes </label>
 
         </div>
+
+        <!-- Float End
+        <div class="col-md pt-1 pb-1 d-md-flex justify-content-md-end">
+
+        </div>
+        -->
 
       </div>
 
@@ -490,12 +507,14 @@
       BOOTSTRAP OFFCANVAS FOR SETTINGS, INFO AND ISOTOPE VIEWER
 
     -->
+    <!-- OlD SETTINGS BUTTON
     <p class="position-absolute top-50 start-0 translate-middle-y">
       <button class="btn btn-primary rounded-0 rounded-end pt-5 pb-5" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvas" aria-controls="offcanvas" title="Open Settings Panel" onclick="loadIsotopes();">
         <i class="fas fa-sliders-h"></i>
         <i class="fas fa-chevron-right"></i>
       </button>
     </p>
+    -->
 
     <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvas" aria-labelledby="offcanvasLabel">
       <div class="offcanvas-header">
