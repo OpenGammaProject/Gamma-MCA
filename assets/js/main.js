@@ -17,7 +17,6 @@
     - Add separate install button in settings (only show with onbeforeinstallprompt)
     - Settings button location?
     - !!! Webmanifest add screenshots
-    - Change width and padding in web vs app (css detect user client)
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -70,6 +69,15 @@ let localStorageAvailable = false;
 document.body.onload = function() {
   if ("serviceWorker" in navigator) { // Add service worker for PWA
     navigator.serviceWorker.register("/service-worker.js");
+  }
+
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches; // Detect PWA or browser
+  if (navigator.standalone || isStandalone) { // Standalone PWA mode
+    console.log('standalone');
+
+  } else { // Default browser window
+    console.log('browser');
+    document.getElementById('main').className = document.getElementById('main').className.replaceAll('pb-1', 'p-1');
   }
 
   const domain = new URL(window.location.href + isoListURL);
