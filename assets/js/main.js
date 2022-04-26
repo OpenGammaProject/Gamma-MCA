@@ -14,8 +14,6 @@
     - FWHM calculation for peaks
     - (?) Serial console read capability
     - Search for updates regularly and push a notification
-    - Settings button location?
-    - !!! Webmanifest add screenshots
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -72,10 +70,12 @@ document.body.onload = function() {
 
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches; // Detect PWA or browser
   if (navigator.standalone || isStandalone) { // Standalone PWA mode
-    ; //console.log('standalone');
+    //console.log('standalone');
+    document.title += ' PWA';
   } else { // Default browser window
     //console.log('browser');
     document.getElementById('main').className = document.getElementById('main').className.replaceAll('pb-1', 'p-1');
+    document.title += ' web application';
   }
 
   const domain = new URL(window.location.href + isoListURL);
