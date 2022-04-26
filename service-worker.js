@@ -9,15 +9,31 @@
   ===============================
 
   Possible Future Improvements:
-    - Add all important files to OFFLINE_RESOURCES
+    - nothing.
 
 */
 const APP_VERSION = '2022-04-25';
 const CACHE_NAME = "gamma-static"; // A random name for the cache
 const OFFLINE_RESOURCES = ['/',
                           '/index.html',
-                          '/404.html'];
+                          '/site.webmanifest',
+                          '/assets/css/bootstrap.min.css',
+                          '/assets/css/all.min.css',
+                          '/assets/css/main.css',
+                          '/assets/logo.svg',
+                          '/assets/js/external/bootstrap.min.js',
+                          '/assets/webfonts/fa-solid-900.woff2',
+                          '/assets/webfonts/fa-brands-400.woff2',
+                          '/assets/js/external/plotly-basic.min.js',
+                          '/assets/js/raw-data.js',
+                          '/assets/js/plot.js',
+                          '/assets/js/serial.js',
+                          '/assets/js/main.js',
+                          '/assets/favicon/favicon-32x32.png',
+                          '/assets/favicon/favicon.ico',
+                          '/assets/isotopes_energies_min.json'];
 
+let anfragen = [];
 
 self.addEventListener("install", function(event) { // First time install of a worker
   console.log('Installing service worker.');
@@ -60,7 +76,7 @@ self.addEventListener("fetch", function(event) {
     try {  // Not found in cache -- request from network
       const networkResponse = await fetch(event.request);
 
-      //console.log('Network Response!', networkResponse);
+      console.log('Network Response!', networkResponse);
       cache.put(event.request, networkResponse.clone());
       return networkResponse;
     } catch (error) { // Did not find in cache or network, probably new page and offline access!

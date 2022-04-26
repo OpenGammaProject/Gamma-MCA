@@ -72,10 +72,9 @@ document.body.onload = function() {
 
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches; // Detect PWA or browser
   if (navigator.standalone || isStandalone) { // Standalone PWA mode
-    console.log('standalone');
-
+    ; //console.log('standalone');
   } else { // Default browser window
-    console.log('browser');
+    //console.log('browser');
     document.getElementById('main').className = document.getElementById('main').className.replaceAll('pb-1', 'p-1');
   }
 
