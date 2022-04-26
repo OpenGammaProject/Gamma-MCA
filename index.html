@@ -26,11 +26,11 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon/favicon-16x16.png">
     <link rel="mask-icon" href="/assets/favicon/safari-pinned-tab.svg" color="#5bbad5">
     <link rel="shortcut icon" href="/assets/favicon/favicon.ico">
-    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-config" content="/assets/favicon/browserconfig.xml">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="#f6bd16">
 
-    <title>Gamma MCA | Gamma-ray spectroscopy web application</title>
+    <title>Gamma MCA | Gamma-ray spectroscopy</title>
 
     <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
     <link rel="stylesheet" href="/assets/css/all.min.css">
@@ -71,11 +71,11 @@
       MAIN PAGE CONTENT
 
     -->
-    <div class="container-fluid flex-column d-flex vh-100 p-1 text-dark lh-sm main">
+    <div class="container-fluid flex-column d-flex vh-100 pb-1 text-dark lh-sm main" id="main"> <!-- pb-1 needed for vertical scroll bar -->
 
-      <div class="row border border-1 border-secondary rounded-top bg-light">
+      <div class="row border border-1 border-secondary bg-light">
 
-        <div class="col-lg">
+        <div class="col-lg pt-1">
 
           <h3><u>File Import</u></h3>
 
@@ -120,10 +120,10 @@
         </div>
 
         <div class="col-lg-auto g-0">
-          <div class="vr h-100"></div>
+          <div class="vr h-100 opacity-50"></div>
         </div>
 
-        <div class="col-lg">
+        <div class="col-lg pt-1">
 
           <h3><u>Serial Connection</u></h3>
 
@@ -204,10 +204,10 @@
         </div>
 
         <div class="col-lg-auto g-0">
-          <div class="vr h-100"></div>
+          <div class="vr h-100 opacity-50"></div>
         </div>
 
-        <div class="col-md">
+        <div class="col-md pt-1">
 
           <h3><u>Calibration</u></h3>
 
@@ -290,10 +290,10 @@
         </div>
 
         <div class="col-lg-auto g-0">
-          <div class="vr h-100"></div>
+          <div class="vr h-100 opacity-50"></div>
         </div>
 
-        <div class="col-md-1 ">
+        <div class="col-md-1 pt-1">
 
           <h3><u>Info</u></h3>
 
@@ -315,8 +315,8 @@
 
       </div>
 
-      <div class="row bg-light flex-grow-1 plot-div"> <!-- flex-fill -->
-        <div class="col border border-1 border-secondary rounded-0 border-top-0">
+      <div class="row bg-light flex-grow-1 plot-div border border-top-0 border-1 border-secondary bg-light"> <!-- flex-fill -->
+        <div class="col">
 
           <!--
             PLOT DIV
@@ -326,7 +326,18 @@
         </div>
       </div>
 
-      <div class="plot-tools row border border-1 border-secondary rounded-bottom border-top-0 bg-light">
+      <div class="plot-tools row border border-top-0 border-1 border-secondary bg-light">
+
+        <div class="col-md-auto d-md-flex">
+          <button class="btn btn-primary ps-2 pe-2 pt-1 pb-1 rounded-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvas" aria-controls="offcanvas" title="Open Settings Menu" onclick="loadIsotopes();">
+            <i class="fas fa-sliders-h"></i> Settings
+          </button>
+        </div>
+
+        <div class="col-md-auto g-0">
+          <div class="vr h-100"></div>
+          <div class="vr h-100"></div>
+        </div>
 
         <div class="col-md-auto pt-1 pb-1">
           <button class="btn btn-primary btn-sm" type="button" onclick="resetPlot();" title="Reset plot settings"> <i class="fas fa-redo"></i> Reset Plot </button>
@@ -406,6 +417,12 @@
           <label class="btn btn-outline-primary btn-sm" title="Show closest isotope when hovering (experimental)" for="iso-hover"> <i class="fa-solid fa-magnifying-glass"></i> Isotopes </label>
 
         </div>
+
+        <!-- Float End
+        <div class="col-md pt-1 pb-1 d-md-flex justify-content-md-end">
+
+        </div>
+        -->
 
       </div>
 
@@ -490,12 +507,14 @@
       BOOTSTRAP OFFCANVAS FOR SETTINGS, INFO AND ISOTOPE VIEWER
 
     -->
+    <!-- OlD SETTINGS BUTTON
     <p class="position-absolute top-50 start-0 translate-middle-y">
       <button class="btn btn-primary rounded-0 rounded-end pt-5 pb-5" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvas" aria-controls="offcanvas" title="Open Settings Panel" onclick="loadIsotopes();">
         <i class="fas fa-sliders-h"></i>
         <i class="fas fa-chevron-right"></i>
       </button>
     </p>
+    -->
 
     <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvas" aria-labelledby="offcanvasLabel">
       <div class="offcanvas-header">
@@ -692,9 +711,17 @@
 
             <p id="version-tag">Version </p>
 
+            <div class="visually-hidden" id="manual-install">
+              <hr>
+
+              <button type="button" class="btn btn-primary btn-sm" title="Install Gamma MCA" onclick="installPWA();"><i class="fa-solid fa-download"></i> Install MCA</button>
+
+              <p><small>Install Gamma MCA (PWA) on this device. It will behave like any other native app and will work outside this browser.</small></p>
+            </div>
+
             <hr>
 
-            <button type="button" class="btn btn-danger btn-sm" title="Reset Gamma MCA" onclick="resetMCA();">Reset MCA</button>
+            <button type="button" class="btn btn-danger btn-sm" title="Reset Gamma MCA" onclick="resetMCA();"><i class="fa-solid fa-arrow-rotate-right"></i> Reset MCA</button>
 
             <p><small>Clears all settings, browser storage and reloads the page.</small></p>
 
@@ -723,6 +750,22 @@
         </div>
       </div>
 
+      <div id="pwa-installer" class="toast text-white bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+        <div class="toast-header">
+          <i class="fa-solid fa-download me-2"></i>
+          <strong class="me-auto">Install App (Beta)?</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          <p>Gamma MCA is a progressive web app! You can install it to use Gamma MCA standalone and offline like any native program.</p>
+          <p>Do you want to install?</p>
+          <div class="mt-2 pt-2 border-top">
+            <button type="button" class="btn btn-light btn-sm" title="Install Gamma MCA" onclick="installPWA();">Install</button>
+            <button type="button" class="btn btn-primary btn-sm" title="Dismiss" data-bs-dismiss="toast">No</button>
+          </div>
+        </div>
+      </div>
+
       <div id="screen-size-warning" class="toast bg-warning" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="10000">
         <div class="toast-header">
           <i class="fas fa-info-circle me-2"></i>
@@ -730,7 +773,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
         <div class="toast-body">
-          Your window/screen size is smaller than recommended - therefore your experience may vary. For optimal usage increase the window size to a minimum of 1230x730.
+          Your window/screen size is smaller than recommended - therefore your experience may vary. For optimal usage increase the window size to a minimum of 1200x750 px.
         </div>
       </div>
 

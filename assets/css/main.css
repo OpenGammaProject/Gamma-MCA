@@ -5,7 +5,7 @@
 
 body {
   font-size: 14px;
-  background-color: white;
+  background-color: #ffffff; /*#f6bd16;*/
 }
 
 h3 {
@@ -19,12 +19,12 @@ h3 {
 
 .plot-div {
   min-height: 300px;
-  max-height: 1200px;
+  /*max-height: 1200px;*/
 }
 
 .logo {
   width: 27%;
-  max-height: 192px;
+  max-height: 400px;
 }
 
 .logo-404 {
@@ -38,4 +38,11 @@ h3 {
 
 .toast-container {
   z-index: 1111;
+}
+
+/* Special Settings for PWA */
+@media all and (display-mode: standalone) {
+  .main {
+    width: 100%;
+  }
 }

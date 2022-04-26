@@ -4,15 +4,16 @@
   2022, NuclearPhoenix.- Phoenix1747
   https://nuclearphoenix.xyz
 
-/*
+  ===============================
 
   Possible Future Improvements:
     - Sorting isotope list
     - Social media share function
     - Peak Finder/Analyzer
     - (?) Add serial EOL char selection
-    - (!) FWHM calculation for peaks
+    - FWHM calculation for peaks
     - (?) Serial console read capability
+    - Search for updates regularly and push a notification
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -47,7 +48,7 @@ let serOptions = { baudRate: 9600 }; // Standard baud-rate of 9600 bps
 let refreshRate = 1000; // Delay in ms between serial plot updates
 let maxRecTimeEnabled = false;
 let maxRecTime = 1800000; // 30 mins
-const refreshMetaTime = 100; // 100 ms
+const REFRESH_META_TIME = 100; // 100 ms
 
 let cpsValues = [];
 
@@ -56,13 +57,27 @@ let isoList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const appVersion = '2022-04-24';
+const APP_VERSION = '2022-04-26';
 let localStorageAvailable = false;
 
 /*
   Startup of the page
 */
 document.body.onload = function() {
+  if ("serviceWorker" in navigator) { // Add service worker for PWA
+    navigator.serviceWorker.register("/service-worker.js");
+  }
+
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches; // Detect PWA or browser
+  if (navigator.standalone || isStandalone) { // Standalone PWA mode
+    //console.log('standalone');
+    document.title += ' PWA';
+  } else { // Default browser window
+    //console.log('browser');
+    document.getElementById('main').className = document.getElementById('main').className.replaceAll('pb-1', 'p-1');
+    document.title += ' web application';
+  }
+
   const domain = new URL(window.location.href + isoListURL);
   isoListURL = domain.href;
 
@@ -98,7 +113,7 @@ document.body.onload = function() {
   plot.resetPlot(spectrumData);
   bindPlotEvents(); // Bind click and hover events provided by plotly
 
-  document.getElementById('version-tag').innerText += ' ' + appVersion + '.';
+  document.getElementById('version-tag').innerText += ' ' + APP_VERSION + '.';
 
   if (localStorageAvailable) {
     if (loadJSON('lastVisit') <= 0) {
@@ -106,7 +121,7 @@ document.body.onload = function() {
     }
     const time = new Date();
     saveJSON('lastVisit', time.getTime());
-    saveJSON('lastUsedVersion', appVersion);
+    saveJSON('lastUsedVersion', APP_VERSION);
 
     const settingsNotSaveAlert = document.getElementById('ls-unavailable'); // Remove saving alert
     settingsNotSaveAlert.parentNode.removeChild(settingsNotSaveAlert);
@@ -123,6 +138,12 @@ document.body.onload = function() {
 };
 
 
+// Exit website confirmation alert
+window.onbeforeunload = function(e) {
+  return 'Are you sure to leave?';
+};
+
+
 // Needed For Responsiveness! DO NOT REMOVE OR THE LAYOUT GOES TO SHIT!!!
 document.body.onresize = function() {
   plot.updatePlot(spectrumData);
@@ -130,6 +151,62 @@ document.body.onresize = function() {
   //fixHeight('offbody', 'tabcontent');
 };
 
+
+// User changed from browser window to PWA (after installation) or backwards
+window.matchMedia('(display-mode: standalone)').addEventListener('change', (evt) => {
+  /*
+  let displayMode = 'browser';
+  if (evt.matches) {
+    displayMode = 'standalone';
+  }
+  */
+  window.location.reload(); // Just reload the page?
+});
+
+
+let deferredPrompt;
+
+window.onbeforeinstallprompt = function(event) {
+  //event.preventDefault(); // Prevent the mini-infobar from appearing on mobile
+  deferredPrompt = event;
+
+  if (localStorageAvailable) {
+    if (!loadJSON('installPrompt')) {
+      popupNotification('pwa-installer'); // Show notification on first visit
+      saveJSON('installPrompt', true);
+    }
+  }
+
+  document.getElementById('manual-install').className -= 'visually-hidden';
+};
+
+
+async function installPWA() {
+  //hideNotification('pwa-installer');
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+}
+
+
+window.onappinstalled = function() {
+  deferredPrompt = null;
+  hideNotification('pwa-installer');
+  document.getElementById('manual-install').className += 'visually-hidden';
+};
+
+/*
+document.onkeydown = async function(event) {
+  console.log(event.keyCode);
+  if (event.keyCode === 27) { // ESC
+    const offcanvasElement = document.getElementById('offcanvas');
+    const offcanvas = new bootstrap.Offcanvas(offcanvasElement);
+
+    //event.preventDefault();
+
+    await offcanvas.toggle();
+  }
+};
+*/
 
 function getFileData(input, background = false) { // Gets called when a file has been selected.
   if (input.files.length == 0) { // File selection has been canceled
@@ -201,8 +278,10 @@ function fixHeight(parentId, contentId) {
 function sizeCheck() {
   const viewportWidth = document.documentElement.clientWidth;
   const viewportHeight = document.documentElement.clientHeight;
-  if (viewportWidth < 1230 || viewportHeight < 730) {
+  if (viewportWidth < 1200 || viewportHeight < 750) {
     popupNotification('screen-size-warning');
+  } else {
+    hideNotification('screen-size-warning');
   }
 }
 
@@ -518,6 +597,13 @@ function popupNotification(id) {
 }
 
 
+function hideNotification(id) {
+  const element = document.getElementById(id);
+  const toast = new bootstrap.Toast(element);
+  toast.hide();
+}
+
+
 let loadedIsos = false;
 
 async function loadIsotopes(reload = false) { // Load Isotope Energies JSON ONCE
@@ -550,6 +636,7 @@ async function loadIsotopes(reload = false) { // Load Isotope Energies JSON ONCE
 
       const tableElement = document.getElementById('iso-table');
       tableElement.innerHTML = ''; // Delete old table
+      plot.clearAnnos(spectrumData); // Delete all isotope lines
 
       let intKeys = Object.keys(json);
       intKeys.sort((a, b) => a - b); // Sort Energies numerically
@@ -1187,7 +1274,7 @@ function refreshMeta(type) {
       disconnectPort(true);
       popupNotification('auto-stop');
     } else {
-      metaTimeout = setTimeout(refreshMeta, refreshMetaTime, type); // Only re-schedule if still valid
+      metaTimeout = setTimeout(refreshMeta, REFRESH_META_TIME, type); // Only re-schedule if still valid
     }
   }
 }

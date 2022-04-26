@@ -180,7 +180,15 @@ function SpectrumPlot(divId) {
       }
     }
 
-  }
+  };
+  /*
+    Clear annotations and shapes
+  */
+  this.clearAnnos = function(dataObj) {
+    this.shapes = [];
+    this.annotations = [];
+    this.updatePlot(dataObj);
+  };
   /*
     Plot All The Data
   */
@@ -356,7 +364,7 @@ function SpectrumPlot(divId) {
     }
 
     let config = {
-      //responsive: true,
+      responsive: true,
       scrollZoom: true,
       displayModeBar: true,
       displaylogo: false,
