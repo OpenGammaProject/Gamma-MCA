@@ -692,9 +692,17 @@
 
             <p id="version-tag">Version </p>
 
+            <div class="visually-hidden" id="manual-install">
+              <hr>
+
+              <button type="button" class="btn btn-primary btn-sm" title="Install Gamma MCA" onclick="installPWA();"><i class="fa-solid fa-download"></i> Install MCA</button>
+
+              <p><small>Install Gamma MCA (PWA) on this device. It will behave like any other native app and will work outside this browser.</small></p>
+            </div>
+
             <hr>
 
-            <button type="button" class="btn btn-danger btn-sm" title="Reset Gamma MCA" onclick="resetMCA();">Reset MCA</button>
+            <button type="button" class="btn btn-danger btn-sm" title="Reset Gamma MCA" onclick="resetMCA();"><i class="fa-solid fa-arrow-rotate-right"></i> Reset MCA</button>
 
             <p><small>Clears all settings, browser storage and reloads the page.</small></p>
 

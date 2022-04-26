@@ -14,7 +14,6 @@
     - FWHM calculation for peaks
     - (?) Serial console read capability
     - Search for updates regularly and push a notification
-    - Add separate install button in settings (only show with onbeforeinstallprompt)
     - Settings button location?
     - !!! Webmanifest add screenshots
 
@@ -166,21 +165,23 @@ window.onbeforeinstallprompt = function(event) {
       saveJSON('installPrompt', true);
     }
   }
+
+  document.getElementById('manual-inst-btn').className -= 'visually-hidden';
 };
 
 
 async function installPWA() {
-  hideNotification('pwa-installer');
+  //hideNotification('pwa-installer');
   deferredPrompt.prompt();
   await deferredPrompt.userChoice;
-  deferredPrompt = null;
 }
 
-/*
+
 window.onappinstalled = function() {
+  deferredPrompt = null;
   hideNotification('pwa-installer');
+  document.getElementById('manual-install').className += 'visually-hidden';
 };
-*/
 
 
 function getFileData(input, background = false) { // Gets called when a file has been selected.
