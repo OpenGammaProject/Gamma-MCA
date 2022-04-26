@@ -33,7 +33,6 @@ const OFFLINE_RESOURCES = ['/',
                           '/assets/favicon/favicon.ico',
                           '/assets/isotopes_energies_min.json'];
 
-let anfragen = [];
 
 self.addEventListener("install", function(event) { // First time install of a worker
   console.log('Installing service worker.');
