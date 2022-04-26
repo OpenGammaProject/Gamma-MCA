@@ -27,6 +27,40 @@
   "description": "Progressive web application for gamma(-ray) spectroscopy including file import/export and live plotting support via the serial interface.",
   "categories": ["nuclear physics", "radiation", "gamma spectroscopy", "science", "gamma-ray", "physics", "geiger", "spectrometry"],
   "screenshots": [
-
+    {
+      "src": "/assets/screenshots/browser.PNG",
+      "sizes": "1920x937",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Start screen of the browser app"
+    },
+    {
+      "src": "/assets/screenshots/pwa.PNG",
+      "sizes": "1415x923",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Start screen of the installed PWA"
+    },
+    {
+      "src": "/assets/screenshots/file.PNG",
+      "sizes": "1415x923",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "CSV spectrum files imported into the PWA and plotted"
+    },
+    {
+      "src": "/assets/screenshots/serial.PNG",
+      "sizes": "1415x923",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Recording a background spectrum using the serial port"
+    },
+    {
+      "src": "/assets/screenshots/settings.PNG",
+      "sizes": "1415x923",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Opened settings panel with a custom isotope list, settings menu and info tab"
+    }
   ]
 }
