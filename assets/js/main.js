@@ -132,6 +132,12 @@ document.body.onload = function() {
 };
 
 
+// Exit website confirmation alert
+window.onbeforeunload = function(e) {
+  return 'Are you sure to leave?';
+};
+
+
 // Needed For Responsiveness! DO NOT REMOVE OR THE LAYOUT GOES TO SHIT!!!
 document.body.onresize = function() {
   plot.updatePlot(spectrumData);
