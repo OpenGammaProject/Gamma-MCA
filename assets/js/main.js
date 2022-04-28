@@ -14,6 +14,7 @@
     - FWHM calculation for peaks
     - (?) Serial console read capability
     - Search for updates regularly and push a notification
+    - Hotkey to open/close settings
 
   Known Performance Issues:
     - Isotope hightlighting
