@@ -13,7 +13,6 @@
     - (?) Add serial EOL char selection
     - FWHM calculation for peaks
     - (?) Serial console read capability
-    - Search for updates regularly and push a notification
     - Hotkey to open/close settings
 
   Known Performance Issues:
@@ -58,15 +57,32 @@ let isoList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2022-04-30.1';
+const APP_VERSION = '2022-04-30.2';
 let localStorageAvailable = false;
+let firstInstall = false;
 
 /*
   Startup of the page
 */
-document.body.onload = function() {
+document.body.onload = async function() {
+  localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
+
+  if (localStorageAvailable) {
+    loadSettingsStorage();
+  }
+  loadSettingsDefault();
+
   if ("serviceWorker" in navigator) { // Add service worker for PWA
-    navigator.serviceWorker.register("/service-worker.js");
+    const reg = await navigator.serviceWorker.register("/service-worker.js"); // Onload async because of this... good? hmmm.
+
+    if (localStorageAvailable) {
+      reg.addEventListener('updatefound', () => {
+          if (firstInstall) { // "Update" will always be installed on first load (service worker installation)
+            return;
+          }
+        popupNotification('update-installed');
+      });
+    }
   }
 
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches; // Detect PWA or browser
@@ -81,13 +97,6 @@ document.body.onload = function() {
 
   const domain = new URL(isoListURL, window.location.origin);
   isoListURL = domain.href;
-
-  localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
-
-  if (localStorageAvailable) {
-    loadSettingsStorage();
-  }
-  loadSettingsDefault();
 
   if ('serial' in navigator) {
     document.getElementById('serial-div').className = ''; // Remove visually-hidden and invisible
@@ -119,6 +128,7 @@ document.body.onload = function() {
   if (localStorageAvailable) {
     if (loadJSON('lastVisit') <= 0) {
       popupNotification('welcomeMsg');
+      firstInstall = true;
     }
     const time = new Date();
     saveJSON('lastVisit', time.getTime());
