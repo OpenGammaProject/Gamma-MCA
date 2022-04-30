@@ -58,7 +58,7 @@ let isoList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2022-04-30';
+const APP_VERSION = '2022-04-30.1';
 let localStorageAvailable = false;
 
 /*
@@ -79,7 +79,7 @@ document.body.onload = function() {
     document.title += ' web application';
   }
 
-  const domain = new URL(window.location.href + isoListURL);
+  const domain = new URL(isoListURL, window.location.origin);
   isoListURL = domain.href;
 
   localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
