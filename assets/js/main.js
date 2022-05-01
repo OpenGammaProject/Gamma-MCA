@@ -14,6 +14,7 @@
     - FWHM calculation for peaks
     - (?) Serial console read capability
     - Hotkey to open/close settings
+    - Add desktop notifications
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -57,7 +58,7 @@ let isoList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2022-04-30.2';
+const APP_VERSION = '2022-05-01';
 let localStorageAvailable = false;
 let firstInstall = false;
 
@@ -178,7 +179,7 @@ window.matchMedia('(display-mode: standalone)').addEventListener('change', (evt)
 let deferredPrompt;
 
 window.onbeforeinstallprompt = function(event) {
-  //event.preventDefault(); // Prevent the mini-infobar from appearing on mobile
+  event.preventDefault(); // Prevent the mini-infobar from appearing on mobile
   deferredPrompt = event;
 
   if (localStorageAvailable) {
