@@ -14,7 +14,7 @@
     - FWHM calculation for peaks
     - (?) Serial console read capability
     - Hotkey to open/close settings
-    - Add desktop notifications
+    - (?) Add desktop notifications
 
   Known Performance Issues:
     - Isotope hightlighting
