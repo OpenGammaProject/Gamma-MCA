@@ -1298,7 +1298,6 @@ let refreshTimeout;
 
 function refreshRender(type) {
   if (ser.port.readable && keepReading) {
-    const timeElement = document.getElementById('record-time');
     const nowTime = new Date();
     const delta = new Date(nowTime.getTime() - startTime + timeDone);
 
