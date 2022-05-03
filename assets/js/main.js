@@ -189,7 +189,8 @@ window.onbeforeinstallprompt = function(event) {
     }
   }
 
-  document.getElementById('manual-install').className -= 'visually-hidden';
+  const installButton = document.getElementById('manual-install');
+  installButton.className = installButton.className.replaceAll('visually-hidden', '');
 };
 
 
@@ -227,7 +228,7 @@ function getFileData(input, background = false) { // Gets called when a file has
   const file = input.files[0];
   let reader = new FileReader();
 
-  const fileEnding = file.name.split('.')[1];
+  //const fileEnding = file.name.split('.')[1];
 
   reader.readAsText(file);
 
@@ -871,7 +872,7 @@ function loadSettingsStorage() {
 
 
 function changeSettings(name, value, type) {
-  if (typeof value !== type || value == null || value == undefined || (typeof value == 'number' && isNaN(value))) {
+  if (typeof value !== type || value === 'null' || value === 'undefined' || (typeof value === 'number' && isNaN(value))) {
     popupNotification('setting-type');
     return;
   }
@@ -1244,7 +1245,7 @@ async function disconnectPort(stop = false) {
   }
 
   try {
-    if (typeof reader !== undefined) {
+    if (typeof reader !== 'undefined') {
       reader.cancel();
     }
   } catch(err) {
