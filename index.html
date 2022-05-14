@@ -598,7 +598,7 @@
 
             <p>
               <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" role="switch" id="edit-plot" onclick="changeSettings('editMode', this.checked, 'boolean');">
+                <input class="form-check-input" type="checkbox" role="switch" id="edit-plot" onclick="changeSettings('editMode', this);">
                 <label class="form-check-label" for="edit-plot">Editable Plot Labels (Axes Labels and Headline)</label>
               </div>
             </p>
@@ -606,8 +606,8 @@
             <p>
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="iso-hover-prox">Iso Hover Proximity</label>
-                <input type="number" class="form-control" id="iso-hover-prox" min="1" max="10000" onkeypress="enterPress(event, 'setting1');">
-                <button class="btn btn-primary" type="button" id="setting1" onclick="changeSettings('hoverProx', parseInt(document.getElementById('iso-hover-prox').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
+                <input type="number" class="form-control" id="iso-hover-prox" min="1" onkeypress="enterPress(event, 'setting1');">
+                <button class="btn btn-primary" type="button" id="setting1" onclick="changeSettings('hoverProx', document.getElementById('iso-hover-prox'));" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
               <small>Input in keV. Any positive integer is valid.</small>
             </p>
@@ -616,7 +616,7 @@
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="custom-url">Isotope List</label>
                 <input type="url" class="form-control" id="custom-url" onkeypress="enterPress(event, 'setting2');" spellcheck="false">
-                <button class="btn btn-primary" type="button" id="setting2" onclick="changeSettings('customURL', document.getElementById('custom-url').value, 'string');" title="Apply"> <i class="fas fa-check"></i> </button>
+                <button class="btn btn-primary" type="button" id="setting2" onclick="changeSettings('customURL', document.getElementById('custom-url'));" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
               <small>File must be of valid JSON format. Use only trusted sources!</small>
             </p>
@@ -629,7 +629,7 @@
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="custom-delimiter">CSV File Delimiter</label>
                 <input type="text" class="form-control" id="custom-delimiter" onkeypress="enterPress(event, 'setting3');" spellcheck="false">
-                <button class="btn btn-primary" type="button" id="setting3" onclick="changeSettings('delimiter', document.getElementById('custom-delimiter').value, 'string');" title="Apply"> <i class="fas fa-check"></i> </button>
+                <button class="btn btn-primary" type="button" id="setting3" onclick="changeSettings('delimiter', document.getElementById('custom-delimiter'));" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
               <small>Any character is valid.</small>
             </p>
@@ -637,8 +637,8 @@
             <p>
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="custom-file-adc">RAW Stream Channel No</label>
-                <input type="number" class="form-control" id="custom-file-adc" min="1" max="16384" onkeypress="enterPress(event, 'setting4');">
-                <button class="btn btn-primary" type="button" id="setting4" onclick="changeSettings('fileChannels', parseInt(document.getElementById('custom-file-adc').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
+                <input type="number" class="form-control" id="custom-file-adc" min="1" onkeypress="enterPress(event, 'setting4');">
+                <button class="btn btn-primary" type="button" id="setting4" onclick="changeSettings('fileChannels', document.getElementById('custom-file-adc'));" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
               <small>Number of (ADC) channels of the original device. Any positive integer is valid.</small>
             </p>
@@ -651,21 +651,21 @@
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="custom-baud">Baud Rate</label>
                 <input type="number" class="form-control serial-controls" id="custom-baud" min="1" onkeypress="enterPress(event, 'setting5');">
-                <button class="btn btn-primary serial-controls" type="button" id="setting5" onclick="changeSettings('baudRate', parseInt(document.getElementById('custom-baud').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
+                <button class="btn btn-primary serial-controls" type="button" id="setting5" onclick="changeSettings('baudRate', document.getElementById('custom-baud'));" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
               <small>Input in bits per second. Any positive integer is valid.</small>
             </p>
 
             <p>
               <div class="form-check form-switch">
-                <input class="form-check-input serial-controls" type="checkbox" role="switch" id="toggle-time-limit" onclick="changeSettings('timeLimitBool', this.checked, 'boolean');">
+                <input class="form-check-input serial-controls" type="checkbox" role="switch" id="toggle-time-limit" onclick="changeSettings('timeLimitBool', this);">
                 <label class="form-check-label" for="toggle-time-limit">Enable Time Limit</label>
               </div>
 
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="ser-limit">Recording Time Limit</label>
                 <input type="number" class="form-control serial-controls" id="ser-limit"  min="1" onkeypress="enterPress(event, 'ser-limit-btn');" disabled>
-                <button class="btn btn-primary serial-controls" id="ser-limit-btn" type="button" onclick="changeSettings('timeLimit', parseInt(document.getElementById('ser-limit').value), 'number');" title="Apply" disabled> <i class="fas fa-check"></i> </button>
+                <button class="btn btn-primary serial-controls" id="ser-limit-btn" type="button" onclick="changeSettings('timeLimit', document.getElementById('ser-limit'));" title="Apply" disabled> <i class="fas fa-check"></i> </button>
               </div>
               <small>Input in seconds. Any positive integer is valid. Serial recording will stop automatically when time runs out.</small>
 
@@ -675,7 +675,7 @@
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="custom-ser-refresh">Plot Refresh Time</label>
                 <input type="number" class="form-control serial-controls" id="custom-ser-refresh" min="1" onkeypress="enterPress(event, 'setting6');">
-                <button class="btn btn-primary serial-controls" type="button" id="setting6" onclick="changeSettings('plotRefresh', parseFloat(document.getElementById('custom-ser-refresh').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
+                <button class="btn btn-primary serial-controls" type="button" id="setting6" onclick="changeSettings('plotRefresh', document.getElementById('custom-ser-refresh'));" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
               <small>Input in seconds. Any positive float is valid, use integers for best performance.</small>
             </p>
@@ -684,7 +684,7 @@
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="custom-ser-buffer">Max Serial Buffer</label>
                 <input type="number" class="form-control serial-controls" id="custom-ser-buffer" min="1" onkeypress="enterPress(event, 'setting7');">
-                <button class="btn btn-primary serial-controls" type="button" id="setting7" onclick="changeSettings('serBuffer', parseInt(document.getElementById('custom-ser-buffer').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
+                <button class="btn btn-primary serial-controls" type="button" id="setting7" onclick="changeSettings('serBuffer', document.getElementById('custom-ser-buffer'));" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
               <small>Max number of serial input events buffered between plot refreshes. Any positive integer is valid.</small>
             </p>
@@ -692,8 +692,8 @@
             <p>
               <div class="input-group input-group-sm">
                 <label class="input-group-text" for="custom-ser-adc">Serial Channel No</label>
-                <input type="number" class="form-control serial-controls" id="custom-ser-adc" min="1" max="16384" onkeypress="enterPress(event, 'setting8');">
-                <button class="btn btn-primary serial-controls" type="button" id="setting8" onclick="changeSettings('serChannels', parseInt(document.getElementById('custom-ser-adc').value), 'number');" title="Apply"> <i class="fas fa-check"></i> </button>
+                <input type="number" class="form-control serial-controls" id="custom-ser-adc" min="1" onkeypress="enterPress(event, 'setting8');">
+                <button class="btn btn-primary serial-controls" type="button" id="setting8" onclick="changeSettings('serChannels', document.getElementById('custom-ser-adc'));" title="Apply"> <i class="fas fa-check"></i> </button>
               </div>
               <small>Number of (ADC) channels of the serial device. Any positive integer is valid.</small>
             </p>

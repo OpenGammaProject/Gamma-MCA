@@ -58,7 +58,7 @@ let isoList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2022-05-02';
+const APP_VERSION = '2022-05-14';
 let localStorageAvailable = false;
 let firstInstall = false;
 
@@ -71,7 +71,6 @@ document.body.onload = async function() {
   if (localStorageAvailable) {
     loadSettingsStorage();
   }
-  loadSettingsDefault();
 
   if ("serviceWorker" in navigator) { // Add service worker for PWA
     const reg = await navigator.serviceWorker.register("/service-worker.js"); // Onload async because of this... good? hmmm.
@@ -88,10 +87,8 @@ document.body.onload = async function() {
 
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches; // Detect PWA or browser
   if (navigator.standalone || isStandalone) { // Standalone PWA mode
-    //console.log('standalone');
     document.title += ' PWA';
   } else { // Default browser window
-    //console.log('browser');
     document.getElementById('main').className = document.getElementById('main').className.replaceAll('pb-1', 'p-1');
     document.title += ' web application';
   }
@@ -143,6 +140,7 @@ document.body.onload = async function() {
     popupNotification('welcomeMsg');
   }
 
+  loadSettingsDefault();
   sizeCheck();
 
   const loadingSpinner = document.getElementById('loading');
@@ -871,14 +869,17 @@ function loadSettingsStorage() {
 }
 
 
-function changeSettings(name, value, type) {
-  if (typeof value !== type || value === 'null' || value === 'undefined' || (typeof value === 'number' && isNaN(value))) {
+function changeSettings(name, element) {
+  if (!element.checkValidity()) {
     popupNotification('setting-type');
     return;
   }
 
+  let value = element.value;
+
   switch (name) {
     case 'editMode':
+      value = element.checked;
       plot.editableMode = value;
       plot.resetPlot(spectrumData);
 
@@ -913,6 +914,7 @@ function changeSettings(name, value, type) {
       break;
 
     case 'fileChannels':
+      value = parseInt(value);
       raw.adcChannels = value;
 
       if (localStorageAvailable) {
@@ -921,6 +923,7 @@ function changeSettings(name, value, type) {
       break;
 
     case 'timeLimitBool':
+      value = element.checked;
       document.getElementById('ser-limit').disabled = !value;
       document.getElementById('ser-limit-btn').disabled = !value;
 
@@ -932,6 +935,7 @@ function changeSettings(name, value, type) {
       break;
 
     case 'timeLimit':
+      value = parseFloat(value);
       maxRecTime = value * 1000; // convert s to ms
 
       if (localStorageAvailable) {
@@ -940,6 +944,7 @@ function changeSettings(name, value, type) {
       break;
 
     case 'hoverProx':
+      value = parseFloat(value);
       maxDist = value;
 
       if (localStorageAvailable) {
@@ -948,6 +953,7 @@ function changeSettings(name, value, type) {
       break;
 
     case 'plotRefresh':
+      value = parseFloat(value);
       refreshRate = value * 1000; // convert s to ms
 
       if (localStorageAvailable) {
@@ -956,6 +962,7 @@ function changeSettings(name, value, type) {
       break;
 
     case 'serBuffer':
+      value = parseInt(value);
       ser.maxSize = value;
 
       if (localStorageAvailable) {
@@ -964,6 +971,7 @@ function changeSettings(name, value, type) {
       break;
 
     case 'baudRate':
+      value = parseInt(value);
       serOptions.baudRate = value;
 
       if (localStorageAvailable) {
@@ -972,6 +980,7 @@ function changeSettings(name, value, type) {
       break;
 
     case 'serChannels':
+      value = parseInt(value);
       ser.adcChannels = value;
 
       if (localStorageAvailable) {
