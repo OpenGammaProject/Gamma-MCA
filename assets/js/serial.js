@@ -5,6 +5,7 @@ function SerialData() {
   this.port = null;
   this.adcChannels = 4096; // For OSC
   this.maxLength = 20; // Maximum number of characters for a valid string/number
+  this.eolChar = ';' // End of Line/Data character
 
   this.rawData = ""; // Raw String Input from Serial Reading
   this.serData = []; // Ready to use Integer Pulse Heights, could use a setget meh
@@ -14,7 +15,7 @@ function SerialData() {
 
     this.rawData += string;
 
-    let stringArr = this.rawData.split(';'); //('\r\n');
+    let stringArr = this.rawData.split(this.eolChar); //('\r\n');
     stringArr.pop(); // Delete last entry to avoid counting unfinished transmissions
 
     if (stringArr.length <= 1) {
@@ -25,7 +26,7 @@ function SerialData() {
     } else {
       for (const element of stringArr) {
         //this.rawData = this.rawData.replaceAll(element + '\r\n', '');
-        this.rawData = this.rawData.replace(element + ';', '');
+        this.rawData = this.rawData.replace(element + this.eolChar, '');
         const trimString = element.trim(); // Delete whitespace and line breaks
 
         if (trimString.length == 0 || trimString.length >= this.maxLength) {

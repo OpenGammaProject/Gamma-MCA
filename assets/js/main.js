@@ -9,7 +9,6 @@
   Possible Future Improvements:
     - Sorting isotope list
     - Social media share function
-    - (?) Add serial EOL char selection
     - FWHM calculation for peaks
     - (?) Serial console read capability
     - Hotkey to open/close settings
@@ -823,6 +822,7 @@ function loadSettingsDefault() {
   document.getElementById('toggle-time-limit').checked = maxRecTimeEnabled;
   document.getElementById('iso-hover-prox').value = maxDist;
   document.getElementById('custom-baud').value = serOptions.baudRate;
+  document.getElementById('eol-char').value = ser.eolChar;
 
   document.getElementById('smaVal').value = plot.smaLength;
 
@@ -877,6 +877,10 @@ function loadSettingsStorage() {
   setting = loadJSON('baudRate');
   if (setting) {
     serOptions.baudRate = setting;
+  }
+  setting = loadJSON('eolChar');
+  if (setting) {
+    ser.eolChar = setting;
   }
   setting = loadJSON('smaLength');
   if (setting) {
@@ -1001,6 +1005,14 @@ function changeSettings(name, element) {
     case 'baudRate':
       value = parseInt(value);
       serOptions.baudRate = value;
+
+      if (localStorageAvailable) {
+        saveJSON(name, value);
+      }
+      break;
+
+    case 'eolChar':
+      serOptions.eolChar = value;
 
       if (localStorageAvailable) {
         saveJSON(name, value);

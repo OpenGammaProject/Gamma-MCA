@@ -521,15 +521,6 @@
       BOOTSTRAP OFFCANVAS FOR SETTINGS, INFO AND ISOTOPE VIEWER
 
     -->
-    <!-- OlD SETTINGS BUTTON
-    <p class="position-absolute top-50 start-0 translate-middle-y">
-      <button class="btn btn-primary rounded-0 rounded-end pt-5 pb-5" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvas" aria-controls="offcanvas" title="Open Settings Panel" onclick="loadIsotopes();">
-        <i class="fas fa-sliders-h"></i>
-        <i class="fas fa-chevron-right"></i>
-      </button>
-    </p>
-    -->
-
     <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvas" aria-labelledby="offcanvasLabel">
       <div class="offcanvas-header">
         <img class="logo" src="/assets/logo.svg" alt="Logo" title="Gamma MCA Logo">
@@ -684,6 +675,15 @@
                       <button class="btn btn-primary serial-controls" type="button" id="setting5" onclick="changeSettings('baudRate', document.getElementById('custom-baud'));" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <small>Input in bits per second. Any positive integer is valid.</small>
+
+                    <p>
+                      <div class="input-group input-group-sm">
+                        <label class="input-group-text" for="eol-char">EOL character</label>
+                        <input type="text" class="form-control" id="eol-char" onkeypress="enterPress(event, 'setting5-1');" spellcheck="false">
+                        <button class="btn btn-primary" type="button" id="setting5-1" onclick="changeSettings('eolChar', document.getElementById('eol-char'));" title="Apply"> <i class="fas fa-check"></i> </button>
+                      </div>
+                      <small>Character transmitted at the end of every single data point. Any character is valid.</small>
+                    </p>
 
                     <p>
                       <div class="form-check form-switch">
