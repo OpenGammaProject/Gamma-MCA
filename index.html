@@ -332,7 +332,7 @@
       <div class="plot-tools row border border-top-0 border-1 border-secondary bg-light">
 
         <div class="col-md-auto d-md-flex">
-          <button class="btn btn-primary ps-2 pe-2 pt-1 pb-1 rounded-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvas" aria-controls="offcanvas" title="Open Settings Menu" onclick="loadIsotopes();">
+          <button class="btn btn-primary ps-2 pe-2 pt-1 pb-1" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvas" aria-controls="offcanvas" title="Open Settings Menu" onclick="loadIsotopes();">
             <i class="fas fa-sliders-h"></i> Settings
           </button>
         </div>
@@ -391,7 +391,7 @@
         <div class="col-md-auto pt-1 pb-1">
 
           <div class="input-group input-group-sm">
-            <span class="input-group-text">Plot Type</span>
+            <span class="input-group-text">Type</span>
             <button class="btn btn-primary btn-sm" type="button" id="plotType" onclick="changeType(this);" title="Switch plot type"><i class="fas fa-chart-line"></i> Line</button>
           </div>
 
@@ -418,6 +418,17 @@
 
           <input type="checkbox" class="btn-check" id="iso-hover" onclick="toggleIsoHover();" autocomplete="off">
           <label class="btn btn-outline-primary btn-sm" title="Show closest isotope when hovering (experimental)" for="iso-hover"> <i class="fa-solid fa-magnifying-glass"></i> Isotopes </label>
+
+        </div>
+
+        <div class="col-md-auto g-0">
+          <div class="vr h-100"></div>
+        </div>
+
+        <div class="col-md-auto pt-1 pb-1">
+
+          <input type="checkbox" class="btn-check" id="peak-finder" onclick="findPeaks(this);" autocomplete="off">
+          <label class="btn btn-outline-primary btn-sm" title="Find energy peaks (experimental)" for="peak-finder"> <i class="fa-solid fa-mountain"></i> Peaks </label>
 
         </div>
 
@@ -790,7 +801,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
         <div class="toast-body">
-          Your window/screen size is smaller than recommended - therefore your experience may vary. For optimal usage increase the window size to a minimum of 1200x750 px.
+          Your window/screen size is smaller than recommended - therefore your experience may vary. For optimal usage increase the window size to a minimum of 1250 x 750 px.
         </div>
       </div>
 

@@ -9,12 +9,12 @@
   Possible Future Improvements:
     - Sorting isotope list
     - Social media share function
-    - Peak Finder/Analyzer
     - (?) Add serial EOL char selection
     - FWHM calculation for peaks
     - (?) Serial console read capability
     - Hotkey to open/close settings
     - (?) Add desktop notifications
+    - Customizable Peak Detection Parameters
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -58,7 +58,7 @@ let isoList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2022-05-14';
+const APP_VERSION = '2022-05-21';
 let localStorageAvailable = false;
 let firstInstall = false;
 
@@ -289,7 +289,7 @@ function fixHeight(parentId, contentId) {
 function sizeCheck() {
   const viewportWidth = document.documentElement.clientWidth;
   const viewportHeight = document.documentElement.clientHeight;
-  if (viewportWidth < 1200 || viewportHeight < 750) {
+  if (viewportWidth < 1250 || viewportHeight < 750) {
     popupNotification('screen-size-warning');
   } else {
     hideNotification('screen-size-warning');
@@ -333,6 +333,8 @@ function resetPlot() {
   if(plot.sma) {
     toggleSma(false, document.getElementById('sma'));
   }
+  plot.clearAnnos();
+  loadIsotopes(true);
   plot.resetPlot(spectrumData);
   bindPlotEvents(); // Fix Reset Bug: Hovering and Clicking not working.
 }
@@ -647,7 +649,8 @@ async function loadIsotopes(reload = false) { // Load Isotope Energies JSON ONCE
 
       const tableElement = document.getElementById('iso-table');
       tableElement.innerHTML = ''; // Delete old table
-      plot.clearAnnos(spectrumData); // Delete all isotope lines
+      plot.clearAnnos(); // Delete all isotope lines
+      plot.updatePlot(spectrumData);
 
       let intKeys = Object.keys(json);
       intKeys.sort((a, b) => a - b); // Sort Energies numerically
@@ -743,7 +746,7 @@ async function closestIso(value) {
       prevIso = newIso;
     }
 
-    plot.toggleLine(parseFloat(closest).toFixed(2), isoList[closest], true);
+    plot.toggleLine(parseFloat(closest).toFixed(2), isoList[closest]);
     plot.updatePlot(spectrumData);
   } else if (Object.keys(prevIso).length !== 0) {
     plot.toggleLine(Object.keys(prevIso)[0], Object.values(prevIso)[0], false);
@@ -777,6 +780,15 @@ function selectAll(selectBox) {
     plot.annotations = [];
   }
 
+  plot.updatePlot(spectrumData);
+}
+
+
+function findPeaks(checkbox) {
+  plot.peakConfig.enabled = checkbox.checked;
+  if (!checkbox.checked) { // disabled
+    plot.peakFinder(false);
+  }
   plot.updatePlot(spectrumData);
 }
 

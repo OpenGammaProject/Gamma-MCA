@@ -21,6 +21,15 @@ function SpectrumPlot(divId) {
   this.shapes = [];
   this.annotations = [];
   this.editableMode = false;
+  this.peakConfig = {
+    enabled: false,
+    thres: 0.03,
+    lag: 150,
+    width: 4,
+    lines: [],
+    lastDataX: [],
+    lastDataY: [],
+  };
 
   /*
     Get An Array with Length == Data.length containing ascending numbers
@@ -81,7 +90,7 @@ function SpectrumPlot(divId) {
     for(const i in newData) { // Compute the central moving average
       const intIndex = parseInt(i); // Gotcha, I wasted sooo much time on this -_-
 
-      if (intIndex >= half && intIndex <= target.length - half) { // Shortcut
+      if (intIndex >= half && intIndex <= target.length - half - 1) { // Shortcut
         const remainderIndexFactor = length % 2;
 
         const addVal = target[intIndex+half-remainderIndexFactor];
@@ -112,6 +121,57 @@ function SpectrumPlot(divId) {
     return newData;
   };
   /*
+    Find and mark energy peaks by using two different moving averages
+  */
+  this.peakFinder = function(doFind = true) {
+    if (this.peakConfig.lines.length !== 0) {
+      for (const line of this.peakConfig.lines) {
+        this.toggleLine(line, "", false);
+      }
+    }
+
+    if (!doFind) {
+      return;
+    }
+
+    const shortData = this.peakConfig.lastDataY;
+    const longData = plot.computeMovingAverage(this.peakConfig.lastDataY, this.peakConfig.lag);
+
+    const maxVal = Math.max(...shortData);
+    const xAxisData = this.peakConfig.lastDataX;
+    let peakLines = [];
+
+    for (let i = 0; i < shortData.length; i++) {
+      if (shortData[i] - longData[i] > this.peakConfig.thres * maxVal)  {
+        peakLines.push(xAxisData[i]);
+      }
+    }
+
+    let values = 0;
+    let size = 0;
+
+    for (let i = 0; i < peakLines.length-1; i++) {
+      if (peakLines[i + 1] - peakLines[i] <= this.peakConfig.width) {
+        values += peakLines[i];
+        size++;
+      } else {
+        let result;
+
+        if (values == 0) {
+          result = peakLines[i];
+        } else {
+          result = values / size;
+        }
+
+        values = 0;
+        size = 0;
+
+        this.toggleLine(result, Math.round(result));
+        this.peakConfig.lines.push(result);
+      }
+    }
+  };
+  /*
     Convenient Wrapper, could do more in the future
   */
   this.resetPlot = function(spectrumData) {
@@ -126,7 +186,7 @@ function SpectrumPlot(divId) {
   /*
     Add a line
   */
-  this.toggleLine = function(energy, name, enabled) {
+  this.toggleLine = function(energy, name, enabled = true) {
     if (enabled) {
       const newLine = {
         type: 'line',
@@ -184,10 +244,9 @@ function SpectrumPlot(divId) {
   /*
     Clear annotations and shapes
   */
-  this.clearAnnos = function(dataObj) {
+  this.clearAnnos = function() {
     this.shapes = [];
     this.annotations = [];
-    this.updatePlot(dataObj);
   };
   /*
     Plot All The Data
@@ -224,7 +283,7 @@ function SpectrumPlot(divId) {
     /*
       Compute Background and Corrected Spectrum
     */
-    if (dataObj.background.length > 0){//== dataObj.data.length) {
+    if (dataObj.background.length == dataObj.data.length) {
       bgTrace = {
         name: 'Background Spectrum',
         stackgroup: 'data', // Stack line charts on top of each other
@@ -339,8 +398,8 @@ function SpectrumPlot(divId) {
         yanchor: "top",
         yref: "paper",
       }],
-      shapes: this.shapes,
-      annotations: JSON.parse(JSON.stringify(this.annotations)), // Copy array but do not reference
+      //shapes: this.shapes,
+      //annotations: JSON.parse(JSON.stringify(this.annotations)), // Copy array but do not reference
     };
     /*
       Set calibrated x-axis
@@ -351,9 +410,6 @@ function SpectrumPlot(divId) {
       }
       layout.xaxis.title = 'Energy [keV]';
       layout.xaxis.ticksuffix = ' keV';
-      for (const anno of layout.annotations) {
-        anno.hovertext += layout.xaxis.ticksuffix;
-      }
     }
     /*
       CPS enabled
@@ -373,6 +429,29 @@ function SpectrumPlot(divId) {
       },
       editable: this.editableMode,
     };
+
+    /*
+      Peak Detection Stuff
+    */
+    if (this.peakConfig.enabled) {
+      if (data.length == 1) {
+        this.peakConfig.lastDataX = data[0].x;
+        this.peakConfig.lastDataY = data[0].y;
+      } else {
+        this.peakConfig.lastDataX = data[data.length - 1].x;
+        this.peakConfig.lastDataY = data[data.length - 1].y;
+      }
+      this.peakFinder();
+    }
+
+    layout.shapes = this.shapes;
+    layout.annotations = JSON.parse(JSON.stringify(this.annotations)); // Copy array but do not reference
+
+    if (this.calibration.enabled) {
+      for (const anno of layout.annotations) {
+        anno.hovertext += layout.xaxis.ticksuffix;
+      }
+    }
 
     if (update) {
       layout['uirevision'] = true;
