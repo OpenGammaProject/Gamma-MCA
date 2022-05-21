@@ -14,7 +14,6 @@
     - (?) Serial console read capability
     - Hotkey to open/close settings
     - (?) Add desktop notifications
-    - Customizable Peak Detection Parameters
     - Add Isotope Recognition for Peak Detector
 
   Known Performance Issues:
@@ -826,24 +825,28 @@ function loadSettingsDefault() {
   document.getElementById('custom-baud').value = serOptions.baudRate;
 
   document.getElementById('smaVal').value = plot.smaLength;
+
+  document.getElementById('peak-thres').value = plot.peakConfig.thres;
+  document.getElementById('peak-lag').value = plot.peakConfig.lag;
+  document.getElementById('peak-width').value = plot.peakConfig.width;
 }
 
 
 function loadSettingsStorage() {
-  let setting = loadJSON('isoListURL');
+  let setting = loadJSON('customURL');
   if (setting) {
     const newUrl = new URL(setting);
     isoListURL = newUrl.href;
   }
-  setting = loadJSON('editableMode');
+  setting = loadJSON('editMode');
   if (setting) {
     plot.editableMode = setting;
   }
-  setting = loadJSON('rawDelimiter');
+  setting = loadJSON('fileDelimiter');
   if (setting) {
     raw.delimiter = setting;
   }
-  setting = loadJSON('rawADC');
+  setting = loadJSON('fileChannels');
   if (setting) {
     raw.adcChannels = setting;
   }
@@ -851,7 +854,7 @@ function loadSettingsStorage() {
   if (setting) {
     refreshRate = setting;
   }
-  setting = loadJSON('serMaxBufferSize');
+  setting = loadJSON('serBufferSize');
   if (setting) {
     ser.maxSize = setting;
   }
@@ -859,11 +862,11 @@ function loadSettingsStorage() {
   if (setting) {
     ser.adcChannels = setting;
   }
-  setting = loadJSON('enableTimeLimit');
+  setting = loadJSON('timeLimitBool');
   if (setting) {
     maxRecTimeEnabled = setting;
   }
-  setting = loadJSON('timelimit');
+  setting = loadJSON('timeLimit');
   if (setting) {
     maxRecTime = setting;
   }
@@ -878,6 +881,18 @@ function loadSettingsStorage() {
   setting = loadJSON('smaLength');
   if (setting) {
     plot.smaLength = setting;
+  }
+  setting = loadJSON('peakThres');
+  if (setting) {
+    plot.peakConfig.thres = setting;
+  }
+  setting = loadJSON('peakLag');
+  if (setting) {
+    plot.peakConfig.lag = setting;
+  }
+  setting = loadJSON('peakWidth');
+  if (setting) {
+    plot.peakConfig.width = setting;
   }
 }
 
@@ -897,7 +912,7 @@ function changeSettings(name, element) {
       plot.resetPlot(spectrumData);
 
       if (localStorageAvailable) {
-        saveJSON('editableMode', value);
+        saveJSON(name, value);
       }
       break;
 
@@ -909,7 +924,7 @@ function changeSettings(name, element) {
         reloadIsotopes();
 
         if (localStorageAvailable) {
-          saveJSON('isoListURL', isoListURL);
+          saveJSON(name, isoListURL);
         }
 
       } catch(e) {
@@ -918,11 +933,11 @@ function changeSettings(name, element) {
       }
       break;
 
-    case 'delimiter':
+    case 'fileDelimiter':
       raw.delimiter = value;
 
       if (localStorageAvailable) {
-        saveJSON('rawDelimiter', value);
+        saveJSON(name, value);
       }
       break;
 
@@ -931,7 +946,7 @@ function changeSettings(name, element) {
       raw.adcChannels = value;
 
       if (localStorageAvailable) {
-        saveJSON('rawADC', value);
+        saveJSON(name, value);
       }
       break;
 
@@ -943,7 +958,7 @@ function changeSettings(name, element) {
       maxRecTimeEnabled = value;
 
       if (localStorageAvailable) {
-        saveJSON('enableTimeLimit', value);
+        saveJSON(name, value);
       }
       break;
 
@@ -952,34 +967,34 @@ function changeSettings(name, element) {
       maxRecTime = value * 1000; // convert s to ms
 
       if (localStorageAvailable) {
-        saveJSON('timelimit', maxRecTime);
+        saveJSON(name, maxRecTime);
       }
       break;
 
-    case 'hoverProx':
+    case 'maxIsoDist':
       value = parseFloat(value);
       maxDist = value;
 
       if (localStorageAvailable) {
-        saveJSON('maxIsoDist', value);
+        saveJSON(name, value);
       }
       break;
 
-    case 'plotRefresh':
+    case 'plotRefreshRate':
       value = parseFloat(value);
       refreshRate = value * 1000; // convert s to ms
 
       if (localStorageAvailable) {
-        saveJSON('plotRefreshRate', refreshRate);
+        saveJSON(name, refreshRate);
       }
       break;
 
-    case 'serBuffer':
+    case 'serBufferSize':
       value = parseInt(value);
       ser.maxSize = value;
 
       if (localStorageAvailable) {
-        saveJSON('serMaxBufferSize', value);
+        saveJSON(name, value);
       }
       break;
 
@@ -988,7 +1003,7 @@ function changeSettings(name, element) {
       serOptions.baudRate = value;
 
       if (localStorageAvailable) {
-        saveJSON('baudRate', value);
+        saveJSON(name, value);
       }
       break;
 
@@ -997,7 +1012,37 @@ function changeSettings(name, element) {
       ser.adcChannels = value;
 
       if (localStorageAvailable) {
-        saveJSON('serADC', value);
+        saveJSON(name, value);
+      }
+      break;
+
+    case 'peakThres':
+      value = parseFloat(value);
+      plot.peakConfig.thres = value;
+      plot.updatePlot(spectrumData);
+
+      if (localStorageAvailable) {
+        saveJSON(name, value);
+      }
+      break;
+
+    case 'peakLag':
+      value = parseInt(value);
+      plot.peakConfig.lag = value;
+      plot.updatePlot(spectrumData);
+
+      if (localStorageAvailable) {
+        saveJSON(name, value);
+      }
+      break;
+
+    case 'peakWidth':
+      value = parseInt(value);
+      plot.peakConfig.width = value;
+      plot.updatePlot(spectrumData);
+
+      if (localStorageAvailable) {
+        saveJSON(name, value);
       }
       break;
 
