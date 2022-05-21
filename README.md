@@ -35,4 +35,4 @@ Thanks to the Web Serial API you can use any serial device capable of doing gamm
 
 ---
 
-The End.
+Notice: The [LICENSE](/LICENSE) does not apply to the name "Gamma MCA" and especially the Gamma MCA logo. These are Copyright 2021 by me, Phoenix1747.
