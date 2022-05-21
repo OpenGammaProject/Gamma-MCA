@@ -15,6 +15,7 @@
     - Hotkey to open/close settings
     - (?) Add desktop notifications
     - Customizable Peak Detection Parameters
+    - Add Isotope Recognition for Peak Detector
 
   Known Performance Issues:
     - Isotope hightlighting
