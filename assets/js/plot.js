@@ -446,8 +446,8 @@ function SpectrumPlot(divId) {
         this.peakConfig.lastDataX = data[0].x;
         this.peakConfig.lastDataY = data[0].y;
       } else {
-        this.peakConfig.lastDataX = data[data.length - 1].x;
-        this.peakConfig.lastDataY = data[data.length - 1].y;
+        this.peakConfig.lastDataX = data[1].x;
+        this.peakConfig.lastDataY = data[1].y;
       }
       this.peakFinder();
     }
