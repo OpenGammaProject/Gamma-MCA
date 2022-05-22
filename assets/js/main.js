@@ -334,6 +334,7 @@ function resetPlot() {
     toggleSma(false, document.getElementById('sma'));
   }
   plot.clearAnnos();
+  document.getElementById('check-all-isos').checked = false; // reset "select all" checkbox
   loadIsotopes(true);
   plot.resetPlot(spectrumData);
   bindPlotEvents(); // Fix Reset Bug: Hovering and Clicking not working.
