@@ -44,7 +44,12 @@ self.addEventListener("install", function(event) { // First time install of a wo
         cache.delete(URL, {ignoreSearch: true, ignoreMethod: true});
       }
       */
-      clearCache(); // Clear the whole cache
+      cache.keys().then(function(keys) { // Delete the whole cache
+        keys.forEach(async function(request, index, array) {
+          //console.log('Clearing cache!', request);
+          await cache.delete(request);
+        });
+      })
       return cache.addAll(OFFLINE_RESOURCES); // Cache all important files
     })
   );
@@ -83,18 +88,6 @@ self.addEventListener("fetch", function(event) {
     }
   }());
 });
-
-
-async function clearCache() {
-  const cache = await caches.open(CACHE_NAME);
-
-  cache.keys().then(function(keys) { // Delete the whole cache
-    keys.forEach(function(request, index, array) {
-      //console.log('Clearing cache!', request);
-      cache.delete(request);
-    });
-  });
-}
 
 
 async function updateCache(request) {
