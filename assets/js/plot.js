@@ -359,9 +359,9 @@ function SpectrumPlot(divId) {
         spikedash: 'solid',
         spikecolor: 'black',
         spikemode: 'across',
-        nticks: 20,
+        //nticks: 20,
         //tickformat: '.02f',
-        //exponentformat: "SI",
+        exponentformat: "SI",
       },
       yaxis: {
         title: 'Counts [1]',

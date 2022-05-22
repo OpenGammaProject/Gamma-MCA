@@ -15,6 +15,7 @@
     - (?) Add desktop notifications
     - Add Isotope Recognition for Peak Detector
     - (?) Tabs for main control functions up top
+    - Format click and hover numbers
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -257,6 +258,7 @@ function getFileData(input, background = false) { // Gets called when a file has
     }
 
     plot.plotData(spectrumData, false);
+    bindPlotEvents(); // needed, because of "false" above
   };
 
   reader.onerror = function() {
@@ -364,7 +366,7 @@ function changeSma(input) {
 
 function hoverEvent(data) {
   const hoverData = document.getElementById('hover-data');
-  hoverData.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
+  hoverData.innerText = Math.round(data.points[0].x) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
 
   for (const key in calClick) {
     if (calClick[key]) {
@@ -398,7 +400,7 @@ function unHover(data) {
 
 function clickEvent(data) {
   const clickData = document.getElementById('click-data');
-  clickData.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
+  clickData.innerText = Math.round(data.points[0].x) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
 
   for (const key in calClick) {
     if (calClick[key]) {
@@ -466,6 +468,7 @@ function toggleCal(enabled) {
     plot.calibration.enabled = enabled;
   }
   plot.plotData(spectrumData, false);
+  bindPlotEvents(); // needed, because of "false" above
 }
 
 
