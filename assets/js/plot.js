@@ -84,7 +84,7 @@ function SpectrumPlot(divId) {
     Get The Moving Average
   */
   this.computeMovingAverage = function(target, length = this.smaLength) {
-    let newData = getXAxis(target.length);
+    let newData = Array(target.length).fill(0);
     const half = Math.round(length/2);
 
     for(const i in newData) { // Compute the central moving average
@@ -284,7 +284,7 @@ function SpectrumPlot(divId) {
       Compute Background and Corrected Spectrum
     */
     if (dataObj.background.length == dataObj.data.length) {
-      bgTrace = {
+      let bgTrace = {
         name: 'Background Spectrum',
         stackgroup: 'data', // Stack line charts on top of each other
 
@@ -329,6 +329,8 @@ function SpectrumPlot(divId) {
     /*
       All The Layout Stuff
     */
+    const maxXValue = trace.x[trace.x.length-1];
+
     let layout = {
       autosize: true, // Needed for resizing on update
       title: 'Energy Spectrum',
@@ -343,12 +345,14 @@ function SpectrumPlot(divId) {
         title: 'ADC Channel [1]',
         mirror: true,
         linewidth: 2,
-        autorange: true,
+        //autorange: true,
         fixedrange: true,
+        range: [0,maxXValue],
         type: this.xAxis, // 'linear' or 'log'
         rangeslider: {
-          borderwidth: 2,
-          //thickness: 0.15,
+          borderwidth: 1,
+          //autorange: true,
+          range: [0,maxXValue],
         },
         showspikes: true, //Show spike line for X-axis
         spikethickness: 1,
