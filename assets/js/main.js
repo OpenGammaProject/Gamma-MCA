@@ -465,7 +465,7 @@ function toggleCal(enabled) {
   } else {
     plot.calibration.enabled = enabled;
   }
-  plot.updatePlot(spectrumData);
+  plot.plotData(spectrumData, false);
 }
 
 

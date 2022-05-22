@@ -462,7 +462,7 @@ function SpectrumPlot(divId) {
     }
 
     if (update) {
-      layout['uirevision'] = true;
+      layout.uirevision = true;
       Plotly.react(this.divId, data, layout, config);
     } else {
       Plotly.newPlot(this.divId, data, layout, config);
