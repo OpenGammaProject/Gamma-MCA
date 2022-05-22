@@ -332,6 +332,7 @@ function SpectrumPlot(divId) {
     const maxXValue = Math.max(...trace.x);
 
     let layout = {
+      uirevision: true,
       autosize: true, // Needed for resizing on update
       title: 'Energy Spectrum',
       hovermode: 'x',
@@ -462,7 +463,7 @@ function SpectrumPlot(divId) {
     }
 
     if (update) {
-      layout.uirevision = true;
+      //layout.uirevision = true;
       Plotly.react(this.divId, data, layout, config);
     } else {
       Plotly.newPlot(this.divId, data, layout, config);
