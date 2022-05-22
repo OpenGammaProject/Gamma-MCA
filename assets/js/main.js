@@ -11,11 +11,12 @@
     - Social media share function
     - FWHM calculation for peaks
     - (?) Serial console read capability
-    - Hotkey to open/close settings
+    - (?) Hotkey to open/close settings
     - (?) Add desktop notifications
     - Add Isotope Recognition for Peak Detector
-    - (?) Tabs for main control functions up top
-    - Format click and hover numbers
+    - Tabs for main control functions up top
+    - Spike cursor decimal places
+    - (!) Weird comb-structure with quadratic calibrations
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -769,7 +770,9 @@ function selectAll(selectBox) {
     const checkBox = row.cells[0].firstChild;
     checkBox.checked = selectBox.checked;
     if (selectBox.checked) {
-      plot.toggleLine(checkBox.value, checkBox.id, checkBox.checked);
+      const wordArray = checkBox.id.split('-');
+      const name = wordArray[0] + '-' + wordArray[1];
+      plot.toggleLine(checkBox.value, name, checkBox.checked);
     }
   }
   if (!selectBox.checked) {
