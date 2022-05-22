@@ -158,7 +158,6 @@ window.onbeforeunload = function(e) {
 document.body.onresize = function() {
   plot.updatePlot(spectrumData);
   sizeCheck();
-  //fixHeight('offbody', 'tabcontent');
 };
 
 
@@ -266,25 +265,6 @@ function getFileData(input, background = false) { // Gets called when a file has
   };
 }
 
-/*
-function fixHeight(parentId, contentId) {
-  const offsetMargin = 35;
-  const parentElement = document.getElementById(parentId);
-  const contentElement = document.getElementById(contentId);
-
-  const totalHeight = parentElement.offsetHeight;
-  let reservedHeight = 0;
-
-  for (childElement of parentElement.childNodes) {
-    if (childElement.id == contentElement.id || childElement.nodeType == 3) {
-      continue;
-    }
-    reservedHeight += childElement.offsetHeight;
-  }
-  contentElement.style['max-height'] = totalHeight - reservedHeight - offsetMargin + 'px';
-  contentElement.style['overflow-y'] = 'scroll';
-}
-*/
 
 function sizeCheck() {
   const viewportWidth = document.documentElement.clientWidth;
@@ -518,7 +498,7 @@ function importCal(input) {
   if (input.files.length == 0) { // File selection has been canceled
     return;
   }
-  
+
   const file = input.files[0];
   let reader = new FileReader();
 
@@ -649,7 +629,6 @@ async function loadIsotopes(reload = false) { // Load Isotope Energies JSON ONCE
   const loadingElement = document.getElementById('iso-loading');
   loadingElement.className = loadingElement.className.replaceAll(' visually-hidden', '');
 
-  //fixHeight('offbody', 'tabcontent');
   const options = {
     cache: 'no-cache',
     headers: {
