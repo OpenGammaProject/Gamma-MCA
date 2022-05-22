@@ -1216,6 +1216,7 @@ async function readUntilClosed() {
 
 
 let closed;
+let firstLoad = false;
 
 async function startRecord(pause = false, type = recordingType) {
   try {
@@ -1227,6 +1228,7 @@ async function startRecord(pause = false, type = recordingType) {
 
     if (!pause) {
       removeFile(recordingType); // Remove old spectrum
+      firstLoad = true;
     }
 
     document.getElementById('export-button').disabled = false;
@@ -1387,7 +1389,13 @@ function refreshRender(type) {
     spectrumData[type] = ser.updateData(spectrumData[type], newData); // Depends on Background/Spectrum Aufnahme
     spectrumData[type + 'Cps'] = spectrumData[type].map(val => val / delta.getTime() * 1000);
 
-    plot.updatePlot(spectrumData);
+    if (firstLoad) {
+      plot.plotData(spectrumData, false);
+      bindPlotEvents(); // needed, because of "false" above
+      firstLoad = false;
+    } else {
+      plot.updatePlot(spectrumData);
+    }
 
     const deltaLastRefresh = new Date(nowTime.getTime() - lastUpdate.getTime());
     lastUpdate = nowTime;
