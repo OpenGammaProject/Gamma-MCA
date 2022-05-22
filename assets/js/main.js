@@ -366,7 +366,7 @@ function changeSma(input) {
 
 function hoverEvent(data) {
   const hoverData = document.getElementById('hover-data');
-  hoverData.innerText = Math.round(data.points[0].x) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
+  hoverData.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
 
   for (const key in calClick) {
     if (calClick[key]) {
@@ -400,7 +400,7 @@ function unHover(data) {
 
 function clickEvent(data) {
   const clickData = document.getElementById('click-data');
-  clickData.innerText = Math.round(data.points[0].x) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
+  clickData.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
 
   for (const key in calClick) {
     if (calClick[key]) {
@@ -426,9 +426,9 @@ function toggleCal(enabled) {
   */
   if (enabled) {
     let readoutArray = [
-      [document.getElementById('adc-a').value, document.getElementById('cal-a').value*1000],
-      [document.getElementById('adc-b').value, document.getElementById('cal-b').value*1000],
-      [document.getElementById('adc-c').value, document.getElementById('cal-c').value*1000]
+      [document.getElementById('adc-a').value, document.getElementById('cal-a').value],
+      [document.getElementById('adc-b').value, document.getElementById('cal-b').value],
+      [document.getElementById('adc-c').value, document.getElementById('cal-c').value]
     ];
 
     let invalid = 0;
@@ -560,19 +560,7 @@ function getDateString() {
 
 function downloadCal() {
   filename = 'calibration_' + getDateString() + '.json';
-
-  let newObject = {};
-  for (const key in plot.calibration) {
-    const value = plot.calibration[key];
-    if (!isNaN(value)) {
-      if (key == 'aTo' || key == 'bTo' || key == 'cTo') {
-        newObject[key] = value/1000;
-      } else {
-        newObject[key] = value;
-      }
-    }
-  }
-  download(filename, newObject, true);
+  download(filename, plot.calibration, true);
 }
 
 

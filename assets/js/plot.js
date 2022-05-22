@@ -412,8 +412,8 @@ function SpectrumPlot(divId) {
       for (const element of data) {
         element.x = this.getCalAxis(element.x.length);
       }
-      layout.xaxis.title = 'Energy [eV]';
-      layout.xaxis.ticksuffix = 'eV';
+      layout.xaxis.title = 'Energy [keV]';
+      layout.xaxis.ticksuffix = ' keV';
 
       const newMax = Math.max(...data[0].x);
       layout.xaxis.range = [0,newMax];
