@@ -1155,8 +1155,9 @@ async function requestSerial() {
 function toggleCps(button, off = false) {
   if (off) { // Override
     plot.cps = false;
+  } else {
+    plot.cps = !plot.cps;
   }
-  plot.cps = !plot.cps;
 
   if (plot.cps) {
     button.innerText = 'CPS';
