@@ -345,13 +345,13 @@ function SpectrumPlot(divId) {
         title: 'ADC Channel [1]',
         mirror: true,
         linewidth: 2,
-        //autorange: true,
+        autorange: false,
         fixedrange: false,
         range: [0,maxXValue],
         type: this.xAxis, // 'linear' or 'log'
         rangeslider: {
           borderwidth: 1,
-          //autorange: true,
+          autorange: false,
           range: [0,maxXValue],
         },
         showspikes: true, //Show spike line for X-axis
@@ -429,7 +429,7 @@ function SpectrumPlot(divId) {
 
     let config = {
       responsive: true,
-      scrollZoom: true,
+      scrollZoom: false,
       displayModeBar: true,
       displaylogo: false,
       toImageButtonOptions: {

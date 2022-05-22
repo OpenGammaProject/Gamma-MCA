@@ -256,7 +256,7 @@ function getFileData(input, background = false) { // Gets called when a file has
       }
     }
 
-    plot.plotData(spectrumData);
+    plot.plotData(spectrumData, false);
   };
 
   reader.onerror = function() {
