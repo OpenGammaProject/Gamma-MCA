@@ -444,9 +444,9 @@ function toggleCal(enabled) {
   */
   if (enabled) {
     let readoutArray = [
-      [document.getElementById('adc-a').value, document.getElementById('cal-a').value],
-      [document.getElementById('adc-b').value, document.getElementById('cal-b').value],
-      [document.getElementById('adc-c').value, document.getElementById('cal-c').value]
+      [document.getElementById('adc-a').value, document.getElementById('cal-a').value*1000],
+      [document.getElementById('adc-b').value, document.getElementById('cal-b').value*1000],
+      [document.getElementById('adc-c').value, document.getElementById('cal-c').value*1000]
     ];
 
     let invalid = 0;
@@ -568,7 +568,19 @@ function getDateString() {
 
 function downloadCal() {
   filename = 'calibration_' + getDateString() + '.json';
-  download(filename, plot.calibration, true);
+
+  let newObject = {};
+  for (const key in plot.calibration) {
+    const value = plot.calibration[key];
+    if (!isNaN(value)) {
+      if (key == 'aTo' || key == 'bTo' || key == 'cTo') {
+        newObject[key] = value/1000;
+      } else {
+        newObject[key] = value;
+      }
+    }
+  }
+  download(filename, newObject, true);
 }
 
 
