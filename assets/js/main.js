@@ -666,14 +666,14 @@ async function loadIsotopes(reload = false) { // Load Isotope Energies JSON ONCE
           try {
             evnt.target.parentNode.firstChild.firstChild.click();
           } catch(e) { // Catch press on <sup> element
-            evnt.target.parentNode.parentNode.firstChild.firstChild.click();
+            ; //evnt.target.parentNode.parentNode.firstChild.firstChild.click();
           }
         });
         cell3.addEventListener('click', function(evnt) {
           try {
             evnt.target.parentNode.firstChild.firstChild.click();
           } catch(e) { // Catch press on <sup> element
-            evnt.target.parentNode.parentNode.firstChild.firstChild.click();
+            ; //evnt.target.parentNode.parentNode.firstChild.firstChild.click();
           }
         });
 
@@ -686,11 +686,11 @@ async function loadIsotopes(reload = false) { // Load Isotope Energies JSON ONCE
         const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1);
 
         cell1.innerHTML = '<input class="form-check-input" id="' + name + '" type="checkbox" value="' + energy + '" onclick="plotIsotope(this)">';
-        cell3.innerText = energy.toFixed(2);
+        cell3.innerHTML = '<label for="' + name + '">' +  energy.toFixed(2) + '</label>';
 
         const strArr = name.split('-');
 
-        cell2.innerHTML = '<sup>' + strArr[1] + '</sup>' + strArr[0];
+        cell2.innerHTML = '<label for="' + name + '"><sup>' + strArr[1] + '</sup>' + strArr[0] + '</label>';
       }
     } else {
       isoError.innerText = 'Could not load isotope list! HTTP Error: ' + response.status + '. Please try again.';
