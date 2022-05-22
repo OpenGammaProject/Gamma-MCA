@@ -219,14 +219,21 @@ function SpectrumPlot(divId) {
         },
       };
 
-      if (!this.shapes.includes(newLine)) {
-        this.shapes.push(newLine);
+      // Check for duplicates!
+      for (const shape of this.shapes) {
+        if (JSON.stringify(shape) === JSON.stringify(newLine)) {
+          return;
+        }
       }
-      if (!this.annotations.includes(newAnno)) {
-        this.annotations.push(newAnno);
-      } else {
-        console.log('yes');
+      for (const anno of this.annotations) {
+        if (JSON.stringify(anno) === JSON.stringify(newAnno)) {
+          return;
+        }
       }
+
+      // Not a duplicate
+      this.shapes.push(newLine);
+      this.annotations.push(newAnno);
     } else {
       for (const i in this.shapes) {
         if (this.shapes[i].x0 == energy) {
@@ -239,7 +246,6 @@ function SpectrumPlot(divId) {
         }
       }
     }
-
   };
   /*
     Clear annotations and shapes
