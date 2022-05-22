@@ -346,7 +346,7 @@ function SpectrumPlot(divId) {
         mirror: true,
         linewidth: 2,
         //autorange: true,
-        fixedrange: true,
+        fixedrange: false,
         range: [0,maxXValue],
         type: this.xAxis, // 'linear' or 'log'
         rangeslider: {
