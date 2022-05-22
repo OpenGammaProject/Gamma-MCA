@@ -18,7 +18,7 @@
 
   Known Performance Issues:
     - Isotope hightlighting
-    - (Un)Selecting all isotopes from gamma-ray energies list
+    - (Un)Selecting all isotopes from gamma-ray energies list (Plotly)
 */
 
 const SpectrumData = function() { // Will hold the measurement data globally.
@@ -58,7 +58,7 @@ let isoList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2022-05-21b';
+const APP_VERSION = '2022-05-22';
 let localStorageAvailable = false;
 let firstInstall = false;
 
@@ -769,7 +769,7 @@ function plotIsotope(checkbox) {
 
 
 function selectAll(selectBox) {
-  // Bad performance ofc
+  // Bad performance because of the updatePlot with that many lines!
   const tableElement = selectBox.closest('table');
   const tableBody = tableElement.tBodies[0];
   const tableRows = tableBody.rows;
