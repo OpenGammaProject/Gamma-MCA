@@ -329,7 +329,7 @@ function SpectrumPlot(divId) {
     /*
       All The Layout Stuff
     */
-    const maxXValue = trace.x[trace.x.length-1];
+    const maxXValue = Math.max(...trace.x);
 
     let layout = {
       autosize: true, // Needed for resizing on update
@@ -414,6 +414,10 @@ function SpectrumPlot(divId) {
       }
       layout.xaxis.title = 'Energy [keV]';
       layout.xaxis.ticksuffix = ' keV';
+
+      const newMax = Math.max(...data[0].x);
+      layout.xaxis.range = [0,newMax];
+      layout.xaxis.rangeslider.range = [0,newMax];
     }
     /*
       CPS enabled
