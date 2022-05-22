@@ -14,6 +14,7 @@
     - Hotkey to open/close settings
     - (?) Add desktop notifications
     - Add Isotope Recognition for Peak Detector
+    - (?) Tabs for main control functions up top
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -654,7 +655,10 @@ async function loadIsotopes(reload = false) { // Load Isotope Energies JSON ONCE
       let intKeys = Object.keys(json);
       intKeys.sort((a, b) => a - b); // Sort Energies numerically
 
+      let index = 0; // Index used to avoid HTML id duplicates
+
       for (const key of intKeys) {
+        index++;
         isoList[key] = json[key];
 
         const row = tableElement.insertRow();
@@ -682,8 +686,8 @@ async function loadIsotopes(reload = false) { // Load Isotope Energies JSON ONCE
 
         const energy = parseFloat(key.trim());
         const dirtyName = json[key].toLowerCase();
-        const lowercaseName = dirtyName.replace(/[^a-z0-9 -]/gi, '').trim(); // Fixes security issue. See GitHub: #2
-        const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1);
+        const lowercaseName = dirtyName.replace(/[^a-z0-9 -]/gi, '').trim(); // Fixes security issue. Clean everything except for letters, numbers and minus. See GitHub: #2
+        const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1) + '-' + index; // Capitalize Name and append index number
 
         cell1.innerHTML = '<input class="form-check-input" id="' + name + '" type="checkbox" value="' + energy + '" onclick="plotIsotope(this)">';
         cell3.innerHTML = '<label for="' + name + '">' +  energy.toFixed(2) + '</label>';
@@ -756,7 +760,9 @@ async function closestIso(value) {
 
 
 function plotIsotope(checkbox) {
-  plot.toggleLine(checkbox.value, checkbox.id, checkbox.checked);
+  const wordArray = checkbox.id.split('-');
+  const name = wordArray[0] + '-' + wordArray[1];
+  plot.toggleLine(checkbox.value, name, checkbox.checked);
   plot.updatePlot(spectrumData);
 }
 
