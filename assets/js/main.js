@@ -515,6 +515,10 @@ function changeType(button) {
 
 
 function importCal(input) {
+  if (input.files.length == 0) { // File selection has been canceled
+    return;
+  }
+  
   const file = input.files[0];
   let reader = new FileReader();
 
@@ -547,7 +551,12 @@ function importCal(input) {
       console.log('Calibration Import Error:', e);
       popupNotification('cal-import-error');
     }
-  }
+  };
+
+  reader.onerror = function() {
+    popupNotification('file-error');
+    return;
+  };
 }
 
 
