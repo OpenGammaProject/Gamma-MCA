@@ -440,6 +440,7 @@ function SpectrumPlot(divId) {
       displayModeBar: true,
       displaylogo: false,
       toImageButtonOptions: {
+        format: 'png', // one of png, svg, jpeg, webp
         filename: 'gamma_mca_export',
       },
       editable: this.editableMode,
