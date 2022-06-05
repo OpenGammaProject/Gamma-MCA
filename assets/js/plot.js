@@ -291,7 +291,7 @@ function SpectrumPlot(divId) {
     */
     if (dataObj.background.length == dataObj.data.length) {
       let bgTrace = {
-        name: 'Background Spectrum',
+        name: 'Background',
         stackgroup: 'data', // Stack line charts on top of each other
 
         x: getXAxis(dataObj.background.length),
@@ -488,7 +488,7 @@ function SpectrumPlot(divId) {
 
           <script src="https://spectrum.nuclearphoenix.xyz/assets/js/external/plotly-basic.min.js"><\/script>
 
-          <div id="plotly-output"></div>
+          <div id="plotly-output" style="width:100%;height:100%"></div>
 
           <script type="text/javascript">
             Plotly.newPlot(
