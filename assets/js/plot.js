@@ -469,6 +469,47 @@ function SpectrumPlot(divId) {
       }
     }
 
+    /*
+      HTML EXPORT FUNCTIONALITY
+    */
+    config.modeBarButtonsToAdd = [{
+      name: 'Download plot as HTML',
+      icon: Plotly.Icons['disk'],
+      direction: 'up',
+      click: function() {
+        let newConfig = JSON.parse(JSON.stringify(config));
+        delete newConfig.modeBarButtonsToAdd; // remove this section, otherwise there will be problems!
+
+        const text = `
+        <html>
+          <head>
+            <meta charset="utf-8" />
+          </head>
+
+          <script src="https://spectrum.nuclearphoenix.xyz/assets/js/external/plotly-basic.min.js"><\/script>
+
+          <div id="plotly-output"></div>
+
+          <script type="text/javascript">
+            Plotly.newPlot(
+              'plotly-output',
+              ${JSON.stringify(data)},
+              ${JSON.stringify(layout)},
+              ${JSON.stringify(newConfig)}
+            );
+          <\/script>
+        <\/html>
+        `;
+
+        var element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('download', 'gamma_mca_export.html');
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+    }}];
+
     if (update) {
       //layout.uirevision = true;
       Plotly.react(this.divId, data, layout, config);

@@ -17,6 +17,7 @@
     - Spike cursor decimal places
     - !!! Weird comb-structure with quadratic calibrations
     - !!! Check Calibration Regression
+    - !!! Export HTML not supporting all settings?
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -60,7 +61,7 @@ let isoList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2022-05-22a';
+const APP_VERSION = '2022-06-05';
 let localStorageAvailable = false;
 let firstInstall = false;
 
