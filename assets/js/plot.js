@@ -483,22 +483,14 @@ function SpectrumPlot(divId) {
         const text = `
         <html>
           <head>
-            <meta charset="utf-8" />
+            <meta charset="utf-8">
           </head>
-
-          <script src="https://spectrum.nuclearphoenix.xyz/assets/js/external/plotly-basic.min.js"><\/script>
-
-          <div id="plotly-output" style="width:100%;height:100%"></div>
-
-          <script type="text/javascript">
-            Plotly.newPlot(
-              'plotly-output',
-              ${JSON.stringify(data)},
-              ${JSON.stringify(layout)},
-              ${JSON.stringify(newConfig)}
-            );
-          <\/script>
-        <\/html>
+          <body>
+            <div id="plotly-output" style="width:100%;height:100%"></div>
+            <script src="https://spectrum.nuclearphoenix.xyz/assets/js/external/plotly-basic.min.js"></script>
+            <script type="text/javascript">Plotly.newPlot('plotly-output',${JSON.stringify(data)},${JSON.stringify(layout)},${JSON.stringify(newConfig)})</script>
+          </body>
+        </html>
         `;
 
         var element = document.createElement('a');

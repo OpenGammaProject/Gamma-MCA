@@ -18,6 +18,8 @@
     - !!! Weird comb-structure with quadratic calibrations
     - !!! Check Calibration Regression
     - !!! Export HTML not supporting all settings?
+    - !!! Watermark for HTML export
+    - Image Export File Format in settings
 
   Known Performance Issues:
     - Isotope hightlighting
