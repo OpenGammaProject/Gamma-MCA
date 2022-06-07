@@ -465,7 +465,7 @@ function SpectrumPlot(divId) {
     }
 
     layout.shapes = this.shapes;
-    layout.annotations = JSON.parse(JSON.stringify(this.annotations)); // Copy array but do not reference
+    layout.annotations = JSON.parse(JSON.stringify(this.annotations)); //layout.annotations.concat(JSON.parse(JSON.stringify(this.annotations))); // Copy array but do not reference
 
     if (this.calibration.enabled) {
       for (const anno of layout.annotations) {
@@ -481,8 +481,30 @@ function SpectrumPlot(divId) {
       icon: Plotly.Icons['disk'],
       direction: 'up',
       click: function() {
+        let newLayout = JSON.parse(JSON.stringify(layout));
+        const logoUrl = new URL('/assets/logo.svg', window.location.origin);
+        newLayout.images[0].source = logoUrl.href;
+
+        const newAnno = {
+          x: 1,
+          y: 0.01,
+          opacity: 0.9,
+          xref: 'paper',
+          yref: 'paper',
+          xanchor: "right",
+          yanchor: "bottom",
+          text: 'https://spectrum.nuclearphoenix.xyz',
+          showarrow: false,
+          font: {
+            size: 10,
+          },
+        };
+        newLayout.annotations.push(newAnno);
+
         let newConfig = JSON.parse(JSON.stringify(config));
         delete newConfig.modeBarButtonsToAdd; // remove this section, otherwise there will be problems!
+
+        const scriptUrl = new URL('/assets/js/external/plotly-basic.min.js', window.location.origin);
 
         const text = `
         <html>
@@ -491,8 +513,8 @@ function SpectrumPlot(divId) {
           </head>
           <body>
             <div id="plotly-output" style="width:100%;height:100%"></div>
-            <script src="https://spectrum.nuclearphoenix.xyz/assets/js/external/plotly-basic.min.js"></script>
-            <script type="text/javascript">Plotly.newPlot('plotly-output',${JSON.stringify(data)},${JSON.stringify(layout)},${JSON.stringify(newConfig)})</script>
+            <script src="${scriptUrl}"></script>
+            <script type="text/javascript">Plotly.newPlot('plotly-output',${JSON.stringify(data)},${JSON.stringify(newLayout)},${JSON.stringify(newConfig)})</script>
           </body>
         </html>
         `;
