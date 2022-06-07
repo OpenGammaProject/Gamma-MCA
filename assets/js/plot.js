@@ -278,6 +278,8 @@ function SpectrumPlot(divId) {
       width: 1,
     };
 
+    let maxXValue = Math.max(...trace.x);
+
     let data = [trace];
 
     /*
@@ -289,7 +291,7 @@ function SpectrumPlot(divId) {
     /*
       Compute Background and Corrected Spectrum
     */
-    if (dataObj.background.length == dataObj.data.length) {
+    if (dataObj.background.length > 0) { //== dataObj.data.length)
       let bgTrace = {
         name: 'Background',
         stackgroup: 'data', // Stack line charts on top of each other
@@ -308,6 +310,10 @@ function SpectrumPlot(divId) {
           color: 'slategrey',
         },
       };
+
+      if (bgTrace.x.length > maxXValue) {
+        maxXValue = Math.max(...bgTrace.x);
+      }
 
       if (this.cps) {
         bgTrace.y = dataObj.backgroundCps;
@@ -335,8 +341,6 @@ function SpectrumPlot(divId) {
     /*
       All The Layout Stuff
     */
-    const maxXValue = Math.max(...trace.x);
-
     let layout = {
       uirevision: true,
       autosize: true, // Needed for resizing on update
