@@ -507,6 +507,7 @@ function SpectrumPlot(divId) {
         const scriptUrl = new URL('/assets/js/external/plotly-basic.min.js', window.location.origin);
 
         const text = `
+        <!DOCTYPE html>
         <html>
           <head>
             <meta charset="utf-8">
