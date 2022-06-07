@@ -56,7 +56,7 @@ function SpectrumPlot(divId) {
       const a = (this.calibration.cFrom * (this.calibration.bTo - this.calibration.aTo) + this.calibration.bFrom * (this.calibration.aTo - this.calibration.cTo) + this.calibration.aFrom * (this.calibration.cTo - this.calibration.bTo)) / denom;
 
       for(let i = 0; i < len; i++) {
-        calArray.push(a * Math.pow(i,2) + k * i + d);
+        calArray.push((a * Math.pow(i,2) + k * i + d).toFixed(2));
       }
 
       console.log('c1',a);
@@ -69,7 +69,7 @@ function SpectrumPlot(divId) {
       const d = this.calibration.aTo - k * this.calibration.aFrom;
 
       for(let i = 0; i < len; i++) {
-        calArray.push(k * i + d);
+        calArray.push((k * i + d).toFixed(2));
       }
 
       console.log('c1',0);
