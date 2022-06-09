@@ -18,8 +18,8 @@
     - !!! Weird comb-structure with quadratic calibrations
     - !!! Check Calibration Regression
     - !!! Export HTML not supporting all settings?
-    - !!! Watermark for HTML export
     - Image Export File Format in settings
+    - Backlink to GammaDB
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -63,7 +63,7 @@ let isoList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2022-06-07a';
+const APP_VERSION = '2022-06-09';
 let localStorageAvailable = false;
 let firstInstall = false;
 

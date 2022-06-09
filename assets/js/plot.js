@@ -512,8 +512,8 @@ function SpectrumPlot(divId) {
           <head>
             <meta charset="utf-8">
           </head>
-          <body>
-            <div id="plotly-output" style="width:100%;height:100%"></div>
+          <body style="margin:0;padding:0">
+            <div id="plotly-output" style="width:100vw;height:100vh"></div>
             <script src="${scriptUrl}"></script>
             <script type="text/javascript">Plotly.newPlot('plotly-output',${JSON.stringify(data)},${JSON.stringify(newLayout)},${JSON.stringify(newConfig)})</script>
           </body>
