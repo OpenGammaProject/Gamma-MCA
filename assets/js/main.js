@@ -16,7 +16,6 @@
     - Add Isotope Recognition for Peak Detector
     - !!! Weird comb-structure with quadratic calibrations
     - !!! Check Calibration Regression
-    - !!! Export HTML not supporting all settings?
 
   Known Performance Issues:
     - Isotope hightlighting

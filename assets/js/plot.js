@@ -32,6 +32,67 @@ function SpectrumPlot(divId) {
     lastDataY: [],
   };
 
+  this.customModeBarButtons = {
+    name: 'Download plot as HTML',
+    icon: Plotly.Icons['disk'],
+    direction: 'up',
+    click: function(plotElement) {
+      let newLayout = JSON.parse(JSON.stringify(plotElement.layout));
+      const logoUrl = new URL('/assets/logo.svg', window.location.origin);
+      newLayout.images[0].source = logoUrl.href;
+
+      const newAnno = {
+        x: 1,
+        y: 0,
+        opacity: 0.9,
+        xref: 'paper',
+        yref: 'paper',
+        xanchor: "right",
+        yanchor: "bottom",
+        text: window.location.origin, //'https://spectrum.nuclearphoenix.xyz',
+        showarrow: false,
+        font: {
+          size: 10,
+        },
+      };
+      newLayout.annotations.push(newAnno);
+
+      //let newConfig = JSON.parse(JSON.stringify(plotElement.config));
+      //delete newConfig.modeBarButtonsToAdd; // remove this section, otherwise there will be problems!
+
+      const scriptUrl = new URL('/assets/js/external/plotly-basic.min.js', window.location.origin);
+      const config = {
+        responsive: true,
+        displaylogo: false,
+        toImageButtonOptions: {
+          filename: 'gamma_mca_export',
+        }
+      };
+
+      const text = `
+      <!DOCTYPE html>
+      <!-- Gamma MCA Interactive Export Version 1 by NuclearPhoenix. https://spectrum.nuclearphoenix.xyz. -->
+      <html>
+        <head>
+          <meta charset="utf-8">
+        </head>
+        <body style="margin:0;padding:0">
+          <div id="plotly-output" style="width:99vw;height:99vh"></div>
+          <script src="${scriptUrl}"></script>
+          <script type="text/javascript">Plotly.newPlot('plotly-output',${JSON.stringify(plotElement.data)},${JSON.stringify(newLayout)},${JSON.stringify(config)})</script>
+        </body>
+      </html>
+      `;
+
+      let element = document.createElement('a');
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+      element.setAttribute('download', 'gamma_mca_export.html');
+      element.style.display = 'none';
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+  }};
+
   /*
     Get An Array with Length == Data.length containing ascending numbers
   */
@@ -477,58 +538,7 @@ function SpectrumPlot(divId) {
     /*
       HTML EXPORT FUNCTIONALITY
     */
-    config.modeBarButtonsToAdd = [{
-      name: 'Download plot as HTML',
-      icon: Plotly.Icons['disk'],
-      direction: 'up',
-      click: function() {
-        let newLayout = JSON.parse(JSON.stringify(layout));
-        const logoUrl = new URL('/assets/logo.svg', window.location.origin);
-        newLayout.images[0].source = logoUrl.href;
-
-        const newAnno = {
-          x: 1,
-          y: 0.01,
-          opacity: 0.9,
-          xref: 'paper',
-          yref: 'paper',
-          xanchor: "right",
-          yanchor: "bottom",
-          text: 'https://spectrum.nuclearphoenix.xyz',
-          showarrow: false,
-          font: {
-            size: 10,
-          },
-        };
-        newLayout.annotations.push(newAnno);
-
-        let newConfig = JSON.parse(JSON.stringify(config));
-        delete newConfig.modeBarButtonsToAdd; // remove this section, otherwise there will be problems!
-
-        const scriptUrl = new URL('/assets/js/external/plotly-basic.min.js', window.location.origin);
-
-        const text = `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="utf-8">
-          </head>
-          <body style="margin:0;padding:0">
-            <div id="plotly-output" style="width:99vw;height:99vh"></div>
-            <script src="${scriptUrl}"></script>
-            <script type="text/javascript">Plotly.newPlot('plotly-output',${JSON.stringify(data)},${JSON.stringify(newLayout)},${JSON.stringify(newConfig)})</script>
-          </body>
-        </html>
-        `;
-
-        var element = document.createElement('a');
-        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-        element.setAttribute('download', 'gamma_mca_export.html');
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-    }}];
+    config.modeBarButtonsToAdd = [this.customModeBarButtons];
 
     if (update) {
       //layout.uirevision = true;
