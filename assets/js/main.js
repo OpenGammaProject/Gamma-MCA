@@ -19,7 +19,6 @@
     - !!! Check Calibration Regression
     - !!! Export HTML not supporting all settings?
     - Image Export File Format in settings
-    - Backlink to GammaDB
 
   Known Performance Issues:
     - Isotope hightlighting
