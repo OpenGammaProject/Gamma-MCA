@@ -18,7 +18,6 @@
     - !!! Weird comb-structure with quadratic calibrations
     - !!! Check Calibration Regression
     - !!! Export HTML not supporting all settings?
-    - Image Export File Format in settings
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -832,6 +831,13 @@ function loadSettingsDefault() {
   document.getElementById('peak-thres').value = plot.peakConfig.thres;
   document.getElementById('peak-lag').value = plot.peakConfig.lag;
   document.getElementById('peak-width').value = plot.peakConfig.width;
+
+  const formatSelector = document.getElementById('download-format');
+  for (let i = 0; i < formatSelector.options.length; i++) {
+    if (formatSelector.options[i].value == plot.downloadFormat) {
+      formatSelector.selectedIndex = i;
+    }
+  }
 }
 
 
@@ -900,6 +906,10 @@ function loadSettingsStorage() {
   setting = loadJSON('peakWidth');
   if (setting) {
     plot.peakConfig.width = setting;
+  }
+  setting = loadJSON('plotDownload');
+  if (setting) {
+    plot.downloadFormat = setting;
   }
 }
 
@@ -1054,6 +1064,15 @@ function changeSettings(name, element) {
     case 'peakWidth':
       value = parseInt(value);
       plot.peakConfig.width = value;
+      plot.updatePlot(spectrumData);
+
+      if (localStorageAvailable) {
+        saveJSON(name, value);
+      }
+      break;
+
+    case 'plotDownload':
+      plot.downloadFormat = value;
       plot.updatePlot(spectrumData);
 
       if (localStorageAvailable) {

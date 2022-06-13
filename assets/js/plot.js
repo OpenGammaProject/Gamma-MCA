@@ -5,6 +5,7 @@ function SpectrumPlot(divId) {
   this.xAxis = 'linear';
   this.yAxis = 'linear';
   this.plotType = 'scatter'; //"scatter", "bar"
+  this.downloadFormat = 'png'; // one of png, svg, jpeg, webp
   this.sma = false; // Simple Moving Average
   this.smaLength = 20;
   this.calibration = {
@@ -444,7 +445,7 @@ function SpectrumPlot(divId) {
       displayModeBar: true,
       displaylogo: false,
       toImageButtonOptions: {
-        format: 'png', // one of png, svg, jpeg, webp
+        format: this.downloadFormat,
         filename: 'gamma_mca_export',
       },
       editable: this.editableMode,

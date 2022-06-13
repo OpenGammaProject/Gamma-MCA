@@ -623,6 +623,19 @@
                       <small>File must be of valid JSON format. Use only trusted sources!</small>
                     </p>
 
+                    <p>
+                      <div class="input-group input-group-sm">
+                        <label class="input-group-text" for="iso-hover-prox">Download Plot</label>
+                        <select class="form-select form-select-sm" id="download-format" aria-label="Plot download file format" onChange="changeSettings('plotDownload', this);">
+                          <option value="png" selected>.png</option>
+                          <option value="svg">.svg</option>
+                          <option value="jpeg">.jpeg</option>
+                          <option value="webp">.webp</option>
+                        </select>
+                      </div>
+                      <small>File format for downloading a static plot. SVG looks the best.</small>
+                    </p>
+
                   </div>
                 </div>
               </div>
