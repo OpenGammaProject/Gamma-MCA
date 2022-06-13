@@ -14,7 +14,6 @@
     - (?) Hotkey to open/close settings
     - (?) Add desktop notifications
     - Add Isotope Recognition for Peak Detector
-    - Spike cursor decimal places
     - !!! Weird comb-structure with quadratic calibrations
     - !!! Check Calibration Regression
     - !!! Export HTML not supporting all settings?
