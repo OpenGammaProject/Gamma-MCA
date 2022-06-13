@@ -17,6 +17,8 @@ Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://
 * Live plotting of any serial device using the Web Serial API
 * Linear and quadratic energy calibration
 * Customizable list of common gamma-ray energies
+* Export your spectrum and embed the interactive plot into your website
+* Automatic peak detection
 * ... and much more!
 
 ## Importing Spectra
