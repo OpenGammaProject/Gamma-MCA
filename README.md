@@ -14,7 +14,7 @@ Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://
 * Can be easily installed if so desired and works just like any other native program
 * Straightforward interface to get down to business
 * File import of common data formats (such as most CSVs, TKAs, etc.)
-* Live plotting of any serial device using the Web Serial API
+* Live plotting via the serial interface, compatible with any device (Arduino, ...)
 * Linear and quadratic energy calibration
 * Customizable list of common gamma-ray energies
 * Export your spectrum and embed the interactive plot into your website
