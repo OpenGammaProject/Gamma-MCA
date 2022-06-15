@@ -11,12 +11,13 @@ function SerialData() {
   this.serData = []; // Ready to use Integer Pulse Heights, could use a setget meh
 
   this.addRaw = function(uintArray) {
-    const string = String.fromCharCode(...uintArray);
+    const string = String.fromCharCode(...uintArray); //new TextDecoder("utf-8").decode(uintArray);
 
     this.rawData += string;
 
     let stringArr = this.rawData.split(this.eolChar); //('\r\n');
     stringArr.pop(); // Delete last entry to avoid counting unfinished transmissions
+    stringArr.shift(); // Delete first entry. !FIX SERIAL COMMUNICATION ERRORS!
 
     if (stringArr.length <= 1) {
       if (this.rawData.length > this.maxLength) {
@@ -43,7 +44,7 @@ function SerialData() {
             console.log('Warning: You are saturating the serial buffer. Please increase the limit!');
             return;
           }
-          if (parsedInt < 0) {
+          if (parsedInt < 0 || parsedInt > this.adcChannels) { // Fixed value range. !FIX SERIAL COMMUNICATION ERRORS!
             continue;
           }
           this.serData.push(parsedInt);
