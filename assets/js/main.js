@@ -1360,7 +1360,7 @@ async function disconnectPort(stop = false) {
 let metaTimeout;
 
 function refreshMeta(type) {
-  if (ser.port.readable && keepReading) {
+  if (ser.port.readable) {
     const totalTimeElement = document.getElementById('total-record-time');
     const timeElement = document.getElementById('record-time');
     const progressBar = document.getElementById('ser-time-progress-bar');
@@ -1399,7 +1399,7 @@ let lastUpdate = new Date();
 let refreshTimeout;
 
 function refreshRender(type) {
-  if (ser.port.readable && keepReading) {
+  if (ser.port.readable) {
     const nowTime = new Date();
     const delta = new Date(nowTime.getTime() - startTime + timeDone);
 
