@@ -1375,7 +1375,7 @@ function refreshMeta(type) {
       const progressElement = document.getElementById('ser-time-progress');
       const progress = Math.round(delta.getTime() / maxRecTime * 100);
       progressElement.style.width = progress + '%';
-      //progressElement.innerText = progress + '%';
+      progressElement.innerText = progress + '%';
       progressElement.setAttribute('aria-valuenow', progress)
 
       const totalTime = new Date(maxRecTime);
