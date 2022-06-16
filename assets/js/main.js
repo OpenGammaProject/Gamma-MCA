@@ -1423,10 +1423,10 @@ function refreshRender(type) {
       plot.updatePlot(spectrumData);
     }
 
-    const deltaLastRefresh = new Date(endDelay.getTime() - lastUpdate.getTime());
+    const deltaLastRefresh = endDelay.getTime() - lastUpdate.getTime();
     lastUpdate = endDelay;
 
-    const cpsValue = newData.length / deltaLastRefresh.getTime() * 1000;
+    const cpsValue = newData.length / deltaLastRefresh * 1000;
     document.getElementById('cps').innerText = cpsValue.toFixed(1) + ' cps';
 
     cpsValues.push(cpsValue);
