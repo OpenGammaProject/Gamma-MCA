@@ -531,7 +531,7 @@ function importCal(input) {
       oldCalVals.c = readoutArray[4].value;
 
     } catch(e) {
-      console.log('Calibration Import Error:', e);
+      console.error('Calibration Import Error:', e);
       popupNotification('cal-import-error');
     }
   };
@@ -944,7 +944,7 @@ function changeSettings(name, element) {
 
       } catch(e) {
         popupNotification('setting-error');
-        console.log('Custom URL Error', e);
+        console.error('Custom URL Error', e);
       }
       break;
 
@@ -1169,7 +1169,7 @@ async function requestSerial() {
     }
     listSerial();
   } catch(err) {
-    console.log('Aborted adding a new port!', err); // Do nothing.
+    console.warn('Aborted adding a new port!', err); // Do nothing.
   }
 }
 
@@ -1221,7 +1221,7 @@ async function readUntilClosed() {
       }
     } catch (err) {
       // Sudden device disconnect can cause this
-      console.log('Misc Serial Read Error:', err);
+      console.error('Misc Serial Read Error:', err);
       popupNotification('misc-ser-error');
     } finally {
       // Allow the serial port to be closed later.
@@ -1271,7 +1271,7 @@ async function startRecord(pause = false, type = recordingType) {
 
     closed = readUntilClosed();
   } catch(err) {
-    console.log('Connection Error:', err);
+    console.error('Connection Error:', err);
     popupNotification('serial-connect-error');
   }
 }
@@ -1305,7 +1305,7 @@ async function sendSerial(command) {
     document.getElementById('ser-command').value = "";
 
   } catch (err) {
-    console.log('Connection Error:', err);
+    console.error('Connection Error:', err);
     popupNotification('serial-connect-error');
   } finally {
 
@@ -1347,7 +1347,7 @@ async function disconnectPort(stop = false) {
     clearTimeout(refreshTimeout);
     clearTimeout(metaTimeout);
   } catch (err) {
-    console.log('No timeout to clear.', err);
+    console.warn('No timeout to clear.', err);
   }
 
   try {
@@ -1355,7 +1355,7 @@ async function disconnectPort(stop = false) {
       reader.cancel();
     }
   } catch(err) {
-    console.log('Nothing to disconnect.', err);
+    console.warn('Nothing to disconnect.', err);
   }
   await closed;
 }
