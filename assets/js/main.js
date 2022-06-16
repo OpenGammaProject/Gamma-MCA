@@ -1361,11 +1361,12 @@ let metaTimeout;
 
 function refreshMeta(type) {
   if (ser.port.readable) {
+    const nowTime = new Date();
+
     const totalTimeElement = document.getElementById('total-record-time');
     const timeElement = document.getElementById('record-time');
     const progressBar = document.getElementById('ser-time-progress-bar');
 
-    const nowTime = new Date();
     const delta = new Date(nowTime.getTime() - startTime + timeDone);
 
     timeElement.innerText = addLeadingZero(delta.getUTCHours()) + ':' + addLeadingZero(delta.getUTCMinutes()) + ':' + addLeadingZero(delta.getUTCSeconds());
@@ -1389,7 +1390,8 @@ function refreshMeta(type) {
       disconnectPort(true);
       popupNotification('auto-stop');
     } else {
-      metaTimeout = setTimeout(refreshMeta, REFRESH_META_TIME, type); // Only re-schedule if still valid
+      const finishDelta = new Date().getTime() - nowTime.getTime();
+      metaTimeout = setTimeout(refreshMeta, REFRESH_META_TIME - finishDelta, type); // Only re-schedule if still valid
     }
   }
 }
@@ -1400,10 +1402,11 @@ let refreshTimeout;
 
 function refreshRender(type) {
   if (ser.port.readable) {
-    const nowTime = new Date();
-    const delta = new Date(nowTime.getTime() - startTime + timeDone);
+    const startDelay = new Date();
+    const newData = ser.getData(); // Get all the new data
+    const endDelay = new Date();
 
-    const newData = ser.getData();
+    const delta = new Date(timeDone - startTime + startDelay.getTime());
 
     spectrumData[type] = ser.updateData(spectrumData[type], newData); // Depends on Background/Spectrum Aufnahme
     spectrumData[type + 'Cps'] = spectrumData[type].map(val => val / delta.getTime() * 1000);
@@ -1416,8 +1419,8 @@ function refreshRender(type) {
       plot.updatePlot(spectrumData);
     }
 
-    const deltaLastRefresh = new Date(nowTime.getTime() - lastUpdate.getTime());
-    lastUpdate = nowTime;
+    const deltaLastRefresh = new Date(endDelay.getTime() - lastUpdate.getTime());
+    lastUpdate = endDelay;
 
     const cpsValue = newData.length / deltaLastRefresh.getTime() * 1000;
     document.getElementById('cps').innerText = cpsValue.toFixed(1) + ' cps';
@@ -1444,6 +1447,7 @@ function refreshRender(type) {
     document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts(spectrumData.data);
     document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts(spectrumData.background);
 
-    refreshTimeout = setTimeout(refreshRender, refreshRate, type); // Only re-schedule if still avail
+    const finishDelta = new Date().getTime() - startDelay.getTime();
+    refreshTimeout = setTimeout(refreshRender, refreshRate - finishDelta, type); // Only re-schedule if still avail
   }
 }
