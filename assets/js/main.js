@@ -1395,7 +1395,11 @@ function refreshMeta(type) {
       popupNotification('auto-stop');
     } else {
       const finishDelta = new Date().getTime() - nowTime.getTime();
-      metaTimeout = setTimeout(refreshMeta, REFRESH_META_TIME - finishDelta, type); // Only re-schedule if still valid
+      if (REFRESH_META_TIME - finishDelta > 0) { // Only re-schedule if still available
+        metaTimeout = setTimeout(refreshMeta, REFRESH_META_TIME - finishDelta, type);
+      } else {
+        metaTimeout = setTimeout(refreshMeta, 1, type);
+      }
     }
   }
 }
@@ -1452,6 +1456,10 @@ function refreshRender(type) {
     document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts(spectrumData.background);
 
     const finishDelta = new Date().getTime() - startDelay.getTime();
-    refreshTimeout = setTimeout(refreshRender, refreshRate - finishDelta, type); // Only re-schedule if still avail
+    if (refreshRate - finishDelta > 0) { // Only re-schedule if still available
+      refreshTimeout = setTimeout(refreshRender, refreshRate - finishDelta, type);
+    } else {
+      refreshTimeout = setTimeout(refreshRender, 1, type);
+    }
   }
 }
