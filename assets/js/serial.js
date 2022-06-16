@@ -11,6 +11,11 @@ function SerialData() {
   this.serData = []; // Ready to use Integer Pulse Heights, could use a setget meh
 
   this.addRaw = function(uintArray) {
+    if (this.serData.length > this.maxSize) { // Protect from overflow and crashes
+      console.warn('Warning: Serial buffer is saturating!');
+      return;
+    }
+
     const string = String.fromCharCode(...uintArray); //new TextDecoder("utf-8").decode(uintArray);
 
     this.rawData += string;
@@ -39,11 +44,6 @@ function SerialData() {
         if (isNaN(parsedInt)) {
           continue; // Not an integer -> throw away
         } else {
-          // Protect from overflow and crashes
-          if (this.serData.length > this.maxSize) {
-            console.log('Warning: You are saturating the serial buffer. Please increase the limit!');
-            return;
-          }
           if (parsedInt < 0 || parsedInt > this.adcChannels) { // Fixed value range. !FIX SERIAL COMMUNICATION ERRORS!
             continue;
           }
