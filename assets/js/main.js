@@ -1263,7 +1263,11 @@ async function startRecord(pause = false, type = recordingType) {
     refreshRender(recordingType); // Start updating the plot
     refreshMeta(recordingType); // Start updating the meta data
 
-    cpsValues.shift(); // First cps value is always a zero, so remove that.
+    if (pause) {
+      cpsValues.pop(); // Last cps value after pausing is always 0, remove.
+    } else {
+      cpsValues.shift(); // First cps value is always a zero, so remove that.
+    }
 
     closed = readUntilClosed();
   } catch(err) {
