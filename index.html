@@ -748,16 +748,16 @@
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="peak-thres">Threshold</label>
-                      <input type="number" class="form-control serial-controls" id="peak-thres" min="0" step="0.01" onkeypress="enterPress(event, 'setting9');">
-                      <button class="btn btn-primary serial-controls" type="button" id="setting9" onclick="changeSettings('peakThres', document.getElementById('peak-thres'));" title="Apply"> <i class="fas fa-check"></i> </button>
+                      <input type="number" class="form-control" id="peak-thres" min="0" step="0.01" onkeypress="enterPress(event, 'setting9');">
+                      <button class="btn btn-primary" type="button" id="setting9" onclick="changeSettings('peakThres', document.getElementById('peak-thres'));" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <small>Sensitivity of the vertical step size in relation to the highest value. Any positive float is valid.</small>
 
                     <p>
                       <div class="input-group input-group-sm">
                         <label class="input-group-text" for="peak-lag">Smooth</label>
-                        <input type="number" class="form-control serial-controls" id="peak-lag" min="1" onkeypress="enterPress(event, 'setting10');">
-                        <button class="btn btn-primary serial-controls" type="button" id="setting10" onclick="changeSettings('peakLag', document.getElementById('peak-lag'));" title="Apply"> <i class="fas fa-check"></i> </button>
+                        <input type="number" class="form-control" id="peak-lag" min="1" onkeypress="enterPress(event, 'setting10');">
+                        <button class="btn btn-primary" type="button" id="setting10" onclick="changeSettings('peakLag', document.getElementById('peak-lag'));" title="Apply"> <i class="fas fa-check"></i> </button>
                       </div>
                       <small>Width of the overall moving average applied to the plot data that is used as a general reference. Any positive integer is valid.</small>
                     </p>
@@ -765,8 +765,8 @@
                     <p>
                       <div class="input-group input-group-sm">
                         <label class="input-group-text" for="peak-width">Width</label>
-                        <input type="number" class="form-control serial-controls" id="peak-width" min="1" onkeypress="enterPress(event, 'setting11');">
-                        <button class="btn btn-primary serial-controls" type="button" id="setting11" onclick="changeSettings('peakWidth', document.getElementById('peak-width'));" title="Apply"> <i class="fas fa-check"></i> </button>
+                        <input type="number" class="form-control" id="peak-width" min="1" onkeypress="enterPress(event, 'setting11');">
+                        <button class="btn btn-primary" type="button" id="setting11" onclick="changeSettings('peakWidth', document.getElementById('peak-width'));" title="Apply"> <i class="fas fa-check"></i> </button>
                       </div>
                       <small>Maximum distance two peak lines can be apart to count as one single peak. Any positive integer is valid.</small>
                     </p>
