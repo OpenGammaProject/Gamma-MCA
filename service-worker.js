@@ -12,7 +12,7 @@
     - nothing.
 
 */
-const APP_VERSION = '2022-06-15';
+const APP_VERSION = '2022-06-16';
 const CACHE_NAME = "gamma-static"; // A random name for the cache
 const OFFLINE_RESOURCES = ['/',
                           '/index.html',
@@ -23,6 +23,8 @@ const OFFLINE_RESOURCES = ['/',
                           '/assets/logo.svg',
                           '/assets/webfonts/fa-solid-900.woff2',
                           '/assets/webfonts/fa-brands-400.woff2',
+                          '/assets/webfonts/fa-solid-900.ttf',
+                          '/assets/webfonts/fa-brands-400.ttf',
                           '/assets/js/external/plotly-basic.min.js',
                           '/assets/js/external/bootstrap.min.js',
                           '/assets/js/raw-data.js',
