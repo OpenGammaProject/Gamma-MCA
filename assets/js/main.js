@@ -122,7 +122,7 @@ document.body.onload = async function() {
   plot.resetPlot(spectrumData);
   bindPlotEvents(); // Bind click and hover events provided by plotly
 
-  document.getElementById('version-tag').innerText += ' ' + APP_VERSION + '.';
+  document.getElementById('version-tag').innerText += ` ${APP_VERSION}.`;
 
   if (localStorageAvailable) {
     if (loadJSON('lastVisit') <= 0) {
@@ -370,7 +370,7 @@ function hoverEvent(data) {
 
   for (const key in calClick) {
     if (calClick[key]) {
-      document.getElementById('adc-' + key).value = data.points[0].x.toFixed(2);
+      document.getElementById(`adc-${key}`).value = data.points[0].x.toFixed(2);
     }
   }
 
@@ -386,7 +386,7 @@ function unHover(data) {
 
   for (const key in calClick) {
     if (calClick[key]) {
-      document.getElementById('adc-' + key).value = oldCalVals[key];
+      document.getElementById(`adc-${key}`).value = oldCalVals[key];
     }
   }
 
@@ -404,10 +404,10 @@ function clickEvent(data) {
 
   for (const key in calClick) {
     if (calClick[key]) {
-      document.getElementById('adc-' + key).value = data.points[0].x.toFixed(2);
+      document.getElementById(`adc-${key}`).value = data.points[0].x.toFixed(2);
       oldCalVals[key] = data.points[0].x.toFixed(2);
       calClick[key] = false;
-      document.getElementById('select-' + key).checked = calClick[key];
+      document.getElementById(`select-${key}`).checked = calClick[key];
     }
   }
 }
@@ -559,13 +559,13 @@ function getDateString() {
 
 
 function downloadCal() {
-  filename = 'calibration_' + getDateString() + '.json';
+  filename = `calibration_${getDateString()}.json`;
   download(filename, plot.calibration, true);
 }
 
 
 function downloadData(filename, data) {
-  filename += '_' + getDateString() + '.csv';
+  filename += `_${getDateString()}.csv`;
 
   text = '';
   spectrumData[data].forEach(item => {
@@ -579,9 +579,9 @@ function downloadData(filename, data) {
 function download(filename, text, json=false) {
     let element = document.createElement('a');
     if (json) {
-      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(JSON.stringify(text)));
+      element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(JSON.stringify(text))}`);
     } else {
-      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+      element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
     }
 
     element.setAttribute('download', filename);
@@ -681,15 +681,15 @@ async function loadIsotopes(reload = false) { // Load Isotope Energies JSON ONCE
         const lowercaseName = dirtyName.replace(/[^a-z0-9 -]/gi, '').trim(); // Fixes security issue. Clean everything except for letters, numbers and minus. See GitHub: #2
         const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1) + '-' + index; // Capitalize Name and append index number
 
-        cell1.innerHTML = '<input class="form-check-input" id="' + name + '" type="checkbox" value="' + energy + '" onclick="plotIsotope(this)">';
-        cell3.innerHTML = '<label for="' + name + '">' +  energy.toFixed(2) + '</label>';
+        cell1.innerHTML = `<input class="form-check-input" id="${name}" type="checkbox" value="${energy}" onclick="plotIsotope(this)">`;
+        cell3.innerHTML = `<label for="${name}">${energy.toFixed(2)}</label>`;
 
         const strArr = name.split('-');
 
-        cell2.innerHTML = '<label for="' + name + '"><sup>' + strArr[1] + '</sup>' + strArr[0] + '</label>';
+        cell2.innerHTML = `<label for="${name}"><sup>${strArr[1]}</sup>${strArr[0]}</label>`;
       }
     } else {
-      isoError.innerText = 'Could not load isotope list! HTTP Error: ' + response.status + '. Please try again.';
+      isoError.innerText = `Could not load isotope list! HTTP Error: ${response.status}. Please try again.`;
       isoError.className = isoError.className.replaceAll(' visually-hidden', '');
       successFlag = false;
     }
@@ -1134,7 +1134,7 @@ async function listSerial() {
     portsAvail[index] = ports[index];
 
     const option = document.createElement('option');
-    option.text = 'Port ' + index + ' (Id: ' + ports[index].getInfo().usbProductId + ')';
+    option.text = `Port ${index} (Id: ${ports[index].getInfo().usbProductId})`;
     portSelector.add(option, index);
   }
 
@@ -1417,7 +1417,7 @@ function refreshRender(type) {
     const delta = new Date(timeDone - startTime + startDelay.getTime());
 
     spectrumData[type] = ser.updateData(spectrumData[type], newData); // Depends on Background/Spectrum Aufnahme
-    spectrumData[type + 'Cps'] = spectrumData[type].map(val => val / delta.getTime() * 1000);
+    spectrumData[`${type}Cps`] = spectrumData[type].map(val => val / delta.getTime() * 1000);
 
     if (firstLoad) {
       plot.plotData(spectrumData, false);
@@ -1450,7 +1450,7 @@ function refreshRender(type) {
     std /= (cpsValues.length - 1);
     std = Math.sqrt(std);
 
-    document.getElementById('avg-cps-std').innerHTML = ' &plusmn; ' + std.toFixed(1) + ' cps' + ' (&#916; ' + Math.round(std/mean*100) + '%)';
+    document.getElementById('avg-cps-std').innerHTML = ` &plusmn; ${std.toFixed(1)} cps (&#916; ${Math.round(std/mean*100)}%)`;
 
     document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts(spectrumData.data);
     document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts(spectrumData.background);

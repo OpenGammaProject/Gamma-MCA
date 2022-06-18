@@ -86,7 +86,7 @@ class SpectrumPlot {
         `;
 
         let element = document.createElement('a');
-        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
         element.setAttribute('download', 'gamma_mca_export.html');
         element.style.display = 'none';
         document.body.appendChild(element);
