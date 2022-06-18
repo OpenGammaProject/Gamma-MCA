@@ -577,7 +577,7 @@ function downloadData(filename, data) {
 
 
 function download(filename, text, json=false) {
-    var element = document.createElement('a');
+    let element = document.createElement('a');
     if (json) {
       element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(JSON.stringify(text)));
     } else {
