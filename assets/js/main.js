@@ -375,7 +375,7 @@ function hoverEvent(data) {
   }
 
   if (checkNearIso) {
-    closestIso(data.points[0].x.toFixed(2));
+    closestIso(data.points[0].x);
   }
 }
 
