@@ -72,7 +72,7 @@ class SpectrumPlot {
 
         const text = `\
         <!DOCTYPE html>
-        <!-- Gamma MCA Interactive Export Version 1 by NuclearPhoenix. https://spectrum.nuclearphoenix.xyz. -->
+        <!-- Gamma MCA Interactive Export Version 1.1 by NuclearPhoenix. https://spectrum.nuclearphoenix.xyz. -->
         <html>
           <head>
             <meta charset="utf-8">
@@ -120,7 +120,7 @@ class SpectrumPlot {
       const a = (this.calibration.cFrom * (this.calibration.bTo - this.calibration.aTo) + this.calibration.bFrom * (this.calibration.aTo - this.calibration.cTo) + this.calibration.aFrom * (this.calibration.cTo - this.calibration.bTo)) / denom;
 
       for(let i = 0; i < len; i++) {
-        calArray.push(a * Math.pow(i,2) + k * i + d);
+        calArray.push(parseFloat((a * Math.pow(i,2) + k * i + d).toFixed(2)));
       }
 
       console.log('c1',a);
@@ -133,7 +133,7 @@ class SpectrumPlot {
       const d = this.calibration.aTo - k * this.calibration.aFrom;
 
       for(let i = 0; i < len; i++) {
-        calArray.push(k * i + d);
+        calArray.push(parseFloat((k * i + d).toFixed(2)));
       }
 
       console.log('c1',0);
