@@ -120,7 +120,7 @@ class SpectrumPlot {
       const a = (this.calibration.cFrom * (this.calibration.bTo - this.calibration.aTo) + this.calibration.bFrom * (this.calibration.aTo - this.calibration.cTo) + this.calibration.aFrom * (this.calibration.cTo - this.calibration.bTo)) / denom;
 
       for(let i = 0; i < len; i++) {
-        calArray.push((a * Math.pow(i,2) + k * i + d).toFixed(2));
+        calArray.push(a * Math.pow(i,2) + k * i + d);
       }
 
       console.log('c1',a);
@@ -133,7 +133,7 @@ class SpectrumPlot {
       const d = this.calibration.aTo - k * this.calibration.aFrom;
 
       for(let i = 0; i < len; i++) {
-        calArray.push((k * i + d).toFixed(2));
+        calArray.push(k * i + d);
       }
 
       console.log('c1',0);
@@ -142,7 +142,7 @@ class SpectrumPlot {
 
     }
 
-    return calArray;
+    return calArray; // Array of String because of toFixed()!!!!
   }
   /*
     Get The Moving Average
