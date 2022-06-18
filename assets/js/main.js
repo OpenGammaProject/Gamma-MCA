@@ -568,9 +568,7 @@ function downloadData(filename, data) {
   filename += `_${getDateString()}.csv`;
 
   text = '';
-  spectrumData[data].forEach(item => {
-    text += item + '\n';
-  });
+  spectrumData[data].forEach(item => text += item + '\n');
 
   download(filename, text);
 }
@@ -725,12 +723,10 @@ async function closestIso(value) {
   }
 
   const keys = Object.keys(isoList);
-  const closeKeys = keys.filter(energy => {return Math.abs(energy - value) <= maxDist});
+  const closeKeys = keys.filter(energy => Math.abs(energy - value) <= maxDist);
 
   if (closeKeys.length !== 0) {
-    let closest = closeKeys.reduce((prev, curr) => {
-      return (Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
-    });
+    let closest = closeKeys.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
 
     plot.toggleLine(Object.keys(prevIso)[0], Object.values(prevIso)[0], false);
 
@@ -1436,17 +1432,13 @@ function refreshRender(type) {
     cpsValues.push(cpsValue);
 
     let mean = 0;
-    cpsValues.forEach((item, i) => {
-      mean += item;
-    });
+    cpsValues.forEach((item, i) => mean += item);
     mean /= cpsValues.length;
 
     document.getElementById('avg-cps').innerHTML = 'Avg: ' + mean.toFixed(1);
 
     let std = 0;
-    cpsValues.forEach((item, i) => {
-      std += Math.pow(item - mean, 2);
-    });
+    cpsValues.forEach((item, i) => std += Math.pow(item - mean, 2));
     std /= (cpsValues.length - 1);
     std = Math.sqrt(std);
 
