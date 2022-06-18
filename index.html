@@ -52,13 +52,13 @@
       <div id="text-window" class="fixed-top m-5 p-5 text-center bg-light border border-3 rounded-3 border-primary">
 
         <noscript>
-          <h2 class="bg-danger text-white text-center">
+          <p class="fs-3 bg-danger text-white text-center">
             This website only works with Javascript enabled! You need to enable it in your browser to be able to use this site!
             Instructions on how to do this can be found <a class="link-light" title="Enable-Javascript.com" href="https://enable-javascript.com/" target="_blank">here</a>.
-          </h2>
+          </p>
         </noscript>
 
-        <h1>Loading, please wait...</h1>
+        <p class="fs-1">Loading. Please wait...</p>
         <div class="spinner-border spinner-border-lg text-primary" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
@@ -79,7 +79,7 @@
 
         <div class="col-lg pt-1">
 
-          <h3><u>File Import</u></h3>
+          <h2 class="fs-4">File Import</h2>
 
           <p>
             <b>Spectrum File:</b>
@@ -123,7 +123,7 @@
 
         <div class="col-lg pt-1">
 
-          <h3><u>Serial Connection</u></h3>
+          <h2 class="fs-4">Serial Connection</h2>
 
           <div class="alert alert-warning visually-hidden" role="alert" id="serial-error">
             Looks like the Web Serial API is not supported. Please switch to the latest Chromium-based browser (Chrome, Edge, Opera, ...) or enable it in your browser's settings to use serial connections.
@@ -207,7 +207,7 @@
 
         <div class="col-md pt-1">
 
-          <h3><u>Calibration</u></h3>
+          <h2 class="fs-4">Calibration</h2>
 
           <form>
 
@@ -293,7 +293,7 @@
 
         <div class="col-md-1 pt-1">
 
-          <h3><u>Info</u></h3>
+          <h2 class="fs-4">Info</h2>
 
           <b>Hover:</b>
           <p><span id="hover-data">None</span></p>
@@ -448,7 +448,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Record Spectrum</h5>
+            <h3 class="modal-title">Record Spectrum</h3>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -468,7 +468,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Export File</h5>
+            <h3 class="modal-title">Export File</h3>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -488,7 +488,7 @@
       <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">Serial Console</h5>
+            <h3 class="modal-title">Serial Console</h3>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -519,7 +519,7 @@
     <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvas" aria-labelledby="offcanvasLabel">
       <div class="offcanvas-header">
         <img class="logo" src="/assets/logo.svg" alt="Logo" title="Gamma MCA Logo">
-        <h4 class="offcanvas-title" id="offcanvasLabel">Gamma MCA</h4>
+        <h1 class="display-6 offcanvas-title" id="offcanvasLabel">Gamma MCA</h1>
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div>
 
@@ -535,9 +535,9 @@
           <div class="tab-pane fade show active me-2" id="isotopes" role="tabpanel" aria-labelledby="isotopes">
             <br>
 
-            <h5>
+            <h4 class="fs-5">
               Common Gamma-Ray Energies <button type="button" class="btn btn-outline-primary btn-sm float-end" title="Reload Isotope List" onclick="reloadIsotopes();"><i class="fa-solid fa-arrow-rotate-right"></i></button>
-            </h5>
+            </h4>
 
             <div class="text-center">
               <div class="alert alert-danger visually-hidden" role="alert" id="iso-load-error"></div>
@@ -583,11 +583,11 @@
 
             <div class="accordion accordion-flush">
               <div class="accordion-item">
-                <h2 class="accordion-header" id="panel1-heading">
+                <h4 class="accordion-header" id="panel1-heading">
                   <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panel1-collaps" aria-expanded="true" aria-controls="panel1-collaps">
                     Plot
                   </button>
-                </h2>
+                </h4>
                 <div id="panel1-collaps" class="accordion-collapse collapse" aria-labelledby="panel1-heading">
                   <div class="accordion-body">
 
@@ -627,11 +627,11 @@
                 </div>
               </div>
               <div class="accordion-item">
-                <h2 class="accordion-header" id="panel2-heading">
+                <h4 class="accordion-header" id="panel2-heading">
                   <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panel2-collapse" aria-expanded="false" aria-controls="panel2-collapse">
                     File Import
                   </button>
-                </h2>
+                </h4>
                 <div id="panel2-collapse" class="accordion-collapse collapse" aria-labelledby="panel2-heading">
                   <div class="accordion-body">
 
@@ -653,11 +653,11 @@
                 </div>
               </div>
               <div class="accordion-item">
-                <h2 class="accordion-header" id="panel3-heading">
+                <h4 class="accordion-header" id="panel3-heading">
                   <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panel3-collapse" aria-expanded="false" aria-controls="panel3-collapse">
                     Serial Connection
                   </button>
-                </h2>
+                </h4>
                 <div id="panel3-collapse" class="accordion-collapse collapse" aria-labelledby="panel3-heading">
                   <div class="accordion-body">
 
@@ -712,11 +712,11 @@
                 </div>
               </div>
               <div class="accordion-item">
-                <h2 class="accordion-header" id="panel4-heading">
+                <h4 class="accordion-header" id="panel4-heading">
                   <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panel4-collapse" aria-expanded="false" aria-controls="panel4-collapse">
                     Energy Peak Detection
                   </button>
-                </h2>
+                </h4>
                 <div id="panel4-collapse" class="accordion-collapse collapse" aria-labelledby="panel4-heading">
                   <div class="accordion-body">
 
