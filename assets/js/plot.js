@@ -190,7 +190,7 @@ class SpectrumPlot {
   peakFinder(doFind = true) {
     if (this.peakConfig.lines.length !== 0) {
       for (const line of this.peakConfig.lines) {
-        this.toggleLine(line, "", false);
+        this.toggleLine(line, '', false);
       }
     }
 
@@ -411,7 +411,7 @@ class SpectrumPlot {
       title: 'Energy Spectrum',
       hovermode: 'x',
       legend: {
-        orientation: "h",
+        orientation: 'h',
         y: -0.35,
       },
       barmode: 'stack',
@@ -436,7 +436,7 @@ class SpectrumPlot {
         spikemode: 'across',
         //nticks: 20,
         //tickformat: '.02f',
-        exponentformat: "SI",
+        exponentformat: 'SI',
       },
       yaxis: {
         title: 'Counts [1]',
@@ -454,7 +454,7 @@ class SpectrumPlot {
         ticksuffix: ' cts',
         //tickformat: '.02f',
         showexponent: 'last',
-        exponentformat: "SI",
+        exponentformat: 'SI',
       },
       plot_bgcolor: 'white',
       paper_bgcolor: '#f8f9fa', // Bootstrap bg-light
@@ -471,11 +471,11 @@ class SpectrumPlot {
         opacity: 0.4,
         sizex: 0.15,
         sizey: 0.15,
-        source: "/assets/logo.svg",
-        xanchor: "right",
-        xref: "paper",
-        yanchor: "top",
-        yref: "paper",
+        source: '/assets/logo.svg',
+        xanchor: 'right',
+        xref: 'paper',
+        yanchor: 'top',
+        yref: 'paper',
       }],
       //shapes: this.shapes,
       //annotations: JSON.parse(JSON.stringify(this.annotations)), // Copy array but do not reference

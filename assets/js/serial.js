@@ -8,7 +8,7 @@ class SerialData {
     this.maxLength = 20; // Maximum number of characters for a valid string/number
     this.eolChar = ';' // End of Line/Data character
 
-    this.rawData = ""; // Raw String Input from Serial Reading
+    this.rawData = ''; // Raw String Input from Serial Reading
     this.serData = []; // Ready to use Integer Pulse Heights, could use a setget meh
   }
 
@@ -28,7 +28,7 @@ class SerialData {
 
     if (stringArr.length <= 1) {
       if (this.rawData.length > this.maxLength) {
-        this.rawData = ""; // String too long without an EOL char, obvious error, delete.
+        this.rawData = ''; // String too long without an EOL char, obvious error, delete.
       }
       return;
     } else {
@@ -63,7 +63,7 @@ class SerialData {
   }
 
   flushData() {
-    this.rawData = "";
+    this.rawData = '';
     this.serData = [];
   }
 

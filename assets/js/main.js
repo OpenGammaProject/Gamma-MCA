@@ -73,8 +73,8 @@ document.body.onload = async function() {
     loadSettingsStorage();
   }
 
-  if ("serviceWorker" in navigator) { // Add service worker for PWA
-    const reg = await navigator.serviceWorker.register("/service-worker.js"); // Onload async because of this... good? hmmm.
+  if ('serviceWorker' in navigator) { // Add service worker for PWA
+    const reg = await navigator.serviceWorker.register('/service-worker.js'); // Onload async because of this... good? hmmm.
 
     if (localStorageAvailable) {
       reg.addEventListener('updatefound', () => {
@@ -99,8 +99,8 @@ document.body.onload = async function() {
 
   if ('serial' in navigator) {
     document.getElementById('serial-div').className = ''; // Remove visually-hidden and invisible
-    navigator.serial.addEventListener("connect", serialConnect);
-    navigator.serial.addEventListener("disconnect", serialDisconnect);
+    navigator.serial.addEventListener('connect', serialConnect);
+    navigator.serial.addEventListener('disconnect', serialDisconnect);
     listSerial(); // List Available Serial Ports
   } else {
     //const serDivElement = document.getElementById('serial-div'); // Delete serial control div
@@ -1133,7 +1133,7 @@ async function listSerial() {
   for (const index in ports) { // List new Ports
     portsAvail[index] = ports[index];
 
-    const option = document.createElement("option");
+    const option = document.createElement('option');
     option.text = 'Port ' + index + ' (Id: ' + ports[index].getInfo().usbProductId + ')';
     portSelector.add(option, index);
   }
@@ -1141,7 +1141,7 @@ async function listSerial() {
   const serSettingsElements = document.getElementsByClassName('ser-settings');
 
   if (ports.length == 0) {
-    const option = document.createElement("option");
+    const option = document.createElement('option');
     option.text = 'No Ports Available';
     portSelector.add(option);
 
@@ -1302,7 +1302,7 @@ async function sendSerial(command) {
     await writableStreamClosed;
 
     document.getElementById('ser-output').innerText += '> ' + formatCommand.trim() + '\n';
-    document.getElementById('ser-command').value = "";
+    document.getElementById('ser-command').value = '';
 
   } catch (err) {
     console.error('Connection Error:', err);
