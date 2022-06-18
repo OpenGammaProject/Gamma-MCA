@@ -24,6 +24,7 @@ h3 {
 
 .logo {
   width: 27%;
+  height: auto;
   max-height: 400px;
 }
 
