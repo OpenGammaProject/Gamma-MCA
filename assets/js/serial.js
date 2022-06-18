@@ -1,16 +1,18 @@
 /* Serial Capability and Management */
 
-function SerialData() {
-  this.maxSize = 10000; // Maximum number of pulses/events to hold in the buffer
-  this.port = null;
-  this.adcChannels = 4096; // For OSC
-  this.maxLength = 20; // Maximum number of characters for a valid string/number
-  this.eolChar = ';' // End of Line/Data character
+class SerialData {
+  constructor() {
+    this.maxSize = 10000; // Maximum number of pulses/events to hold in the buffer
+    this.port = null;
+    this.adcChannels = 4096; // For OSC
+    this.maxLength = 20; // Maximum number of characters for a valid string/number
+    this.eolChar = ';' // End of Line/Data character
 
-  this.rawData = ""; // Raw String Input from Serial Reading
-  this.serData = []; // Ready to use Integer Pulse Heights, could use a setget meh
+    this.rawData = ""; // Raw String Input from Serial Reading
+    this.serData = []; // Ready to use Integer Pulse Heights, could use a setget meh
+  }
 
-  this.addRaw = function(uintArray) {
+  addRaw(uintArray) {
     if (this.serData.length > this.maxSize) { // Protect from overflow and crashes
       console.warn('Warning: Serial buffer is saturating!');
       return;
@@ -52,20 +54,20 @@ function SerialData() {
       }
     }
 
-  };
+  }
 
-  this.getData = function() {
+  getData() {
     const copyArr = [...this.serData];
     this.serData = [];
     return copyArr;
-  };
+  }
 
-  this.flushData = function() {
+  flushData() {
     this.rawData = "";
     this.serData = [];
-  };
+  }
 
-  this.updateData = function(oldDataArr, newDataArr) {
+  updateData(oldDataArr, newDataArr) {
     if(oldDataArr.length == 0) {
       oldDataArr = Array(this.adcChannels).fill(0);
     }
@@ -74,5 +76,5 @@ function SerialData() {
       oldDataArr[value] += 1;
     }
     return oldDataArr;
-  };
+  }
 }

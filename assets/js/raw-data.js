@@ -1,14 +1,16 @@
 /* File String in CSV format -> Array */
 
-function RawData(valueIndex, delimiter = ',') {
-  this.delimiter = delimiter;
-  this.adcChannels = 4096; // For OSC
-  this.valueIndex = valueIndex;
-  this.fileType = valueIndex;
+class RawData {
+  constructor(valueIndex, delimiter = ',') {
+    this.valueIndex = valueIndex;
+    this.delimiter = delimiter;
 
-  this.tempValIndex = valueIndex;
+    this.adcChannels = 4096; // For OSC
+    this.fileType = valueIndex;
+    this.tempValIndex = valueIndex;
+  }
 
-  this.checkLines = function(value) {
+  checkLines(value) {
     const values = value.split(this.delimiter);
 
     if (values.length == 1){ // Work-Around for files with only one column
@@ -16,14 +18,14 @@ function RawData(valueIndex, delimiter = ',') {
     }
 
     return values.length > this.tempValIndex;
-  };
+  }
 
-  this.parseLines = function(value) {
+  parseLines(value) {
     const values = value.split(this.delimiter);
     return parseFloat(values[this.tempValIndex].trim());
-  };
+  }
 
-  this.histConverter = function(dataArr) {
+  histConverter(dataArr) {
     if (this.fileType == 1) {
       return dataArr;
     }
@@ -34,9 +36,9 @@ function RawData(valueIndex, delimiter = ',') {
       xArray[element] += 1;
     }
     return xArray;
-  };
+  }
 
-  this.csvToArray = function(data) {
+  csvToArray(data) {
     this.tempValIndex = this.valueIndex; // RESET VALUE INDEX
 
     const allLines = data.split('\n');
@@ -45,5 +47,5 @@ function RawData(valueIndex, delimiter = ',') {
     const cleanData = dataLines.map(this.parseLines, this);
 
     return this.histConverter(cleanData);
-  };
+  }
 }

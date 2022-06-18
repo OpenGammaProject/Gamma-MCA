@@ -1,112 +1,114 @@
 /* Plot data using Plotly JS */
 
-function SpectrumPlot(divId) {
-  this.divId = divId;
-  this.xAxis = 'linear';
-  this.yAxis = 'linear';
-  this.plotType = 'scatter'; //"scatter", "bar"
-  this.downloadFormat = 'png'; // one of png, svg, jpeg, webp
-  this.sma = false; // Simple Moving Average
-  this.smaLength = 20;
-  this.calibration = {
-    enabled: false,
-    points: 0,
-    aFrom: 0,
-    aTo: 0,
-    bFrom: 0,
-    bTo: 0,
-    cFrom: 0,
-    cTo: 0,
-  };
-  this.cps = false;
-  this.shapes = [];
-  this.annotations = [];
-  this.editableMode = false;
-  this.peakConfig = {
-    enabled: false,
-    thres: 0.03,
-    lag: 150,
-    width: 4,
-    lines: [],
-    lastDataX: [],
-    lastDataY: [],
-  };
+class SpectrumPlot {
+  constructor(divId) {
+    this.divId = divId;
+    this.xAxis = 'linear';
+    this.yAxis = 'linear';
+    this.plotType = 'scatter'; //"scatter", "bar"
+    this.downloadFormat = 'png'; // one of png, svg, jpeg, webp
+    this.sma = false; // Simple Moving Average
+    this.smaLength = 20;
+    this.calibration = {
+      enabled: false,
+      points: 0,
+      aFrom: 0,
+      aTo: 0,
+      bFrom: 0,
+      bTo: 0,
+      cFrom: 0,
+      cTo: 0,
+    };
+    this.cps = false;
+    this.shapes = [];
+    this.annotations = [];
+    this.editableMode = false;
+    this.peakConfig = {
+      enabled: false,
+      thres: 0.03,
+      lag: 150,
+      width: 4,
+      lines: [],
+      lastDataX: [],
+      lastDataY: [],
+    };
 
-  this.customModeBarButtons = {
-    name: 'Download plot as HTML',
-    icon: Plotly.Icons['disk'],
-    direction: 'up',
-    click: function(plotElement) {
-      let newLayout = JSON.parse(JSON.stringify(plotElement.layout));
-      const logoUrl = new URL('/assets/logo.svg', window.location.origin);
-      newLayout.images[0].source = logoUrl.href;
+    this.customModeBarButtons = {
+      name: 'Download plot as HTML',
+      icon: Plotly.Icons['disk'],
+      direction: 'up',
+      click: plotElement => {
+        let newLayout = JSON.parse(JSON.stringify(plotElement.layout));
+        const logoUrl = new URL('/assets/logo.svg', window.location.origin);
+        newLayout.images[0].source = logoUrl.href;
 
-      const newAnno = {
-        x: 1,
-        y: 0,
-        opacity: 0.9,
-        xref: 'paper',
-        yref: 'paper',
-        xanchor: "right",
-        yanchor: "bottom",
-        text: window.location.origin, //'https://spectrum.nuclearphoenix.xyz',
-        showarrow: false,
-        font: {
-          size: 10,
-        },
-      };
-      newLayout.annotations.push(newAnno);
+        const newAnno = {
+          x: 1,
+          y: 0,
+          opacity: 0.9,
+          xref: 'paper',
+          yref: 'paper',
+          xanchor: "right",
+          yanchor: "bottom",
+          text: window.location.origin, //'https://spectrum.nuclearphoenix.xyz',
+          showarrow: false,
+          font: {
+            size: 10,
+          },
+        };
+        newLayout.annotations.push(newAnno);
 
-      //let newConfig = JSON.parse(JSON.stringify(plotElement.config));
-      //delete newConfig.modeBarButtonsToAdd; // remove this section, otherwise there will be problems!
+        //let newConfig = JSON.parse(JSON.stringify(plotElement.config));
+        //delete newConfig.modeBarButtonsToAdd; // remove this section, otherwise there will be problems!
 
-      const scriptUrl = new URL('/assets/js/external/plotly-basic.min.js', window.location.origin);
-      const config = {
-        responsive: true,
-        displaylogo: false,
-        toImageButtonOptions: {
-          filename: 'gamma_mca_export',
-        }
-      };
+        const scriptUrl = new URL('/assets/js/external/plotly-basic.min.js', window.location.origin);
+        const config = {
+          responsive: true,
+          displaylogo: false,
+          toImageButtonOptions: {
+            filename: 'gamma_mca_export',
+          }
+        };
 
-      const text = `
-      <!DOCTYPE html>
-      <!-- Gamma MCA Interactive Export Version 1 by NuclearPhoenix. https://spectrum.nuclearphoenix.xyz. -->
-      <html>
-        <head>
-          <meta charset="utf-8">
-        </head>
-        <body style="margin:0;padding:0">
-          <div id="plotly-output" style="width:99vw;height:99vh"></div>
-          <script src="${scriptUrl}"></script>
-          <script type="text/javascript">Plotly.newPlot('plotly-output',${JSON.stringify(plotElement.data)},${JSON.stringify(newLayout)},${JSON.stringify(config)})</script>
-        </body>
-      </html>
-      `;
+        const text = `
+        <!DOCTYPE html>
+        <!-- Gamma MCA Interactive Export Version 1 by NuclearPhoenix. https://spectrum.nuclearphoenix.xyz. -->
+        <html>
+          <head>
+            <meta charset="utf-8">
+          </head>
+          <body style="margin:0;padding:0">
+            <div id="plotly-output" style="width:99vw;height:99vh"></div>
+            <script src="${scriptUrl}"></script>
+            <script type="text/javascript">Plotly.newPlot('plotly-output',${JSON.stringify(plotElement.data)},${JSON.stringify(newLayout)},${JSON.stringify(config)})</script>
+          </body>
+        </html>
+        `;
 
-      let element = document.createElement('a');
-      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-      element.setAttribute('download', 'gamma_mca_export.html');
-      element.style.display = 'none';
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-  }};
+        let element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('download', 'gamma_mca_export.html');
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+    }};
+  }
 
   /*
     Get An Array with Length == Data.length containing ascending numbers
   */
-  const getXAxis = function(len) {
+  getXAxis(len) {
     let xArray = [];
     for(let i = 0; i < len; i++) {
       xArray.push(i);
     }
     return xArray;
-  };
+  }
   /*
     Get the calibrated x-axis using the values in this.calibration
   */
-  this.getCalAxis = function(len) {
+  getCalAxis(len) {
     let calArray = [];
 
     if (this.calibration.points == 3) { // Pretty ugly hard scripted, could be dynamically calculated for n-poly using Math.js and matrices. Meh.
@@ -141,11 +143,11 @@ function SpectrumPlot(divId) {
     }
 
     return calArray;
-  };
+  }
   /*
     Get The Moving Average
   */
-  this.computeMovingAverage = function(target, length = this.smaLength) {
+  computeMovingAverage(target, length = this.smaLength) {
     let newData = Array(target.length).fill(0);
     const half = Math.round(length/2);
 
@@ -181,11 +183,11 @@ function SpectrumPlot(divId) {
       newData[i] = val / divider;
     }
     return newData;
-  };
+  }
   /*
     Find and mark energy peaks by using two different moving averages
   */
-  this.peakFinder = function(doFind = true) {
+  peakFinder(doFind = true) {
     if (this.peakConfig.lines.length !== 0) {
       for (const line of this.peakConfig.lines) {
         this.toggleLine(line, "", false);
@@ -197,7 +199,7 @@ function SpectrumPlot(divId) {
     }
 
     const shortData = this.peakConfig.lastDataY;
-    const longData = plot.computeMovingAverage(this.peakConfig.lastDataY, this.peakConfig.lag);
+    const longData = this.computeMovingAverage(this.peakConfig.lastDataY, this.peakConfig.lag);
 
     const maxVal = Math.max(...shortData);
     const xAxisData = this.peakConfig.lastDataX;
@@ -232,23 +234,23 @@ function SpectrumPlot(divId) {
         this.peakConfig.lines.push(result);
       }
     }
-  };
+  }
   /*
     Convenient Wrapper, could do more in the future
   */
-  this.resetPlot = function(spectrumData) {
+  resetPlot(spectrumData) {
     this.plotData(spectrumData, false); // Not Updating
-  };
+  }
   /*
     Convenient Wrapper, could do more in the future
   */
-  this.updatePlot = function(spectrumData) {
+  updatePlot(spectrumData) {
     this.plotData(spectrumData); // Updating
-  };
+  }
   /*
     Add a line
   */
-  this.toggleLine = function(energy, name, enabled = true) {
+  toggleLine(energy, name, enabled = true) {
     if (enabled) {
       const newLine = {
         type: 'line',
@@ -308,23 +310,23 @@ function SpectrumPlot(divId) {
         }
       }
     }
-  };
+  }
   /*
     Clear annotations and shapes
   */
-  this.clearAnnos = function() {
+  clearAnnos() {
     this.shapes = [];
     this.annotations = [];
-  };
+  }
   /*
     Plot All The Data
   */
-  this.plotData = function(dataObj, update = true) {
+  plotData(dataObj, update = true) {
     let trace = {
       name: 'Clean Spectrum',
       stackgroup: 'data', // Stack line charts on top of each other
 
-      x: getXAxis(dataObj.data.length),
+      x: this.getXAxis(dataObj.data.length),
       y: dataObj.data,
       type: this.plotType,
       mode: 'lines', // Remove lines, "lines", "none"
@@ -358,7 +360,7 @@ function SpectrumPlot(divId) {
         name: 'Background',
         stackgroup: 'data', // Stack line charts on top of each other
 
-        x: getXAxis(dataObj.background.length),
+        x: this.getXAxis(dataObj.background.length),
         y: dataObj.background,
         type: this.plotType,
         mode: 'ono', // Remove lines, "lines", "none"
@@ -546,5 +548,5 @@ function SpectrumPlot(divId) {
     } else {
       Plotly.newPlot(this.divId, data, layout, config);
     }
-  };
+  }
 }
