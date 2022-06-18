@@ -1134,7 +1134,7 @@ async function listSerial() {
     portsAvail[index] = ports[index];
 
     const option = document.createElement('option');
-    option.text = `Port ${index} (Id: ${ports[index].getInfo().usbProductId})`;
+    option.text = `Port ${index} (Id: 0x${ports[index].getInfo().usbProductId.toString(16)})`;
     portSelector.add(option, index);
   }
 
