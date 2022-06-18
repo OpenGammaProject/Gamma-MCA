@@ -4,7 +4,6 @@
 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="expires" content="86400"> <!-- 24h cached -->
     <meta name="keywords" content="gamma, spectroscopy, spectrometry, scintillator, mca, open-source, physics, science, web, application, particle-physics, nuclear, radiation, serial, spectrum, radiation, multi-channel analyzer">
     <meta name="description" content="Gamma MCA is a free and complete (progressive) web app for gamma spectroscopy. You can import spectrum files and record new ones using the serial interface.">
     <meta name="author" content="NuclearPhoenix">
@@ -86,12 +85,10 @@
             <b>Spectrum File:</b>
           </p>
 
-          <p>
-            <div class="input-group input-group-sm">
-              <input class="form-control form-control-sm" type="file" id="data" accept=".csv, .TKA" onchange="getFileData(this);">
-              <button class="btn btn-primary btn-sm" type="button" onclick="removeFile('data');" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
-            </div>
-          </p>
+          <div class="input-group input-group-sm">
+            <input class="form-control form-control-sm" type="file" id="data" accept=".csv, .TKA" onchange="getFileData(this);">
+            <button class="btn btn-primary btn-sm" type="button" onclick="removeFile('data');" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
+          </div>
 
           <hr>
 
@@ -99,12 +96,10 @@
             <b>Background File:</b>
           </p>
 
-          <p>
-            <div class="input-group input-group-sm">
-              <input class="form-control form-control-sm" type="file" id="background" accept=".csv, .TKA" onchange="getFileData(this, true);">
-              <button class="btn btn-primary btn-sm" type="button" onclick="removeFile('background');" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
-            </div>
-          </p>
+          <div class="input-group input-group-sm">
+            <input class="form-control form-control-sm" type="file" id="background" accept=".csv, .TKA" onchange="getFileData(this, true);">
+            <button class="btn btn-primary btn-sm" type="button" onclick="removeFile('background');" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
+          </div>
 
           <hr>
 
@@ -222,7 +217,7 @@
                 <div class="input-group input-group-sm">
                   <label class="input-group-text" for="adc-a">A:</label>
                   <input class="form-control form-control-sm" type="number" id="adc-a" min="0" value="" title="Input ADC Channel A" placeholder="Data Point A">
-                  <input type="checkbox" class="btn-check" id="select-a" autocomplete="off" onclick="toggleCalClick('a', this.checked);">
+                  <input type="checkbox" class="btn-check" id="select-a" onclick="toggleCalClick('a', this.checked);">
                   <label class="btn btn-outline-primary" for="select-a" title="Select from plot"> <i class="fa-solid fa-arrow-pointer"></i> </label>
                 </div>
 
@@ -238,7 +233,7 @@
                 <div class="input-group input-group-sm">
                   <label class="input-group-text" for="adc-b">B:</label>
                   <input class="form-control form-control-sm" type="number" id="adc-b" min="0" value="" title="Input ADC Channel B" placeholder="Data Point B">
-                  <input type="checkbox" class="btn-check" id="select-b" autocomplete="off" onclick="toggleCalClick('b', this.checked);">
+                  <input type="checkbox" class="btn-check" id="select-b" onclick="toggleCalClick('b', this.checked);">
                   <label class="btn btn-outline-primary" for="select-b" title="Select from plot"> <i class="fa-solid fa-arrow-pointer"></i> </label>
                 </div>
 
@@ -254,7 +249,7 @@
                 <div class="input-group input-group-sm">
                   <label class="input-group-text" for="adc-c">C:</label>
                   <input class="form-control form-control-sm" type="number" id="adc-c" min="0" value="" title="Input ADC Channel C" placeholder="Data Point C">
-                  <input type="checkbox" class="btn-check" id="select-c" autocomplete="off" onclick="toggleCalClick('c', this.checked);">
+                  <input type="checkbox" class="btn-check" id="select-c" onclick="toggleCalClick('c', this.checked);">
                   <label class="btn btn-outline-primary" for="select-c" title="Select from plot"> <i class="fa-solid fa-arrow-pointer"></i> </label>
                 </div>
 
@@ -277,7 +272,7 @@
             <hr>
 
             <p>
-              <input type="checkbox" class="btn-check" id="apply-cal" onclick="toggleCal(this.checked);" autocomplete="off">
+              <input type="checkbox" class="btn-check" id="apply-cal" onclick="toggleCal(this.checked);">
               <label class="btn btn-outline-primary btn-sm" title="Toggle plot calibration" id="calibration-label" for="apply-cal"> <i class="fa-solid fa-check"></i> Calibrate </label>
 
               <button class="btn btn-primary btn-sm" type="reset" onclick="resetCal();" title="Clear calibration"> <i class="fas fa-trash"></i> Delete</button>
@@ -378,7 +373,7 @@
             <label class="input-group-text" for="smaVal">SMA Length</label>
             <input class="form-control form-control-sm" type="number" id="smaVal" min="1" max="1000" value="" onkeypress="enterPress(event, 'sma');" oninput="changeSma(this);" title="Width of simple moving average">
 
-            <input type="checkbox" class="btn-check" id="sma" autocomplete="off" onclick="toggleSma(this.checked);">
+            <input type="checkbox" class="btn-check" id="sma" onclick="toggleSma(this.checked);">
             <label class="btn btn-outline-primary" for="sma" title="Toggle simple moving average">Enable</label>
           </div>
 
@@ -416,7 +411,7 @@
 
         <div class="col-md-auto pt-1 pb-1">
 
-          <input type="checkbox" class="btn-check" id="iso-hover" onclick="toggleIsoHover();" autocomplete="off">
+          <input type="checkbox" class="btn-check" id="iso-hover" onclick="toggleIsoHover();">
           <label class="btn btn-outline-primary btn-sm" title="Show closest isotope when hovering (experimental)" for="iso-hover"> <i class="fa-solid fa-magnifying-glass"></i> Isotopes </label>
 
         </div>
@@ -427,7 +422,7 @@
 
         <div class="col-md-auto pt-1 pb-1">
 
-          <input type="checkbox" class="btn-check" id="peak-finder" onclick="findPeaks(this);" autocomplete="off">
+          <input type="checkbox" class="btn-check" id="peak-finder" onclick="findPeaks(this);">
           <label class="btn btn-outline-primary btn-sm" title="Find energy peaks (experimental)" for="peak-finder"> <i class="fa-solid fa-mountain"></i> Peaks </label>
 
         </div>
@@ -524,13 +519,13 @@
     <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvas" aria-labelledby="offcanvasLabel">
       <div class="offcanvas-header">
         <img class="logo" src="/assets/logo.svg" alt="Logo" title="Gamma MCA Logo">
-        <h4 class="offcanvas-title">Gamma MCA</h4>
+        <h4 class="offcanvas-title" id="offcanvasLabel">Gamma MCA</h4>
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
       </div>
 
       <div class="offcanvas-body" id="offbody">
 
-        <nav class="nav nav-tabs">
+        <nav class="nav nav-tabs" role="tablist">
           <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#isotopes" type="button" role="tab" aria-controls="isotopes" aria-selected="true">Isotopes</button>
           <button class="nav-link" data-bs-toggle="tab" data-bs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="false">Settings</button>
           <button class="nav-link" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab" aria-controls="info" aria-selected="false">Info</button>
@@ -555,25 +550,21 @@
               </div>
             </div>
 
-            <p>
-              <div class="table-responsive"> <!-- style="max-height:70vh;" -->
-                <table class="table table-hover align-middle">
-                  <thead class="table-light"> <!-- style="box-shadow: inset 1px 1px #000, 0 2px #000;" -->
-                    <tr>
-                      <th> <input class="form-check-input" id="check-all-isos" type="checkbox" value="" onclick="selectAll(this)" title="Toggle all isotopes"> </th>
-                      <th>Isotope</th>
-                      <th>Energy [keV]</th>
-                    </tr>
-                  </thead>
+            <div class="table-responsive"> <!-- style="max-height:70vh;" -->
+              <table class="table table-hover align-middle">
+                <caption>List of gamma-ray energies of common isotopes.</caption>
+                <thead class="table-light"> <!-- style="box-shadow: inset 1px 1px #000, 0 2px #000;" -->
+                  <tr>
+                    <th> <input class="form-check-input" id="check-all-isos" type="checkbox" value="" onclick="selectAll(this)" title="Toggle all isotopes"> </th>
+                    <th>Isotope</th>
+                    <th>Energy [keV]</th>
+                  </tr>
+                </thead>
 
-                  <tbody id="iso-table"></tbody>
+                <tbody id="iso-table"></tbody>
 
-                  <caption>
-                    List of gamma-ray energies of common isotopes.
-                  </caption>
-                </table>
-              </div>
-            </p>
+              </table>
+            </div>
 
           </div>
 
@@ -605,36 +596,32 @@
                       <label class="form-check-label" for="edit-plot">Editable Plot Labels (Axes Labels and Headline)</label>
                     </div>
 
-                    <p>
-                      <div class="input-group input-group-sm">
-                        <label class="input-group-text" for="iso-hover-prox">Iso Hover Proximity</label>
-                        <input type="number" class="form-control" id="iso-hover-prox" min="1" onkeypress="enterPress(event, 'setting1');">
-                        <button class="btn btn-primary" type="button" id="setting1" onclick="changeSettings('maxIsoDist', document.getElementById('iso-hover-prox'));" title="Apply"> <i class="fas fa-check"></i> </button>
-                      </div>
-                      <small>Input in keV. Any positive integer is valid.</small>
-                    </p>
+                    <br>
 
-                    <p>
-                      <div class="input-group input-group-sm">
-                        <label class="input-group-text" for="custom-url">Isotope List</label>
-                        <input type="url" class="form-control" id="custom-url" onkeypress="enterPress(event, 'setting2');" spellcheck="false">
-                        <button class="btn btn-primary" type="button" id="setting2" onclick="changeSettings('customURL', document.getElementById('custom-url'));" title="Apply"> <i class="fas fa-check"></i> </button>
-                      </div>
-                      <small>File must be of valid JSON format. Use only trusted sources!</small>
-                    </p>
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="iso-hover-prox">Iso Hover Proximity</label>
+                      <input type="number" class="form-control" id="iso-hover-prox" min="1" onkeypress="enterPress(event, 'setting1');">
+                      <button class="btn btn-primary" type="button" id="setting1" onclick="changeSettings('maxIsoDist', document.getElementById('iso-hover-prox'));" title="Apply"> <i class="fas fa-check"></i> </button>
+                    </div>
+                    <p><small>Input in keV. Any positive integer is valid.</small></p>
 
-                    <p>
-                      <div class="input-group input-group-sm">
-                        <label class="input-group-text" for="iso-hover-prox">Download Plot</label>
-                        <select class="form-select form-select-sm" id="download-format" aria-label="Plot download file format" onChange="changeSettings('plotDownload', this);">
-                          <option value="png" selected>.png</option>
-                          <option value="svg">.svg</option>
-                          <option value="jpeg">.jpeg</option>
-                          <option value="webp">.webp</option>
-                        </select>
-                      </div>
-                      <small>File format for downloading a static plot. SVG looks the best.</small>
-                    </p>
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="custom-url">Isotope List</label>
+                      <input type="url" class="form-control" id="custom-url" onkeypress="enterPress(event, 'setting2');" spellcheck="false">
+                      <button class="btn btn-primary" type="button" id="setting2" onclick="changeSettings('customURL', document.getElementById('custom-url'));" title="Apply"> <i class="fas fa-check"></i> </button>
+                    </div>
+                    <p><small>File must be of valid JSON format. Use only trusted sources!</small></p>
+
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="iso-hover-prox">Download Plot</label>
+                      <select class="form-select form-select-sm" id="download-format" aria-label="Plot download file format" onChange="changeSettings('plotDownload', this);">
+                        <option value="png" selected>.png</option>
+                        <option value="svg">.svg</option>
+                        <option value="jpeg">.jpeg</option>
+                        <option value="webp">.webp</option>
+                      </select>
+                    </div>
+                    <p><small>File format for downloading a static plot. SVG looks the best.</small></p>
 
                   </div>
                 </div>
@@ -653,16 +640,14 @@
                       <input type="text" class="form-control" id="custom-delimiter" onkeypress="enterPress(event, 'setting3');" spellcheck="false">
                       <button class="btn btn-primary" type="button" id="setting3" onclick="changeSettings('fileDelimiter', document.getElementById('custom-delimiter'));" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
-                    <small>Any character is valid.</small>
+                    <p><small>Any character is valid.</small></p>
 
-                    <p>
-                      <div class="input-group input-group-sm">
-                        <label class="input-group-text" for="custom-file-adc">RAW Stream Channel No</label>
-                        <input type="number" class="form-control" id="custom-file-adc" min="1" onkeypress="enterPress(event, 'setting4');">
-                        <button class="btn btn-primary" type="button" id="setting4" onclick="changeSettings('fileChannels', document.getElementById('custom-file-adc'));" title="Apply"> <i class="fas fa-check"></i> </button>
-                      </div>
-                      <small>Number of (ADC) channels of the original device. Any positive integer is valid.</small>
-                    </p>
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="custom-file-adc">RAW Stream Channel No</label>
+                      <input type="number" class="form-control" id="custom-file-adc" min="1" onkeypress="enterPress(event, 'setting4');">
+                      <button class="btn btn-primary" type="button" id="setting4" onclick="changeSettings('fileChannels', document.getElementById('custom-file-adc'));" title="Apply"> <i class="fas fa-check"></i> </button>
+                    </div>
+                    <p><small>Number of (ADC) channels of the original device. Any positive integer is valid.</small></p>
 
                   </div>
                 </div>
@@ -681,58 +666,47 @@
                       <input type="number" class="form-control serial-controls" id="custom-baud" min="1" onkeypress="enterPress(event, 'setting5');">
                       <button class="btn btn-primary serial-controls" type="button" id="setting5" onclick="changeSettings('baudRate', document.getElementById('custom-baud'));" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
-                    <small>Input in bits per second. Any positive integer is valid.</small>
+                    <p><small>Input in bits per second. Any positive integer is valid.</small></p>
 
-                    <p>
-                      <div class="input-group input-group-sm">
-                        <label class="input-group-text" for="eol-char">EOL character</label>
-                        <input type="text" class="form-control serial-controls" id="eol-char" onkeypress="enterPress(event, 'setting5-1');" spellcheck="false">
-                        <button class="btn btn-primary serial-controls" type="button" id="setting5-1" onclick="changeSettings('eolChar', document.getElementById('eol-char'));" title="Apply"> <i class="fas fa-check"></i> </button>
-                      </div>
-                      <small>Character transmitted at the end of every single data point. Any character is valid.</small>
-                    </p>
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="eol-char">EOL character</label>
+                      <input type="text" class="form-control serial-controls" id="eol-char" onkeypress="enterPress(event, 'setting5-1');" spellcheck="false">
+                      <button class="btn btn-primary serial-controls" type="button" id="setting5-1" onclick="changeSettings('eolChar', document.getElementById('eol-char'));" title="Apply"> <i class="fas fa-check"></i> </button>
+                    </div>
+                    <p><small>Character transmitted at the end of every single data point. Any character is valid.</small></p>
 
-                    <p>
-                      <div class="form-check form-switch">
-                        <input class="form-check-input serial-controls" type="checkbox" role="switch" id="toggle-time-limit" onclick="changeSettings('timeLimitBool', this);">
-                        <label class="form-check-label" for="toggle-time-limit">Enable Time Limit</label>
-                      </div>
+                    <div class="form-check form-switch">
+                      <input class="form-check-input serial-controls" type="checkbox" role="switch" id="toggle-time-limit" onclick="changeSettings('timeLimitBool', this);">
+                      <label class="form-check-label" for="toggle-time-limit">Enable Time Limit</label>
+                    </div>
 
-                      <div class="input-group input-group-sm">
-                        <label class="input-group-text" for="ser-limit">Recording Time Limit</label>
-                        <input type="number" class="form-control serial-controls" id="ser-limit"  min="1" onkeypress="enterPress(event, 'ser-limit-btn');" disabled>
-                        <button class="btn btn-primary serial-controls" id="ser-limit-btn" type="button" onclick="changeSettings('timeLimit', document.getElementById('ser-limit'));" title="Apply" disabled> <i class="fas fa-check"></i> </button>
-                      </div>
-                      <small>Input in seconds. Any positive integer is valid. Serial recording will stop automatically when time runs out.</small>
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="ser-limit">Recording Time Limit</label>
+                      <input type="number" class="form-control serial-controls" id="ser-limit"  min="1" onkeypress="enterPress(event, 'ser-limit-btn');" disabled>
+                      <button class="btn btn-primary serial-controls" id="ser-limit-btn" type="button" onclick="changeSettings('timeLimit', document.getElementById('ser-limit'));" title="Apply" disabled> <i class="fas fa-check"></i> </button>
+                    </div>
+                    <p><small>Input in seconds. Any positive integer is valid. Serial recording will stop automatically when time runs out.</small></p>
 
-                    </p>
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="custom-ser-refresh">Plot Refresh Time</label>
+                      <input type="number" class="form-control serial-controls" id="custom-ser-refresh" min="1" onkeypress="enterPress(event, 'setting6');">
+                      <button class="btn btn-primary serial-controls" type="button" id="setting6" onclick="changeSettings('plotRefreshRate', document.getElementById('custom-ser-refresh'));" title="Apply"> <i class="fas fa-check"></i> </button>
+                    </div>
+                    <p><small>Input in seconds. Any positive float is valid, use integers for best performance.</small></p>
 
-                    <p>
-                      <div class="input-group input-group-sm">
-                        <label class="input-group-text" for="custom-ser-refresh">Plot Refresh Time</label>
-                        <input type="number" class="form-control serial-controls" id="custom-ser-refresh" min="1" onkeypress="enterPress(event, 'setting6');">
-                        <button class="btn btn-primary serial-controls" type="button" id="setting6" onclick="changeSettings('plotRefreshRate', document.getElementById('custom-ser-refresh'));" title="Apply"> <i class="fas fa-check"></i> </button>
-                      </div>
-                      <small>Input in seconds. Any positive float is valid, use integers for best performance.</small>
-                    </p>
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="custom-ser-buffer">Max Serial Buffer</label>
+                      <input type="number" class="form-control serial-controls" id="custom-ser-buffer" min="1" onkeypress="enterPress(event, 'setting7');">
+                      <button class="btn btn-primary serial-controls" type="button" id="setting7" onclick="changeSettings('serBufferSize', document.getElementById('custom-ser-buffer'));" title="Apply"> <i class="fas fa-check"></i> </button>
+                    </div>
+                    <p><small>Max number of serial input events buffered between plot refreshes. Any positive integer is valid.</small></p>
 
-                    <p>
-                      <div class="input-group input-group-sm">
-                        <label class="input-group-text" for="custom-ser-buffer">Max Serial Buffer</label>
-                        <input type="number" class="form-control serial-controls" id="custom-ser-buffer" min="1" onkeypress="enterPress(event, 'setting7');">
-                        <button class="btn btn-primary serial-controls" type="button" id="setting7" onclick="changeSettings('serBufferSize', document.getElementById('custom-ser-buffer'));" title="Apply"> <i class="fas fa-check"></i> </button>
-                      </div>
-                      <small>Max number of serial input events buffered between plot refreshes. Any positive integer is valid.</small>
-                    </p>
-
-                    <p>
-                      <div class="input-group input-group-sm">
-                        <label class="input-group-text" for="custom-ser-adc">Serial Channel No</label>
-                        <input type="number" class="form-control serial-controls" id="custom-ser-adc" min="1" onkeypress="enterPress(event, 'setting8');">
-                        <button class="btn btn-primary serial-controls" type="button" id="setting8" onclick="changeSettings('serChannels', document.getElementById('custom-ser-adc'));" title="Apply"> <i class="fas fa-check"></i> </button>
-                      </div>
-                      <small>Number of (ADC) channels of the serial device. Any positive integer is valid.</small>
-                    </p>
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="custom-ser-adc">Serial Channel No</label>
+                      <input type="number" class="form-control serial-controls" id="custom-ser-adc" min="1" onkeypress="enterPress(event, 'setting8');">
+                      <button class="btn btn-primary serial-controls" type="button" id="setting8" onclick="changeSettings('serChannels', document.getElementById('custom-ser-adc'));" title="Apply"> <i class="fas fa-check"></i> </button>
+                    </div>
+                    <p><small>Number of (ADC) channels of the serial device. Any positive integer is valid.</small></p>
 
                   </div>
                 </div>
@@ -751,25 +725,21 @@
                       <input type="number" class="form-control" id="peak-thres" min="0" step="0.01" onkeypress="enterPress(event, 'setting9');">
                       <button class="btn btn-primary" type="button" id="setting9" onclick="changeSettings('peakThres', document.getElementById('peak-thres'));" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
-                    <small>Sensitivity of the vertical step size in relation to the highest value. Any positive float is valid.</small>
+                    <p><small>Sensitivity of the vertical step size in relation to the highest value. Any positive float is valid.</small></p>
 
-                    <p>
-                      <div class="input-group input-group-sm">
-                        <label class="input-group-text" for="peak-lag">Smooth</label>
-                        <input type="number" class="form-control" id="peak-lag" min="1" onkeypress="enterPress(event, 'setting10');">
-                        <button class="btn btn-primary" type="button" id="setting10" onclick="changeSettings('peakLag', document.getElementById('peak-lag'));" title="Apply"> <i class="fas fa-check"></i> </button>
-                      </div>
-                      <small>Width of the overall moving average applied to the plot data that is used as a general reference. Any positive integer is valid.</small>
-                    </p>
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="peak-lag">Smooth</label>
+                      <input type="number" class="form-control" id="peak-lag" min="1" onkeypress="enterPress(event, 'setting10');">
+                      <button class="btn btn-primary" type="button" id="setting10" onclick="changeSettings('peakLag', document.getElementById('peak-lag'));" title="Apply"> <i class="fas fa-check"></i> </button>
+                    </div>
+                    <p><small>Width of the overall moving average applied to the plot data that is used as a general reference. Any positive integer is valid.</small></p>
 
-                    <p>
-                      <div class="input-group input-group-sm">
-                        <label class="input-group-text" for="peak-width">Width</label>
-                        <input type="number" class="form-control" id="peak-width" min="1" onkeypress="enterPress(event, 'setting11');">
-                        <button class="btn btn-primary" type="button" id="setting11" onclick="changeSettings('peakWidth', document.getElementById('peak-width'));" title="Apply"> <i class="fas fa-check"></i> </button>
-                      </div>
-                      <small>Maximum distance two peak lines can be apart to count as one single peak. Any positive integer is valid.</small>
-                    </p>
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="peak-width">Width</label>
+                      <input type="number" class="form-control" id="peak-width" min="1" onkeypress="enterPress(event, 'setting11');">
+                      <button class="btn btn-primary" type="button" id="setting11" onclick="changeSettings('peakWidth', document.getElementById('peak-width'));" title="Apply"> <i class="fas fa-check"></i> </button>
+                    </div>
+                    <p><small>Maximum distance two peak lines can be apart to count as one single peak. Any positive integer is valid.</small></p>
 
                   </div>
                 </div>
