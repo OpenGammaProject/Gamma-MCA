@@ -142,7 +142,7 @@ class SpectrumPlot {
 
     }
 
-    return calArray; // Array of String because of toFixed()!!!!
+    return calArray;
   }
   /*
     Get The Moving Average
