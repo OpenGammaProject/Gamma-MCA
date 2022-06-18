@@ -70,7 +70,7 @@ class SpectrumPlot {
           }
         };
 
-        const text = `
+        const text = `\
         <!DOCTYPE html>
         <!-- Gamma MCA Interactive Export Version 1 by NuclearPhoenix. https://spectrum.nuclearphoenix.xyz. -->
         <html>
@@ -82,7 +82,7 @@ class SpectrumPlot {
             <script src="${scriptUrl}"></script>
             <script type="text/javascript">Plotly.newPlot('plotly-output',${JSON.stringify(plotElement.data)},${JSON.stringify(newLayout)},${JSON.stringify(config)})</script>
           </body>
-        </html>
+        </html>\
         `;
 
         let element = document.createElement('a');
