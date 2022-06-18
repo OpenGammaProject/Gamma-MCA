@@ -36,17 +36,17 @@ const OFFLINE_RESOURCES = ['/',
                           '/assets/isotopes_energies_min.json'];
 
 
-self.addEventListener("install", function(event) { // First time install of a worker
+self.addEventListener("install", event => { // First time install of a worker
   console.log('Installing service worker.');
 
   event.waitUntil(
-    caches.open(CACHE_NAME).then(function(cache) {
+    caches.open(CACHE_NAME).then(cache => {
       /*
       for (const URL of OFFLINE_RESOURCES) { // Remove old cached files
         cache.delete(URL, {ignoreSearch: true, ignoreMethod: true});
       }
       */
-      cache.keys().then(function(keys) { // Delete the whole cache
+      cache.keys().then(keys => { // Delete the whole cache
         keys.forEach(async function(request, index, array) {
           //console.log('Clearing cache!', request);
           await cache.delete(request);
@@ -60,13 +60,13 @@ self.addEventListener("install", function(event) { // First time install of a wo
 });
 
 
-self.addEventListener("activate", function(event) { // New worker takes over
+self.addEventListener("activate", event => { // New worker takes over
   console.log('Activating service worker.');
   self.clients.claim(); // Allows an active service worker to set itself as the controller for all clients within its scope
 });
 
 
-self.addEventListener("fetch", function(event) {
+self.addEventListener("fetch", event => {
   //console.log('mode', event.request.mode);
 
   event.respondWith(async function() {

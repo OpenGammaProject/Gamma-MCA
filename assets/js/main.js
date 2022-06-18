@@ -28,7 +28,7 @@ const SpectrumData = function() { // Will hold the measurement data globally.
   this.dataCps = [];
   this.backgroundCps = [];
 
-  this.getTotalCounts = function(data) {
+  this.getTotalCounts = data => {
     let sum = 0;
     data.forEach((item, i) => {
       sum += item;
@@ -150,20 +150,20 @@ document.body.onload = async function() {
 
 
 // Exit website confirmation alert
-window.onbeforeunload = function(e) {
+window.onbeforeunload = e => {
   return 'Are you sure to leave?';
 };
 
 
 // Needed For Responsiveness! DO NOT REMOVE OR THE LAYOUT GOES TO SHIT!!!
-document.body.onresize = function() {
+document.body.onresize = () => {
   plot.updatePlot(spectrumData);
   sizeCheck();
 };
 
 
 // User changed from browser window to PWA (after installation) or backwards
-window.matchMedia('(display-mode: standalone)').addEventListener('change', (evt) => {
+window.matchMedia('(display-mode: standalone)').addEventListener('change', evt => {
   /*
   let displayMode = 'browser';
   if (evt.matches) {
@@ -176,7 +176,7 @@ window.matchMedia('(display-mode: standalone)').addEventListener('change', (evt)
 
 let deferredPrompt;
 
-window.onbeforeinstallprompt = function(event) {
+window.onbeforeinstallprompt = event => {
   event.preventDefault(); // Prevent the mini-infobar from appearing on mobile
   deferredPrompt = event;
 
@@ -199,7 +199,7 @@ async function installPWA() {
 }
 
 
-window.onappinstalled = function() {
+window.onappinstalled = () => {
   deferredPrompt = null;
   hideNotification('pwa-installer');
   document.getElementById('manual-install').className += 'visually-hidden';
@@ -230,7 +230,7 @@ function getFileData(input, background = false) { // Gets called when a file has
 
   reader.readAsText(file);
 
-  reader.onload = function() {
+  reader.onload = () => {
     const result = reader.result.trim();
 
     /*
@@ -261,7 +261,7 @@ function getFileData(input, background = false) { // Gets called when a file has
     bindPlotEvents(); // needed, because of "false" above
   };
 
-  reader.onerror = function() {
+  reader.onerror = () => {
     popupNotification('file-error');
     return;
   };
@@ -507,7 +507,7 @@ function importCal(input) {
 
   reader.readAsText(file);
 
-  reader.onload = function() {
+  reader.onload = () => {
     try {
       const result = reader.result.trim();
       const obj = JSON.parse(result);
@@ -536,7 +536,7 @@ function importCal(input) {
     }
   };
 
-  reader.onerror = function() {
+  reader.onerror = () => {
     popupNotification('file-error');
     return;
   };
@@ -658,14 +658,14 @@ async function loadIsotopes(reload = false) { // Load Isotope Energies JSON ONCE
         const cell2 = row.insertCell(1);
         const cell3 = row.insertCell(2);
 
-        cell2.addEventListener('click', function(evnt) {
+        cell2.addEventListener('click', evnt => {
           try {
             evnt.target.parentNode.firstChild.firstChild.click();
           } catch(e) { // Catch press on <sup> element
             ; //evnt.target.parentNode.parentNode.firstChild.firstChild.click();
           }
         });
-        cell3.addEventListener('click', function(evnt) {
+        cell3.addEventListener('click', evnt => {
           try {
             evnt.target.parentNode.firstChild.firstChild.click();
           } catch(e) { // Catch press on <sup> element
@@ -725,10 +725,10 @@ async function closestIso(value) {
   }
 
   const keys = Object.keys(isoList);
-  const closeKeys = keys.filter((energy) => {return Math.abs(energy - value) <= maxDist});
+  const closeKeys = keys.filter(energy => {return Math.abs(energy - value) <= maxDist});
 
   if (closeKeys.length !== 0) {
-    let closest = closeKeys.reduce(function(prev, curr) {
+    let closest = closeKeys.reduce((prev, curr) => {
       return (Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
     });
 
