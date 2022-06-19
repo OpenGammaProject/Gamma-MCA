@@ -185,6 +185,21 @@ class SpectrumPlot {
     return newData;
   }
   /*
+    Seek the closest matching isotope by energy from an isotope list
+  */
+  seekClosest(isoList, value, maxDist = 100) {
+    const keys = Object.keys(isoList);
+    const closeKeys = keys.filter(energy => Math.abs(energy - value) <= maxDist);
+
+    if (closeKeys.length !== 0) {
+      let closest = closeKeys.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
+
+      return {energy: parseFloat(closest).toFixed(2), name: isoList[closest]};
+    } else {
+      return {energy: undefined, name: undefined};
+    }
+  }
+  /*
     Find and mark energy peaks by using two different moving averages
   */
   peakFinder(doFind = true) {

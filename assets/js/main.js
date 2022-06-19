@@ -719,7 +719,7 @@ async function closestIso(value) {
     return;
   }
 
-  const { energy, name } = seekClosest(value);
+  const { energy, name } = plot.seekClosest(isoList, value, maxDist);
 
   if (energy !== undefined && name !== undefined) {
     plot.toggleLine(Object.keys(prevIso)[0], Object.values(prevIso)[0], false);
@@ -740,20 +740,6 @@ async function closestIso(value) {
     }
   }
 
-}
-
-
-function seekClosest(value) {
-  const keys = Object.keys(isoList);
-  const closeKeys = keys.filter(energy => Math.abs(energy - value) <= maxDist);
-
-  if (closeKeys.length !== 0) {
-    let closest = closeKeys.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
-
-    return {energy: parseFloat(closest).toFixed(2), name: isoList[closest]};
-  } else {
-    return {energy: undefined, name: undefined};
-  }
 }
 
 
