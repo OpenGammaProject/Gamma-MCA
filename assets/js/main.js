@@ -103,9 +103,6 @@ document.body.onload = async function() {
     navigator.serial.addEventListener('disconnect', serialDisconnect);
     listSerial(); // List Available Serial Ports
   } else {
-    //const serDivElement = document.getElementById('serial-div'); // Delete serial control div
-    //serDivElement.parentNode.removeChild(serDivElement);
-
     const serError = document.getElementById('serial-error');
     serError.className = serError.className.replaceAll(' visually-hidden', '');
 
