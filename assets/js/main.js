@@ -13,7 +13,6 @@
     - (?) Serial console read capability
     - (?) Hotkey to open/close settings
     - (?) Add desktop notifications
-    - Add Isotope Recognition for Peak Detector
     - !!! Weird comb-structure with quadratic calibrations
     - !!! Check Calibration Regression
 
@@ -59,7 +58,7 @@ let isoList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2022-06-19';
+const APP_VERSION = '2022-06-20';
 let localStorageAvailable = false;
 let firstInstall = false;
 
