@@ -23,8 +23,10 @@ class SpectrumPlot {
     this.shapes = [];
     this.annotations = [];
     this.editableMode = false;
+    this.isoList = {};
     this.peakConfig = {
       enabled: false,
+      mode: 0, // Energy: 0 and Isotope: 1 modes
       thres: 0.03,
       lag: 150,
       width: 4,
@@ -187,14 +189,14 @@ class SpectrumPlot {
   /*
     Seek the closest matching isotope by energy from an isotope list
   */
-  seekClosest(isoList, value, maxDist = 100) {
-    const keys = Object.keys(isoList);
+  seekClosest(value, maxDist = 100) {
+    const keys = Object.keys(this.isoList);
     const closeKeys = keys.filter(energy => Math.abs(energy - value) <= maxDist);
 
     if (closeKeys.length !== 0) {
       let closest = closeKeys.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
 
-      return {energy: parseFloat(closest).toFixed(2), name: isoList[closest]};
+      return {energy: parseFloat(closest).toFixed(2), name: this.isoList[closest]};
     } else {
       return {energy: undefined, name: undefined};
     }
@@ -242,11 +244,19 @@ class SpectrumPlot {
           result = values / size;
         }
 
+        if (this.peakConfig.mode == 0) {
+          this.toggleLine(result, Math.round(result));
+          this.peakConfig.lines.push(result);
+        } else { // Isotope Mode
+          const { energy, name } = seekClosest(result, size);
+          if (energy !== undefined && name !== undefined) {
+            this.toggleLine(energy, name);
+            this.peakConfig.lines.push(energy);
+          }
+        }
+
         values = 0;
         size = 0;
-
-        this.toggleLine(result, Math.round(result));
-        this.peakConfig.lines.push(result);
       }
     }
   }

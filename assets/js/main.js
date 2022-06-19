@@ -683,6 +683,7 @@ async function loadIsotopes(reload = false) { // Load Isotope Energies JSON ONCE
 
         cell2.innerHTML = `<label for="${name}"><sup>${strArr[1]}</sup>${strArr[0]}</label>`;
       }
+      plot.isoList = isoList; // Copy list to plot object
     } else {
       isoError.innerText = `Could not load isotope list! HTTP Error: ${response.status}. Please try again.`;
       isoError.className = isoError.className.replaceAll(' visually-hidden', '');
@@ -719,7 +720,7 @@ async function closestIso(value) {
     return;
   }
 
-  const { energy, name } = plot.seekClosest(isoList, value, maxDist);
+  const { energy, name } = seekClosest(value);
 
   if (energy !== undefined && name !== undefined) {
     plot.toggleLine(Object.keys(prevIso)[0], Object.values(prevIso)[0], false);
@@ -739,7 +740,20 @@ async function closestIso(value) {
       plot.updatePlot(spectrumData);
     }
   }
+}
 
+
+function seekClosest(value) {
+  const keys = Object.keys(isoList);
+  const closeKeys = keys.filter(energy => Math.abs(energy - value) <= maxDist);
+
+  if (closeKeys.length !== 0) {
+    let closest = closeKeys.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
+
+    return {energy: parseFloat(closest).toFixed(2), name: isoList[closest]};
+  } else {
+    return {energy: undefined, name: undefined};
+  }
 }
 
 
@@ -775,11 +789,24 @@ function selectAll(selectBox) {
 }
 
 
-function findPeaks(checkbox) {
-  plot.peakConfig.enabled = checkbox.checked;
-  if (!checkbox.checked) { // disabled
-    plot.peakFinder(false);
+async function findPeaks(button) {
+  if (plot.peakConfig.enabled) {
+    if (plot.peakConfig.mode == 0) {
+      //plot.peakFinder(false); // Delete all old lines
+      await loadIsotopes();
+      plot.peakConfig.mode++;
+      button.innerText = 'Isotope';
+    } else {
+      plot.peakFinder(false); // Delete all old lines
+      plot.peakConfig.enabled = false;
+      button.innerText = 'None';
+    }
+  } else {
+    plot.peakConfig.enabled = true;
+    plot.peakConfig.mode = 0;
+    button.innerText = 'Energy';
   }
+
   plot.updatePlot(spectrumData);
 }
 

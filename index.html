@@ -411,8 +411,10 @@
 
         <div class="col-md-auto pt-1 pb-1">
 
-          <input type="checkbox" class="btn-check" id="iso-hover" onclick="toggleIsoHover();">
-          <label class="btn btn-outline-primary btn-sm" title="Show closest isotope when hovering (experimental)" for="iso-hover"> <i class="fa-solid fa-magnifying-glass"></i> Isotopes </label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">Peaks</span>
+            <button class="btn btn-primary btn-sm" type="button" onclick="findPeaks(this);" title="Find energy peaks or isotopes (experimental)">None</button>
+          </div>
 
         </div>
 
@@ -422,8 +424,8 @@
 
         <div class="col-md-auto pt-1 pb-1">
 
-          <input type="checkbox" class="btn-check" id="peak-finder" onclick="findPeaks(this);">
-          <label class="btn btn-outline-primary btn-sm" title="Find energy peaks (experimental)" for="peak-finder"> <i class="fa-solid fa-mountain"></i> Peaks </label>
+          <input type="checkbox" class="btn-check" id="iso-hover" onclick="toggleIsoHover();">
+          <label class="btn btn-outline-primary btn-sm" title="Show closest isotope when hovering (experimental)" for="iso-hover"> <i class="fa-solid fa-magnifying-glass"></i> Isotopes </label>
 
         </div>
 
