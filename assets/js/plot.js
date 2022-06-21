@@ -231,9 +231,10 @@ class SpectrumPlot {
 
     let values = 0;
     let size = 0;
+    peakLines.push(0);
 
-    for (let i = 0; i < peakLines.length-1; i++) {
-      if (peakLines[i + 1] - peakLines[i] <= this.peakConfig.width) {
+    for (let i = 1; i < peakLines.length; i++) {
+      if (Math.abs(peakLines[i] - peakLines[i - 1]) <= this.peakConfig.width) {
         values += peakLines[i];
         size++;
       } else {
