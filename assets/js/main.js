@@ -847,6 +847,7 @@ function loadSettingsDefault() {
   document.getElementById('peak-thres').value = plot.peakConfig.thres;
   document.getElementById('peak-lag').value = plot.peakConfig.lag;
   document.getElementById('peak-width').value = plot.peakConfig.width;
+  document.getElementById('seek-width').value = plot.peakConfig.seekWidth;
 
   const formatSelector = document.getElementById('download-format');
   for (let i = 0; i < formatSelector.options.length; i++) {
@@ -922,6 +923,10 @@ function loadSettingsStorage() {
   setting = loadJSON('peakWidth');
   if (setting) {
     plot.peakConfig.width = setting;
+  }
+  setting = loadJSON('seekWidth');
+  if (setting) {
+    plot.peakConfig.seekWidth = setting;
   }
   setting = loadJSON('plotDownload');
   if (setting) {
@@ -1080,6 +1085,16 @@ function changeSettings(name, element) {
     case 'peakWidth':
       value = parseInt(value);
       plot.peakConfig.width = value;
+      plot.updatePlot(spectrumData);
+
+      if (localStorageAvailable) {
+        saveJSON(name, value);
+      }
+      break;
+
+    case 'seekWidth':
+      value = parseFloat(value);
+      plot.peakConfig.seekWidth = value;
       plot.updatePlot(spectrumData);
 
       if (localStorageAvailable) {

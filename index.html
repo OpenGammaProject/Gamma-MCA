@@ -725,7 +725,7 @@
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="peak-thres">Threshold</label>
-                      <input type="number" class="form-control" id="peak-thres" min="0" step="0.01" onkeypress="enterPress(event, 'setting9');">
+                      <input type="number" class="form-control" id="peak-thres" min="0" step="0.001" onkeypress="enterPress(event, 'setting9');">
                       <button class="btn btn-primary" type="button" id="setting9" onclick="changeSettings('peakThres', document.getElementById('peak-thres'));" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <p><small>Sensitivity of the vertical step size in relation to the highest value. Any positive float is valid.</small></p>
@@ -743,6 +743,13 @@
                       <button class="btn btn-primary" type="button" id="setting11" onclick="changeSettings('peakWidth', document.getElementById('peak-width'));" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <p><small>Maximum distance two peak lines can be apart to count as one single peak. Any positive integer is valid.</small></p>
+
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="seek-width">Isotope Seek</label>
+                      <input type="number" class="form-control" id="seek-width" min="1" onkeypress="enterPress(event, 'setting12');">
+                      <button class="btn btn-primary" type="button" id="setting12" onclick="changeSettings('seekWidth', document.getElementById('seek-width'));" title="Apply"> <i class="fas fa-check"></i> </button>
+                    </div>
+                    <p><small>Maximum distance to search for isotopes around the peak energy (multiple of the peak width). Any positive float is valid.</small></p>
 
                   </div>
                 </div>

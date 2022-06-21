@@ -27,9 +27,10 @@ class SpectrumPlot {
     this.peakConfig = {
       enabled: false,
       mode: 0, // Energy: 0 and Isotope: 1 modes
-      thres: 0.02,
+      thres: 0.025,
       lag: 150,
       width: 2,
+      seekWidth: 2,
       lines: [],
       lastDataX: [],
       lastDataY: [],
@@ -229,36 +230,39 @@ class SpectrumPlot {
       }
     }
 
-    let values = 0;
-    let size = 0;
+    let values = [];
     peakLines.push(0);
 
-    for (let i = 1; i < peakLines.length; i++) {
-      if (Math.abs(peakLines[i] - peakLines[i - 1]) <= this.peakConfig.width) {
-        values += peakLines[i];
-        size++;
-      } else {
-        let result;
+    for (let i = 0; i < peakLines.length; i++) {
+      values.push(peakLines[i]);
 
-        if (values == 0) {
+      if (Math.abs(peakLines[i + 1] - peakLines[i]) > this.peakConfig.width) {
+        let result = 0;
+        let size;
+
+        if (values.length == 1) {
           result = peakLines[i];
+          size = this.peakConfig.seekWidth;
         } else {
-          result = values / size;
+          for (const val of values) {
+            result += val;
+          }
+          result /= values.length;
+          size = this.peakConfig.seekWidth * (Math.max(...values) - Math.min(...values));
         }
 
         if (this.peakConfig.mode == 0) {
           this.toggleLine(result, Math.round(result));
           this.peakConfig.lines.push(result);
         } else { // Isotope Mode
-          const { energy, name } = this.seekClosest(result, size/2);
+          const { energy, name } = this.seekClosest(result, size);
           if (energy !== undefined && name !== undefined) {
             this.toggleLine(energy, name);
             this.peakConfig.lines.push(energy);
           }
         }
 
-        values = 0;
-        size = 0;
+        values = [];
       }
     }
   }
