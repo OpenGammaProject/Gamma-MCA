@@ -722,7 +722,9 @@ async function closestIso(value) {
   const { energy, name } = seekClosest(value);
 
   if (energy !== undefined && name !== undefined) {
-    plot.toggleLine(Object.keys(prevIso)[0], Object.values(prevIso)[0], false);
+    if (Object.keys(prevIso).length !== 0) {
+      plot.toggleLine(Object.keys(prevIso)[0], Object.values(prevIso)[0], false);
+    }
 
     let newIso = {};
     newIso[energy] = name;

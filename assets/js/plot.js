@@ -252,7 +252,7 @@ class SpectrumPlot {
         }
 
         if (this.peakConfig.mode == 0) {
-          this.toggleLine(result, Math.round(result));
+          this.toggleLine(result, Math.round(result).toString());
           this.peakConfig.lines.push(result);
         } else { // Isotope Mode
           const { energy, name } = this.seekClosest(result, size);
@@ -282,6 +282,7 @@ class SpectrumPlot {
     Add a line
   */
   toggleLine(energy, name, enabled = true) {
+    name = name.replaceAll('-',''); // Remove - to save space
     if (enabled) {
       const newLine = {
         type: 'line',
