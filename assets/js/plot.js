@@ -209,6 +209,7 @@ class SpectrumPlot {
       for (const line of this.peakConfig.lines) {
         this.toggleLine(line, '', false);
       }
+      this.peakConfig.lines = [];
     }
 
     if (!doFind) {
