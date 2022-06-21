@@ -27,9 +27,9 @@ class SpectrumPlot {
     this.peakConfig = {
       enabled: false,
       mode: 0, // Energy: 0 and Isotope: 1 modes
-      thres: 0.03,
+      thres: 0.02,
       lag: 150,
-      width: 4,
+      width: 2,
       lines: [],
       lastDataX: [],
       lastDataY: [],
@@ -194,7 +194,7 @@ class SpectrumPlot {
     const closeKeys = keys.filter(energy => Math.abs(energy - value) <= maxDist);
 
     if (closeKeys.length !== 0) {
-      let closest = closeKeys.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
+      const closest = closeKeys.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
 
       return {energy: parseFloat(closest).toFixed(2), name: this.isoList[closest]};
     } else {
@@ -250,7 +250,7 @@ class SpectrumPlot {
           this.toggleLine(result, Math.round(result));
           this.peakConfig.lines.push(result);
         } else { // Isotope Mode
-          const { energy, name } = seekClosest(result, size);
+          const { energy, name } = this.seekClosest(result, size/2);
           if (energy !== undefined && name !== undefined) {
             this.toggleLine(energy, name);
             this.peakConfig.lines.push(energy);
