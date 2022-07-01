@@ -16,6 +16,10 @@
     - !!! Weird comb-structure with quadratic calibrations
     - !!! Check Calibration Regression
 
+    - Improve Mobile Layout
+    - Add file handling
+    - Show screen size warning on mobile only once
+
   Known Performance Issues:
     - Isotope hightlighting
     - (Un)Selecting all isotopes from gamma-ray energies list (Plotly)
