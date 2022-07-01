@@ -11,14 +11,14 @@ Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://
 ## Feature Overview
 
 * No installation required - accessible on every internet-connected device
-* Can be easily installed if so desired and works just like any other native program
+* Can be easily installed for stand-alone offline use
 * Straightforward interface to get down to business
-* File import of common data formats (such as most CSVs, TKAs, etc.)
-* Live plotting via the serial interface, compatible with any device (Arduino, ...)
+* File import of common data formats (e.g. CSV, TKA)
+* Live plotting via the serial interface, compatible with any serial device (e.g. Arduino)
 * Linear and quadratic energy calibration
-* Customizable list of common gamma-ray energies
-* Export your spectrum and embed the interactive plot into your website
-* Automatic peak detection
+* Customizable list of common isotopes and their gamma-ray energies
+* Export interactive graphs of your spectrum to embed it into your website
+* Automatic peak detection (energy and isotope)
 * ... and much more!
 
 ## Importing Spectra
