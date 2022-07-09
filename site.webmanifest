@@ -34,13 +34,14 @@
     }
   ],
   "start_url": "/",
-  "background_color": "#ffffff",
+  "background_color": "#efebe9",
+  "lang": "en-US",
   "orientation": "landscape",
   "display": "standalone",
   "scope": "/",
   "theme_color": "#f6bd16",
-  "description": "Progressive web application for gamma(-ray) spectroscopy including file import/export and live plotting support via the serial interface.",
-  "categories": ["nuclear physics", "radiation", "gamma spectroscopy", "science", "gamma-ray", "physics", "geiger", "spectrometry"],
+  "description": "Progressive web application for gamma-ray spectroscopy including file import/export and live plotting support via the serial interface.",
+  "categories": ["nuclear physics","radiation","gamma spectroscopy","science","gamma-ray","physics","geiger","spectrometry","education","tool","mca","analyzer"],
   "screenshots": [
     {
       "src": "/assets/screenshots/browser.PNG",
