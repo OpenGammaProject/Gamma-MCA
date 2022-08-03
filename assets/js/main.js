@@ -15,6 +15,7 @@
     - (?) Add desktop notifications
     - !!! Weird comb-structure with quadratic calibrations
     - !!! Check Calibration Regression
+    - Support XML file calibration import
 
     - Improve Mobile Layout
     - Add file handling
@@ -226,19 +227,31 @@ function getFileData(input, background = false) { // Gets called when a file has
   const file = input.files[0];
   let reader = new FileReader();
 
-  //const fileEnding = file.name.split('.')[1];
+  const fileEnding = file.name.split('.')[1];
 
   reader.readAsText(file);
 
   reader.onload = () => {
     const result = reader.result.trim();
 
-    /*
-      TODO: FileType über Dateiendung?
-    */
-    if (background) {
-      const bg = raw.csvToArray(result);
-      spectrumData.background = bg;
+    if (fileEnding.toLowerCase() === 'xml') {
+      if (window.DOMParser) {
+        const {espectrum, bgspectrum} = raw.xmlToArray(result);
+
+        if (espectrum === undefined && bgspectrum === undefined) {
+          popupNotification('file-error');
+        }
+        if (espectrum !== undefined) {
+          spectrumData.data = espectrum;
+        }
+        if (bgspectrum !== undefined) {
+          spectrumData.background = bgspectrum;
+        }
+      } else {
+        console.error('No DOM parser in this browser!');
+      }
+    } else if (background) {
+      spectrumData.background = raw.csvToArray(result);
     } else {
       spectrumData.data = raw.csvToArray(result);
     }
