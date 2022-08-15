@@ -1,6 +1,6 @@
 /* Plot data using Plotly JS */
 
-class SpectrumPlot {
+export class SpectrumPlot {
   constructor(divId) {
     this.divId = divId;
     this.xAxis = 'linear';

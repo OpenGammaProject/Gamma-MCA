@@ -26,15 +26,19 @@
     - (Un)Selecting all isotopes from gamma-ray energies list (Plotly)
 */
 
+import {SpectrumPlot} from "./plot";
+import {RawData} from "./raw-data";
+import {SerialData} from "./serial";
+
 const SpectrumData = function() { // Will hold the measurement data globally.
   this.data = [];
   this.background = [];
   this.dataCps = [];
   this.backgroundCps = [];
 
-  this.getTotalCounts = data => {
+  this.getTotalCounts = (data: Array<number>) => {
     let sum = 0;
-    data.forEach((item, i) => {
+    data.forEach(item => {
       sum += item;
     });
     return sum;

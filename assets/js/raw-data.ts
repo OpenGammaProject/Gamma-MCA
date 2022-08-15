@@ -1,6 +1,6 @@
 /* File String in CSV format -> Array */
 
-class RawData {
+export class RawData {
   constructor(valueIndex, delimiter = ',') {
     this.valueIndex = valueIndex;
     this.delimiter = delimiter;

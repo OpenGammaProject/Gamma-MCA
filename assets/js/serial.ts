@@ -1,6 +1,6 @@
 /* Serial Capability and Management */
 
-class SerialData {
+export class SerialData {
   constructor() {
     this.maxSize = 10000; // Maximum number of pulses/events to hold in the buffer
     this.port = null;
