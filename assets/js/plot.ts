@@ -88,7 +88,8 @@ export class SpectrumPlot {
   };
   readonly customModeBarButtons = {
     name: 'Download plot as HTML',
-    //icon: Plotly.Icons['disk'],
+    // @ts-ignore // Works just fine without TS complaining
+    icon: Plotly.Icons['disk'],
     direction: 'up',
     click: (plotElement: any) => {
       let newLayout = JSON.parse(JSON.stringify(plotElement.layout));
@@ -635,8 +636,10 @@ export class SpectrumPlot {
 
     if (update) {
       //layout.uirevision = true;
+      // @ts-ignore // Works just fine without TS complaining
       Plotly.react(this.divId, data, layout, config);
     } else {
+      // @ts-ignore // Works just fine without TS complaining
       Plotly.newPlot(this.divId, data, layout, config);
     }
   }

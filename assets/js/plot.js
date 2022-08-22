@@ -37,6 +37,7 @@ export class SpectrumPlot {
     };
     customModeBarButtons = {
         name: 'Download plot as HTML',
+        icon: Plotly.Icons['disk'],
         direction: 'up',
         click: (plotElement) => {
             let newLayout = JSON.parse(JSON.stringify(plotElement.layout));
