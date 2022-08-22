@@ -1,7 +1,21 @@
-/* File String in CSV format -> Array */
+/*
+
+  File String in CSV, XML, TKA, ... format -> Array
+
+  Gamma MCA: free, open-source web-MCA for gamma spectroscopy
+  2022, NuclearPhoenix.- Phoenix1747
+  https://nuclearphoenix.xyz
+
+*/
 
 export class RawData {
-  constructor(valueIndex, delimiter = ',') {
+  valueIndex: number;
+  delimiter: string;
+  adcChannels: number;
+  fileType: number;
+  private tempValIndex: number;
+
+  constructor(valueIndex: number, delimiter = ',') {
     this.valueIndex = valueIndex;
     this.delimiter = delimiter;
 
@@ -10,27 +24,27 @@ export class RawData {
     this.tempValIndex = valueIndex;
   }
 
-  checkLines(value) {
+  checkLines(value: string): boolean {
     const values = value.split(this.delimiter);
 
-    if (values.length == 1){ // Work-Around for files with only one column
+    if (values.length === 1){ // Work-Around for files with only one column
       this.tempValIndex = 0;
     }
 
     return values.length > this.tempValIndex;
   }
 
-  parseLines(value) {
+  parseLines(value: string): number {
     const values = value.split(this.delimiter);
     return parseFloat(values[this.tempValIndex].trim());
   }
 
-  histConverter(dataArr) {
-    if (this.fileType == 1) {
+  histConverter(dataArr: number[]): number[] {
+    if (this.fileType === 1) {
       return dataArr;
     }
 
-    let xArray = Array(this.adcChannels).fill(0);
+    let xArray: number[] = Array(this.adcChannels).fill(0);
 
     for(const element of dataArr) {
       xArray[element] += 1;
@@ -38,7 +52,7 @@ export class RawData {
     return xArray;
   }
 
-  csvToArray(data) {
+  csvToArray(data: string): number[] {
     this.tempValIndex = this.valueIndex; // RESET VALUE INDEX
 
     const allLines = data.split('\n');
@@ -49,7 +63,7 @@ export class RawData {
     return this.histConverter(cleanData);
   }
 
-  xmlToArray(data) {
+  xmlToArray(data: string): {espectrum: number[], bgspectrum: number[]} {
     try {
       const parser = new DOMParser();
       let xmlDoc = parser.parseFromString(data, 'text/xml');
@@ -59,12 +73,22 @@ export class RawData {
       const especArray = Array.from(espec);
       const bgspecArray = Array.from(bgspec);
 
-      const espectrum = this.histConverter(especArray.map(item => parseInt(item.textContent)));
-      const bgspectrum = this.histConverter(bgspecArray.map(item => parseInt(item.textContent)));
+      const espectrum = this.histConverter(especArray.map(item => {
+        if (item.textContent === null) {
+          return -1;
+        }
+        return parseInt(item.textContent);
+      }));
+      const bgspectrum = this.histConverter(bgspecArray.map(item => {
+        if (item.textContent === null) {
+          return -1;
+        }
+        return parseInt(item.textContent);
+      }));
 
       return {espectrum, bgspectrum};
     } catch (e) {
-      return {undefined,undefined}
+      return {espectrum: [], bgspectrum: []};
     }
   }
 }

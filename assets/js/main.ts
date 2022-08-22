@@ -16,6 +16,10 @@
     - !!! Weird comb-structure with quadratic calibrations
     - !!! Check Calibration Regression
     - Support XML file calibration import
+    - Support XML combi-file export
+
+    - Remove remaining explicit anys (Typescript)
+    - Remove unclean ! operators (Typescript)
 
     - Improve Mobile Layout
     - Add file handling
@@ -24,19 +28,33 @@
   Known Performance Issues:
     - Isotope hightlighting
     - (Un)Selecting all isotopes from gamma-ray energies list (Plotly)
+
 */
 
-import {SpectrumPlot} from "./plot";
-import {RawData} from "./raw-data";
-import {SerialData} from "./serial";
+import './external/bootstrap.min.js';
 
-const SpectrumData = function() { // Will hold the measurement data globally.
-  this.data = [];
-  this.background = [];
-  this.dataCps = [];
-  this.backgroundCps = [];
+import {SpectrumPlot} from './plot.js';
+import {RawData} from './raw-data.js';
+import {SerialData} from './serial.js';
 
-  this.getTotalCounts = (data: Array<number>) => {
+export interface isotopeList {
+  [key: string]: number | undefined;
+};
+
+interface portList {
+  [key: number]: SerialPort | undefined;
+};
+
+type calType = 'a' | 'b' | 'c';
+type dataType = 'data' | 'background';
+
+export class SpectrumData { // Will hold the measurement data globally.
+  data: number[] = [];
+  background: number[] = [];
+  dataCps: number[] = [];
+  backgroundCps: number[] = [];
+
+  getTotalCounts = (data: number[]) => {
     let sum = 0;
     data.forEach(item => {
       sum += item;
@@ -52,7 +70,7 @@ let ser = new SerialData();
 
 let calClick = { a: false, b: false, c: false };
 let oldCalVals = { a: '', b: '', c: ''};
-let portsAvail = {};
+let portsAvail: portList = {};
 
 let serOptions = { baudRate: 9600 }; // Standard baud-rate of 9600 bps
 let refreshRate = 1000; // Delay in ms between serial plot updates
@@ -60,10 +78,10 @@ let maxRecTimeEnabled = false;
 let maxRecTime = 1800000; // 30 mins
 const REFRESH_META_TIME = 100; // 100 ms
 
-let cpsValues = [];
+let cpsValues: number[];
 
 let isoListURL = 'assets/isotopes_energies_min.json';
-let isoList = {};
+let isoList: isotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
@@ -74,7 +92,7 @@ let firstInstall = false;
 /*
   Startup of the page
 */
-document.body.onload = async function() {
+document.body.onload = async function(): Promise<void> {
   localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 
   if (localStorageAvailable) {
@@ -95,10 +113,10 @@ document.body.onload = async function() {
   }
 
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches; // Detect PWA or browser
-  if (navigator.standalone || isStandalone) { // Standalone PWA mode
+  if ('standalone' in window.navigator || isStandalone) { // Standalone PWA mode
     document.title += ' PWA';
   } else { // Default browser window
-    document.getElementById('main').className = document.getElementById('main').className.replaceAll('pb-1', 'p-1');
+    document.getElementById('main')!.className = document.getElementById('main')!.className.replaceAll('pb-1', 'p-1');
     document.title += ' web application';
   }
 
@@ -106,28 +124,28 @@ document.body.onload = async function() {
   isoListURL = domain.href;
 
   if ('serial' in navigator) {
-    document.getElementById('serial-div').className = ''; // Remove visually-hidden and invisible
+    document.getElementById('serial-div')!.className = ''; // Remove visually-hidden and invisible
     navigator.serial.addEventListener('connect', serialConnect);
     navigator.serial.addEventListener('disconnect', serialDisconnect);
     listSerial(); // List Available Serial Ports
   } else {
-    const serError = document.getElementById('serial-error');
+    const serError = document.getElementById('serial-error')!;
     serError.className = serError.className.replaceAll(' visually-hidden', '');
 
     const serSettingsElements = document.getElementsByClassName('ser-settings');
     for (const element of serSettingsElements) { // Disable serial settings
-      element.disabled = true;
+      (<HTMLSelectElement | HTMLButtonElement>element).disabled = true;
     }
     const serControlsElements = document.getElementsByClassName('serial-controls');
     for (const element of serControlsElements) { // Disable serial controls
-      element.disabled = true;
+      (<HTMLSelectElement | HTMLButtonElement>element).disabled = true;
     }
   }
 
   plot.resetPlot(spectrumData);
   bindPlotEvents(); // Bind click and hover events provided by plotly
 
-  document.getElementById('version-tag').innerText += ` ${APP_VERSION}.`;
+  document.getElementById('version-tag')!.innerText += ` ${APP_VERSION}.`;
 
   if (localStorageAvailable) {
     if (loadJSON('lastVisit') <= 0) {
@@ -138,24 +156,24 @@ document.body.onload = async function() {
     saveJSON('lastVisit', time.getTime());
     saveJSON('lastUsedVersion', APP_VERSION);
 
-    const settingsNotSaveAlert = document.getElementById('ls-unavailable'); // Remove saving alert
-    settingsNotSaveAlert.parentNode.removeChild(settingsNotSaveAlert);
+    const settingsNotSaveAlert = document.getElementById('ls-unavailable')!; // Remove saving alert
+    settingsNotSaveAlert.parentNode!.removeChild(settingsNotSaveAlert);
   } else {
-    const settingsSaveAlert = document.getElementById('ls-available'); // Remove saving alert
-    settingsSaveAlert.parentNode.removeChild(settingsSaveAlert);
+    const settingsSaveAlert = document.getElementById('ls-available')!; // Remove saving alert
+    settingsSaveAlert.parentNode!.removeChild(settingsSaveAlert);
     popupNotification('welcomeMsg');
   }
 
   loadSettingsDefault();
   sizeCheck();
 
-  const loadingSpinner = document.getElementById('loading');
-  loadingSpinner.parentNode.removeChild(loadingSpinner); // Delete Loading Thingymajig
+  const loadingSpinner = document.getElementById('loading')!;
+  loadingSpinner.parentNode!.removeChild(loadingSpinner); // Delete Loading Thingymajig
 };
 
 
 // Exit website confirmation alert
-window.onbeforeunload = e => {
+window.onbeforeunload = (event) => {
   return 'Are you sure to leave?';
 };
 
@@ -168,10 +186,10 @@ document.body.onresize = () => {
 
 
 // User changed from browser window to PWA (after installation) or backwards
-window.matchMedia('(display-mode: standalone)').addEventListener('change', evt => {
+window.matchMedia('(display-mode: standalone)').addEventListener('change', (event) => {
   /*
   let displayMode = 'browser';
-  if (evt.matches) {
+  if (event.matches) {
     displayMode = 'standalone';
   }
   */
@@ -179,9 +197,9 @@ window.matchMedia('(display-mode: standalone)').addEventListener('change', evt =
 });
 
 
-let deferredPrompt;
+let deferredPrompt: any;
 
-window.onbeforeinstallprompt = event => {
+window.addEventListener('onbeforeinstallprompt', (event: Event) => {
   event.preventDefault(); // Prevent the mini-infobar from appearing on mobile
   deferredPrompt = event;
 
@@ -192,9 +210,9 @@ window.onbeforeinstallprompt = event => {
     }
   }
 
-  const installButton = document.getElementById('manual-install');
+  const installButton = document.getElementById('manual-install')!;
   installButton.className = installButton.className.replaceAll('visually-hidden', '');
-};
+});
 
 
 async function installPWA() {
@@ -204,11 +222,11 @@ async function installPWA() {
 }
 
 
-window.onappinstalled = () => {
+window.addEventListener('onappinstalled', () => {
   deferredPrompt = null;
   hideNotification('pwa-installer');
-  document.getElementById('manual-install').className += 'visually-hidden';
-};
+  document.getElementById('manual-install')!.className += 'visually-hidden';
+});
 
 /*
 document.onkeydown = async function(event) {
@@ -224,8 +242,8 @@ document.onkeydown = async function(event) {
 };
 */
 
-function getFileData(input, background = false) { // Gets called when a file has been selected.
-  if (input.files.length == 0) { // File selection has been canceled
+function getFileData(input: HTMLInputElement, background = false): void { // Gets called when a file has been selected.
+  if (input.files === null) { // File selection has been canceled
     return;
   }
   const file = input.files[0];
@@ -236,7 +254,7 @@ function getFileData(input, background = false) { // Gets called when a file has
   reader.readAsText(file);
 
   reader.onload = () => {
-    const result = reader.result.trim();
+    const result = (<string>reader.result).trim(); // A bit unclean for typescript, I'm sorry
 
     if (fileEnding.toLowerCase() === 'xml') {
       if (window.DOMParser) {
@@ -259,13 +277,13 @@ function getFileData(input, background = false) { // Gets called when a file has
     } else {
       spectrumData.data = raw.csvToArray(result);
     }
-    document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts(spectrumData.data);
-    document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts(spectrumData.background);
+    document.getElementById('total-spec-cts')!.innerText = spectrumData.getTotalCounts(spectrumData.data).toString();
+    document.getElementById('total-bg-cts')!.innerText = spectrumData.getTotalCounts(spectrumData.background).toString();
 
     /*
       Error Msg Problem with RAW Stream selection?
     */
-    if (!(spectrumData.background.length == spectrumData.data.length || spectrumData.data.length == 0 || spectrumData.background.length == 0)) {
+    if (!(spectrumData.background.length === spectrumData.data.length || spectrumData.data.length === 0 || spectrumData.background.length === 0)) {
       popupNotification('data-error');
       if (background) { // Remove file again
         removeFile('background');
@@ -285,7 +303,7 @@ function getFileData(input, background = false) { // Gets called when a file has
 }
 
 
-function sizeCheck() {
+function sizeCheck(): void {
   const viewportWidth = document.documentElement.clientWidth;
   const viewportHeight = document.documentElement.clientHeight;
   if (viewportWidth < 1250 || viewportHeight < 750) {
@@ -296,71 +314,72 @@ function sizeCheck() {
 }
 
 
-function removeFile(id) {
+function removeFile(id: dataType): void {
   spectrumData[id] = [];
-  document.getElementById(id).value = '';
+  (<HTMLInputElement>document.getElementById(id)).value = '';
   plot.resetPlot(spectrumData);
 
-  document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts(spectrumData.data);
-  document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts(spectrumData.background);
+  document.getElementById('total-spec-cts')!.innerText = spectrumData.getTotalCounts(spectrumData.data).toString();
+  document.getElementById('total-bg-cts')!.innerText = spectrumData.getTotalCounts(spectrumData.background).toString();
 
   bindPlotEvents(); // Re-Bind Events for new plot
 }
 
 
-function bindPlotEvents() {
-  const myPlot = document.getElementById(plot.divId);
-  myPlot.on('plotly_hover', hoverEvent);
+function bindPlotEvents(): void {
+  const myPlot = <any>document.getElementById(plot.divId); // Using Plotly on functions
+  myPlot.on('plotly_hover', hoverEvent)!;
   myPlot.on('plotly_unhover', unHover);
   myPlot.on('plotly_click', clickEvent);
 }
 
 
-function selectFileType(button) {
-  raw.fileType = button.value;
-  raw.valueIndex = button.value;
+function selectFileType(button: HTMLInputElement): void {
+  raw.fileType = parseInt(button.value);
+  raw.valueIndex = parseInt(button.value);
 }
 
 
-function resetPlot() {
-  if (plot.xAxis == 'log'){
-    changeAxis(document.getElementById('xAxis'));
+function resetPlot(): void {
+  if (plot.xAxis === 'log'){
+    changeAxis(<HTMLButtonElement>document.getElementById('xAxis'));
   }
-  if (plot.yAxis == 'log'){
-    changeAxis(document.getElementById('yAxis'));
+  if (plot.yAxis === 'log'){
+    changeAxis(<HTMLButtonElement>document.getElementById('yAxis'));
   }
   if(plot.sma) {
-    toggleSma(false, document.getElementById('sma'));
+    toggleSma(false, <HTMLInputElement>document.getElementById('sma'));
   }
   plot.clearAnnos();
-  document.getElementById('check-all-isos').checked = false; // reset "select all" checkbox
+  (<HTMLInputElement>document.getElementById('check-all-isos')).checked = false; // reset "select all" checkbox
   loadIsotopes(true);
   plot.resetPlot(spectrumData);
   bindPlotEvents(); // Fix Reset Bug: Hovering and Clicking not working.
 }
 
 
-function changeAxis(button) {
-  if (plot[button.id] == 'linear') {
-    plot[button.id] = 'log';
+function changeAxis(button: HTMLButtonElement): void {
+  let id = button.id as 'xAxis' | 'yAxis';
+  if (plot[id] === 'linear') {
+    plot[id] = 'log';
     button.innerText = 'Log';
   } else {
-    plot[button.id] = 'linear';
+    plot[id] = 'linear';
     button.innerText = 'Linear';
   }
   plot.updatePlot(spectrumData);
 }
 
 
-function enterPress(event, id) {
-  if (event.keyCode == 13) { // ENTER key
-    const button = document.getElementById(id);
+function enterPress(event: KeyboardEvent, id: string): void {
+  if (event.key === 'Enter') { // ENTER key
+    const button = document.getElementById(id)!;
     button.click();
   }
 }
 
 
-function toggleSma(value, thisValue = null) {
+function toggleSma(value: boolean, thisValue: HTMLInputElement | null = null ): void {
   plot.sma = value;
   if (thisValue !== null) {
     thisValue.checked = false;
@@ -369,7 +388,7 @@ function toggleSma(value, thisValue = null) {
 }
 
 
-function changeSma(input) {
+function changeSma(input: HTMLInputElement): void {
   const parsedInput = parseInt(input.value);
   if (isNaN(parsedInput)) {
     popupNotification('sma-error');
@@ -381,13 +400,14 @@ function changeSma(input) {
 }
 
 
-function hoverEvent(data) {
-  const hoverData = document.getElementById('hover-data');
+function hoverEvent(data: any): void {
+  const hoverData = document.getElementById('hover-data')!;
   hoverData.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
 
   for (const key in calClick) {
-    if (calClick[key]) {
-      document.getElementById(`adc-${key}`).value = data.points[0].x.toFixed(2);
+    const castKey = <calType>key;
+    if (calClick[castKey]) {
+      (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = data.points[0].x.toFixed(2);
     }
   }
 
@@ -397,13 +417,14 @@ function hoverEvent(data) {
 }
 
 
-function unHover(data) {
-  const hoverData = document.getElementById('hover-data');
+function unHover(data: any): void {
+  const hoverData = document.getElementById('hover-data')!;
   hoverData.innerText = 'None';
 
   for (const key in calClick) {
-    if (calClick[key]) {
-      document.getElementById(`adc-${key}`).value = oldCalVals[key];
+    const castKey = <calType>key;
+    if (calClick[castKey]) {
+      (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = oldCalVals[castKey];
     }
   }
 
@@ -415,23 +436,24 @@ function unHover(data) {
 }
 
 
-function clickEvent(data) {
-  const clickData = document.getElementById('click-data');
+function clickEvent(data: any): void {
+  const clickData = document.getElementById('click-data')!;
   clickData.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
 
   for (const key in calClick) {
-    if (calClick[key]) {
-      document.getElementById(`adc-${key}`).value = data.points[0].x.toFixed(2);
-      oldCalVals[key] = data.points[0].x.toFixed(2);
-      calClick[key] = false;
-      document.getElementById(`select-${key}`).checked = calClick[key];
+    const castKey = <calType>key;
+    if (calClick[castKey]) {
+      (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = data.points[0].x.toFixed(2);
+      oldCalVals[castKey] = data.points[0].x.toFixed(2);
+      calClick[castKey] = false;
+      (<HTMLInputElement>document.getElementById(`select-${castKey}`)).checked = calClick[<calType>key];
     }
   }
 }
 
 
-function toggleCal(enabled) {
-  const button = document.getElementById('calibration-label');
+function toggleCal(enabled: boolean): void {
+  const button = document.getElementById('calibration-label')!;
 
   if (enabled) {
     button.innerHTML = '<i class="fa-solid fa-rotate-left"></i> Reset';
@@ -443,13 +465,13 @@ function toggleCal(enabled) {
   */
   if (enabled) {
     let readoutArray = [
-      [document.getElementById('adc-a').value, document.getElementById('cal-a').value],
-      [document.getElementById('adc-b').value, document.getElementById('cal-b').value],
-      [document.getElementById('adc-c').value, document.getElementById('cal-c').value]
+      [(<HTMLInputElement>document.getElementById('adc-a')).value, (<HTMLInputElement>document.getElementById('cal-a')).value],
+      [(<HTMLInputElement>document.getElementById('adc-b')).value, (<HTMLInputElement>document.getElementById('cal-b')).value],
+      [(<HTMLInputElement>document.getElementById('adc-c')).value, (<HTMLInputElement>document.getElementById('cal-c')).value]
     ];
 
     let invalid = 0;
-    let validArray = [];
+    let validArray: number[][] = [];
 
     for (const pair of readoutArray) {
       const float1 = parseFloat(pair[0]);
@@ -471,8 +493,8 @@ function toggleCal(enabled) {
     plot.calibration.enabled = enabled;
     plot.calibration.points = validArray.length;
 
-    if (validArray.length == 2) {
-      validArray.push([undefined, undefined]);
+    if (validArray.length === 2) {
+      validArray.push([0, 0]);
     }
 
     plot.calibration.aFrom = validArray[0][0];
@@ -489,21 +511,21 @@ function toggleCal(enabled) {
 }
 
 
-function resetCal() {
+function resetCal(): void {
   for (const point in calClick) {
-    calClick[point] = false;
+    calClick[<calType>point] = false;
   }
   toggleCal(false);
 }
 
 
-function toggleCalClick(point, value) {
+function toggleCalClick(point: calType, value: boolean): void {
   calClick[point] = value;
 }
 
 
-function changeType(button) {
-  if (plot.plotType == 'scatter') {
+function changeType(button: HTMLButtonElement): void {
+  if (plot.plotType === 'scatter') {
     button.innerHTML = '<i class="fas fa-chart-bar"></i> Bar';
     plot.plotType = 'bar';
   } else {
@@ -514,8 +536,8 @@ function changeType(button) {
 }
 
 
-function importCal(input) {
-  if (input.files.length == 0) { // File selection has been canceled
+function importCal(input: HTMLInputElement): void {
+  if (input.files === null) { // File selection has been canceled
     return;
   }
 
@@ -526,21 +548,21 @@ function importCal(input) {
 
   reader.onload = () => {
     try {
-      const result = reader.result.trim();
+      const result = (<string>reader.result).trim(); // A bit unclean for typescript, I'm sorry
       const obj = JSON.parse(result);
 
       let readoutArray = [
-        document.getElementById('adc-a'),
-        document.getElementById('cal-a'),
-        document.getElementById('adc-b'),
-        document.getElementById('cal-b'),
-        document.getElementById('adc-c'),
-        document.getElementById('cal-c')
+        <HTMLInputElement>document.getElementById('adc-a'),
+        <HTMLInputElement>document.getElementById('cal-a'),
+        <HTMLInputElement>document.getElementById('adc-b'),
+        <HTMLInputElement>document.getElementById('cal-b'),
+        <HTMLInputElement>document.getElementById('adc-c'),
+        <HTMLInputElement>document.getElementById('cal-c')
       ];
 
       const inputArr = ['aFrom', 'aTo', 'bFrom', 'bTo', 'cFrom', 'cTo'];
       for (const index in inputArr) {
-        readoutArray[index].value = parseFloat(obj[inputArr[index]]);
+        readoutArray[index].value = obj[inputArr[index]];
       }
 
       oldCalVals.a = readoutArray[0].value;
@@ -560,44 +582,40 @@ function importCal(input) {
 }
 
 
-function addLeadingZero(timeNumber) {
-  if (timeNumber < 10) {
-    return '0' + timeNumber;
+function addLeadingZero(number: string): string {
+  if (parseFloat(number) < 10) {
+    return '0' + number;
   } else {
-    return timeNumber;
+    return number;
   }
 }
 
 
-function getDateString() {
+function getDateString(): string {
   const time = new Date();
-  return time.getFullYear() + addLeadingZero(time.getMonth() + 1) + addLeadingZero(time.getDate()) + addLeadingZero(time.getHours()) + addLeadingZero(time.getMinutes());
+  return time.getFullYear() + addLeadingZero((time.getMonth() + 1).toString()) + addLeadingZero(time.getDate().toString()) + addLeadingZero(time.getHours().toString()) + addLeadingZero(time.getMinutes().toString());
 }
 
 
-function downloadCal() {
-  filename = `calibration_${getDateString()}.json`;
-  download(filename, plot.calibration, true);
+function downloadCal(): void {
+  const filename = `calibration_${getDateString()}.json`;
+  download(filename, JSON.stringify(plot.calibration));
 }
 
 
-function downloadData(filename, data) {
+function downloadData(filename: string, data: dataType): void {
   filename += `_${getDateString()}.csv`;
 
-  text = '';
+  let text = '';
   spectrumData[data].forEach(item => text += item + '\n');
 
   download(filename, text);
 }
 
 
-function download(filename, text, json=false) {
+function download(filename: string, text: string): void {
     let element = document.createElement('a');
-    if (json) {
-      element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(JSON.stringify(text))}`);
-    } else {
-      element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
-    }
+    element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
 
     element.setAttribute('download', filename);
 
@@ -610,7 +628,7 @@ function download(filename, text, json=false) {
 }
 
 
-function popupNotification(id) {
+function popupNotification(id: string): void {
   // Uses Bootstrap Toasts already defined in HTML
   const element = document.getElementById(id);
   const toast = new bootstrap.Toast(element);
@@ -618,7 +636,7 @@ function popupNotification(id) {
 }
 
 
-function hideNotification(id) {
+function hideNotification(id: string): void {
   const element = document.getElementById(id);
   const toast = new bootstrap.Toast(element);
   toast.hide();
@@ -627,22 +645,22 @@ function hideNotification(id) {
 
 let loadedIsos = false;
 
-async function loadIsotopes(reload = false) { // Load Isotope Energies JSON ONCE
+async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope Energies JSON ONCE
   if (loadedIsos && !reload) { // Isotopes already loaded
     return true;
   }
 
-  const loadingElement = document.getElementById('iso-loading');
+  const loadingElement = document.getElementById('iso-loading')!;
   loadingElement.className = loadingElement.className.replaceAll(' visually-hidden', '');
 
-  const options = {
+  const options: RequestInit = {
     cache: 'no-cache',
     headers: {
       'Content-Type': 'text/plain; application/json; charset=UTF-8',
     },
   };
 
-  const isoError = document.getElementById('iso-load-error');
+  const isoError = document.getElementById('iso-load-error')!;
   //isoError.innerText = ''; // Remove any old error msges
   isoError.className += ' visually-hidden'; // Hide any old errors
   let successFlag = true; // Ideally no errors
@@ -654,13 +672,13 @@ async function loadIsotopes(reload = false) { // Load Isotope Energies JSON ONCE
       const json = await response.json();
       loadedIsos = true;
 
-      const tableElement = document.getElementById('iso-table');
+      const tableElement = <HTMLTableElement>document.getElementById('iso-table');
       tableElement.innerHTML = ''; // Delete old table
       plot.clearAnnos(); // Delete all isotope lines
       plot.updatePlot(spectrumData);
 
       let intKeys = Object.keys(json);
-      intKeys.sort((a, b) => a - b); // Sort Energies numerically
+      intKeys.sort((a, b) => parseFloat(a) - parseFloat(b)); // Sort Energies numerically
 
       let index = 0; // Index used to avoid HTML id duplicates
 
@@ -673,16 +691,16 @@ async function loadIsotopes(reload = false) { // Load Isotope Energies JSON ONCE
         const cell2 = row.insertCell(1);
         const cell3 = row.insertCell(2);
 
-        cell2.addEventListener('click', evnt => {
+        cell2.addEventListener('click', event => {
           try {
-            evnt.target.parentNode.firstChild.firstChild.click();
+            (<HTMLInputElement>cell1.firstChild).click(); //evnt.target.parentNode.firstChild.firstChild.click();
           } catch(e) { // Catch press on <sup> element
             ; //evnt.target.parentNode.parentNode.firstChild.firstChild.click();
           }
         });
-        cell3.addEventListener('click', evnt => {
+        cell3.addEventListener('click', event => {
           try {
-            evnt.target.parentNode.firstChild.firstChild.click();
+            (<HTMLInputElement>cell1.firstChild).click(); //evnt.target.parentNode.firstChild.firstChild.click();
           } catch(e) { // Catch press on <sup> element
             ; //evnt.target.parentNode.parentNode.firstChild.firstChild.click();
           }
@@ -692,7 +710,7 @@ async function loadIsotopes(reload = false) { // Load Isotope Energies JSON ONCE
         cell3.style.cursor = 'pointer';
 
         const energy = parseFloat(key.trim());
-        const dirtyName = json[key].toLowerCase();
+        const dirtyName: string = json[key].toLowerCase();
         const lowercaseName = dirtyName.replace(/[^a-z0-9 -]/gi, '').trim(); // Fixes security issue. Clean everything except for letters, numbers and minus. See GitHub: #2
         const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1) + '-' + index; // Capitalize Name and append index number
 
@@ -720,21 +738,41 @@ async function loadIsotopes(reload = false) { // Load Isotope Energies JSON ONCE
 }
 
 
-function reloadIsotopes() {
+function reloadIsotopes(): void {
   //loadedIsos = false;
   loadIsotopes(true);
 }
 
 
-let prevIso = {};
+function seekClosest(value: number): {energy: number, name: string} | {energy: undefined, name: undefined} {
+  const vals = Object.values(isoList);
+  const closeVals = <number[]>vals.filter(energy => { // After this step there are 100% only numbers left, so force a number[]
+    if (energy) {
+      return Math.abs(energy - value) <= maxDist;
+    }
+    return false;
+  });
 
-function toggleIsoHover() {
+  if (closeVals.length !== 0) {
+    const closest = closeVals.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
+    const name = Object.keys(isoList).find(key => isoList[key] === closest)!; // closest will always be somewhere in isoList with a key, because we got it from there!
+
+    return {energy: closest, name: name};
+  } else {
+    return {energy: undefined, name: undefined};
+  }
+}
+
+
+let prevIso: isotopeList = {};
+
+function toggleIsoHover(): void {
   checkNearIso = !checkNearIso;
   closestIso(-100000);
 }
 
 
-async function closestIso(value) {
+async function closestIso(value: number): Promise<void> {
   // VERY BAD PERFORMANCE, EXPERIMENTAL FEATURE!
   if(!await loadIsotopes()) { // User has not yet opened the settings panel
     return;
@@ -742,64 +780,48 @@ async function closestIso(value) {
 
   const { energy, name } = seekClosest(value);
 
-  if (energy !== undefined && name !== undefined) {
-    if (Object.keys(prevIso).length !== 0) {
-      plot.toggleLine(Object.keys(prevIso)[0], Object.values(prevIso)[0], false);
+  if (Object.keys(prevIso).length >= 0) {
+    const energyVal = Object.values(prevIso)[0];
+    if (energyVal !== undefined) {
+      plot.toggleLine(energyVal, Object.keys(prevIso)[0], false);
     }
+  }
 
-    let newIso = {};
-    newIso[energy] = name;
+  if (energy !== undefined && name !== undefined) {
+    let newIso: isotopeList = {};
+    newIso[name] = energy;
 
     if (prevIso !== newIso) {
       prevIso = newIso;
     }
 
     plot.toggleLine(energy, name);
-    plot.updatePlot(spectrumData);
-  } else {
-    if (Object.keys(prevIso).length !== 0) {
-      plot.toggleLine(Object.keys(prevIso)[0], Object.values(prevIso)[0], false);
-      plot.updatePlot(spectrumData);
-    }
   }
-}
-
-
-function seekClosest(value) {
-  const keys = Object.keys(isoList);
-  const closeKeys = keys.filter(energy => Math.abs(energy - value) <= maxDist);
-
-  if (closeKeys.length !== 0) {
-    let closest = closeKeys.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
-
-    return {energy: parseFloat(closest).toFixed(2), name: isoList[closest]};
-  } else {
-    return {energy: undefined, name: undefined};
-  }
-}
-
-
-function plotIsotope(checkbox) {
-  const wordArray = checkbox.id.split('-');
-  const name = wordArray[0] + '-' + wordArray[1];
-  plot.toggleLine(checkbox.value, name, checkbox.checked);
   plot.updatePlot(spectrumData);
 }
 
 
-function selectAll(selectBox) {
+function plotIsotope(checkbox: HTMLInputElement): void {
+  const wordArray = checkbox.id.split('-');
+  const name = wordArray[0] + '-' + wordArray[1];
+  plot.toggleLine(parseFloat(checkbox.value), name, checkbox.checked);
+  plot.updatePlot(spectrumData);
+}
+
+
+function selectAll(selectBox: HTMLInputElement): void {
   // Bad performance because of the updatePlot with that many lines!
-  const tableElement = selectBox.closest('table');
+  const tableElement = <HTMLTableElement>document.getElementById('table'); //selectBox.closest('table');
   const tableBody = tableElement.tBodies[0];
   const tableRows = tableBody.rows;
 
   for (const row of tableRows) {
-    const checkBox = row.cells[0].firstChild;
+    const checkBox = <HTMLInputElement>row.cells[0].firstChild;
     checkBox.checked = selectBox.checked;
     if (selectBox.checked) {
       const wordArray = checkBox.id.split('-');
       const name = wordArray[0] + '-' + wordArray[1];
-      plot.toggleLine(checkBox.value, name, checkBox.checked);
+      plot.toggleLine(parseFloat(checkBox.value), name, checkBox.checked);
     }
   }
   if (!selectBox.checked) {
@@ -811,9 +833,9 @@ function selectAll(selectBox) {
 }
 
 
-async function findPeaks(button) {
+async function findPeaks(button: HTMLButtonElement): Promise<void> {
   if (plot.peakConfig.enabled) {
-    if (plot.peakConfig.mode == 0) {
+    if (plot.peakConfig.mode === 0) {
       //plot.peakFinder(false); // Delete all old lines
       await loadIsotopes();
       plot.peakConfig.mode++;
@@ -838,50 +860,50 @@ async function findPeaks(button) {
 =========================================
 */
 
-function saveJSON(name, value) {
+function saveJSON(name: string, value: string | boolean | number): void {
   localStorage.setItem(name, JSON.stringify(value));
 }
 
 
-function loadJSON(name) {
-  return JSON.parse(localStorage.getItem(name));
+function loadJSON(name: string): any {
+  return JSON.parse(<string>localStorage.getItem(name));
 }
 
 
-function loadSettingsDefault() {
-  document.getElementById('custom-url').value = isoListURL;
-  document.getElementById('edit-plot').checked = plot.editableMode;
-  document.getElementById('custom-delimiter').value = raw.delimiter;
-  document.getElementById('custom-file-adc').value = raw.adcChannels;
-  document.getElementById('custom-ser-refresh').value = refreshRate / 1000; // convert ms to s
-  document.getElementById('custom-ser-buffer').value = ser.maxSize;
-  document.getElementById('custom-ser-adc').value = ser.adcChannels;
-  const autoStop = document.getElementById('ser-limit');
-  autoStop.value = maxRecTime / 1000; // convert ms to s
+function loadSettingsDefault(): void {
+  (<HTMLInputElement>document.getElementById('custom-url')).value = isoListURL;
+  (<HTMLInputElement>document.getElementById('edit-plot')).checked = plot.editableMode;
+  (<HTMLInputElement>document.getElementById('custom-delimiter')).value = raw.delimiter;
+  (<HTMLInputElement>document.getElementById('custom-file-adc')).value = raw.adcChannels.toString();
+  (<HTMLInputElement>document.getElementById('custom-ser-refresh')).value = (refreshRate / 1000).toString(); // convert ms to s
+  (<HTMLInputElement>document.getElementById('custom-ser-buffer')).value = ser.maxSize.toString();
+  (<HTMLInputElement>document.getElementById('custom-ser-adc')).value = ser.adcChannels.toString();
+  const autoStop = <HTMLInputElement>document.getElementById('ser-limit');
+  autoStop.value = (maxRecTime / 1000).toString(); // convert ms to s
   autoStop.disabled = !maxRecTimeEnabled;
-  document.getElementById('ser-limit-btn').disabled = !maxRecTimeEnabled;
-  document.getElementById('toggle-time-limit').checked = maxRecTimeEnabled;
-  document.getElementById('iso-hover-prox').value = maxDist;
-  document.getElementById('custom-baud').value = serOptions.baudRate;
-  document.getElementById('eol-char').value = ser.eolChar;
+  (<HTMLInputElement>document.getElementById('ser-limit-btn')).disabled = !maxRecTimeEnabled;
+  (<HTMLInputElement>document.getElementById('toggle-time-limit')).checked = maxRecTimeEnabled;
+  (<HTMLInputElement>document.getElementById('iso-hover-prox')).value = maxDist.toString();
+  (<HTMLInputElement>document.getElementById('custom-baud')).value = serOptions.baudRate.toString();
+  (<HTMLInputElement>document.getElementById('eol-char')).value = ser.eolChar;
 
-  document.getElementById('smaVal').value = plot.smaLength;
+  (<HTMLInputElement>document.getElementById('smaVal')).value = plot.smaLength.toString();
 
-  document.getElementById('peak-thres').value = plot.peakConfig.thres;
-  document.getElementById('peak-lag').value = plot.peakConfig.lag;
-  document.getElementById('peak-width').value = plot.peakConfig.width;
-  document.getElementById('seek-width').value = plot.peakConfig.seekWidth;
+  (<HTMLInputElement>document.getElementById('peak-thres')).value = plot.peakConfig.thres.toString();
+  (<HTMLInputElement>document.getElementById('peak-lag')).value = plot.peakConfig.lag.toString();
+  (<HTMLInputElement>document.getElementById('peak-width')).value = plot.peakConfig.width.toString();
+  (<HTMLInputElement>document.getElementById('seek-width')).value = plot.peakConfig.seekWidth.toString();
 
-  const formatSelector = document.getElementById('download-format');
+  const formatSelector = <HTMLSelectElement>document.getElementById('download-format');
   for (let i = 0; i < formatSelector.options.length; i++) {
-    if (formatSelector.options[i].value == plot.downloadFormat) {
+    if (formatSelector.options[i].value === plot.downloadFormat) {
       formatSelector.selectedIndex = i;
     }
   }
 }
 
 
-function loadSettingsStorage() {
+function loadSettingsStorage(): void {
   let setting = loadJSON('customURL');
   if (setting) {
     const newUrl = new URL(setting);
@@ -958,22 +980,24 @@ function loadSettingsStorage() {
 }
 
 
-function changeSettings(name, element) {
+function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElement): void {
   if (!element.checkValidity()) {
     popupNotification('setting-type');
     return;
   }
 
-  let value = element.value;
+  const value = element.value;
+  let boolVal: boolean;
+  let numVal: number;
 
   switch (name) {
     case 'editMode':
-      value = element.checked;
-      plot.editableMode = value;
+      boolVal = (<HTMLInputElement>element).checked;
+      plot.editableMode = boolVal;
       plot.resetPlot(spectrumData);
 
       if (localStorageAvailable) {
-        saveJSON(name, value);
+        saveJSON(name, boolVal);
       }
       break;
 
@@ -1003,29 +1027,29 @@ function changeSettings(name, element) {
       break;
 
     case 'fileChannels':
-      value = parseInt(value);
-      raw.adcChannels = value;
+      numVal = parseInt(value);
+      raw.adcChannels = numVal;
 
       if (localStorageAvailable) {
-        saveJSON(name, value);
+        saveJSON(name, numVal);
       }
       break;
 
     case 'timeLimitBool':
-      value = element.checked;
-      document.getElementById('ser-limit').disabled = !value;
-      document.getElementById('ser-limit-btn').disabled = !value;
+      boolVal = (<HTMLInputElement>element).checked;
+      (<HTMLInputElement>document.getElementById('ser-limit')).disabled = !boolVal;
+      (<HTMLButtonElement>document.getElementById('ser-limit-btn')).disabled = !boolVal;
 
-      maxRecTimeEnabled = value;
+      maxRecTimeEnabled = boolVal;
 
       if (localStorageAvailable) {
-        saveJSON(name, value);
+        saveJSON(name, boolVal);
       }
       break;
 
     case 'timeLimit':
-      value = parseFloat(value);
-      maxRecTime = value * 1000; // convert s to ms
+      numVal = parseFloat(value);
+      maxRecTime = numVal * 1000; // convert s to ms
 
       if (localStorageAvailable) {
         saveJSON(name, maxRecTime);
@@ -1033,17 +1057,17 @@ function changeSettings(name, element) {
       break;
 
     case 'maxIsoDist':
-      value = parseFloat(value);
-      maxDist = value;
+      numVal = parseFloat(value);
+      maxDist = numVal;
 
       if (localStorageAvailable) {
-        saveJSON(name, value);
+        saveJSON(name, maxDist);
       }
       break;
 
     case 'plotRefreshRate':
-      value = parseFloat(value);
-      refreshRate = value * 1000; // convert s to ms
+      numVal = parseFloat(value);
+      refreshRate = numVal * 1000; // convert s to ms
 
       if (localStorageAvailable) {
         saveJSON(name, refreshRate);
@@ -1051,25 +1075,25 @@ function changeSettings(name, element) {
       break;
 
     case 'serBufferSize':
-      value = parseInt(value);
-      ser.maxSize = value;
+      numVal = parseInt(value);
+      ser.maxSize = numVal;
 
       if (localStorageAvailable) {
-        saveJSON(name, value);
+        saveJSON(name, ser.maxSize);
       }
       break;
 
     case 'baudRate':
-      value = parseInt(value);
-      serOptions.baudRate = value;
+      numVal = parseInt(value);
+      serOptions.baudRate = numVal;
 
       if (localStorageAvailable) {
-        saveJSON(name, value);
+        saveJSON(name, serOptions.baudRate);
       }
       break;
 
     case 'eolChar':
-      serOptions.eolChar = value;
+      ser.eolChar = value;
 
       if (localStorageAvailable) {
         saveJSON(name, value);
@@ -1077,51 +1101,51 @@ function changeSettings(name, element) {
       break;
 
     case 'serChannels':
-      value = parseInt(value);
-      ser.adcChannels = value;
+      numVal = parseInt(value);
+      ser.adcChannels = numVal;
 
       if (localStorageAvailable) {
-        saveJSON(name, value);
+        saveJSON(name, numVal);
       }
       break;
 
     case 'peakThres':
-      value = parseFloat(value);
-      plot.peakConfig.thres = value;
+      numVal = parseFloat(value);
+      plot.peakConfig.thres = numVal;
       plot.updatePlot(spectrumData);
 
       if (localStorageAvailable) {
-        saveJSON(name, value);
+        saveJSON(name, numVal);
       }
       break;
 
     case 'peakLag':
-      value = parseInt(value);
-      plot.peakConfig.lag = value;
+      numVal = parseInt(value);
+      plot.peakConfig.lag = numVal;
       plot.updatePlot(spectrumData);
 
       if (localStorageAvailable) {
-        saveJSON(name, value);
+        saveJSON(name, numVal);
       }
       break;
 
     case 'peakWidth':
-      value = parseInt(value);
-      plot.peakConfig.width = value;
+      numVal = parseInt(value);
+      plot.peakConfig.width = numVal;
       plot.updatePlot(spectrumData);
 
       if (localStorageAvailable) {
-        saveJSON(name, value);
+        saveJSON(name, numVal);
       }
       break;
 
     case 'seekWidth':
-      value = parseFloat(value);
-      plot.peakConfig.seekWidth = value;
+      numVal = parseFloat(value);
+      plot.peakConfig.seekWidth = numVal;
       plot.updatePlot(spectrumData);
 
       if (localStorageAvailable) {
-        saveJSON(name, value);
+        saveJSON(name, numVal);
       }
       break;
 
@@ -1142,7 +1166,7 @@ function changeSettings(name, element) {
 }
 
 
-function resetMCA() {
+function resetMCA(): void {
   if (localStorageAvailable) {
     localStorage.clear();
   }
@@ -1155,20 +1179,20 @@ function resetMCA() {
 =========================================
 */
 
-function serialConnect(event) {
+function serialConnect(event: Event) {
   listSerial();
   popupNotification('serial-connect');
 };
 
 
-function serialDisconnect(event) {
+function serialDisconnect(event: Event): void {
   for (const key in portsAvail) {
-    if (portsAvail[key] == event.target) {
+    if (portsAvail[key] == event.target) { // Maybe use a strict === ?
       delete portsAvail[key];
       break;
     }
   }
-  if (event.target == ser.port) {
+  if (event.target === ser.port) {
     disconnectPort(true);
   }
 
@@ -1178,10 +1202,10 @@ function serialDisconnect(event) {
 };
 
 
-async function listSerial() {
-  const portSelector = document.getElementById('port-selector');
+async function listSerial(): Promise<void> {
+  const portSelector = <HTMLSelectElement>document.getElementById('port-selector');
   for (const index in portSelector.options) { // Remove all "old" ports
-    portSelector.remove(index);
+    portSelector.remove(parseInt(index));
   }
 
   const ports = await navigator.serial.getPorts();
@@ -1190,13 +1214,16 @@ async function listSerial() {
     portsAvail[index] = ports[index];
 
     const option = document.createElement('option');
-    option.text = `Port ${index} (Id: 0x${ports[index].getInfo().usbProductId.toString(16)})`;
-    portSelector.add(option, index);
+    const usbId = ports[index].getInfo().usbProductId;
+
+    option.text = `Port ${index} (Id: 0x${usbId?.toString(16)})`;
+
+    portSelector.add(option, parseInt(index));
   }
 
-  const serSettingsElements = document.getElementsByClassName('ser-settings');
+  const serSettingsElements = document.getElementsByClassName('ser-settings') as HTMLCollectionOf<HTMLInputElement> | HTMLCollectionOf<HTMLSelectElement>;
 
-  if (ports.length == 0) {
+  if (ports.length === 0) {
     const option = document.createElement('option');
     option.text = 'No Ports Available';
     portSelector.add(option);
@@ -1212,16 +1239,16 @@ async function listSerial() {
 }
 
 
-async function requestSerial() {
+async function requestSerial(): Promise<void> {
   try {
     const port = await navigator.serial.requestPort();
 
-    if (Object.keys(portsAvail).length == 0) {
+    if (Object.keys(portsAvail).length === 0) {
       portsAvail[0] = port;
     } else {
-      const keys = Object.keys(portsAvail);
-      const max = Math.max(...keys);
-      portsAvail[max+1] = port; // Put new port in max+1 index  to get a new, unused number
+      const intKeys = Object.keys(portsAvail).map(value => parseInt(value));
+      const max = Math.max(...intKeys);
+      portsAvail[max + 1] = port; // Put new port in max+1 index  to get a new, unused number
     }
     listSerial();
   } catch(err) {
@@ -1230,7 +1257,7 @@ async function requestSerial() {
 }
 
 
-function toggleCps(button, off = false) {
+function toggleCps(button: HTMLButtonElement, off = false): void {
   if (off) { // Override
     plot.cps = false;
   } else {
@@ -1246,21 +1273,21 @@ function toggleCps(button, off = false) {
 }
 
 
-async function selectPort() {
-  const selector = document.getElementById('port-selector');
+async function selectPort(): Promise<void> {
+  const selector = <HTMLSelectElement>document.getElementById('port-selector');
   const index = selector.selectedIndex;
   ser.port = portsAvail[index];
 }
 
 
 let keepReading = false;
-let reader;
-let recordingType = '';
+let reader: ReadableStreamDefaultReader | undefined;
+let recordingType: dataType;
 let startTime = 0;
 let timeDone = 0;
 
-async function readUntilClosed() {
-  while (ser.port.readable && keepReading) {
+async function readUntilClosed(): Promise<void> {
+  while (ser.port?.readable && keepReading) {
     try {
       reader = ser.port.readable.getReader();
 
@@ -1281,21 +1308,26 @@ async function readUntilClosed() {
       popupNotification('misc-ser-error');
     } finally {
       // Allow the serial port to be closed later.
-      reader.releaseLock();
+      reader?.releaseLock();
       reader = undefined;
     }
   }
 
-  await ser.port.close();
+  await ser.port?.close();
 }
 
 
-let closed;
+let closed: Promise<void>;
 let firstLoad = false;
 
-async function startRecord(pause = false, type = recordingType) {
+async function startRecord(pause = false, type = <dataType>recordingType): Promise<void> {
   try {
     selectPort();
+
+    if (ser.port === undefined) {
+      throw 'Port is undefined! This should not be happening.';
+    }
+
     await ser.port.open(serOptions); // Baud-Rate optional
 
     keepReading = true; // Reset keepReading
@@ -1306,12 +1338,12 @@ async function startRecord(pause = false, type = recordingType) {
       firstLoad = true;
     }
 
-    document.getElementById('export-button').disabled = false;
-    document.getElementById('stop-button').disabled = false;
-    document.getElementById('pause-button').className = document.getElementById('pause-button').className.replaceAll(' visually-hidden','');
-    document.getElementById('record-button').className += ' visually-hidden';
-    document.getElementById('resume-button').className += ' visually-hidden';
-    document.getElementById('recording-spinner').className = document.getElementById('recording-spinner').className.replaceAll(' visually-hidden','');
+    (<HTMLButtonElement>document.getElementById('export-button')).disabled = false;
+    (<HTMLButtonElement>document.getElementById('stop-button')).disabled = false;
+    document.getElementById('pause-button')!.className = document.getElementById('pause-button')!.className.replaceAll(' visually-hidden','');
+    document.getElementById('record-button')!.className += ' visually-hidden';
+    document.getElementById('resume-button')!.className += ' visually-hidden';
+    document.getElementById('recording-spinner')!.className = document.getElementById('recording-spinner')!.className.replaceAll(' visually-hidden','');
 
     const timer = new Date();
     startTime = timer.getTime();
@@ -1333,7 +1365,7 @@ async function startRecord(pause = false, type = recordingType) {
 }
 
 
-async function sendSerial(command) {
+async function sendSerial(command: string): Promise<void> {
   const wasReading = keepReading;
 
   try {
@@ -1342,6 +1374,11 @@ async function sendSerial(command) {
     }
 
     selectPort();
+
+    if (ser.port === undefined) {
+      throw 'Port is undefined! This should not be happening.';
+    }
+
     await ser.port.open(serOptions); // Baud-Rate optional
 
     const textEncoder = new TextEncoderStream();
@@ -1357,15 +1394,15 @@ async function sendSerial(command) {
     await writer.close();
     await writableStreamClosed;
 
-    document.getElementById('ser-output').innerText += '> ' + formatCommand.trim() + '\n';
-    document.getElementById('ser-command').value = '';
+    document.getElementById('ser-output')!.innerText += '> ' + formatCommand.trim() + '\n';
+    (<HTMLInputElement>document.getElementById('ser-command')).value = '';
 
   } catch (err) {
     console.error('Connection Error:', err);
     popupNotification('serial-connect-error');
   } finally {
 
-    await ser.port.close();
+    await ser.port?.close();
 
     if (wasReading) {
       startRecord(true);
@@ -1375,25 +1412,25 @@ async function sendSerial(command) {
 }
 
 
-async function disconnectPort(stop = false) {
+async function disconnectPort(stop = false): Promise<void> {
   const nowTime = new Date();
   timeDone += nowTime.getTime() - startTime;
 
-  document.getElementById('pause-button').className += ' visually-hidden';
-  document.getElementById('recording-spinner').className += ' visually-hidden';
+  document.getElementById('pause-button')!.className += ' visually-hidden';
+  document.getElementById('recording-spinner')!.className += ' visually-hidden';
 
   if (stop) {
-    document.getElementById('stop-button').disabled = true;
-    document.getElementById('record-button').className = document.getElementById('record-button').className.replaceAll(' visually-hidden','');
-    document.getElementById('resume-button').className += ' visually-hidden';
-    recordingType = '';
+    (<HTMLButtonElement>document.getElementById('stop-button')).disabled = true;
+    document.getElementById('record-button')!.className = document.getElementById('record-button')!.className.replaceAll(' visually-hidden','');
+    document.getElementById('resume-button')!.className += ' visually-hidden';
+    //recordingType = '';
     timeDone = 0;
     cpsValues = [];
 
-    const cpsButton = document.getElementById('plot-cps');
+    const cpsButton = <HTMLButtonElement>document.getElementById('plot-cps');
     toggleCps(cpsButton, true); // Disable CPS again
   } else {
-    document.getElementById('resume-button').className = document.getElementById('resume-button').className.replaceAll(' visually-hidden','');
+    document.getElementById('resume-button')!.className = document.getElementById('resume-button')!.className.replaceAll(' visually-hidden','');
   }
 
   keepReading = false;
@@ -1407,9 +1444,7 @@ async function disconnectPort(stop = false) {
   }
 
   try {
-    if (typeof reader !== 'undefined') {
-      reader.cancel();
-    }
+    reader?.cancel();
   } catch(err) {
     console.warn('Nothing to disconnect.', err);
   }
@@ -1417,36 +1452,36 @@ async function disconnectPort(stop = false) {
 }
 
 
-let metaTimeout;
+let metaTimeout: NodeJS.Timeout;
 
-function refreshMeta(type) {
-  if (ser.port.readable) {
+function refreshMeta(type: dataType): void {
+  if (ser.port?.readable) {
     const nowTime = new Date();
 
-    const totalTimeElement = document.getElementById('total-record-time');
-    const timeElement = document.getElementById('record-time');
-    const progressBar = document.getElementById('ser-time-progress-bar');
+    const totalTimeElement = document.getElementById('total-record-time')!;
+    const timeElement = document.getElementById('record-time')!;
+    const progressBar = document.getElementById('ser-time-progress-bar')!;
 
     const delta = new Date(nowTime.getTime() - startTime + timeDone);
 
-    timeElement.innerText = addLeadingZero(delta.getUTCHours()) + ':' + addLeadingZero(delta.getUTCMinutes()) + ':' + addLeadingZero(delta.getUTCSeconds());
+    timeElement.innerText = addLeadingZero(delta.getUTCHours().toString()) + ':' + addLeadingZero(delta.getUTCMinutes().toString()) + ':' + addLeadingZero(delta.getUTCSeconds().toString());
 
     if (maxRecTimeEnabled) {
-      const progressElement = document.getElementById('ser-time-progress');
+      const progressElement = document.getElementById('ser-time-progress')!;
       const progress = Math.round(delta.getTime() / maxRecTime * 100);
       progressElement.style.width = progress + '%';
       progressElement.innerText = progress + '%';
-      progressElement.setAttribute('aria-valuenow', progress)
+      progressElement.setAttribute('aria-valuenow', progress.toString())
 
       const totalTime = new Date(maxRecTime);
-      totalTimeElement.innerText = ' / ' +  addLeadingZero(totalTime.getUTCHours()) + ':' + addLeadingZero(totalTime.getUTCMinutes()) + ':' + addLeadingZero(totalTime.getUTCSeconds());
+      totalTimeElement.innerText = ' / ' +  addLeadingZero(totalTime.getUTCHours().toString()) + ':' + addLeadingZero(totalTime.getUTCMinutes().toString()) + ':' + addLeadingZero(totalTime.getUTCSeconds().toString());
       progressBar.className = progressBar.className.replaceAll(' visually-hidden','');
     } else {
       totalTimeElement.innerText = '';
       progressBar.className += ' visually-hidden';
     }
 
-    if (delta > maxRecTime && maxRecTimeEnabled) {
+    if (delta.getTime() > maxRecTime && maxRecTimeEnabled) {
       disconnectPort(true);
       popupNotification('auto-stop');
     } else {
@@ -1462,10 +1497,10 @@ function refreshMeta(type) {
 
 
 let lastUpdate = new Date();
-let refreshTimeout;
+let refreshTimeout: NodeJS.Timeout;
 
-function refreshRender(type) {
-  if (ser.port.readable) {
+function refreshRender(type: dataType): void {
+  if (ser.port?.readable) {
     const startDelay = new Date();
     const newData = ser.getData(); // Get all the new data
     const endDelay = new Date();
@@ -1487,25 +1522,25 @@ function refreshRender(type) {
     lastUpdate = endDelay;
 
     const cpsValue = newData.length / deltaLastRefresh * 1000;
-    document.getElementById('cps').innerText = cpsValue.toFixed(1) + ' cps';
+    document.getElementById('cps')!.innerText = cpsValue.toFixed(1) + ' cps';
 
     cpsValues.push(cpsValue);
 
     let mean = 0;
-    cpsValues.forEach((item, i) => mean += item);
+    cpsValues.forEach(item => mean += item);
     mean /= cpsValues.length;
 
-    document.getElementById('avg-cps').innerHTML = 'Avg: ' + mean.toFixed(1);
+    document.getElementById('avg-cps')!.innerHTML = 'Avg: ' + mean.toFixed(1);
 
     let std = 0;
-    cpsValues.forEach((item, i) => std += Math.pow(item - mean, 2));
+    cpsValues.forEach(item => std += Math.pow(item - mean, 2));
     std /= (cpsValues.length - 1);
     std = Math.sqrt(std);
 
-    document.getElementById('avg-cps-std').innerHTML = ` &plusmn; ${std.toFixed(1)} cps (&#916; ${Math.round(std/mean*100)}%)`;
+    document.getElementById('avg-cps-std')!.innerHTML = ` &plusmn; ${std.toFixed(1)} cps (&#916; ${Math.round(std/mean*100)}%)`;
 
-    document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts(spectrumData.data);
-    document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts(spectrumData.background);
+    document.getElementById('total-spec-cts')!.innerText = spectrumData.getTotalCounts(spectrumData.data).toString();
+    document.getElementById('total-bg-cts')!.innerText = spectrumData.getTotalCounts(spectrumData.background).toString();
 
     const finishDelta = new Date().getTime() - startDelay.getTime();
     if (refreshRate - finishDelta > 0) { // Only re-schedule if still available

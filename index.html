@@ -554,7 +554,7 @@
             </div>
 
             <div class="table-responsive"> <!-- style="max-height:70vh;" -->
-              <table class="table table-hover align-middle">
+              <table id="table" class="table table-hover align-middle">
                 <caption>List of gamma-ray energies of common isotopes.</caption>
                 <thead class="table-light"> <!-- style="box-shadow: inset 1px 1px #000, 0 2px #000;" -->
                   <tr>
@@ -999,13 +999,13 @@
 
     </div>
 
+    <!--
     <script src="/assets/js/external/bootstrap.min.js"></script>
     <script src="/assets/js/external/plotly-basic.min.js"></script>
-    <!--
-    <script src="/assets/js/raw-data.js"></script>
-    <script src="/assets/js/plot.js"></script>
-    <script src="/assets/js/serial.js"></script>
     -->
-    <script src="/assets/js/main.js"></script>
+    <script type="module" src="/assets/js/raw-data.js"></script>
+    <script type="module" src="/assets/js/plot.js"></script>
+    <script type="module" src="/assets/js/serial.js"></script>
+    <script type="module" src="/assets/js/main.js"></script>
   </body>
 </html>

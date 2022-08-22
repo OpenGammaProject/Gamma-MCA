@@ -1,108 +1,162 @@
-/* Plot data using Plotly JS */
+/*
+
+  Plot data using Plotly JS
+
+  Gamma MCA: free, open-source web-MCA for gamma spectroscopy
+  2022, NuclearPhoenix.- Phoenix1747
+  https://nuclearphoenix.xyz
+
+  ===============================
+
+  TODO:
+  - Remove all any types
+  - Remove all ! operators
+
+*/
+
+
+import './external/plotly-basic.min.js';
+
+import {SpectrumData, isotopeList} from './main.js';
+
+interface shape {
+  type: string;
+  xref: string;
+  yref: string;
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+  //fillcolor: string,
+  line: {
+      color: string;
+      width: number;
+      dash: string;
+    };
+};
+
+interface anno {
+  x: number;
+  y: number;
+  xref: string;
+  yref: string;
+  text: string;
+  showarrow: boolean;
+  arrowhead: number;
+  ax: number;
+  ay: number;
+  hovertext: string;
+  font: {
+    size: number;
+  };
+};
+
 
 export class SpectrumPlot {
-  constructor(divId) {
+  readonly divId: string;
+  xAxis = 'linear';
+  yAxis = 'linear';
+  plotType = 'scatter'; //"scatter", "bar"
+  downloadFormat = 'png'; // one of png, svg, jpeg, webp
+  sma = false; // Simple Moving Average
+  smaLength = 20;
+  calibration = {
+    enabled: false,
+    points: 0,
+    aFrom: 0,
+    aTo: 0,
+    bFrom: 0,
+    bTo: 0,
+    cFrom: 0,
+    cTo: 0,
+  };
+  cps = false;
+  shapes: shape[] = [];
+  annotations: anno[] = [];
+  editableMode = false;
+  isoList: isotopeList = {};
+  peakConfig = {
+    enabled: false,
+    mode: 0, // Energy: 0 and Isotope: 1 modes
+    thres: 0.025,
+    lag: 150,
+    width: 2,
+    seekWidth: 2,
+    lines: <number[]>[],
+    lastDataX: <number[]>[],
+    lastDataY: <number[]>[],
+  };
+  readonly customModeBarButtons = {
+    name: 'Download plot as HTML',
+    //icon: Plotly.Icons['disk'],
+    direction: 'up',
+    click: (plotElement: any) => {
+      let newLayout = JSON.parse(JSON.stringify(plotElement.layout));
+      const logoUrl = new URL('/assets/logo.svg', window.location.origin);
+      newLayout.images[0].source = logoUrl.href;
+
+      const newAnno = {
+        x: 1,
+        y: 0,
+        opacity: 0.9,
+        xref: 'paper',
+        yref: 'paper',
+        xanchor: "right",
+        yanchor: "bottom",
+        text: window.location.origin,
+        showarrow: false,
+        font: {
+          size: 10,
+        },
+      };
+      newLayout.annotations.push(newAnno);
+
+      //let newConfig = JSON.parse(JSON.stringify(plotElement.config));
+      //delete newConfig.modeBarButtonsToAdd; // remove this section, otherwise there will be problems!
+
+      const scriptUrl = new URL('/assets/js/external/plotly-basic.min.js', window.location.origin);
+      const config = {
+        responsive: true,
+        displaylogo: false,
+        toImageButtonOptions: {
+          filename: 'gamma_mca_export',
+        }
+      };
+
+      const text = `\
+      <!DOCTYPE html>
+      <!-- Gamma MCA Interactive Export Version 1.1 by NuclearPhoenix. https://spectrum.nuclearphoenix.xyz. -->
+      <html>
+        <head>
+          <meta charset="utf-8">
+        </head>
+        <body style="margin:0;padding:0">
+          <div id="plotly-output" style="width:99vw;height:99vh"></div>
+          <script src="${scriptUrl}"></script>
+          <script type="text/javascript">Plotly.newPlot('plotly-output',${JSON.stringify(plotElement.data)},${JSON.stringify(newLayout)},${JSON.stringify(config)})</script>
+        </body>
+      </html>\
+      `;
+
+      let element = document.createElement('a');
+      element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
+      element.setAttribute('download', 'gamma_mca_export.html');
+      element.style.display = 'none';
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+  }};
+  /*
+    Constructor
+  */
+  constructor(divId: string) {
     this.divId = divId;
-    this.xAxis = 'linear';
-    this.yAxis = 'linear';
-    this.plotType = 'scatter'; //"scatter", "bar"
-    this.downloadFormat = 'png'; // one of png, svg, jpeg, webp
-    this.sma = false; // Simple Moving Average
-    this.smaLength = 20;
-    this.calibration = {
-      enabled: false,
-      points: 0,
-      aFrom: 0,
-      aTo: 0,
-      bFrom: 0,
-      bTo: 0,
-      cFrom: 0,
-      cTo: 0,
-    };
-    this.cps = false;
-    this.shapes = [];
-    this.annotations = [];
-    this.editableMode = false;
-    this.isoList = {};
-    this.peakConfig = {
-      enabled: false,
-      mode: 0, // Energy: 0 and Isotope: 1 modes
-      thres: 0.025,
-      lag: 150,
-      width: 2,
-      seekWidth: 2,
-      lines: [],
-      lastDataX: [],
-      lastDataY: [],
-    };
-
-    this.customModeBarButtons = {
-      name: 'Download plot as HTML',
-      icon: Plotly.Icons['disk'],
-      direction: 'up',
-      click: plotElement => {
-        let newLayout = JSON.parse(JSON.stringify(plotElement.layout));
-        const logoUrl = new URL('/assets/logo.svg', window.location.origin);
-        newLayout.images[0].source = logoUrl.href;
-
-        const newAnno = {
-          x: 1,
-          y: 0,
-          opacity: 0.9,
-          xref: 'paper',
-          yref: 'paper',
-          xanchor: "right",
-          yanchor: "bottom",
-          text: window.location.origin, //'https://spectrum.nuclearphoenix.xyz',
-          showarrow: false,
-          font: {
-            size: 10,
-          },
-        };
-        newLayout.annotations.push(newAnno);
-
-        //let newConfig = JSON.parse(JSON.stringify(plotElement.config));
-        //delete newConfig.modeBarButtonsToAdd; // remove this section, otherwise there will be problems!
-
-        const scriptUrl = new URL('/assets/js/external/plotly-basic.min.js', window.location.origin);
-        const config = {
-          responsive: true,
-          displaylogo: false,
-          toImageButtonOptions: {
-            filename: 'gamma_mca_export',
-          }
-        };
-
-        const text = `\
-        <!DOCTYPE html>
-        <!-- Gamma MCA Interactive Export Version 1.1 by NuclearPhoenix. https://spectrum.nuclearphoenix.xyz. -->
-        <html>
-          <head>
-            <meta charset="utf-8">
-          </head>
-          <body style="margin:0;padding:0">
-            <div id="plotly-output" style="width:99vw;height:99vh"></div>
-            <script src="${scriptUrl}"></script>
-            <script type="text/javascript">Plotly.newPlot('plotly-output',${JSON.stringify(plotElement.data)},${JSON.stringify(newLayout)},${JSON.stringify(config)})</script>
-          </body>
-        </html>\
-        `;
-
-        let element = document.createElement('a');
-        element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
-        element.setAttribute('download', 'gamma_mca_export.html');
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-    }};
   }
-
   /*
     Get An Array with Length == Data.length containing ascending numbers
   */
-  getXAxis(len) {
-    let xArray = [];
+  getXAxis(len: number): number[] {
+    let xArray: number[] = [];
     for(let i = 0; i < len; i++) {
       xArray.push(i);
     }
@@ -111,10 +165,10 @@ export class SpectrumPlot {
   /*
     Get the calibrated x-axis using the values in this.calibration
   */
-  getCalAxis(len) {
-    let calArray = [];
+  getCalAxis(len: number): number[] {
+    let calArray: number[] = [];
 
-    if (this.calibration.points == 3) { // Pretty ugly hard scripted, could be dynamically calculated for n-poly using Math.js and matrices. Meh.
+    if (this.calibration.points === 3) { // Pretty ugly hard scripted, could be dynamically calculated for n-poly using Math.js and matrices. Meh.
 
       const denom = (this.calibration.aFrom - this.calibration.bFrom) * (this.calibration.aFrom - this.calibration.cFrom) * (this.calibration.bFrom - this.calibration.cFrom);
 
@@ -150,8 +204,8 @@ export class SpectrumPlot {
   /*
     Get The Moving Average
   */
-  computeMovingAverage(target, length = this.smaLength) {
-    let newData = Array(target.length).fill(0);
+  computeMovingAverage(target: number[], length = this.smaLength): number[] {
+    let newData: number[] = Array(target.length).fill(0);
     const half = Math.round(length/2);
 
     for(const i in newData) { // Compute the central moving average
@@ -172,13 +226,13 @@ export class SpectrumPlot {
 
       for(let j = 0; j < length; j++) { // Slightly asymetrical to the right with even numbers of smaLength
         if (j < half) {
-          if ((i - j) >= 0) {
-            val += target[i - j];
+          if ((intIndex - j) >= 0) {
+            val += target[intIndex - j];
             divider++;
           }
         } else {
-          if ((i - half+1 + j) < newData.length) {
-            val += target[i - half+1 + j];
+          if ((intIndex - half+1 + j) < newData.length) {
+            val += target[intIndex - half+1 + j];
             divider++;
           }
         }
@@ -190,14 +244,14 @@ export class SpectrumPlot {
   /*
     Seek the closest matching isotope by energy from an isotope list
   */
-  seekClosest(value, maxDist = 100) {
+  seekClosest(value: number, maxDist = 100): {energy: string, name: number} | {energy: undefined, name: undefined} {
     const keys = Object.keys(this.isoList);
-    const closeKeys = keys.filter(energy => Math.abs(energy - value) <= maxDist);
+    const closeKeys = keys.filter(energy => Math.abs(parseFloat(energy) - value) <= maxDist);
 
     if (closeKeys.length !== 0) {
-      const closest = closeKeys.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
+      const closest = closeKeys.reduce((prev, curr) => Math.abs(parseFloat(curr) - value) < Math.abs(parseFloat(prev) - value) ? curr : prev);
 
-      return {energy: parseFloat(closest).toFixed(2), name: this.isoList[closest]};
+      return {energy: parseFloat(closest).toFixed(2), name: this.isoList[closest]!};
     } else {
       return {energy: undefined, name: undefined};
     }
@@ -205,7 +259,7 @@ export class SpectrumPlot {
   /*
     Find and mark energy peaks by using two different moving averages
   */
-  peakFinder(doFind = true) {
+  peakFinder(doFind = true): void {
     if (this.peakConfig.lines.length !== 0) {
       for (const line of this.peakConfig.lines) {
         this.toggleLine(line, '', false);
@@ -217,12 +271,12 @@ export class SpectrumPlot {
       return;
     }
 
-    const shortData = this.peakConfig.lastDataY;
+    const shortData: number[] = this.peakConfig.lastDataY;
     const longData = this.computeMovingAverage(this.peakConfig.lastDataY, this.peakConfig.lag);
 
     const maxVal = Math.max(...shortData);
-    const xAxisData = this.peakConfig.lastDataX;
-    let peakLines = [];
+    const xAxisData: number[] = this.peakConfig.lastDataX;
+    let peakLines: number[] = [];
 
     for (let i = 0; i < shortData.length; i++) {
       if (shortData[i] - longData[i] > this.peakConfig.thres * maxVal)  {
@@ -230,7 +284,7 @@ export class SpectrumPlot {
       }
     }
 
-    let values = [];
+    let values: number[] = [];
     peakLines.push(0);
 
     for (let i = 0; i < peakLines.length; i++) {
@@ -238,9 +292,9 @@ export class SpectrumPlot {
 
       if (Math.abs(peakLines[i + 1] - peakLines[i]) > this.peakConfig.width) {
         let result = 0;
-        let size;
+        let size: number;
 
-        if (values.length == 1) {
+        if (values.length === 1) {
           result = peakLines[i];
           size = this.peakConfig.seekWidth;
         } else {
@@ -251,14 +305,14 @@ export class SpectrumPlot {
           size = this.peakConfig.seekWidth * (Math.max(...values) - Math.min(...values));
         }
 
-        if (this.peakConfig.mode == 0) {
-          this.toggleLine(result, Math.round(result).toString());
+        if (this.peakConfig.mode === 0) {
+          this.toggleLine(result, result.toFixed(2));
           this.peakConfig.lines.push(result);
         } else { // Isotope Mode
           const { energy, name } = this.seekClosest(result, size);
           if (energy !== undefined && name !== undefined) {
-            this.toggleLine(energy, name);
-            this.peakConfig.lines.push(energy);
+            this.toggleLine(parseFloat(energy), name.toString());
+            this.peakConfig.lines.push(parseFloat(energy));
           }
         }
 
@@ -269,22 +323,22 @@ export class SpectrumPlot {
   /*
     Convenient Wrapper, could do more in the future
   */
-  resetPlot(spectrumData) {
+  resetPlot(spectrumData: SpectrumData): void {
     this.plotData(spectrumData, false); // Not Updating
   }
   /*
     Convenient Wrapper, could do more in the future
   */
-  updatePlot(spectrumData) {
+  updatePlot(spectrumData: SpectrumData): void {
     this.plotData(spectrumData); // Updating
   }
   /*
     Add a line
   */
-  toggleLine(energy, name, enabled = true) {
+  toggleLine(energy: number, name: string, enabled = true): void {
     name = name.replaceAll('-',''); // Remove - to save space
     if (enabled) {
-      const newLine = {
+      const newLine: shape = {
         type: 'line',
         xref: 'x',
         yref: 'paper',
@@ -299,8 +353,8 @@ export class SpectrumPlot {
             dash: 'solid'
           },
       };
-      const newAnno = {
-        x: energy,
+      const newAnno: anno = {
+        x: parseFloat(energy.toFixed(2)),
         y: 1,
         xref: 'x',
         yref: 'paper',
@@ -309,7 +363,7 @@ export class SpectrumPlot {
         arrowhead: 7,
         ax: 0,
         ay: -20,
-        hovertext: parseFloat(energy).toFixed(2),
+        hovertext: energy.toFixed(2),
         font: {
           size: 11,
         },
@@ -332,13 +386,13 @@ export class SpectrumPlot {
       this.annotations.push(newAnno);
     } else {
       for (const i in this.shapes) {
-        if (this.shapes[i].x0 == energy) {
-          this.shapes.splice(i,1);
+        if (this.shapes[i].x0 === energy) {
+          this.shapes.splice(parseInt(i),1);
         }
       }
       for (const i in this.annotations) {
-        if (this.annotations[i].x == energy) {
-          this.annotations.splice(i,1);
+        if (this.annotations[i].x === energy) {
+          this.annotations.splice(parseInt(i),1);
         }
       }
     }
@@ -346,14 +400,14 @@ export class SpectrumPlot {
   /*
     Clear annotations and shapes
   */
-  clearAnnos() {
+  clearAnnos(): void {
     this.shapes = [];
     this.annotations = [];
   }
   /*
     Plot All The Data
   */
-  plotData(dataObj, update = true) {
+  plotData(dataObj: SpectrumData, update = true): void {
     let trace = {
       name: 'Clean Spectrum',
       stackgroup: 'data', // Stack line charts on top of each other
@@ -405,6 +459,7 @@ export class SpectrumPlot {
         marker: {
           color: 'slategrey',
         },
+        width: 1,
       };
 
       if (bgTrace.x.length > maxXValue) {
@@ -415,7 +470,7 @@ export class SpectrumPlot {
         bgTrace.y = dataObj.backgroundCps;
       }
 
-      const newData = []; // Compute the corrected data, i.e. data - background
+      const newData: number[] = []; // Compute the corrected data, i.e. data - background
       for (let i = 0; i < data[0].y.length; i++) {
         newData.push(data[0].y[i] - bgTrace.y[i]);
       }
@@ -468,6 +523,7 @@ export class SpectrumPlot {
         spikemode: 'across',
         //nticks: 20,
         //tickformat: '.02f',
+        ticksuffix: '',
         exponentformat: 'SI',
       },
       yaxis: {
@@ -509,6 +565,8 @@ export class SpectrumPlot {
         yanchor: 'top',
         yref: 'paper',
       }],
+      shapes: <shape[]>[],
+      annotations: <anno[]>[],
       //shapes: this.shapes,
       //annotations: JSON.parse(JSON.stringify(this.annotations)), // Copy array but do not reference
     };
@@ -544,13 +602,14 @@ export class SpectrumPlot {
         filename: 'gamma_mca_export',
       },
       editable: this.editableMode,
+      modeBarButtonsToAdd: <any[]>[],
     };
 
     /*
       Peak Detection Stuff
     */
     if (this.peakConfig.enabled) {
-      if (data.length == 1) {
+      if (data.length === 1) {
         this.peakConfig.lastDataX = data[0].x;
         this.peakConfig.lastDataY = data[0].y;
       } else {
