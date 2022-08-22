@@ -35,6 +35,10 @@ Thanks to the Web Serial API you can use any serial device capable of doing gamm
 1. The API is currently only supported by Chromium-based (desktop) browsers. This includes most browsers except Safari and Firefox. The feature is either enabled on default or you have to enable it in the settings. See [Can I Use?](https://caniuse.com/web-serial)
 2. Your device has to print an EOL character (a semicolon `;`) after every single event to signalize the end of a data entry. Whitespace or newlines do not matter.
 
+## Contributing
+
+The PWA is written with TypeScript. The files can be found in `assets/js/`, please only modify the `.ts` files -- all `.js` files are auto-generated.
+
 ---
 
 Notice: The [LICENSE](/LICENSE) does not apply to the name "Gamma MCA" and especially the Gamma MCA logo. These are Copyright 2021 by me, Phoenix1747.

@@ -29,6 +29,10 @@ body {
   max-height: 400px;
 }
 
+.iso-table-label {
+  pointer-events: none;
+}
+
 #ser-time-progress-bar {
   height: 10px;
 }
