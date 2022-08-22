@@ -392,7 +392,7 @@ export class SpectrumPlot {
         }
       }
       for (const i in this.annotations) {
-        if (this.annotations[i].x === energy) {
+        if (this.annotations[i].x === parseFloat(energy.toFixed(2))) {
           this.annotations.splice(parseInt(i),1);
         }
       }
