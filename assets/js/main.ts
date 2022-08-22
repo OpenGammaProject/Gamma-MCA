@@ -38,7 +38,7 @@ import {RawData} from './raw-data.js';
 import {SerialData} from './serial.js';
 
 export interface isotopeList {
-  [key: string]: number | undefined;
+  [key: number]: string | undefined;
 };
 
 interface portList {
@@ -78,7 +78,7 @@ let maxRecTimeEnabled = false;
 let maxRecTime = 1800000; // 30 mins
 const REFRESH_META_TIME = 100; // 100 ms
 
-let cpsValues: number[];
+let cpsValues: number[] = [];
 
 let isoListURL = 'assets/isotopes_energies_min.json';
 let isoList: isotopeList = {};
@@ -199,7 +199,7 @@ window.matchMedia('(display-mode: standalone)').addEventListener('change', (/*ev
 
 let deferredPrompt: any;
 
-window.addEventListener('onbeforeinstallprompt', (event: Event) => {
+window.addEventListener('beforeinstallprompt', (event: Event) => {
   event.preventDefault(); // Prevent the mini-infobar from appearing on mobile
   deferredPrompt = event;
 
@@ -374,7 +374,7 @@ function resetPlot(): void {
 
 
 document.getElementById('xAxis')!.onclick = event => changeAxis(<HTMLButtonElement>event.target);
-document.getElementById('xAxis')!.onclick = event => changeAxis(<HTMLButtonElement>event.target);
+document.getElementById('yAxis')!.onclick = event => changeAxis(<HTMLButtonElement>event.target);
 
 function changeAxis(button: HTMLButtonElement): void {
   let id = button.id as 'xAxis' | 'yAxis';
@@ -746,38 +746,19 @@ async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope 
 
       for (const key of intKeys) {
         index++;
-        isoList[key] = json[key];
+        isoList[parseFloat(key)] = json[key];
 
         const row = tableElement.insertRow();
         const cell1 = row.insertCell(0);
         const cell2 = row.insertCell(1);
         const cell3 = row.insertCell(2);
 
-        cell1.onclick = () => {
-          plotIsotope(<HTMLInputElement>cell1.firstChild);
-        };
-        cell2.onclick = () => {
-          (<HTMLInputElement>cell1.firstChild).click();
-          /*
-          try {
-            (<HTMLInputElement>cell1.firstChild).click(); //evnt.target.parentNode.firstChild.firstChild.click();
-          } catch(e) { // Catch press on <sup> element
-            ; //evnt.target.parentNode.parentNode.firstChild.firstChild.click();
-          }
-          */
-        };
-        cell3.onclick = () => {
-          (<HTMLInputElement>cell1.firstChild).click();
-          /*
-          try {
-            (<HTMLInputElement>cell1.firstChild).click(); //evnt.target.parentNode.firstChild.firstChild.click();
-          } catch(e) { // Catch press on <sup> element
-            ; //evnt.target.parentNode.parentNode.firstChild.firstChild.click();
-          }
-          */
-        };
+        cell1.onclick = () => (<HTMLInputElement>cell1.firstChild).click();
+        cell2.onclick = () => (<HTMLInputElement>cell1.firstChild).click();
+        cell3.onclick = () => (<HTMLInputElement>cell1.firstChild).click();
 
-        cell2.style.cursor = 'pointer'; // change cursor pointer
+        cell1.style.cursor = 'pointer'; // Change cursor pointer to "click-ready"
+        cell2.style.cursor = 'pointer';
         cell3.style.cursor = 'pointer';
 
         const energy = parseFloat(key.trim());
@@ -785,12 +766,15 @@ async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope 
         const lowercaseName = dirtyName.replace(/[^a-z0-9 -]/gi, '').trim(); // Fixes security issue. Clean everything except for letters, numbers and minus. See GitHub: #2
         const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1) + '-' + index; // Capitalize Name and append index number
 
-        cell1.innerHTML = `<input class="form-check-input" id="${name}" type="checkbox" value="${energy}">`;
-        cell3.innerHTML = `<label for="${name}">${energy.toFixed(2)}</label>`;
+        cell1.innerHTML = `<input class="form-check-input iso-table-label" id="${name}" type="checkbox" value="${energy}">`;
+        cell3.innerHTML = `<span class="iso-table-label">${energy.toFixed(2)}</span>`; //`<label for="${name}">${energy.toFixed(2)}</label>`;
+
+        const clickBox = <HTMLInputElement>document.getElementById(name);
+        clickBox.onclick = () => plotIsotope(clickBox);
 
         const strArr = name.split('-');
 
-        cell2.innerHTML = `<label for="${name}"><sup>${strArr[1]}</sup>${strArr[0]}</label>`;
+        cell2.innerHTML = `<span class="iso-table-label"><sup>${strArr[1]}</sup>${strArr[0]}</span>`; //`<label for="${name}"><sup>${strArr[1]}</sup>${strArr[0]}</label>`;
       }
       plot.isoList = isoList; // Copy list to plot object
     } else {
@@ -818,17 +802,17 @@ function reloadIsotopes(): void {
 
 
 function seekClosest(value: number): {energy: number, name: string} | {energy: undefined, name: undefined} {
-  const vals = Object.values(isoList);
-  const closeVals = <number[]>vals.filter(energy => { // After this step there are 100% only numbers left, so force a number[]
+  const closeVals = Object.keys(isoList).filter(energy => { // Only allow closest values and disregard undefined
     if (energy) {
-      return Math.abs(energy - value) <= maxDist;
+      return Math.abs(parseFloat(energy) - value) <= maxDist;
     }
     return false;
   });
+  const closeValsNum = closeVals.map(energy => parseFloat(energy)) // After this step there are 100% only numbers left
 
-  if (closeVals.length !== 0) {
-    const closest = closeVals.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
-    const name = Object.keys(isoList).find(key => isoList[key] === closest)!; // closest will always be somewhere in isoList with a key, because we got it from there!
+  if (closeValsNum.length > 0) {
+    const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
+    const name = isoList[closest]!; // closest will always be somewhere in isoList with a key, because we got it from there!
 
     return {energy: closest, name: name};
   } else {
@@ -856,15 +840,15 @@ async function closestIso(value: number): Promise<void> {
   const { energy, name } = seekClosest(value);
 
   if (Object.keys(prevIso).length >= 0) {
-    const energyVal = Object.values(prevIso)[0];
-    if (energyVal !== undefined) {
+    const energyVal = parseFloat(Object.keys(prevIso)[0]);
+    if (!isNaN(energyVal)) {
       plot.toggleLine(energyVal, Object.keys(prevIso)[0], false);
     }
   }
 
   if (energy !== undefined && name !== undefined) {
     let newIso: isotopeList = {};
-    newIso[name] = energy;
+    newIso[energy] = name;
 
     if (prevIso !== newIso) {
       prevIso = newIso;

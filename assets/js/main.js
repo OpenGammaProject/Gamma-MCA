@@ -30,7 +30,7 @@ let refreshRate = 1000;
 let maxRecTimeEnabled = false;
 let maxRecTime = 1800000;
 const REFRESH_META_TIME = 100;
-let cpsValues;
+let cpsValues = [];
 let isoListURL = 'assets/isotopes_energies_min.json';
 let isoList = {};
 let checkNearIso = false;
@@ -117,7 +117,7 @@ window.matchMedia('(display-mode: standalone)').addEventListener('change', () =>
     window.location.reload();
 });
 let deferredPrompt;
-window.addEventListener('onbeforeinstallprompt', (event) => {
+window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     deferredPrompt = event;
     if (localStorageAvailable) {
@@ -244,7 +244,7 @@ function resetPlot() {
     bindPlotEvents();
 }
 document.getElementById('xAxis').onclick = event => changeAxis(event.target);
-document.getElementById('xAxis').onclick = event => changeAxis(event.target);
+document.getElementById('yAxis').onclick = event => changeAxis(event.target);
 function changeAxis(button) {
     let id = button.id;
     if (plot[id] === 'linear') {
@@ -522,30 +522,27 @@ async function loadIsotopes(reload = false) {
             let index = 0;
             for (const key of intKeys) {
                 index++;
-                isoList[key] = json[key];
+                isoList[parseFloat(key)] = json[key];
                 const row = tableElement.insertRow();
                 const cell1 = row.insertCell(0);
                 const cell2 = row.insertCell(1);
                 const cell3 = row.insertCell(2);
-                cell1.onclick = () => {
-                    plotIsotope(cell1.firstChild);
-                };
-                cell2.onclick = () => {
-                    cell1.firstChild.click();
-                };
-                cell3.onclick = () => {
-                    cell1.firstChild.click();
-                };
+                cell1.onclick = () => cell1.firstChild.click();
+                cell2.onclick = () => cell1.firstChild.click();
+                cell3.onclick = () => cell1.firstChild.click();
+                cell1.style.cursor = 'pointer';
                 cell2.style.cursor = 'pointer';
                 cell3.style.cursor = 'pointer';
                 const energy = parseFloat(key.trim());
                 const dirtyName = json[key].toLowerCase();
                 const lowercaseName = dirtyName.replace(/[^a-z0-9 -]/gi, '').trim();
                 const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1) + '-' + index;
-                cell1.innerHTML = `<input class="form-check-input" id="${name}" type="checkbox" value="${energy}">`;
-                cell3.innerHTML = `<label for="${name}">${energy.toFixed(2)}</label>`;
+                cell1.innerHTML = `<input class="form-check-input iso-table-label" id="${name}" type="checkbox" value="${energy}">`;
+                cell3.innerHTML = `<span class="iso-table-label">${energy.toFixed(2)}</span>`;
+                const clickBox = document.getElementById(name);
+                clickBox.onclick = () => plotIsotope(clickBox);
                 const strArr = name.split('-');
-                cell2.innerHTML = `<label for="${name}"><sup>${strArr[1]}</sup>${strArr[0]}</label>`;
+                cell2.innerHTML = `<span class="iso-table-label"><sup>${strArr[1]}</sup>${strArr[0]}</span>`;
             }
             plot.isoList = isoList;
         }
@@ -568,16 +565,16 @@ function reloadIsotopes() {
     loadIsotopes(true);
 }
 function seekClosest(value) {
-    const vals = Object.values(isoList);
-    const closeVals = vals.filter(energy => {
+    const closeVals = Object.keys(isoList).filter(energy => {
         if (energy) {
-            return Math.abs(energy - value) <= maxDist;
+            return Math.abs(parseFloat(energy) - value) <= maxDist;
         }
         return false;
     });
-    if (closeVals.length !== 0) {
-        const closest = closeVals.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
-        const name = Object.keys(isoList).find(key => isoList[key] === closest);
+    const closeValsNum = closeVals.map(energy => parseFloat(energy));
+    if (closeValsNum.length > 0) {
+        const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
+        const name = isoList[closest];
         return { energy: closest, name: name };
     }
     else {
@@ -596,14 +593,14 @@ async function closestIso(value) {
     }
     const { energy, name } = seekClosest(value);
     if (Object.keys(prevIso).length >= 0) {
-        const energyVal = Object.values(prevIso)[0];
-        if (energyVal !== undefined) {
+        const energyVal = parseFloat(Object.keys(prevIso)[0]);
+        if (!isNaN(energyVal)) {
             plot.toggleLine(energyVal, Object.keys(prevIso)[0], false);
         }
     }
     if (energy !== undefined && name !== undefined) {
         let newIso = {};
-        newIso[name] = energy;
+        newIso[energy] = name;
         if (prevIso !== newIso) {
             prevIso = newIso;
         }

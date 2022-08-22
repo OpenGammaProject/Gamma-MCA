@@ -8,7 +8,7 @@ export class SpectrumPlot {
     plotType = 'scatter';
     downloadFormat = 'png';
     sma = false;
-    smaLength = 20;
+    smaLength = 8;
     calibration = {
         enabled: false,
         points: 0,
@@ -158,11 +158,17 @@ export class SpectrumPlot {
         return newData;
     }
     seekClosest(value, maxDist = 100) {
-        const keys = Object.keys(this.isoList);
-        const closeKeys = keys.filter(energy => Math.abs(parseFloat(energy) - value) <= maxDist);
-        if (closeKeys.length !== 0) {
-            const closest = closeKeys.reduce((prev, curr) => Math.abs(parseFloat(curr) - value) < Math.abs(parseFloat(prev) - value) ? curr : prev);
-            return { energy: parseFloat(closest).toFixed(2), name: this.isoList[closest] };
+        const closeVals = Object.keys(this.isoList).filter(energy => {
+            if (energy) {
+                return Math.abs(parseFloat(energy) - value) <= maxDist;
+            }
+            return false;
+        });
+        const closeValsNum = closeVals.map(energy => parseFloat(energy));
+        if (closeValsNum.length > 0) {
+            const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
+            const name = this.isoList[closest];
+            return { energy: closest, name: name };
         }
         else {
             return { energy: undefined, name: undefined };
@@ -213,8 +219,8 @@ export class SpectrumPlot {
                 else {
                     const { energy, name } = this.seekClosest(result, size);
                     if (energy !== undefined && name !== undefined) {
-                        this.toggleLine(parseFloat(energy), name.toString());
-                        this.peakConfig.lines.push(parseFloat(energy));
+                        this.toggleLine(energy, name);
+                        this.peakConfig.lines.push(energy);
                     }
                 }
                 values = [];
