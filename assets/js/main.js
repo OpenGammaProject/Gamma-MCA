@@ -106,14 +106,14 @@ document.body.onload = async function () {
     const loadingSpinner = document.getElementById('loading');
     loadingSpinner.parentNode.removeChild(loadingSpinner);
 };
-window.onbeforeunload = (event) => {
+window.onbeforeunload = () => {
     return 'Are you sure to leave?';
 };
 document.body.onresize = () => {
     plot.updatePlot(spectrumData);
     sizeCheck();
 };
-window.matchMedia('(display-mode: standalone)').addEventListener('change', (event) => {
+window.matchMedia('(display-mode: standalone)').addEventListener('change', () => {
     window.location.reload();
 });
 let deferredPrompt;
@@ -129,6 +129,8 @@ window.addEventListener('onbeforeinstallprompt', (event) => {
     const installButton = document.getElementById('manual-install');
     installButton.className = installButton.className.replaceAll('visually-hidden', '');
 });
+document.getElementById('install-pwa-btn').onclick = () => installPWA();
+document.getElementById('install-pwa-toast-btn').onclick = () => installPWA();
 async function installPWA() {
     deferredPrompt.prompt();
     await deferredPrompt.userChoice;
@@ -138,8 +140,10 @@ window.addEventListener('onappinstalled', () => {
     hideNotification('pwa-installer');
     document.getElementById('manual-install').className += 'visually-hidden';
 });
+document.getElementById('data').onchange = event => getFileData(event.target);
+document.getElementById('background').onchange = event => getFileData(event.target, true);
 function getFileData(input, background = false) {
-    if (input.files === null) {
+    if (input.files === null || input.files.length === 0) {
         return;
     }
     const file = input.files[0];
@@ -200,6 +204,8 @@ function sizeCheck() {
         hideNotification('screen-size-warning');
     }
 }
+document.getElementById('clear-data').onclick = () => removeFile('data');
+document.getElementById('clear-bg').onclick = () => removeFile('background');
 function removeFile(id) {
     spectrumData[id] = [];
     document.getElementById(id).value = '';
@@ -214,10 +220,13 @@ function bindPlotEvents() {
     myPlot.on('plotly_unhover', unHover);
     myPlot.on('plotly_click', clickEvent);
 }
+document.getElementById('r1').onchange = event => selectFileType(event.target);
+document.getElementById('r2').onchange = event => selectFileType(event.target);
 function selectFileType(button) {
     raw.fileType = parseInt(button.value);
     raw.valueIndex = parseInt(button.value);
 }
+document.getElementById('reset-plot').onclick = () => resetPlot();
 function resetPlot() {
     if (plot.xAxis === 'log') {
         changeAxis(document.getElementById('xAxis'));
@@ -234,6 +243,8 @@ function resetPlot() {
     plot.resetPlot(spectrumData);
     bindPlotEvents();
 }
+document.getElementById('xAxis').onclick = event => changeAxis(event.target);
+document.getElementById('xAxis').onclick = event => changeAxis(event.target);
 function changeAxis(button) {
     let id = button.id;
     if (plot[id] === 'linear') {
@@ -246,12 +257,29 @@ function changeAxis(button) {
     }
     plot.updatePlot(spectrumData);
 }
+document.getElementById('smaVal').onkeydown = event => enterPress(event, 'sma');
+document.getElementById('ser-command').onkeydown = event => enterPress(event, 'send-command');
+document.getElementById('iso-hover-prox').onkeydown = event => enterPress(event, 'setting1');
+document.getElementById('custom-url').onkeydown = event => enterPress(event, 'setting2');
+document.getElementById('custom-delimiter').onkeydown = event => enterPress(event, 'setting3');
+document.getElementById('custom-file-adc').onkeydown = event => enterPress(event, 'setting4');
+document.getElementById('custom-baud').onkeydown = event => enterPress(event, 'setting5');
+document.getElementById('eol-char').onkeydown = event => enterPress(event, 'setting5-1');
+document.getElementById('ser-limit').onkeydown = event => enterPress(event, 'ser-limit-btn');
+document.getElementById('custom-ser-refresh').onkeydown = event => enterPress(event, 'setting6');
+document.getElementById('custom-ser-buffer').onkeydown = event => enterPress(event, 'setting7');
+document.getElementById('custom-ser-adc').onkeydown = event => enterPress(event, 'setting8');
+document.getElementById('peak-thres').onkeydown = event => enterPress(event, 'setting9');
+document.getElementById('peak-lag').onkeydown = event => enterPress(event, 'setting10');
+document.getElementById('peak-width').onkeydown = event => enterPress(event, 'setting11');
+document.getElementById('seek-width').onkeydown = event => enterPress(event, 'setting12');
 function enterPress(event, id) {
     if (event.key === 'Enter') {
         const button = document.getElementById(id);
-        button.click();
+        button?.click();
     }
 }
+document.getElementById('sma').onclick = event => toggleSma(event.target.checked);
 function toggleSma(value, thisValue = null) {
     plot.sma = value;
     if (thisValue !== null) {
@@ -259,6 +287,7 @@ function toggleSma(value, thisValue = null) {
     }
     plot.updatePlot(spectrumData);
 }
+document.getElementById('smaVal').oninput = event => changeSma(event.target);
 function changeSma(input) {
     const parsedInput = parseInt(input.value);
     if (isNaN(parsedInput)) {
@@ -283,7 +312,7 @@ function hoverEvent(data) {
         closestIso(data.points[0].x);
     }
 }
-function unHover(data) {
+function unHover() {
     const hoverData = document.getElementById('hover-data');
     hoverData.innerText = 'None';
     for (const key in calClick) {
@@ -306,6 +335,7 @@ function clickEvent(data) {
         }
     }
 }
+document.getElementById('apply-cal').onclick = event => toggleCal(event.target.checked);
 function toggleCal(enabled) {
     const button = document.getElementById('calibration-label');
     if (enabled) {
@@ -354,15 +384,20 @@ function toggleCal(enabled) {
     plot.plotData(spectrumData, false);
     bindPlotEvents();
 }
+document.getElementById('calibration-reset').onclick = () => resetCal();
 function resetCal() {
     for (const point in calClick) {
         calClick[point] = false;
     }
     toggleCal(false);
 }
+document.getElementById('select-a').onclick = event => toggleCalClick('a', event.target.checked);
+document.getElementById('select-b').onclick = event => toggleCalClick('b', event.target.checked);
+document.getElementById('select-c').onclick = event => toggleCalClick('c', event.target.checked);
 function toggleCalClick(point, value) {
     calClick[point] = value;
 }
+document.getElementById('plotType').onclick = event => changeType(event.target);
 function changeType(button) {
     if (plot.plotType === 'scatter') {
         button.innerHTML = '<i class="fas fa-chart-bar"></i> Bar';
@@ -374,8 +409,9 @@ function changeType(button) {
     }
     plot.updatePlot(spectrumData);
 }
+document.getElementById('cal-input').onchange = event => importCal(event.target);
 function importCal(input) {
-    if (input.files === null) {
+    if (input.files === null || input.files.length === 0) {
         return;
     }
     const file = input.files[0];
@@ -423,10 +459,13 @@ function getDateString() {
     const time = new Date();
     return time.getFullYear() + addLeadingZero((time.getMonth() + 1).toString()) + addLeadingZero(time.getDate().toString()) + addLeadingZero(time.getHours().toString()) + addLeadingZero(time.getMinutes().toString());
 }
+document.getElementById('calibration-download').onclick = () => downloadCal();
 function downloadCal() {
     const filename = `calibration_${getDateString()}.json`;
     download(filename, JSON.stringify(plot.calibration));
 }
+document.getElementById('download-spectrum-btn').onclick = () => downloadData('spectrum', 'data');
+document.getElementById('download-bg-btn').onclick = () => downloadData('background', 'background');
 function downloadData(filename, data) {
     filename += `_${getDateString()}.csv`;
     let text = '';
@@ -452,6 +491,7 @@ function hideNotification(id) {
     const toast = new bootstrap.Toast(element);
     toast.hide();
 }
+document.getElementById('toggle-menu').onclick = () => loadIsotopes();
 let loadedIsos = false;
 async function loadIsotopes(reload = false) {
     if (loadedIsos && !reload) {
@@ -487,29 +527,22 @@ async function loadIsotopes(reload = false) {
                 const cell1 = row.insertCell(0);
                 const cell2 = row.insertCell(1);
                 const cell3 = row.insertCell(2);
-                cell2.addEventListener('click', event => {
-                    try {
-                        cell1.firstChild.click();
-                    }
-                    catch (e) {
-                        ;
-                    }
-                });
-                cell3.addEventListener('click', event => {
-                    try {
-                        cell1.firstChild.click();
-                    }
-                    catch (e) {
-                        ;
-                    }
-                });
+                cell1.onclick = () => {
+                    plotIsotope(cell1.firstChild);
+                };
+                cell2.onclick = () => {
+                    cell1.firstChild.click();
+                };
+                cell3.onclick = () => {
+                    cell1.firstChild.click();
+                };
                 cell2.style.cursor = 'pointer';
                 cell3.style.cursor = 'pointer';
                 const energy = parseFloat(key.trim());
                 const dirtyName = json[key].toLowerCase();
                 const lowercaseName = dirtyName.replace(/[^a-z0-9 -]/gi, '').trim();
                 const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1) + '-' + index;
-                cell1.innerHTML = `<input class="form-check-input" id="${name}" type="checkbox" value="${energy}" onclick="plotIsotope(this)">`;
+                cell1.innerHTML = `<input class="form-check-input" id="${name}" type="checkbox" value="${energy}">`;
                 cell3.innerHTML = `<label for="${name}">${energy.toFixed(2)}</label>`;
                 const strArr = name.split('-');
                 cell2.innerHTML = `<label for="${name}"><sup>${strArr[1]}</sup>${strArr[0]}</label>`;
@@ -530,6 +563,7 @@ async function loadIsotopes(reload = false) {
     loadingElement.className += ' visually-hidden';
     return successFlag;
 }
+document.getElementById('reload-isos-btn').onclick = () => reloadIsotopes();
 function reloadIsotopes() {
     loadIsotopes(true);
 }
@@ -550,6 +584,7 @@ function seekClosest(value) {
         return { energy: undefined, name: undefined };
     }
 }
+document.getElementById('iso-hover').onclick = () => toggleIsoHover();
 let prevIso = {};
 function toggleIsoHover() {
     checkNearIso = !checkNearIso;
@@ -582,6 +617,7 @@ function plotIsotope(checkbox) {
     plot.toggleLine(parseFloat(checkbox.value), name, checkbox.checked);
     plot.updatePlot(spectrumData);
 }
+document.getElementById('check-all-isos').onclick = (event) => selectAll(event.target);
 function selectAll(selectBox) {
     const tableElement = document.getElementById('table');
     const tableBody = tableElement.tBodies[0];
@@ -601,6 +637,7 @@ function selectAll(selectBox) {
     }
     plot.updatePlot(spectrumData);
 }
+document.getElementById('peak-finder-btn').onclick = event => findPeaks(event.target);
 async function findPeaks(button) {
     if (plot.peakConfig.enabled) {
         if (plot.peakConfig.mode === 0) {
@@ -730,6 +767,23 @@ function loadSettingsStorage() {
         plot.downloadFormat = setting;
     }
 }
+document.getElementById('edit-plot').onclick = event => changeSettings('editMode', event.target);
+document.getElementById('setting1').onclick = () => changeSettings('maxIsoDist', document.getElementById('iso-hover-prox'));
+document.getElementById('setting2').onclick = () => changeSettings('customURL', document.getElementById('custom-url'));
+document.getElementById('download-format').onchange = event => changeSettings('plotDownload', event.target);
+document.getElementById('setting3').onclick = () => changeSettings('fileDelimiter', document.getElementById('custom-delimiter'));
+document.getElementById('setting4').onclick = () => changeSettings('fileChannels', document.getElementById('custom-file-adc'));
+document.getElementById('setting5').onclick = () => changeSettings('baudRate', document.getElementById('custom-baud'));
+document.getElementById('setting5-1').onclick = () => changeSettings('eolChar', document.getElementById('eol-char'));
+document.getElementById('toggle-time-limit').onclick = event => changeSettings('timeLimitBool', event.target);
+document.getElementById('ser-limit-btn').onclick = () => changeSettings('timeLimit', document.getElementById('ser-limit'));
+document.getElementById('setting6').onclick = () => changeSettings('plotRefreshRate', document.getElementById('custom-ser-refresh'));
+document.getElementById('setting7').onclick = () => changeSettings('serBufferSize', document.getElementById('custom-ser-buffer'));
+document.getElementById('setting8').onclick = () => changeSettings('serChannels', document.getElementById('custom-ser-adc'));
+document.getElementById('setting9').onclick = () => changeSettings('peakThres', document.getElementById('peak-thres'));
+document.getElementById('setting10').onclick = () => changeSettings('peakLag', document.getElementById('peak-lag'));
+document.getElementById('setting11').onclick = () => changeSettings('peakWidth', document.getElementById('peak-width'));
+document.getElementById('setting12').onclick = () => changeSettings('seekWidth', document.getElementById('seek-width'));
 function changeSettings(name, element) {
     if (!element.checkValidity()) {
         popupNotification('setting-type');
@@ -876,13 +930,14 @@ function changeSettings(name, element) {
     }
     popupNotification('setting-success');
 }
+document.getElementById('reset-gamma-mca').onclick = () => resetMCA();
 function resetMCA() {
     if (localStorageAvailable) {
         localStorage.clear();
     }
     window.location.reload();
 }
-function serialConnect(event) {
+function serialConnect() {
     listSerial();
     popupNotification('serial-connect');
 }
@@ -901,6 +956,7 @@ function serialDisconnect(event) {
     popupNotification('serial-disconnect');
 }
 ;
+document.getElementById('serial-list-btn').onclick = () => listSerial();
 async function listSerial() {
     const portSelector = document.getElementById('port-selector');
     for (const index in portSelector.options) {
@@ -929,6 +985,7 @@ async function listSerial() {
         }
     }
 }
+document.getElementById('serial-add-device').onclick = () => requestSerial();
 async function requestSerial() {
     try {
         const port = await navigator.serial.requestPort();
@@ -946,6 +1003,7 @@ async function requestSerial() {
         console.warn('Aborted adding a new port!', err);
     }
 }
+document.getElementById('plot-cps').onclick = event => toggleCps(event.target);
 function toggleCps(button, off = false) {
     if (off) {
         plot.cps = false;
@@ -996,6 +1054,9 @@ async function readUntilClosed() {
     }
     await ser.port?.close();
 }
+document.getElementById('resume-button').onclick = () => startRecord(true);
+document.getElementById('record-spectrum-btn').onclick = () => startRecord(false, 'data');
+document.getElementById('record-bg-btn').onclick = () => startRecord(false, 'background');
 let closed;
 let firstLoad = false;
 async function startRecord(pause = false, type = recordingType) {
@@ -1034,6 +1095,7 @@ async function startRecord(pause = false, type = recordingType) {
         popupNotification('serial-connect-error');
     }
 }
+document.getElementById('send-command').onclick = () => sendSerial(document.getElementById('ser-command').value);
 async function sendSerial(command) {
     const wasReading = keepReading;
     try {
@@ -1066,6 +1128,8 @@ async function sendSerial(command) {
         }
     }
 }
+document.getElementById('pause-button').onclick = () => disconnectPort();
+document.getElementById('stop-button').onclick = () => disconnectPort(true);
 async function disconnectPort(stop = false) {
     const nowTime = new Date();
     timeDone += nowTime.getTime() - startTime;

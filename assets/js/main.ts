@@ -173,7 +173,7 @@ document.body.onload = async function(): Promise<void> {
 
 
 // Exit website confirmation alert
-window.onbeforeunload = (event) => {
+window.onbeforeunload = (/*event*/) => {
   return 'Are you sure to leave?';
 };
 
@@ -186,7 +186,7 @@ document.body.onresize = () => {
 
 
 // User changed from browser window to PWA (after installation) or backwards
-window.matchMedia('(display-mode: standalone)').addEventListener('change', (event) => {
+window.matchMedia('(display-mode: standalone)').addEventListener('change', (/*event*/) => {
   /*
   let displayMode = 'browser';
   if (event.matches) {
@@ -215,6 +215,9 @@ window.addEventListener('onbeforeinstallprompt', (event: Event) => {
 });
 
 
+document.getElementById('install-pwa-btn')!.onclick = () => installPWA();
+document.getElementById('install-pwa-toast-btn')!.onclick = () => installPWA();
+
 async function installPWA() {
   //hideNotification('pwa-installer');
   deferredPrompt.prompt();
@@ -242,8 +245,12 @@ document.onkeydown = async function(event) {
 };
 */
 
+document.getElementById('data')!.onchange = event => getFileData(<HTMLInputElement>event.target);
+document.getElementById('background')!.onchange = event => getFileData(<HTMLInputElement>event.target, true);
+
+
 function getFileData(input: HTMLInputElement, background = false): void { // Gets called when a file has been selected.
-  if (input.files === null) { // File selection has been canceled
+  if (input.files === null || input.files.length === 0) { // File selection has been canceled
     return;
   }
   const file = input.files[0];
@@ -314,6 +321,9 @@ function sizeCheck(): void {
 }
 
 
+document.getElementById('clear-data')!.onclick = () => removeFile('data');
+document.getElementById('clear-bg')!.onclick = () => removeFile('background');
+
 function removeFile(id: dataType): void {
   spectrumData[id] = [];
   (<HTMLInputElement>document.getElementById(id)).value = '';
@@ -334,11 +344,16 @@ function bindPlotEvents(): void {
 }
 
 
+document.getElementById('r1')!.onchange = event => selectFileType(<HTMLInputElement>event.target);
+document.getElementById('r2')!.onchange = event => selectFileType(<HTMLInputElement>event.target);
+
 function selectFileType(button: HTMLInputElement): void {
   raw.fileType = parseInt(button.value);
   raw.valueIndex = parseInt(button.value);
 }
 
+
+document.getElementById('reset-plot')!.onclick = () => resetPlot();
 
 function resetPlot(): void {
   if (plot.xAxis === 'log'){
@@ -358,6 +373,9 @@ function resetPlot(): void {
 }
 
 
+document.getElementById('xAxis')!.onclick = event => changeAxis(<HTMLButtonElement>event.target);
+document.getElementById('xAxis')!.onclick = event => changeAxis(<HTMLButtonElement>event.target);
+
 function changeAxis(button: HTMLButtonElement): void {
   let id = button.id as 'xAxis' | 'yAxis';
   if (plot[id] === 'linear') {
@@ -371,13 +389,33 @@ function changeAxis(button: HTMLButtonElement): void {
 }
 
 
+// Do this by classes? Way more efficient, v e r y ugly!
+document.getElementById('smaVal')!.onkeydown = event => enterPress(event, 'sma');
+document.getElementById('ser-command')!.onkeydown = event => enterPress(event, 'send-command');
+document.getElementById('iso-hover-prox')!.onkeydown = event => enterPress(event, 'setting1');
+document.getElementById('custom-url')!.onkeydown = event => enterPress(event, 'setting2');
+document.getElementById('custom-delimiter')!.onkeydown = event => enterPress(event, 'setting3');
+document.getElementById('custom-file-adc')!.onkeydown = event => enterPress(event, 'setting4');
+document.getElementById('custom-baud')!.onkeydown = event => enterPress(event, 'setting5');
+document.getElementById('eol-char')!.onkeydown = event => enterPress(event, 'setting5-1');
+document.getElementById('ser-limit')!.onkeydown = event => enterPress(event, 'ser-limit-btn');
+document.getElementById('custom-ser-refresh')!.onkeydown = event => enterPress(event, 'setting6');
+document.getElementById('custom-ser-buffer')!.onkeydown = event => enterPress(event, 'setting7');
+document.getElementById('custom-ser-adc')!.onkeydown = event => enterPress(event, 'setting8');
+document.getElementById('peak-thres')!.onkeydown = event => enterPress(event, 'setting9');
+document.getElementById('peak-lag')!.onkeydown = event => enterPress(event, 'setting10');
+document.getElementById('peak-width')!.onkeydown = event => enterPress(event, 'setting11');
+document.getElementById('seek-width')!.onkeydown = event => enterPress(event, 'setting12');
+
 function enterPress(event: KeyboardEvent, id: string): void {
   if (event.key === 'Enter') { // ENTER key
-    const button = document.getElementById(id)!;
-    button.click();
+    const button = document.getElementById(id);
+    button?.click();
   }
 }
 
+
+document.getElementById('sma')!.onclick = event => toggleSma((<HTMLInputElement>event.target).checked);
 
 function toggleSma(value: boolean, thisValue: HTMLInputElement | null = null ): void {
   plot.sma = value;
@@ -387,6 +425,8 @@ function toggleSma(value: boolean, thisValue: HTMLInputElement | null = null ): 
   plot.updatePlot(spectrumData);
 }
 
+
+document.getElementById('smaVal')!.oninput = event => changeSma(<HTMLInputElement>event.target);
 
 function changeSma(input: HTMLInputElement): void {
   const parsedInput = parseInt(input.value);
@@ -417,7 +457,7 @@ function hoverEvent(data: any): void {
 }
 
 
-function unHover(data: any): void {
+function unHover(/*data: any*/): void {
   const hoverData = document.getElementById('hover-data')!;
   hoverData.innerText = 'None';
 
@@ -451,6 +491,8 @@ function clickEvent(data: any): void {
   }
 }
 
+
+document.getElementById('apply-cal')!.onclick = event => toggleCal((<HTMLInputElement>event.target).checked);
 
 function toggleCal(enabled: boolean): void {
   const button = document.getElementById('calibration-label')!;
@@ -511,6 +553,8 @@ function toggleCal(enabled: boolean): void {
 }
 
 
+document.getElementById('calibration-reset')!.onclick = () => resetCal();
+
 function resetCal(): void {
   for (const point in calClick) {
     calClick[<calType>point] = false;
@@ -519,10 +563,17 @@ function resetCal(): void {
 }
 
 
+// Pretty ugly, but will get changed when implementing the n-poly calibration
+document.getElementById('select-a')!.onclick = event => toggleCalClick('a', (<HTMLInputElement>event.target).checked);
+document.getElementById('select-b')!.onclick = event => toggleCalClick('b', (<HTMLInputElement>event.target).checked);
+document.getElementById('select-c')!.onclick = event => toggleCalClick('c', (<HTMLInputElement>event.target).checked);
+
 function toggleCalClick(point: calType, value: boolean): void {
   calClick[point] = value;
 }
 
+
+document.getElementById('plotType')!.onclick = event => changeType(<HTMLButtonElement>event.target);
 
 function changeType(button: HTMLButtonElement): void {
   if (plot.plotType === 'scatter') {
@@ -536,8 +587,10 @@ function changeType(button: HTMLButtonElement): void {
 }
 
 
+document.getElementById('cal-input')!.onchange = event => importCal(<HTMLInputElement>event.target);
+
 function importCal(input: HTMLInputElement): void {
-  if (input.files === null) { // File selection has been canceled
+  if (input.files === null || input.files.length === 0) { // File selection has been canceled
     return;
   }
 
@@ -597,11 +650,16 @@ function getDateString(): string {
 }
 
 
+document.getElementById('calibration-download')!.onclick = () => downloadCal();
+
 function downloadCal(): void {
   const filename = `calibration_${getDateString()}.json`;
   download(filename, JSON.stringify(plot.calibration));
 }
 
+
+document.getElementById('download-spectrum-btn')!.onclick = () => downloadData('spectrum', 'data');
+document.getElementById('download-bg-btn')!.onclick = () => downloadData('background', 'background');
 
 function downloadData(filename: string, data: dataType): void {
   filename += `_${getDateString()}.csv`;
@@ -631,6 +689,7 @@ function download(filename: string, text: string): void {
 function popupNotification(id: string): void {
   // Uses Bootstrap Toasts already defined in HTML
   const element = document.getElementById(id);
+  // @ts-ignore // Works just fine without TS complaining
   const toast = new bootstrap.Toast(element);
   toast.show();
 }
@@ -638,10 +697,13 @@ function popupNotification(id: string): void {
 
 function hideNotification(id: string): void {
   const element = document.getElementById(id);
+  // @ts-ignore // Works just fine without TS complaining
   const toast = new bootstrap.Toast(element);
   toast.hide();
 }
 
+
+document.getElementById('toggle-menu')!.onclick = () => loadIsotopes();
 
 let loadedIsos = false;
 
@@ -691,20 +753,29 @@ async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope 
         const cell2 = row.insertCell(1);
         const cell3 = row.insertCell(2);
 
-        cell2.addEventListener('click', event => {
+        cell1.onclick = () => {
+          plotIsotope(<HTMLInputElement>cell1.firstChild);
+        };
+        cell2.onclick = () => {
+          (<HTMLInputElement>cell1.firstChild).click();
+          /*
           try {
             (<HTMLInputElement>cell1.firstChild).click(); //evnt.target.parentNode.firstChild.firstChild.click();
           } catch(e) { // Catch press on <sup> element
             ; //evnt.target.parentNode.parentNode.firstChild.firstChild.click();
           }
-        });
-        cell3.addEventListener('click', event => {
+          */
+        };
+        cell3.onclick = () => {
+          (<HTMLInputElement>cell1.firstChild).click();
+          /*
           try {
             (<HTMLInputElement>cell1.firstChild).click(); //evnt.target.parentNode.firstChild.firstChild.click();
           } catch(e) { // Catch press on <sup> element
             ; //evnt.target.parentNode.parentNode.firstChild.firstChild.click();
           }
-        });
+          */
+        };
 
         cell2.style.cursor = 'pointer'; // change cursor pointer
         cell3.style.cursor = 'pointer';
@@ -714,7 +785,7 @@ async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope 
         const lowercaseName = dirtyName.replace(/[^a-z0-9 -]/gi, '').trim(); // Fixes security issue. Clean everything except for letters, numbers and minus. See GitHub: #2
         const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1) + '-' + index; // Capitalize Name and append index number
 
-        cell1.innerHTML = `<input class="form-check-input" id="${name}" type="checkbox" value="${energy}" onclick="plotIsotope(this)">`;
+        cell1.innerHTML = `<input class="form-check-input" id="${name}" type="checkbox" value="${energy}">`;
         cell3.innerHTML = `<label for="${name}">${energy.toFixed(2)}</label>`;
 
         const strArr = name.split('-');
@@ -737,6 +808,8 @@ async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope 
   return successFlag;
 }
 
+
+document.getElementById('reload-isos-btn')!.onclick = () => reloadIsotopes();
 
 function reloadIsotopes(): void {
   //loadedIsos = false;
@@ -763,6 +836,8 @@ function seekClosest(value: number): {energy: number, name: string} | {energy: u
   }
 }
 
+
+document.getElementById('iso-hover')!.onclick = () => toggleIsoHover();
 
 let prevIso: isotopeList = {};
 
@@ -809,6 +884,8 @@ function plotIsotope(checkbox: HTMLInputElement): void {
 }
 
 
+document.getElementById('check-all-isos')!.onclick = (event) => selectAll(<HTMLInputElement>event.target);
+
 function selectAll(selectBox: HTMLInputElement): void {
   // Bad performance because of the updatePlot with that many lines!
   const tableElement = <HTMLTableElement>document.getElementById('table'); //selectBox.closest('table');
@@ -832,6 +909,8 @@ function selectAll(selectBox: HTMLInputElement): void {
   plot.updatePlot(spectrumData);
 }
 
+
+document.getElementById('peak-finder-btn')!.onclick = event => findPeaks(<HTMLButtonElement>event.target);
 
 async function findPeaks(button: HTMLButtonElement): Promise<void> {
   if (plot.peakConfig.enabled) {
@@ -979,6 +1058,25 @@ function loadSettingsStorage(): void {
   }
 }
 
+
+// Do this by classes? Way more efficient, v e r y ugly!
+document.getElementById('edit-plot')!.onclick = event => changeSettings('editMode', <HTMLInputElement>event.target);
+document.getElementById('setting1')!.onclick = () => changeSettings('maxIsoDist', <HTMLInputElement>document.getElementById('iso-hover-prox'));
+document.getElementById('setting2')!.onclick = () => changeSettings('customURL', <HTMLInputElement>document.getElementById('custom-url'));
+document.getElementById('download-format')!.onchange = event => changeSettings('plotDownload', <HTMLSelectElement>event.target);
+document.getElementById('setting3')!.onclick = () => changeSettings('fileDelimiter', <HTMLInputElement>document.getElementById('custom-delimiter'));
+document.getElementById('setting4')!.onclick = () => changeSettings('fileChannels', <HTMLInputElement>document.getElementById('custom-file-adc'));
+document.getElementById('setting5')!.onclick = () => changeSettings('baudRate', <HTMLInputElement>document.getElementById('custom-baud'));
+document.getElementById('setting5-1')!.onclick = () => changeSettings('eolChar', <HTMLInputElement>document.getElementById('eol-char'));
+document.getElementById('toggle-time-limit')!.onclick = event => changeSettings('timeLimitBool', <HTMLInputElement>event.target);
+document.getElementById('ser-limit-btn')!.onclick = () => changeSettings('timeLimit', <HTMLInputElement>document.getElementById('ser-limit'));
+document.getElementById('setting6')!.onclick = () => changeSettings('plotRefreshRate', <HTMLInputElement>document.getElementById('custom-ser-refresh'));
+document.getElementById('setting7')!.onclick = () => changeSettings('serBufferSize', <HTMLInputElement>document.getElementById('custom-ser-buffer'));
+document.getElementById('setting8')!.onclick = () => changeSettings('serChannels', <HTMLInputElement>document.getElementById('custom-ser-adc'));
+document.getElementById('setting9')!.onclick = () => changeSettings('peakThres', <HTMLInputElement>document.getElementById('peak-thres'));
+document.getElementById('setting10')!.onclick = () => changeSettings('peakLag', <HTMLInputElement>document.getElementById('peak-lag'));
+document.getElementById('setting11')!.onclick = () => changeSettings('peakWidth', <HTMLInputElement>document.getElementById('peak-width'));
+document.getElementById('setting12')!.onclick = () => changeSettings('seekWidth', <HTMLInputElement>document.getElementById('seek-width'));
 
 function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElement): void {
   if (!element.checkValidity()) {
@@ -1166,6 +1264,8 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
 }
 
 
+document.getElementById('reset-gamma-mca')!.onclick = () => resetMCA();
+
 function resetMCA(): void {
   if (localStorageAvailable) {
     localStorage.clear();
@@ -1179,7 +1279,7 @@ function resetMCA(): void {
 =========================================
 */
 
-function serialConnect(event: Event) {
+function serialConnect(/*event: Event*/) {
   listSerial();
   popupNotification('serial-connect');
 };
@@ -1201,6 +1301,8 @@ function serialDisconnect(event: Event): void {
   popupNotification('serial-disconnect');
 };
 
+
+document.getElementById('serial-list-btn')!.onclick = () => listSerial();
 
 async function listSerial(): Promise<void> {
   const portSelector = <HTMLSelectElement>document.getElementById('port-selector');
@@ -1239,6 +1341,8 @@ async function listSerial(): Promise<void> {
 }
 
 
+document.getElementById('serial-add-device')!.onclick = () => requestSerial();
+
 async function requestSerial(): Promise<void> {
   try {
     const port = await navigator.serial.requestPort();
@@ -1256,6 +1360,8 @@ async function requestSerial(): Promise<void> {
   }
 }
 
+
+document.getElementById('plot-cps')!.onclick = event => toggleCps(<HTMLButtonElement>event.target);
 
 function toggleCps(button: HTMLButtonElement, off = false): void {
   if (off) { // Override
@@ -1317,6 +1423,10 @@ async function readUntilClosed(): Promise<void> {
 }
 
 
+document.getElementById('resume-button')!.onclick = () => startRecord(true);
+document.getElementById('record-spectrum-btn')!.onclick = () => startRecord(false, 'data');
+document.getElementById('record-bg-btn')!.onclick = () => startRecord(false, 'background');
+
 let closed: Promise<void>;
 let firstLoad = false;
 
@@ -1365,6 +1475,8 @@ async function startRecord(pause = false, type = <dataType>recordingType): Promi
 }
 
 
+document.getElementById('send-command')!.onclick = () => sendSerial((<HTMLInputElement>document.getElementById('ser-command')).value);
+
 async function sendSerial(command: string): Promise<void> {
   const wasReading = keepReading;
 
@@ -1411,6 +1523,9 @@ async function sendSerial(command: string): Promise<void> {
   }
 }
 
+
+document.getElementById('pause-button')!.onclick = () => disconnectPort();
+document.getElementById('stop-button')!.onclick = () => disconnectPort(true);
 
 async function disconnectPort(stop = false): Promise<void> {
   const nowTime = new Date();
