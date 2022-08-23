@@ -19,7 +19,6 @@
     - Support XML combi-file export
 
     - Remove remaining explicit anys (Typescript)
-    - Remove unclean ! operators (Typescript)
 
     - Improve Mobile Layout
     - Add file handling
@@ -338,7 +337,7 @@ function removeFile(id: dataType): void {
 
 function bindPlotEvents(): void {
   const myPlot = <any>document.getElementById(plot.divId); // Using Plotly on functions
-  myPlot.on('plotly_hover', hoverEvent)!;
+  myPlot.on('plotly_hover', hoverEvent);
   myPlot.on('plotly_unhover', unHover);
   myPlot.on('plotly_click', clickEvent);
 }
