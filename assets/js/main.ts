@@ -19,11 +19,7 @@
     - Support XML file calibration import
 
     - Improve Mobile Layout
-
     - Support XML combi-file export
-
-    - Check remaining inline JS in index.html
-    - Smaller Loading screen
 
   Known Performance Issues:
     - Isotope hightlighting
