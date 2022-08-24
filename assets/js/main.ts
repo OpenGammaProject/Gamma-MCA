@@ -19,7 +19,6 @@
     - Support XML file calibration import
 
     - Improve Mobile Layout
-    - Show screen size warning on mobile only once
 
     - Support XML combi-file export
 
@@ -202,7 +201,7 @@ window.onbeforeunload = (/*event*/) => {
 // Needed For Responsiveness! DO NOT REMOVE OR THE LAYOUT GOES TO SHIT!!!
 document.body.onresize = () => {
   plot.updatePlot(spectrumData);
-  sizeCheck();
+  //sizeCheck(); // Do not spam the size warning notification
 };
 
 

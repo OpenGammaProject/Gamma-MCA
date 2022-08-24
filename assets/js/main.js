@@ -129,7 +129,6 @@ window.onbeforeunload = () => {
 };
 document.body.onresize = () => {
     plot.updatePlot(spectrumData);
-    sizeCheck();
 };
 window.matchMedia('(display-mode: standalone)').addEventListener('change', () => {
     window.location.reload();
