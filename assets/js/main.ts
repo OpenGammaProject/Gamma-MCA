@@ -7,22 +7,24 @@
   ===============================
 
   Possible Future Improvements:
+    - (?) Hotkey to open/close settings
+    - (?) Add desktop notifications
+
     - Sorting isotope list
     - Social media share function
     - FWHM calculation for peaks
-    - (?) Serial console read capability
-    - (?) Hotkey to open/close settings
-    - (?) Add desktop notifications
+    - Serial console read capability
     - !!! Weird comb-structure with quadratic calibrations
     - !!! Check Calibration Regression
     - Support XML file calibration import
-    - Support XML combi-file export
-
-    - Remove remaining explicit anys (Typescript)
 
     - Improve Mobile Layout
-    - Add file handling
     - Show screen size warning on mobile only once
+
+    - Support XML combi-file export
+
+    - Check remaining inline JS in index.html
+    - Smaller Loading screen
 
   Known Performance Issues:
     - Isotope hightlighting
@@ -141,6 +143,26 @@ document.body.onload = async function(): Promise<void> {
     }
   }
 
+  if ('launchQueue' in window && 'LaunchParams' in window) { // File Handling API
+    (window as any).launchQueue.setConsumer(
+      async (launchParams: { files: any[] }) => {
+        if (!launchParams.files.length) {
+          return;
+        }
+        const fileHandle = launchParams.files[0];
+        const file: File = await fileHandle.getFile();
+
+        const fileEnding = file.name.split('.')[1].toLowerCase();
+        const spectrumEndings = ['csv', 'tka', 'xml', 'txt'];
+        if (spectrumEndings.includes(fileEnding)) {
+          getFileData(file);
+        } else if (fileEnding === 'json') {
+          importCal(file);
+        }
+        console.warn('File could not be imported!');
+    });
+  }
+
   plot.resetPlot(spectrumData);
   bindPlotEvents(); // Bind click and hover events provided by plotly
 
@@ -244,15 +266,18 @@ document.onkeydown = async function(event) {
 };
 */
 
-document.getElementById('data')!.onchange = event => getFileData(<HTMLInputElement>event.target);
-document.getElementById('background')!.onchange = event => getFileData(<HTMLInputElement>event.target, true);
+document.getElementById('data')!.onchange = event => importFile(<HTMLInputElement>event.target);
+document.getElementById('background')!.onchange = event => importFile(<HTMLInputElement>event.target, true);
 
-
-function getFileData(input: HTMLInputElement, background = false): void { // Gets called when a file has been selected.
+function importFile(input: HTMLInputElement, background = false): void {
   if (input.files === null || input.files.length === 0) { // File selection has been canceled
     return;
   }
-  const file = input.files[0];
+  getFileData(input.files[0], background);
+}
+
+
+function getFileData(file: File, background = false): void { // Gets called when a file has been selected.
   let reader = new FileReader();
 
   const fileEnding = file.name.split('.')[1];
@@ -586,14 +611,17 @@ function changeType(button: HTMLButtonElement): void {
 }
 
 
-document.getElementById('cal-input')!.onchange = event => importCal(<HTMLInputElement>event.target);
+document.getElementById('cal-input')!.onchange = event => importCalButton(<HTMLInputElement>event.target);
 
-function importCal(input: HTMLInputElement): void {
+function importCalButton(input: HTMLInputElement): void {
   if (input.files === null || input.files.length === 0) { // File selection has been canceled
     return;
   }
+  importCal(input.files[0]);
+}
 
-  const file = input.files[0];
+
+function importCal(file: File): void {
   let reader = new FileReader();
 
   reader.readAsText(file);

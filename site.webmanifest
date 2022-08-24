@@ -78,5 +78,63 @@
       "platform": "wide",
       "label": "Opened settings panel with a custom isotope list, settings menu and info tab"
     }
+  ],
+  "file_handlers": [
+    {
+      "action": "/",
+      "accept": {
+        "text/csv": [".csv"]
+      },
+      "icons": [
+        {
+          "src": "/assets/files/csv.png",
+          "sizes": "256x256",
+          "type": "image/png"
+        }
+      ],
+      "launch_type": "multiple-clients"
+    },
+    {
+      "action": "/",
+      "accept": {
+        "text/json": [".json"]
+      },
+      "icons": [
+        {
+          "src": "/assets/files/json.png",
+          "sizes": "256x256",
+          "type": "image/png"
+        }
+      ],
+      "launch_type": "multiple-clients"
+    },
+    {
+      "action": "/",
+      "accept": {
+        "text/csv": [".txt"]
+      },
+      "icons": [
+        {
+          "src": "/assets/files/txt.png",
+          "sizes": "256x256",
+          "type": "image/png"
+        }
+      ],
+      "launch_type": "multiple-clients"
+    },
+    {
+      "action": "/",
+      "accept": {
+        "text/xml": [".xml"]
+      },
+      "icons": [
+        {
+          "src": "/assets/files/xml.png",
+          "sizes": "256x256",
+          "type": "image/png"
+        }
+      ],
+      "launch_type": "multiple-clients"
+    }
   ]
 }

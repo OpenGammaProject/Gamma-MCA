@@ -82,6 +82,24 @@ document.body.onload = async function () {
             element.disabled = true;
         }
     }
+    if ('launchQueue' in window && 'LaunchParams' in window) {
+        window.launchQueue.setConsumer(async (launchParams) => {
+            if (!launchParams.files.length) {
+                return;
+            }
+            const fileHandle = launchParams.files[0];
+            const file = await fileHandle.getFile();
+            const fileEnding = file.name.split('.')[1].toLowerCase();
+            const spectrumEndings = ['csv', 'tka', 'xml', 'txt'];
+            if (spectrumEndings.includes(fileEnding)) {
+                getFileData(file);
+            }
+            else if (fileEnding === 'json') {
+                importCal(file);
+            }
+            console.warn('File could not be imported!');
+        });
+    }
     plot.resetPlot(spectrumData);
     bindPlotEvents();
     document.getElementById('version-tag').innerText += ` ${APP_VERSION}.`;
@@ -140,13 +158,15 @@ window.addEventListener('onappinstalled', () => {
     hideNotification('pwa-installer');
     document.getElementById('manual-install').className += 'visually-hidden';
 });
-document.getElementById('data').onchange = event => getFileData(event.target);
-document.getElementById('background').onchange = event => getFileData(event.target, true);
-function getFileData(input, background = false) {
+document.getElementById('data').onchange = event => importFile(event.target);
+document.getElementById('background').onchange = event => importFile(event.target, true);
+function importFile(input, background = false) {
     if (input.files === null || input.files.length === 0) {
         return;
     }
-    const file = input.files[0];
+    getFileData(input.files[0], background);
+}
+function getFileData(file, background = false) {
     let reader = new FileReader();
     const fileEnding = file.name.split('.')[1];
     reader.readAsText(file);
@@ -409,12 +429,14 @@ function changeType(button) {
     }
     plot.updatePlot(spectrumData);
 }
-document.getElementById('cal-input').onchange = event => importCal(event.target);
-function importCal(input) {
+document.getElementById('cal-input').onchange = event => importCalButton(event.target);
+function importCalButton(input) {
     if (input.files === null || input.files.length === 0) {
         return;
     }
-    const file = input.files[0];
+    importCal(input.files[0]);
+}
+function importCal(file) {
     let reader = new FileReader();
     reader.readAsText(file);
     reader.onload = () => {
