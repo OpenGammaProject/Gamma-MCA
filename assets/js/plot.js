@@ -1,6 +1,7 @@
 import './external/plotly-basic.min.js';
 ;
 ;
+;
 export class SpectrumPlot {
     divId;
     xAxis = 'linear';
@@ -12,12 +13,17 @@ export class SpectrumPlot {
     calibration = {
         enabled: false,
         points: 0,
-        aFrom: 0,
-        aTo: 0,
-        bFrom: 0,
-        bTo: 0,
-        cFrom: 0,
-        cTo: 0,
+        coeff: {
+            aFrom: 0,
+            aTo: 0,
+            bFrom: 0,
+            bTo: 0,
+            cFrom: 0,
+            cTo: 0,
+            c1: 0,
+            c2: 0,
+            c3: 0,
+        },
     };
     cps = false;
     shapes = [];
@@ -101,27 +107,39 @@ export class SpectrumPlot {
     }
     getCalAxis(len) {
         let calArray = [];
+        const aF = this.calibration.coeff.aFrom;
+        const bF = this.calibration.coeff.bFrom;
+        const cF = this.calibration.coeff.cFrom;
+        const aT = this.calibration.coeff.aTo;
+        const bT = this.calibration.coeff.bTo;
+        const cT = this.calibration.coeff.cTo;
         if (this.calibration.points === 3) {
-            const denom = (this.calibration.aFrom - this.calibration.bFrom) * (this.calibration.aFrom - this.calibration.cFrom) * (this.calibration.bFrom - this.calibration.cFrom);
-            const k = (Math.pow(this.calibration.cFrom, 2) * (this.calibration.aTo - this.calibration.bTo) + Math.pow(this.calibration.aFrom, 2) * (this.calibration.bTo - this.calibration.cTo) + Math.pow(this.calibration.bFrom, 2) * (this.calibration.cTo - this.calibration.aTo)) / denom;
-            const d = (this.calibration.bFrom * (this.calibration.bFrom - this.calibration.cFrom) * this.calibration.cFrom * this.calibration.aTo + this.calibration.aFrom * this.calibration.cFrom * (this.calibration.cFrom - this.calibration.aFrom) * this.calibration.bTo + this.calibration.aFrom * (this.calibration.aFrom - this.calibration.bFrom) * this.calibration.bFrom * this.calibration.cTo) / denom;
-            const a = (this.calibration.cFrom * (this.calibration.bTo - this.calibration.aTo) + this.calibration.bFrom * (this.calibration.aTo - this.calibration.cTo) + this.calibration.aFrom * (this.calibration.cTo - this.calibration.bTo)) / denom;
+            const denom = (aF - bF) * (aF - cF) * (bF - cF);
+            const k = (Math.pow(cF, 2) * (aT - bT) + Math.pow(aF, 2) * (bT - cT) + Math.pow(bF, 2) * (cT - aT)) / denom;
+            const d = (bF * (bF - cF) * cF * aT + aF * cF * (cF - aF) * bT + aF * (aF - bF) * bF * cT) / denom;
+            const a = (cF * (bT - aT) + bF * (aT - cT) + aF * (cT - bT)) / denom;
             for (let i = 0; i < len; i++) {
                 calArray.push(parseFloat((a * Math.pow(i, 2) + k * i + d).toFixed(2)));
             }
             console.log('c1', a);
             console.log('c2', k);
             console.log('c3', d);
+            this.calibration.coeff.c1 = a;
+            this.calibration.coeff.c2 = k;
+            this.calibration.coeff.c3 = d;
         }
         else {
-            const k = (this.calibration.aTo - this.calibration.bTo) / (this.calibration.aFrom - this.calibration.bFrom);
-            const d = this.calibration.aTo - k * this.calibration.aFrom;
+            const k = (aT - bT) / (aF - bF);
+            const d = aT - k * aF;
             for (let i = 0; i < len; i++) {
                 calArray.push(parseFloat((k * i + d).toFixed(2)));
             }
             console.log('c1', 0);
             console.log('c2', k);
             console.log('c3', d);
+            this.calibration.coeff.c1 = 0;
+            this.calibration.coeff.c2 = k;
+            this.calibration.coeff.c3 = d;
         }
         return calArray;
     }
