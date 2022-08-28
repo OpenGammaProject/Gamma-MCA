@@ -8,6 +8,8 @@
 
 */
 
+import { coeffObj } from './plot.js';
+
 export class RawData {
   valueIndex: number;
   delimiter: string;
@@ -63,32 +65,51 @@ export class RawData {
     return this.histConverter(cleanData);
   }
 
-  xmlToArray(data: string): {espectrum: number[], bgspectrum: number[]} {
+  xmlToArray(data: string): {espectrum: number[], bgspectrum: number[], coeff: coeffObj} {
+    const coeff: coeffObj = {
+      c1: 0,
+      c2: 0,
+      c3: 0
+    };
+
     try {
       const parser = new DOMParser();
       let xmlDoc = parser.parseFromString(data, 'text/xml');
       const espec = xmlDoc.getElementsByTagName('EnergySpectrum')[0].getElementsByTagName('DataPoint');
       const bgspec = xmlDoc.getElementsByTagName('BackgroundEnergySpectrum')[0].getElementsByTagName('DataPoint');
+      const calCoeffs = xmlDoc.getElementsByTagName('EnergySpectrum')[0].getElementsByTagName('Coefficient');
 
       const especArray = Array.from(espec);
       const bgspecArray = Array.from(bgspec);
+      const calCoeffsArray = Array.from(calCoeffs);
 
       const espectrum = this.histConverter(especArray.map(item => {
         if (item.textContent === null) {
           return -1;
         }
-        return parseInt(item.textContent);
+        return parseFloat(item.textContent);
       }));
       const bgspectrum = this.histConverter(bgspecArray.map(item => {
         if (item.textContent === null) {
           return -1;
         }
-        return parseInt(item.textContent);
+        return parseFloat(item.textContent);
       }));
 
-      return {espectrum, bgspectrum};
+      const coeffNumArray = calCoeffsArray.map(item => {
+        if (item.textContent === null) {
+          return 0;
+        }
+        return parseFloat(item.textContent);
+      });
+
+      for (const i in coeffNumArray) {
+        coeff['c' + (parseInt(i) + 1).toString()] = coeffNumArray[2 - parseInt(i)];
+      }
+
+      return {espectrum, bgspectrum, coeff};
     } catch (e) {
-      return {espectrum: [], bgspectrum: []};
+      return {espectrum: [], bgspectrum: [], coeff};
     }
   }
 }

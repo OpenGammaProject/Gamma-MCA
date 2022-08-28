@@ -157,6 +157,8 @@ window.addEventListener('onappinstalled', () => {
     hideNotification('pwa-installer');
     document.getElementById('manual-install').className += 'visually-hidden';
 });
+document.getElementById('data').onclick = event => { event.target.value = ''; };
+document.getElementById('background').onclick = event => { event.target.value = ''; };
 document.getElementById('data').onchange = event => importFile(event.target);
 document.getElementById('background').onchange = event => importFile(event.target, true);
 function importFile(input, background = false) {
@@ -173,7 +175,7 @@ function getFileData(file, background = false) {
         const result = reader.result.trim();
         if (fileEnding.toLowerCase() === 'xml') {
             if (window.DOMParser) {
-                const { espectrum, bgspectrum } = raw.xmlToArray(result);
+                const { espectrum, bgspectrum, coeff } = raw.xmlToArray(result);
                 if (espectrum === undefined && bgspectrum === undefined) {
                     popupNotification('file-error');
                 }
@@ -182,6 +184,16 @@ function getFileData(file, background = false) {
                 }
                 if (bgspectrum !== undefined) {
                     spectrumData.background = bgspectrum;
+                }
+                const importedCount = Object.values(coeff).filter(value => value !== 0).length;
+                if (importedCount >= 2) {
+                    plot.calibration.coeff = coeff;
+                    plot.calibration.imported = true;
+                    for (const element of document.getElementsByClassName('cal-setting')) {
+                        const changeType = element;
+                        changeType.disabled = true;
+                    }
+                    addImportLabel();
                 }
             }
             else {
@@ -194,8 +206,18 @@ function getFileData(file, background = false) {
         else {
             spectrumData.data = raw.csvToArray(result);
         }
-        document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts(spectrumData.data).toString();
-        document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts(spectrumData.background).toString();
+        const sCounts = spectrumData.getTotalCounts(spectrumData.data);
+        const bgCounts = spectrumData.getTotalCounts(spectrumData.background);
+        document.getElementById('total-spec-cts').innerText = sCounts.toString();
+        document.getElementById('total-bg-cts').innerText = bgCounts.toString();
+        const dataLabel = document.getElementById('data-icon');
+        const bgLabel = document.getElementById('background-icon');
+        if (sCounts > 0) {
+            dataLabel.className = dataLabel.className.replaceAll(' visually-hidden', '');
+        }
+        if (bgCounts > 0) {
+            bgLabel.className = bgLabel.className.replaceAll(' visually-hidden', '');
+        }
         if (!(spectrumData.background.length === spectrumData.data.length || spectrumData.data.length === 0 || spectrumData.background.length === 0)) {
             popupNotification('data-error');
             if (background) {
@@ -231,7 +253,16 @@ function removeFile(id) {
     plot.resetPlot(spectrumData);
     document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts(spectrumData.data).toString();
     document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts(spectrumData.background).toString();
+    const dataLabel = document.getElementById(id + '-icon');
+    dataLabel.className += ' visually-hidden';
     bindPlotEvents();
+}
+const importString = ': imported';
+function addImportLabel() {
+    const titleElement = document.getElementById('calibration-title');
+    if (!titleElement.innerText.includes(importString)) {
+        titleElement.innerText += importString;
+    }
 }
 function bindPlotEvents() {
     const myPlot = document.getElementById(plot.divId);
@@ -364,42 +395,41 @@ function toggleCal(enabled) {
         button.innerHTML = '<i class="fa-solid fa-check"></i> Calibrate';
     }
     if (enabled) {
-        let readoutArray = [
-            [document.getElementById('adc-a').value, document.getElementById('cal-a').value],
-            [document.getElementById('adc-b').value, document.getElementById('cal-b').value],
-            [document.getElementById('adc-c').value, document.getElementById('cal-c').value]
-        ];
-        let invalid = 0;
-        let validArray = [];
-        for (const pair of readoutArray) {
-            const float1 = parseFloat(pair[0]);
-            const float2 = parseFloat(pair[1]);
-            if (isNaN(float1) || isNaN(float2)) {
-                invalid += 1;
+        if (!plot.calibration.imported) {
+            let readoutArray = [
+                [document.getElementById('adc-a').value, document.getElementById('cal-a').value],
+                [document.getElementById('adc-b').value, document.getElementById('cal-b').value],
+                [document.getElementById('adc-c').value, document.getElementById('cal-c').value]
+            ];
+            let invalid = 0;
+            let validArray = [];
+            for (const pair of readoutArray) {
+                const float1 = parseFloat(pair[0]);
+                const float2 = parseFloat(pair[1]);
+                if (isNaN(float1) || isNaN(float2)) {
+                    invalid += 1;
+                }
+                else {
+                    validArray.push([float1, float2]);
+                }
+                if (invalid > 1) {
+                    popupNotification('cal-error');
+                    return;
+                }
             }
-            else {
-                validArray.push([float1, float2]);
+            if (validArray.length === 2) {
+                validArray.push([-1, -1]);
             }
-            if (invalid > 1) {
-                popupNotification('cal-error');
-                return;
-            }
+            plot.calibration.points.aFrom = validArray[0][0];
+            plot.calibration.points.bFrom = validArray[1][0];
+            plot.calibration.points.cFrom = validArray[2][0];
+            plot.calibration.points.aTo = validArray[0][1];
+            plot.calibration.points.bTo = validArray[1][1];
+            plot.calibration.points.cTo = validArray[2][1];
+            plot.computeCoefficients();
         }
-        plot.calibration.enabled = enabled;
-        plot.calibration.points = validArray.length;
-        if (validArray.length === 2) {
-            validArray.push([0, 0]);
-        }
-        plot.calibration.aFrom = validArray[0][0];
-        plot.calibration.bFrom = validArray[1][0];
-        plot.calibration.cFrom = validArray[2][0];
-        plot.calibration.aTo = validArray[0][1];
-        plot.calibration.bTo = validArray[1][1];
-        plot.calibration.cTo = validArray[2][1];
     }
-    else {
-        plot.calibration.enabled = enabled;
-    }
+    plot.calibration.enabled = enabled;
     plot.plotData(spectrumData, false);
     bindPlotEvents();
 }
@@ -408,6 +438,13 @@ function resetCal() {
     for (const point in calClick) {
         calClick[point] = false;
     }
+    for (const element of document.getElementsByClassName('cal-setting')) {
+        const changeType = element;
+        changeType.disabled = false;
+    }
+    const titleElement = document.getElementById('calibration-title');
+    titleElement.innerText = titleElement.innerText.replaceAll(importString, '');
+    plot.clearCalibration();
     toggleCal(false);
 }
 document.getElementById('select-a').onclick = event => toggleCalClick('a', event.target.checked);
@@ -450,13 +487,35 @@ function importCal(file) {
                 document.getElementById('adc-c'),
                 document.getElementById('cal-c')
             ];
-            const inputArr = ['aFrom', 'aTo', 'bFrom', 'bTo', 'cFrom', 'cTo'];
-            for (const index in inputArr) {
-                readoutArray[index].value = obj[inputArr[index]];
+            if (obj.imported) {
+                for (const element of document.getElementsByClassName('cal-setting')) {
+                    const changeType = element;
+                    changeType.disabled = true;
+                }
+                addImportLabel();
+                plot.calibration.coeff = obj.coeff;
+                plot.calibration.imported = true;
             }
-            oldCalVals.a = readoutArray[0].value;
-            oldCalVals.b = readoutArray[2].value;
-            oldCalVals.c = readoutArray[4].value;
+            else {
+                const inputArr = ['aFrom', 'aTo', 'bFrom', 'bTo', 'cFrom', 'cTo'];
+                for (const index in inputArr) {
+                    if (obj.points === undefined || typeof obj.points === 'number') {
+                        readoutArray[index].value = obj[inputArr[index]];
+                    }
+                    else {
+                        const value = obj.points[inputArr[index]];
+                        if (value === -1) {
+                            readoutArray[index].value = '';
+                        }
+                        else {
+                            readoutArray[index].value = obj.points[inputArr[index]];
+                        }
+                    }
+                }
+                oldCalVals.a = readoutArray[0].value;
+                oldCalVals.b = readoutArray[2].value;
+                oldCalVals.c = readoutArray[4].value;
+            }
         }
         catch (e) {
             console.error('Calibration Import Error:', e);
@@ -650,8 +709,7 @@ function selectAll(selectBox) {
         }
     }
     if (!selectBox.checked) {
-        plot.shapes = [];
-        plot.annotations = [];
+        plot.clearShapeAnno();
     }
     plot.updatePlot(spectrumData);
 }

@@ -80,7 +80,7 @@
           <h2 class="fs-4">File Import</h2>
 
           <p>
-            <label for="data"><strong>Spectrum File:</strong></label>
+            <label id="data-label" for="data"><strong>Spectrum File:</strong> <i id="data-icon" class="fa-solid fa-circle-check align-baseline visually-hidden"></i></label>
           </p>
 
           <div class="input-group input-group-sm">
@@ -91,7 +91,7 @@
           <hr>
 
           <p>
-            <label for="background"><strong>Background File:</strong></label>
+            <label id="background-label" for="background"><strong>Background File:</strong> <i id="background-icon" class="fa-solid fa-circle-check align-baseline visually-hidden"></i></label>
           </p>
 
           <div class="input-group input-group-sm">
@@ -205,7 +205,7 @@
 
         <div class="col-md pt-1">
 
-          <h2 class="fs-4">Calibration</h2>
+          <h2 id="calibration-title" class="fs-4">Calibration</h2>
 
           <form>
 
@@ -214,15 +214,15 @@
               <div class="hstack gap-2">
                 <div class="input-group input-group-sm">
                   <label class="input-group-text" for="adc-a">A:</label>
-                  <input class="form-control form-control-sm" type="number" id="adc-a" min="0" value="" title="Input ADC Channel A" placeholder="Data Point A">
-                  <input type="checkbox" class="btn-check" id="select-a">
+                  <input class="form-control form-control-sm cal-setting" type="number" id="adc-a" min="0" value="" title="Input ADC Channel A" placeholder="Data Point A">
+                  <input type="checkbox" class="btn-check cal-setting" id="select-a">
                   <label class="btn btn-outline-primary" for="select-a" title="Select from plot"> <i class="fa-solid fa-arrow-pointer"></i> </label>
                 </div>
 
                 <span> <i class="fa-solid fa-angles-right"></i> </span>
 
                 <div class="input-group input-group-sm">
-                  <input class="form-control form-control-sm" type="number" id="cal-a" min="1" value="" title="Energy for channel A" placeholder="Target Energy A">
+                  <input class="form-control form-control-sm cal-setting" type="number" id="cal-a" min="1" value="" title="Energy for channel A" placeholder="Target Energy A">
                   <label class="input-group-text" for="cal-a">keV</label>
                 </div>
               </div>
@@ -230,15 +230,15 @@
               <div class="hstack gap-2">
                 <div class="input-group input-group-sm">
                   <label class="input-group-text" for="adc-b">B:</label>
-                  <input class="form-control form-control-sm" type="number" id="adc-b" min="0" value="" title="Input ADC Channel B" placeholder="Data Point B">
-                  <input type="checkbox" class="btn-check" id="select-b">
+                  <input class="form-control form-control-sm cal-setting" type="number" id="adc-b" min="0" value="" title="Input ADC Channel B" placeholder="Data Point B">
+                  <input type="checkbox" class="btn-check cal-setting" id="select-b">
                   <label class="btn btn-outline-primary" for="select-b" title="Select from plot"> <i class="fa-solid fa-arrow-pointer"></i> </label>
                 </div>
 
                 <span> <i class="fa-solid fa-angles-right"></i> </span>
 
                 <div class="input-group input-group-sm">
-                  <input class="form-control form-control-sm" type="number" id="cal-b" min="1" value="" title="Energy for channel B" placeholder="Target Energy B">
+                  <input class="form-control form-control-sm cal-setting" type="number" id="cal-b" min="1" value="" title="Energy for channel B" placeholder="Target Energy B">
                   <label class="input-group-text" for="cal-b">keV</label>
                 </div>
               </div>
@@ -246,15 +246,15 @@
               <div class="hstack gap-2">
                 <div class="input-group input-group-sm">
                   <label class="input-group-text" for="adc-c">C:</label>
-                  <input class="form-control form-control-sm" type="number" id="adc-c" min="0" value="" title="Input ADC Channel C" placeholder="Data Point C">
-                  <input type="checkbox" class="btn-check" id="select-c">
+                  <input class="form-control form-control-sm cal-setting" type="number" id="adc-c" min="0" value="" title="Input ADC Channel C" placeholder="Data Point C">
+                  <input type="checkbox" class="btn-check cal-setting" id="select-c">
                   <label class="btn btn-outline-primary" for="select-c" title="Select from plot"> <i class="fa-solid fa-arrow-pointer"></i> </label>
                 </div>
 
                 <span> <i class="fa-solid fa-angles-right"></i> </span>
 
                 <div class="input-group input-group-sm">
-                  <input class="form-control form-control-sm" type="number" id="cal-c" min="1" value="" title="Energy for channel C" placeholder="Target Energy C">
+                  <input class="form-control form-control-sm cal-setting" type="number" id="cal-c" min="1" value="" title="Energy for channel C" placeholder="Target Energy C">
                   <label class="input-group-text" for="cal-c">keV</label>
                 </div>
               </div>

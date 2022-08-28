@@ -51,16 +51,21 @@ interface anno {
   };
 };
 
-export interface coeff {
+interface coeffPoints {
   aFrom: number,
   aTo: number,
   bFrom: number,
   bTo: number,
   cFrom: number,
   cTo: number,
+  [index: string]: number
+};
+
+export interface coeffObj {
   c1: number,
   c2: number,
   c3: number,
+  [index: string]: number
 };
 
 export class SpectrumPlot {
@@ -73,22 +78,24 @@ export class SpectrumPlot {
   smaLength = 8;
   calibration = {
     enabled: false,
-    points: 0,
-    coeff: <coeff>{
+    imported: false,
+    points: <coeffPoints>{
       aFrom: 0,
       aTo: 0,
       bFrom: 0,
       bTo: 0,
       cFrom: 0,
       cTo: 0,
+    },
+    coeff: <coeffObj>{
       c1: 0,
       c2: 0,
       c3: 0,
     },
   };
   cps = false;
-  shapes: shape[] = [];
-  annotations: anno[] = [];
+  private shapes: shape[] = [];
+  private annotations: anno[] = [];
   editableMode = false;
   isoList: isotopeList = {};
   peakConfig = {
@@ -180,29 +187,42 @@ export class SpectrumPlot {
     return xArray;
   }
   /*
-    Get the calibrated x-axis using the values in this.calibration
+    Delete calibration points and calibration coefficients
   */
-  getCalAxis(len: number): number[] {
-    let calArray: number[] = [];
+  clearCalibration(): void {
+    this.calibration.points = <coeffPoints>{
+      aFrom: 0,
+      aTo: 0,
+      bFrom: 0,
+      bTo: 0,
+      cFrom: 0,
+      cTo: 0,
+    };
+    this.calibration.coeff = <coeffObj>{
+      c1: 0,
+      c2: 0,
+      c3: 0,
+    };
+    this.calibration.imported = false;
+  }
+  /*
+    Compute the coefficients used for calibration
+  */
+  computeCoefficients(): void {
+    const aF = this.calibration.points.aFrom;
+    const bF = this.calibration.points.bFrom;
+    const cF = this.calibration.points.cFrom;
+    const aT = this.calibration.points.aTo;
+    const bT = this.calibration.points.bTo;
+    const cT = this.calibration.points.cTo;
 
-    const aF = this.calibration.coeff.aFrom;
-    const bF = this.calibration.coeff.bFrom;
-    const cF = this.calibration.coeff.cFrom;
-    const aT = this.calibration.coeff.aTo;
-    const bT = this.calibration.coeff.bTo;
-    const cT = this.calibration.coeff.cTo;
-
-    if (this.calibration.points === 3) { // Pretty ugly hard scripted, could be dynamically calculated for n-poly using Math.js and matrices. Meh.
+    if (cT >= 0 && cF >= 0) { // Pretty ugly hard scripted, could be dynamically calculated for n-poly using Math.js and matrices. Meh.
 
       const denom = (aF - bF) * (aF - cF) * (bF - cF);
 
       const k = (Math.pow(cF,2) * (aT - bT) + Math.pow(aF,2) * (bT - cT) + Math.pow(bF,2) * (cT - aT)) / denom;
       const d = (bF * (bF - cF) * cF * aT + aF * cF * (cF - aF) * bT + aF * (aF - bF) * bF * cT) / denom;
       const a = (cF * (bT - aT) + bF * (aT - cT) + aF * (cT - bT)) / denom;
-
-      for(let i = 0; i < len; i++) {
-        calArray.push(parseFloat((a * Math.pow(i,2) + k * i + d).toFixed(2)));
-      }
 
       console.log('c1',a);
       console.log('c2',k);
@@ -216,17 +236,26 @@ export class SpectrumPlot {
       const k = (aT - bT)/(aF - bF);
       const d = aT - k * aF;
 
-      for(let i = 0; i < len; i++) {
-        calArray.push(parseFloat((k * i + d).toFixed(2)));
-      }
-
       console.log('c1',0);
       console.log('c2',k);
       console.log('c3',d);
       this.calibration.coeff.c1 = 0;
       this.calibration.coeff.c2 = k;
       this.calibration.coeff.c3 = d;
+    }
+  }
+  /*
+    Get the calibrated x-axis using the values in this.calibration
+  */
+  getCalAxis(len: number): number[] {
+    let calArray: number[] = [];
 
+    const a = this.calibration.coeff.c1;
+    const k = this.calibration.coeff.c2;
+    const d = this.calibration.coeff.c3;
+
+    for(let i = 0; i < len; i++) {
+      calArray.push(parseFloat((a * Math.pow(i,2) + k * i + d).toFixed(2)));
     }
 
     return calArray;
@@ -367,6 +396,13 @@ export class SpectrumPlot {
   */
   updatePlot(spectrumData: SpectrumData): void {
     this.plotData(spectrumData); // Updating
+  }
+  /*
+    Clear all shapes and annotations
+  */
+  clearShapeAnno(): void {
+    this.shapes = [];
+    this.annotations = [];
   }
   /*
     Add a line

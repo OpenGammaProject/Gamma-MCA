@@ -16,7 +16,6 @@
     - Serial console read capability
     - !!! Weird comb-structure with quadratic calibrations
     - !!! Check Calibration Regression
-    - Support XML file calibration import
 
     - Improve Mobile Layout
     - Support XML combi-file export
@@ -119,7 +118,7 @@ document.body.onload = async function(): Promise<void> {
   const domain = new URL(isoListURL, window.location.origin);
   isoListURL = domain.href;
 
-  if ('serial' in navigator) {
+  if ('serial' in navigator) { // Web Serial API
     document.getElementById('serial-div')!.className = ''; // Remove visually-hidden and invisible
     navigator.serial.addEventListener('connect', serialConnect);
     navigator.serial.addEventListener('disconnect', serialDisconnect);
@@ -260,6 +259,8 @@ document.onkeydown = async function(event) {
   }
 };
 */
+document.getElementById('data')!.onclick = event => {(<HTMLInputElement>event.target).value = ''};
+document.getElementById('background')!.onclick = event => {(<HTMLInputElement>event.target).value = ''};
 
 document.getElementById('data')!.onchange = event => importFile(<HTMLInputElement>event.target);
 document.getElementById('background')!.onchange = event => importFile(<HTMLInputElement>event.target, true);
@@ -284,7 +285,7 @@ function getFileData(file: File, background = false): void { // Gets called when
 
     if (fileEnding.toLowerCase() === 'xml') {
       if (window.DOMParser) {
-        const {espectrum, bgspectrum} = raw.xmlToArray(result);
+        const {espectrum, bgspectrum, coeff} = raw.xmlToArray(result);
 
         if (espectrum === undefined && bgspectrum === undefined) {
           popupNotification('file-error');
@@ -295,6 +296,21 @@ function getFileData(file: File, background = false): void { // Gets called when
         if (bgspectrum !== undefined) {
           spectrumData.background = bgspectrum;
         }
+
+        const importedCount = Object.values(coeff).filter(value => value !== 0).length;
+
+        if (importedCount >= 2) {
+          plot.calibration.coeff = coeff;
+          plot.calibration.imported = true;
+
+          for (const element of document.getElementsByClassName('cal-setting')) {
+            const changeType = <HTMLInputElement>element;
+            changeType.disabled = true;
+          }
+
+          addImportLabel();
+        }
+
       } else {
         console.error('No DOM parser in this browser!');
       }
@@ -303,8 +319,21 @@ function getFileData(file: File, background = false): void { // Gets called when
     } else {
       spectrumData.data = raw.csvToArray(result);
     }
-    document.getElementById('total-spec-cts')!.innerText = spectrumData.getTotalCounts(spectrumData.data).toString();
-    document.getElementById('total-bg-cts')!.innerText = spectrumData.getTotalCounts(spectrumData.background).toString();
+
+    const sCounts = spectrumData.getTotalCounts(spectrumData.data);
+    const bgCounts = spectrumData.getTotalCounts(spectrumData.background);
+    document.getElementById('total-spec-cts')!.innerText = sCounts.toString();
+    document.getElementById('total-bg-cts')!.innerText = bgCounts.toString();
+
+    const dataLabel = document.getElementById('data-icon')!;
+    const bgLabel = document.getElementById('background-icon')!;
+
+    if (sCounts > 0) {
+      dataLabel.className = dataLabel.className.replaceAll(' visually-hidden', '');
+    }
+    if (bgCounts > 0) {
+      bgLabel.className = bgLabel.className.replaceAll(' visually-hidden', '');
+    }
 
     /*
       Error Msg Problem with RAW Stream selection?
@@ -351,7 +380,21 @@ function removeFile(id: dataType): void {
   document.getElementById('total-spec-cts')!.innerText = spectrumData.getTotalCounts(spectrumData.data).toString();
   document.getElementById('total-bg-cts')!.innerText = spectrumData.getTotalCounts(spectrumData.background).toString();
 
+  const dataLabel = document.getElementById(id + '-icon')!;
+  dataLabel.className += ' visually-hidden';
+
   bindPlotEvents(); // Re-Bind Events for new plot
+}
+
+
+const importString = ': imported';
+
+function addImportLabel() {
+  const titleElement = document.getElementById('calibration-title')!;
+
+  if (!titleElement.innerText.includes(importString)) {
+    titleElement.innerText += importString;
+  }
 }
 
 
@@ -525,48 +568,49 @@ function toggleCal(enabled: boolean): void {
     Reset Plot beforehand, to prevent x-range from dying when zoomed?
   */
   if (enabled) {
-    let readoutArray = [
-      [(<HTMLInputElement>document.getElementById('adc-a')).value, (<HTMLInputElement>document.getElementById('cal-a')).value],
-      [(<HTMLInputElement>document.getElementById('adc-b')).value, (<HTMLInputElement>document.getElementById('cal-b')).value],
-      [(<HTMLInputElement>document.getElementById('adc-c')).value, (<HTMLInputElement>document.getElementById('cal-c')).value]
-    ];
 
-    let invalid = 0;
-    let validArray: number[][] = [];
+    if (!plot.calibration.imported) {
 
-    for (const pair of readoutArray) {
-      const float1 = parseFloat(pair[0]);
-      const float2 = parseFloat(pair[1]);
+      let readoutArray = [
+        [(<HTMLInputElement>document.getElementById('adc-a')).value, (<HTMLInputElement>document.getElementById('cal-a')).value],
+        [(<HTMLInputElement>document.getElementById('adc-b')).value, (<HTMLInputElement>document.getElementById('cal-b')).value],
+        [(<HTMLInputElement>document.getElementById('adc-c')).value, (<HTMLInputElement>document.getElementById('cal-c')).value]
+      ];
 
-      if (isNaN(float1) || isNaN(float2)) {
-        //pair[0] = undefined;
-        //pair[1] = undefined;
-        invalid += 1;
-      } else {
-        validArray.push([float1, float2]);
+      let invalid = 0;
+      let validArray: number[][] = [];
+
+      for (const pair of readoutArray) {
+        const float1 = parseFloat(pair[0]);
+        const float2 = parseFloat(pair[1]);
+
+        if (isNaN(float1) || isNaN(float2)) {
+          //validArray.push([-1, -1]);
+          invalid += 1;
+        } else {
+          validArray.push([float1, float2]);
+        }
+        if (invalid > 1) {
+          popupNotification('cal-error');
+          return;
+        }
       }
-      if (invalid > 1) {
-        popupNotification('cal-error');
-        return;
+
+      if (validArray.length === 2) {
+        validArray.push([-1, -1]);
       }
+
+      plot.calibration.points.aFrom = validArray[0][0];
+      plot.calibration.points.bFrom = validArray[1][0];
+      plot.calibration.points.cFrom = validArray[2][0];
+      plot.calibration.points.aTo = validArray[0][1];
+      plot.calibration.points.bTo = validArray[1][1];
+      plot.calibration.points.cTo = validArray[2][1];
+
+      plot.computeCoefficients();
     }
-
-    plot.calibration.enabled = enabled;
-    plot.calibration.points = validArray.length;
-
-    if (validArray.length === 2) {
-      validArray.push([0, 0]);
-    }
-
-    plot.calibration.aFrom = validArray[0][0];
-    plot.calibration.bFrom = validArray[1][0];
-    plot.calibration.cFrom = validArray[2][0];
-    plot.calibration.aTo = validArray[0][1];
-    plot.calibration.bTo = validArray[1][1];
-    plot.calibration.cTo = validArray[2][1];
-  } else {
-    plot.calibration.enabled = enabled;
   }
+  plot.calibration.enabled = enabled;
   plot.plotData(spectrumData, false);
   bindPlotEvents(); // needed, because of "false" above
 }
@@ -578,6 +622,15 @@ function resetCal(): void {
   for (const point in calClick) {
     calClick[<calType>point] = false;
   }
+
+  for (const element of document.getElementsByClassName('cal-setting')) {
+    const changeType = <HTMLInputElement>element;
+    changeType.disabled = false;
+  }
+  const titleElement = document.getElementById('calibration-title')!;
+  titleElement.innerText = titleElement.innerText.replaceAll(importString, '');
+
+  plot.clearCalibration();
   toggleCal(false);
 }
 
@@ -635,14 +688,39 @@ function importCal(file: File): void {
         <HTMLInputElement>document.getElementById('cal-c')
       ];
 
-      const inputArr = ['aFrom', 'aTo', 'bFrom', 'bTo', 'cFrom', 'cTo'];
-      for (const index in inputArr) {
-        readoutArray[index].value = obj[inputArr[index]];
-      }
 
-      oldCalVals.a = readoutArray[0].value;
-      oldCalVals.b = readoutArray[2].value;
-      oldCalVals.c = readoutArray[4].value;
+      if (obj.imported) {
+
+        for (const element of document.getElementsByClassName('cal-setting')) {
+          const changeType = <HTMLInputElement>element;
+          changeType.disabled = true;
+        }
+
+        addImportLabel();
+
+        plot.calibration.coeff = obj.coeff;
+        plot.calibration.imported = true;
+
+      } else {
+
+        const inputArr = ['aFrom', 'aTo', 'bFrom', 'bTo', 'cFrom', 'cTo'];
+        for (const index in inputArr) {
+          if (obj.points === undefined || typeof obj.points === 'number') { // Keep compatability with old calibration files
+            readoutArray[index].value = obj[inputArr[index]];
+          } else { // New calibration files
+            const value: number = obj.points[inputArr[index]];
+            if (value === -1) {
+              readoutArray[index].value = '';
+            } else {
+              readoutArray[index].value = obj.points[inputArr[index]];
+            }
+          }
+        }
+
+        oldCalVals.a = readoutArray[0].value;
+        oldCalVals.b = readoutArray[2].value;
+        oldCalVals.c = readoutArray[4].value;
+      }
 
     } catch(e) {
       console.error('Calibration Import Error:', e);
@@ -908,8 +986,7 @@ function selectAll(selectBox: HTMLInputElement): void {
     }
   }
   if (!selectBox.checked) {
-    plot.shapes = [];
-    plot.annotations = [];
+    plot.clearShapeAnno();
   }
 
   plot.updatePlot(spectrumData);
