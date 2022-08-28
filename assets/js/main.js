@@ -35,7 +35,7 @@ let isoListURL = 'assets/isotopes_energies_min.json';
 let isoList = {};
 let checkNearIso = false;
 let maxDist = 100;
-const APP_VERSION = '2022-08-24';
+const APP_VERSION = '2022-08-28';
 let localStorageAvailable = false;
 let firstInstall = false;
 document.body.onload = async function () {
@@ -257,11 +257,11 @@ function removeFile(id) {
     dataLabel.className += ' visually-hidden';
     bindPlotEvents();
 }
-const importString = ': imported';
+const IMPORT_STRING = ': imported';
 function addImportLabel() {
     const titleElement = document.getElementById('calibration-title');
-    if (!titleElement.innerText.includes(importString)) {
-        titleElement.innerText += importString;
+    if (!titleElement.innerText.includes(IMPORT_STRING)) {
+        titleElement.innerText += IMPORT_STRING;
     }
 }
 function bindPlotEvents() {
@@ -443,7 +443,7 @@ function resetCal() {
         changeType.disabled = false;
     }
     const titleElement = document.getElementById('calibration-title');
-    titleElement.innerText = titleElement.innerText.replaceAll(importString, '');
+    titleElement.innerText = titleElement.innerText.replaceAll(IMPORT_STRING, '');
     plot.clearCalibration();
     toggleCal(false);
 }

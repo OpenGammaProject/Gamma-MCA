@@ -80,7 +80,7 @@ let isoList: isotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2022-08-24';
+const APP_VERSION = '2022-08-28';
 let localStorageAvailable = false;
 let firstInstall = false;
 
@@ -387,13 +387,13 @@ function removeFile(id: dataType): void {
 }
 
 
-const importString = ': imported';
+const IMPORT_STRING = ': imported';
 
 function addImportLabel() {
   const titleElement = document.getElementById('calibration-title')!;
 
-  if (!titleElement.innerText.includes(importString)) {
-    titleElement.innerText += importString;
+  if (!titleElement.innerText.includes(IMPORT_STRING)) {
+    titleElement.innerText += IMPORT_STRING;
   }
 }
 
@@ -628,7 +628,7 @@ function resetCal(): void {
     changeType.disabled = false;
   }
   const titleElement = document.getElementById('calibration-title')!;
-  titleElement.innerText = titleElement.innerText.replaceAll(importString, '');
+  titleElement.innerText = titleElement.innerText.replaceAll(IMPORT_STRING, '');
 
   plot.clearCalibration();
   toggleCal(false);
