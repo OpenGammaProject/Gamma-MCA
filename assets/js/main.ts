@@ -14,14 +14,12 @@
     - Social media share function
     - FWHM calculation for peaks
     - Serial console read capability
-    - !!! Weird comb-structure with quadratic calibrations
     - !!! Check Calibration Regression
 
     - Improve Mobile Layout
     - Support XML combi-file export
 
   Known Performance Issues:
-    - Isotope hightlighting
     - (Un)Selecting all isotopes from gamma-ray energies list (Plotly)
 
 */
@@ -932,7 +930,6 @@ function toggleIsoHover(): void {
 
 
 async function closestIso(value: number): Promise<void> {
-  // VERY BAD PERFORMANCE, EXPERIMENTAL FEATURE!
   if(!await loadIsotopes()) { // User has not yet opened the settings panel
     return;
   }
@@ -971,7 +968,7 @@ function plotIsotope(checkbox: HTMLInputElement): void {
 document.getElementById('check-all-isos')!.onclick = (event) => selectAll(<HTMLInputElement>event.target);
 
 function selectAll(selectBox: HTMLInputElement): void {
-  // Bad performance because of the updatePlot with that many lines!
+  // Bad performance mostly because of the updatePlot with that many lines!
   const tableElement = <HTMLTableElement>document.getElementById('table'); //selectBox.closest('table');
   const tableBody = tableElement.tBodies[0];
   const tableRows = tableBody.rows;
