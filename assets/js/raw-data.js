@@ -13,6 +13,10 @@ export class RawData {
     }
     checkLines(value) {
         const values = value.split(this.delimiter);
+        const testParseFirst = parseFloat(values[0].trim());
+        if (isNaN(testParseFirst)) {
+            return false;
+        }
         if (values.length === 1) {
             this.tempValIndex = 0;
         }

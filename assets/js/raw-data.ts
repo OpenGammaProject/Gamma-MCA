@@ -29,6 +29,11 @@ export class RawData {
   checkLines(value: string): boolean {
     const values = value.split(this.delimiter);
 
+    const testParseFirst = parseFloat(values[0].trim());
+    if (isNaN(testParseFirst)) {
+      return false;
+    }
+
     if (values.length === 1){ // Work-Around for files with only one column
       this.tempValIndex = 0;
     }

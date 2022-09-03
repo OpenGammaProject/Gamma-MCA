@@ -12,7 +12,7 @@
     - nothing.
 
 */
-const APP_VERSION = '2022-08-28';
+const APP_VERSION = '2022-09-03';
 const CACHE_NAME = "gamma-static"; // A random name for the cache
 const OFFLINE_RESOURCES = ['/',
                           '/index.html',
