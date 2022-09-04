@@ -41,6 +41,11 @@ body {
   z-index: 1111;
 }
 
+.fakelink {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 /* Special Settings for PWA */
 @media all and (display-mode: standalone) {
   .main {

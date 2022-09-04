@@ -136,9 +136,6 @@ export class SpectrumPlot {
             const k = (Math.pow(cF, 2) * (aT - bT) + Math.pow(aF, 2) * (bT - cT) + Math.pow(bF, 2) * (cT - aT)) / denom;
             const d = (bF * (bF - cF) * cF * aT + aF * cF * (cF - aF) * bT + aF * (aF - bF) * bF * cT) / denom;
             const a = (cF * (bT - aT) + bF * (aT - cT) + aF * (cT - bT)) / denom;
-            console.log('c1', a);
-            console.log('c2', k);
-            console.log('c3', d);
             this.calibration.coeff.c1 = a;
             this.calibration.coeff.c2 = k;
             this.calibration.coeff.c3 = d;
@@ -146,9 +143,6 @@ export class SpectrumPlot {
         else {
             const k = (aT - bT) / (aF - bF);
             const d = aT - k * aF;
-            console.log('c1', 0);
-            console.log('c2', k);
-            console.log('c3', d);
             this.calibration.coeff.c1 = 0;
             this.calibration.coeff.c2 = k;
             this.calibration.coeff.c3 = d;

@@ -265,7 +265,7 @@
 
             <p class="mb-1">Linear (2-point) or quadratic (3-point) calibration is supported.</p>
             <p class="mb-1">E[keV] = c<sub>1</sub> x<sup>2</sup> + c<sub>2</sub> x + c<sub>3</sub> (x ... Channel Number)</p>
-            <p>Coefficients will be computed automatically.</p>
+            <p><span class="link-primary fakelink" id="show-coefficients" title="Show calibration coefficients">Coefficients</span> will be computed automatically.</p>
 
             <hr>
 
@@ -483,7 +483,7 @@
       </div>
     </div>
 
-    <!-- Export Modal -->
+    <!-- Serial Console Modal -->
     <div class="modal fade" id="serialConsoleModal" tabindex="-1" aria-labelledby="serialConsoleModal" aria-hidden="true">
       <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
@@ -994,6 +994,27 @@
           Something went wrong when trying to change a settings value, please reload and try again or report this issue.
         </div>
       </div>
+
+      <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="coefficients" class="toast bg-light" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+          <div class="toast-header bg-secondary text-light">
+            <i class="fa-solid fa-list-ol me-2"></i>
+            <strong class="me-auto">Calibration Coefficients</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>
+          <div class="toast-body">
+            Here are the calibration coefficients:
+            <br>
+            c<sub>1</sub>: <span id="c1-coeff">0</span>
+            <br>
+            c<sub>2</sub>: <span id="c2-coeff">0</span>
+            <br>
+            c<sub>3</sub>: <span id="c3-coeff">0</span>
+            <div class="mt-2 pt-2 border-top">
+              <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="toast">Close</button>
+            </div>
+          </div>
+        </div>
 
     </div>
 

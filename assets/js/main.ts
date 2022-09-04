@@ -566,7 +566,6 @@ function toggleCal(enabled: boolean): void {
     Reset Plot beforehand, to prevent x-range from dying when zoomed?
   */
   if (enabled) {
-
     if (!plot.calibration.imported) {
 
       let readoutArray = [
@@ -608,6 +607,10 @@ function toggleCal(enabled: boolean): void {
       plot.computeCoefficients();
     }
   }
+  document.getElementById('c1-coeff')!.innerText = plot.calibration.coeff.c1.toString();
+  document.getElementById('c2-coeff')!.innerText = plot.calibration.coeff.c2.toString();
+  document.getElementById('c3-coeff')!.innerText = plot.calibration.coeff.c3.toString();
+
   plot.calibration.enabled = enabled;
   plot.plotData(spectrumData, false);
   bindPlotEvents(); // needed, because of "false" above
@@ -783,6 +786,8 @@ function download(filename: string, text: string): void {
     document.body.removeChild(element);
 }
 
+
+document.getElementById('show-coefficients')!.onclick = () => popupNotification('coefficients');
 
 function popupNotification(id: string): void {
   // Uses Bootstrap Toasts already defined in HTML
