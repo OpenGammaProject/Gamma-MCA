@@ -456,7 +456,7 @@ document.getElementById('select-c').onclick = event => toggleCalClick('c', event
 function toggleCalClick(point, value) {
     calClick[point] = value;
 }
-document.getElementById('plotType').onclick = event => changeType(event.target);
+document.getElementById('plotType').onclick = () => changeType(document.getElementById('plotType'));
 function changeType(button) {
     if (plot.plotType === 'scatter') {
         button.innerHTML = '<i class="fas fa-chart-bar"></i> Bar';

@@ -646,7 +646,7 @@ function toggleCalClick(point: calType, value: boolean): void {
 }
 
 
-document.getElementById('plotType')!.onclick = event => changeType(<HTMLButtonElement>event.target);
+document.getElementById('plotType')!.onclick = () => changeType(<HTMLButtonElement>document.getElementById('plotType'));
 
 function changeType(button: HTMLButtonElement): void {
   if (plot.plotType === 'scatter') {
