@@ -97,7 +97,7 @@
     {
       "action": "/",
       "accept": {
-        "text/json": [".json"]
+        "application/json": [".json"]
       },
       "icons": [
         {
@@ -111,7 +111,7 @@
     {
       "action": "/",
       "accept": {
-        "text/csv": [".txt"]
+        "text/plain": [".txt"]
       },
       "icons": [
         {
@@ -125,7 +125,7 @@
     {
       "action": "/",
       "accept": {
-        "text/xml": [".xml"]
+        "application/xml": [".xml"]
       },
       "icons": [
         {
