@@ -19,6 +19,8 @@
     - Improve Mobile Layout
     - Support XML combi-file export
 
+    - Add dead time correction!
+
   Known Performance Issues:
     - (Un)Selecting all isotopes from gamma-ray energies list (Plotly)
 
@@ -78,7 +80,7 @@ let isoList: isotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2022-09-16';
+const APP_VERSION = '2022-10-03';
 let localStorageAvailable = false;
 let firstInstall = false;
 
