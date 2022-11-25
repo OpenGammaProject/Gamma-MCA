@@ -14,7 +14,7 @@
     - Social media share function
     - FWHM calculation for peaks
     - Serial console read capability
-    - !!! Check Calibration Regression
+    - Calibration n-polynomial regression !!!
 
     - Improve Mobile Layout
     - Support XML combi-file export
