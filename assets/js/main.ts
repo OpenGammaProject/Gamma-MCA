@@ -14,12 +14,12 @@
     - Social media share function
     - FWHM calculation for peaks
     - Serial console read capability
-    - Calibration n-polynomial regression !!!
-
     - Improve Mobile Layout
-    - Support XML combi-file export
 
-    - Add dead time correction!
+    - (!) Calibration n-polynomial regression
+    - (!) Update Raw Stream Import Data Structure
+    - (!) Add dead time correction
+    - (!) Support XML combi-file export
 
   Known Performance Issues:
     - (Un)Selecting all isotopes from gamma-ray energies list (Plotly)
