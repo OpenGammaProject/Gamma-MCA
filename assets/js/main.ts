@@ -14,12 +14,13 @@
     - Social media share function
     - FWHM calculation for peaks
     - Serial console read capability
-    - Improve Mobile Layout
 
     - (!) Calibration n-polynomial regression
-    - (!) Update Raw Stream Import Data Structure
-    - (!) Add dead time correction
+    - (!) Update Raw Stream Import Data Structure, also "Chronological Stream"
+    - (!) Add dead time correction for cps
     - (!) Support XML combi-file export
+    - (!) Serial Record selection between "histogram" and "chronological stream"
+    - (!) New Layout with tabs
 
   Known Performance Issues:
     - (Un)Selecting all isotopes from gamma-ray energies list (Plotly)
