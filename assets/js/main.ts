@@ -13,8 +13,8 @@
     - Sorting isotope list
     - Social media share function
     - FWHM calculation for peaks
-    - Serial console read capability
 
+    - (!) Serial console read capability
     - (!) Calibration n-polynomial regression
     - (!) Update Raw Stream Import Data Structure, also "Chronological Stream"
     - (!) Add dead time correction for cps
@@ -81,7 +81,7 @@ let isoList: isotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2022-10-03';
+const APP_VERSION = '2022-12-18';
 let localStorageAvailable = false;
 let firstInstall = false;
 
