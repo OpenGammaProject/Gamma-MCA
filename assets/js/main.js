@@ -418,6 +418,9 @@ function toggleCal(enabled) {
                 }
                 if (invalid > 1) {
                     popupNotification('cal-error');
+                    const checkbox = document.getElementById('apply-cal');
+                    checkbox.checked = false;
+                    toggleCal(checkbox.checked);
                     return;
                 }
             }

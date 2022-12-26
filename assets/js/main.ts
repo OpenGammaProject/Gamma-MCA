@@ -26,7 +26,6 @@
     - (!) Serial Record selection between "histogram" and "chronological stream"
     - (!) Update Raw Stream Import Data Structure, also "Chronological Stream"
     - (!) Serial console read capability
-    - (!) Calibrate Button Click Error Msg reset button
 
   Known Performance Issues:
     - (Un)Selecting all isotopes from gamma-ray energies list (Plotly)
@@ -601,6 +600,11 @@ function toggleCal(enabled: boolean): void {
         }
         if (invalid > 1) {
           popupNotification('cal-error');
+
+          const checkbox = <HTMLInputElement>document.getElementById('apply-cal');
+          checkbox.checked = false;
+          toggleCal(checkbox.checked);
+
           return;
         }
       }
