@@ -157,6 +157,12 @@ window.addEventListener('onappinstalled', () => {
     hideNotification('pwa-installer');
     document.getElementById('manual-install').className += 'visually-hidden';
 });
+window.addEventListener('shown.bs.tab', (event) => {
+    if (event.target.getAttribute('data-bs-toggle') === 'pill') {
+        plot.updatePlot(spectrumData);
+        plot.updatePlot(spectrumData);
+    }
+});
 document.getElementById('data').onclick = event => { event.target.value = ''; };
 document.getElementById('background').onclick = event => { event.target.value = ''; };
 document.getElementById('data').onchange = event => importFile(event.target);
@@ -257,12 +263,9 @@ function removeFile(id) {
     dataLabel.className += ' visually-hidden';
     bindPlotEvents();
 }
-const IMPORT_STRING = ': imported';
 function addImportLabel() {
     const titleElement = document.getElementById('calibration-title');
-    if (!titleElement.innerText.includes(IMPORT_STRING)) {
-        titleElement.innerText += IMPORT_STRING;
-    }
+    titleElement.className = titleElement.className.replaceAll('visually-hidden', '');
 }
 function bindPlotEvents() {
     const myPlot = document.getElementById(plot.divId);
@@ -446,7 +449,9 @@ function resetCal() {
         changeType.disabled = false;
     }
     const titleElement = document.getElementById('calibration-title');
-    titleElement.innerText = titleElement.innerText.replaceAll(IMPORT_STRING, '');
+    if (!titleElement.className.includes('visually-hidden')) {
+        titleElement.className += 'visually-hidden';
+    }
     plot.clearCalibration();
     toggleCal(false);
 }

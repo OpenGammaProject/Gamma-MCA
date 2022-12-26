@@ -75,43 +75,25 @@
 
       <div class="row border border-1 border-secondary bg-light">
 
-        <div class="col-lg pt-1">
+        <div class="col-lg-auto p-2 text-center">
 
-          <h2 class="fs-4">File Import</h2>
-
-          <p>
-            <label id="data-label" for="data"><strong>Spectrum File:</strong> <i id="data-icon" class="fa-solid fa-circle-check align-baseline visually-hidden"></i></label>
-          </p>
-
-          <div class="input-group input-group-sm">
-            <input class="form-control form-control-sm" type="file" id="data" accept=".csv, .TKA, .xml, .txt">
-            <button class="btn btn-primary btn-sm" type="button" id="clear-data" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
+          <div class="nav nav-pills flex-column" id="main-tabs" role="tablist" aria-orientation="vertical">
+            <button class="nav-link active mb-2" id="file-import-tab" data-bs-toggle="pill" data-bs-target="#v-file" type="button" role="tab" aria-controls="v-file" aria-selected="true" title="Select File Import Tab">
+              <i class="fa-solid fa-file-import"></i> File Import
+            </button>
+            <button class="nav-link mb-2" id="serial-tab" data-bs-toggle="pill" data-bs-target="#v-serial" type="button" role="tab" aria-controls="v-serial" aria-selected="false" title="Select Serial Connection Tab">
+              <i class="fa-solid fa-network-wired"></i> Serial Connection
+            </button>
+            <button class="nav-link" id="calibration-tab" data-bs-toggle="pill" data-bs-target="#v-calibration" type="button" role="tab" aria-controls="v-calibration" aria-selected="false" title="Select Calibration Tab">
+              <i class="fa-solid fa-calculator"></i> Calibration
+            </button>
           </div>
 
           <hr>
 
-          <p>
-            <label id="background-label" for="background"><strong>Background File:</strong> <i id="background-icon" class="fa-solid fa-circle-check align-baseline visually-hidden"></i></label>
-          </p>
-
-          <div class="input-group input-group-sm">
-            <input class="form-control form-control-sm" type="file" id="background" accept=".csv, .TKA, .xml, .txt">
-            <button class="btn btn-primary btn-sm" type="button" id="clear-bg" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
-          </div>
-
-          <hr>
-
-          <p><strong>File Type:</strong></p>
-
-          <p>
-            <input id="r1" class="form-check-input" type="radio" value="2" name="filetype">
-            <label class="form-check-label align-middle" for="r1">RAW Stream (e.g. OGD, Serial)</label>
-          </p>
-
-          <p>
-            <input id="r2" class="form-check-input" type="radio" value="1" name="filetype" checked="checked">
-            <label class="form-check-label align-middle" for="r2">Histogram (e.g. CSV, RadiaCode, TKA, XML)</label>
-          </p>
+          <button class="btn btn-sm btn-outline-primary w-100" id="toggle-menu" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvas" aria-controls="offcanvas" title="Open Settings Menu">
+            <i class="fa-solid fa-gear"></i> Settings
+          </button>
 
         </div>
 
@@ -119,82 +101,285 @@
           <div class="vr h-100 opacity-50"></div>
         </div>
 
-        <div class="col-lg pt-1">
+        <div class="col-lg p-3">
 
-          <h2 class="fs-4">Serial Connection</h2>
+          <div class="tab-content h-100">
+            <div class="tab-pane fade show active h-100" id="v-file" role="tabpanel" aria-labelledby="file-import-tab">
+              <!--
+                ###############
+                FILE IMPORT TAB
+                ###############
+              -->
+              <div class="row h-100">
+                <div class="col">
+                  <!--
+                    #####
+                    COL 1
+                    #####
+                  -->
+                  <p>
+                    <label id="data-label" for="data"><strong>Spectrum File:</strong> <i id="data-icon" class="fa-solid fa-circle-check align-baseline visually-hidden"></i></label>
+                  </p>
 
-          <div class="alert alert-warning visually-hidden" role="alert" id="serial-error">
-            Looks like the Web Serial API is not supported. Please switch to the latest Chromium-based browser (Chrome, Edge, Opera, ...) or enable it in your browser's settings to use serial connections.
-          </div>
-
-          <div id="serial-div" class="invisible visually-hidden">
-
-            <p>
-              <strong>Select Port:</strong>
-            </p>
-
-            <div class="input-group input-group-sm">
-
-              <button class="btn btn-primary btn-sm" type="button" id="serial-list-btn" title="Refresh List"> <i class="fas fa-sync"></i> </button>
-              <select class="form-select form-select-sm ser-settings" id="port-selector" aria-label=".form-select-sm example" title="Choose a serial device">
-                <!-- NOTHING -->
-              </select>
-              <button class="btn btn-primary btn-sm" type="button" id="serial-add-device" title="Add new device"> <i class="fas fa-plus"></i> Add </button>
-
-            </div>
-
-            <hr>
-
-            <div class="clearfix pe-3 align-middle">
-
-              <button class="btn btn-primary btn-sm ser-settings" id="record-button" type="button" data-bs-toggle="modal" data-bs-target="#recordModal" title="Start recording"> <i class="fas fa-play"></i> Record </button>
-              <button class="btn btn-primary btn-sm ser-settings visually-hidden" id="pause-button" type="button" title="Pause recording"> <i class="fas fa-pause"></i> Pause </button>
-              <button class="btn btn-primary btn-sm ser-settings visually-hidden" id="resume-button" type="button" title="Resume recording"> <i class="fas fa-play"></i> Resume </button>
-              <button class="btn btn-primary btn-sm" id="stop-button" type="button" title="Stop recording" disabled> <i class="fas fa-stop"></i> Stop </button>
-
-              <div id="recording-spinner" class="spinner-grow spinner-grow-sm text-danger visually-hidden align-middle" role="status">
-                <span class="visually-hidden">Recording...</span>
-              </div>
-
-              <div class="float-end align-middle">
-
-                <div class="vstack align-middle">
-                  <span class="align-middle fw-bold"><span id="record-time"></span><span id="total-record-time"></span></span>
-
-                  <div class="progress mt-1" id="ser-time-progress-bar">
-                    <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="ser-time-progress" title="Serial recording progress"></div>
+                  <div class="input-group input-group-sm">
+                    <input class="form-control form-control-sm" type="file" id="data" accept=".csv, .TKA, .xml, .txt">
+                    <button class="btn btn-primary btn-sm" type="button" id="clear-data" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
                   </div>
+
+                  <br>
+
+                  <p>
+                    <label id="background-label" for="background"><strong>Background File:</strong> <i id="background-icon" class="fa-solid fa-circle-check align-baseline visually-hidden"></i></label>
+                  </p>
+
+                  <div class="input-group input-group-sm">
+                    <input class="form-control form-control-sm" type="file" id="background" accept=".csv, .TKA, .xml, .txt">
+                    <button class="btn btn-primary btn-sm" type="button" id="clear-bg" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
+                  </div>
+
+
                 </div>
 
+                <div class="col-lg-auto g-0">
+                  <div class="vr h-100 opacity-50"></div>
+                </div>
+
+                <div class="col">
+                  <!--
+                    #####
+                    COL 2
+                    #####
+                  -->
+                  <p><strong>File Type:</strong></p>
+
+                  <p>
+                    <input id="r1" class="form-check-input" type="radio" value="2" name="filetype">
+                    <label class="form-check-label align-middle" for="r1">RAW Stream (e.g. OGD, Serial)</label>
+                  </p>
+
+                  <p>
+                    <input id="r2" class="form-check-input" type="radio" value="1" name="filetype" checked="checked">
+                    <label class="form-check-label align-middle" for="r2">Histogram (e.g. CSV, RadiaCode, TKA, XML)</label>
+                  </p>
+
+                </div>
               </div>
 
             </div>
+            <div class="tab-pane fade h-100" id="v-serial" role="tabpanel" aria-labelledby="serial-tab">
+              <!--
+               #####################
+               SERIAL CONNECTION TAB
+               #####################
+              -->
+             <div class="row h-100">
+               <div class="col">
+                 <!--
+                   #####
+                   COL 1
+                   #####
+                 -->
+                  <div class="alert alert-warning visually-hidden" role="alert" id="serial-error">
+                    Looks like the Web Serial API is not supported. Please switch to the latest Chromium-based browser (Chrome, Edge, Opera, ...) or enable it in your browser's settings to use serial connections.
+                  </div>
 
-            <hr>
+                  <div id="serial-div" class="invisible visually-hidden">
 
-            <div class="clearfix pe-3">
+                    <p>
+                      <strong>Select Port:</strong>
+                    </p>
 
-              <button class="btn btn-primary btn-sm" id="export-button" type="button" data-bs-toggle="modal" data-bs-target="#exportModal" title="Export spectrum" disabled>
-                <i class="fas fa-file-export"></i> Export
-              </button>
+                    <div class="input-group input-group-sm">
 
-              <div class="float-end align-middle">
-                <div class="vstack align-middle text-end">
+                      <button class="btn btn-primary btn-sm" type="button" id="serial-list-btn" title="Refresh List"> <i class="fas fa-sync"></i> </button>
+                      <select class="form-select form-select-sm ser-settings" id="port-selector" aria-label=".form-select-sm example" title="Choose a serial device">
+                        <!-- NOTHING -->
+                      </select>
+                      <button class="btn btn-primary btn-sm" type="button" id="serial-add-device" title="Add new device"> <i class="fas fa-plus"></i> Add </button>
 
-                  <span class="align-middle fw-bold" id="cps"></span>
-                  <span class="align-middle"><span id="avg-cps"></span><span id="avg-cps-std"></span></span>
+                    </div>
+
+                    <hr>
+
+                    <div class="clearfix pe-3 align-middle">
+
+                      <button class="btn btn-primary btn-sm ser-settings" id="record-button" type="button" data-bs-toggle="modal" data-bs-target="#recordModal" title="Start recording"> <i class="fas fa-play"></i> Record </button>
+                      <button class="btn btn-primary btn-sm ser-settings visually-hidden" id="pause-button" type="button" title="Pause recording"> <i class="fas fa-pause"></i> Pause </button>
+                      <button class="btn btn-primary btn-sm ser-settings visually-hidden" id="resume-button" type="button" title="Resume recording"> <i class="fas fa-play"></i> Resume </button>
+                      <button class="btn btn-primary btn-sm" id="stop-button" type="button" title="Stop recording" disabled> <i class="fas fa-stop"></i> Stop </button>
+
+                      <div id="recording-spinner" class="spinner-grow spinner-grow-sm text-danger visually-hidden align-middle" role="status">
+                        <span class="visually-hidden">Recording...</span>
+                      </div>
+
+                      <div class="float-end align-middle">
+
+                        <div class="vstack align-middle">
+                          <span class="align-middle fw-bold"><span id="record-time"></span><span id="total-record-time"></span></span>
+
+                          <div class="progress mt-1" id="ser-time-progress-bar">
+                            <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="ser-time-progress" title="Serial recording progress"></div>
+                          </div>
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                    <hr>
+
+                    <div class="clearfix pe-3">
+
+                      <button class="btn btn-primary btn-sm" id="export-button" type="button" data-bs-toggle="modal" data-bs-target="#exportModal" title="Export spectrum" disabled>
+                        <i class="fas fa-file-export"></i> Export
+                      </button>
+
+                      <div class="float-end align-middle">
+                        <div class="vstack align-middle text-end">
+
+                          <span class="align-middle fw-bold" id="cps"></span>
+                          <span class="align-middle"><span id="avg-cps"></span><span id="avg-cps-std"></span></span>
+
+                        </div>
+                      </div>
+
+                    </div>
+
+                    <p class="mt-1">
+                      <button class="btn btn-primary btn-sm ser-settings" type="button" data-bs-toggle="modal" data-bs-target="#serialConsoleModal" title="Serial Console" disabled>
+                        <i class="fa-solid fa-terminal"></i> Console
+                      </button>
+                    </p>
+
+                  </div>
+
+                </div>
+
+                <div class="col-lg-auto g-0">
+                  <div class="vr h-100 opacity-50"></div>
+                </div>
+
+                <div class="col">
+                  <!--
+                    #####
+                    COL 2
+                    #####
+                  -->
+                  Serial Record selection between "histogram" and "chronological stream"
 
                 </div>
               </div>
 
             </div>
+            <div class="tab-pane fade h-100" id="v-calibration" role="tabpanel" aria-labelledby="calibration-tab">
+              <!--
+                ###############
+                CALIBRATION TAB
+                ###############
+              -->
+              <div class="row h-100">
+                <div class="col">
+                  <!--
+                    #####
+                    COL 1
+                    #####
+                  -->
+                  <p class="text-center fs-6 fw-semibold visually-hidden" id="calibration-title">IMPORTED</p>
 
-            <p class="mt-1">
-              <button class="btn btn-primary btn-sm ser-settings" type="button" data-bs-toggle="modal" data-bs-target="#serialConsoleModal" title="Serial Console" disabled>
-                <i class="fa-solid fa-terminal"></i> Console
-              </button>
-            </p>
+                  <form>
 
+                    <div class="vstack gap-1">
+
+                      <div class="hstack gap-2">
+                        <div class="input-group input-group-sm">
+                          <label class="input-group-text" for="adc-a">A:</label>
+                          <input class="form-control form-control-sm cal-setting" type="number" id="adc-a" min="0" value="" title="Input ADC Channel A" placeholder="Data Point A">
+                          <input type="checkbox" class="btn-check cal-setting" id="select-a">
+                          <label class="btn btn-outline-primary" for="select-a" title="Select from plot"> <i class="fa-solid fa-arrow-pointer"></i> </label>
+                        </div>
+
+                        <span> <i class="fa-solid fa-angles-right"></i> </span>
+
+                        <div class="input-group input-group-sm">
+                          <input class="form-control form-control-sm cal-setting" type="number" id="cal-a" min="1" value="" title="Energy for channel A" placeholder="Target Energy A">
+                          <label class="input-group-text" for="cal-a">keV</label>
+                        </div>
+                      </div>
+
+                      <div class="hstack gap-2">
+                        <div class="input-group input-group-sm">
+                          <label class="input-group-text" for="adc-b">B:</label>
+                          <input class="form-control form-control-sm cal-setting" type="number" id="adc-b" min="0" value="" title="Input ADC Channel B" placeholder="Data Point B">
+                          <input type="checkbox" class="btn-check cal-setting" id="select-b">
+                          <label class="btn btn-outline-primary" for="select-b" title="Select from plot"> <i class="fa-solid fa-arrow-pointer"></i> </label>
+                        </div>
+
+                        <span> <i class="fa-solid fa-angles-right"></i> </span>
+
+                        <div class="input-group input-group-sm">
+                          <input class="form-control form-control-sm cal-setting" type="number" id="cal-b" min="1" value="" title="Energy for channel B" placeholder="Target Energy B">
+                          <label class="input-group-text" for="cal-b">keV</label>
+                        </div>
+                      </div>
+
+                      <div class="hstack gap-2">
+                        <div class="input-group input-group-sm">
+                          <label class="input-group-text" for="adc-c">C:</label>
+                          <input class="form-control form-control-sm cal-setting" type="number" id="adc-c" min="0" value="" title="Input ADC Channel C" placeholder="Data Point C">
+                          <input type="checkbox" class="btn-check cal-setting" id="select-c">
+                          <label class="btn btn-outline-primary" for="select-c" title="Select from plot"> <i class="fa-solid fa-arrow-pointer"></i> </label>
+                        </div>
+
+                        <span> <i class="fa-solid fa-angles-right"></i> </span>
+
+                        <div class="input-group input-group-sm">
+                          <input class="form-control form-control-sm cal-setting" type="number" id="cal-c" min="1" value="" title="Energy for channel C" placeholder="Target Energy C">
+                          <label class="input-group-text" for="cal-c">keV</label>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    <hr>
+
+                    <p>
+                      <input type="checkbox" class="btn-check" id="apply-cal">
+                      <label class="btn btn-outline-primary btn-sm" title="Toggle plot calibration" id="calibration-label" for="apply-cal"> <i class="fa-solid fa-check"></i> Calibrate </label>
+
+                      <button class="btn btn-primary btn-sm" type="reset" id="calibration-reset" title="Clear calibration"> <i class="fas fa-trash"></i> Delete</button>
+
+                      <label for="cal-input" class="btn btn-primary btn-sm" type="button" title="Import a calibration.json"> <i class="fas fa-file-import"></i> Import </label>
+                      <input id="cal-input" class="visually-hidden" type="file" accept=".json" name="name">
+
+                      <button class="btn btn-primary btn-sm" type="button" id="calibration-download" title="Export the calibration.json"> <i class="fas fa-file-export"></i> Export </button>
+                    </p>
+
+                  </form>
+
+                </div>
+
+                <div class="col-lg-auto g-0">
+                  <div class="vr h-100 opacity-50"></div>
+                </div>
+
+                <div class="col">
+                  <!--
+                    #####
+                    COL 1
+                    #####
+                  -->
+                  <p class="mb-1">Linear (2-point) or quadratic (3-point) calibration is supported.</p>
+                  <p class="mb-1">E[keV] = c<sub>1</sub> x<sup>2</sup> + c<sub>2</sub> x + c<sub>3</sub> (x ... Channel Number)</p>
+                  <p><span class="link-primary fakelink" id="show-coefficients" title="Show calibration coefficients">Coefficients</span> will be computed automatically.</p>
+
+                  <hr>
+
+                  <p>Coefficient List</p>
+
+                </div>
+              </div>
+
+            </div>
           </div>
 
         </div>
@@ -203,108 +388,22 @@
           <div class="vr h-100 opacity-50"></div>
         </div>
 
-        <div class="col-md pt-1">
-
-          <h2 id="calibration-title" class="fs-4">Calibration</h2>
-
-          <form>
-
-            <div class="vstack gap-1">
-
-              <div class="hstack gap-2">
-                <div class="input-group input-group-sm">
-                  <label class="input-group-text" for="adc-a">A:</label>
-                  <input class="form-control form-control-sm cal-setting" type="number" id="adc-a" min="0" value="" title="Input ADC Channel A" placeholder="Data Point A">
-                  <input type="checkbox" class="btn-check cal-setting" id="select-a">
-                  <label class="btn btn-outline-primary" for="select-a" title="Select from plot"> <i class="fa-solid fa-arrow-pointer"></i> </label>
-                </div>
-
-                <span> <i class="fa-solid fa-angles-right"></i> </span>
-
-                <div class="input-group input-group-sm">
-                  <input class="form-control form-control-sm cal-setting" type="number" id="cal-a" min="1" value="" title="Energy for channel A" placeholder="Target Energy A">
-                  <label class="input-group-text" for="cal-a">keV</label>
-                </div>
-              </div>
-
-              <div class="hstack gap-2">
-                <div class="input-group input-group-sm">
-                  <label class="input-group-text" for="adc-b">B:</label>
-                  <input class="form-control form-control-sm cal-setting" type="number" id="adc-b" min="0" value="" title="Input ADC Channel B" placeholder="Data Point B">
-                  <input type="checkbox" class="btn-check cal-setting" id="select-b">
-                  <label class="btn btn-outline-primary" for="select-b" title="Select from plot"> <i class="fa-solid fa-arrow-pointer"></i> </label>
-                </div>
-
-                <span> <i class="fa-solid fa-angles-right"></i> </span>
-
-                <div class="input-group input-group-sm">
-                  <input class="form-control form-control-sm cal-setting" type="number" id="cal-b" min="1" value="" title="Energy for channel B" placeholder="Target Energy B">
-                  <label class="input-group-text" for="cal-b">keV</label>
-                </div>
-              </div>
-
-              <div class="hstack gap-2">
-                <div class="input-group input-group-sm">
-                  <label class="input-group-text" for="adc-c">C:</label>
-                  <input class="form-control form-control-sm cal-setting" type="number" id="adc-c" min="0" value="" title="Input ADC Channel C" placeholder="Data Point C">
-                  <input type="checkbox" class="btn-check cal-setting" id="select-c">
-                  <label class="btn btn-outline-primary" for="select-c" title="Select from plot"> <i class="fa-solid fa-arrow-pointer"></i> </label>
-                </div>
-
-                <span> <i class="fa-solid fa-angles-right"></i> </span>
-
-                <div class="input-group input-group-sm">
-                  <input class="form-control form-control-sm cal-setting" type="number" id="cal-c" min="1" value="" title="Energy for channel C" placeholder="Target Energy C">
-                  <label class="input-group-text" for="cal-c">keV</label>
-                </div>
-              </div>
-
-            </div>
-
-            <hr>
-
-            <p class="mb-1">Linear (2-point) or quadratic (3-point) calibration is supported.</p>
-            <p class="mb-1">E[keV] = c<sub>1</sub> x<sup>2</sup> + c<sub>2</sub> x + c<sub>3</sub> (x ... Channel Number)</p>
-            <p><span class="link-primary fakelink" id="show-coefficients" title="Show calibration coefficients">Coefficients</span> will be computed automatically.</p>
-
-            <hr>
-
-            <p>
-              <input type="checkbox" class="btn-check" id="apply-cal">
-              <label class="btn btn-outline-primary btn-sm" title="Toggle plot calibration" id="calibration-label" for="apply-cal"> <i class="fa-solid fa-check"></i> Calibrate </label>
-
-              <button class="btn btn-primary btn-sm" type="reset" id="calibration-reset" title="Clear calibration"> <i class="fas fa-trash"></i> Delete</button>
-
-              <label for="cal-input" class="btn btn-primary btn-sm" type="button" title="Import a calibration.json"> <i class="fas fa-file-import"></i> Import </label>
-              <input id="cal-input" class="visually-hidden" type="file" accept=".json" name="name">
-
-              <button class="btn btn-primary btn-sm" type="button" id="calibration-download" title="Export the calibration.json"> <i class="fas fa-file-export"></i> Export </button>
-            </p>
-
-          </form>
-
-        </div>
-
-        <div class="col-lg-auto g-0">
-          <div class="vr h-100 opacity-50"></div>
-        </div>
-
-        <div class="col-md-1 pt-1">
+        <div class="col-lg-2 p-2">
 
           <h2 class="fs-4">Info</h2>
 
-          <strong>Hover:</strong>
+          <strong>Hover Position:</strong>
           <p><span id="hover-data">None</span></p>
 
-          <strong>Click:</strong>
+          <strong>Click Position:</strong>
           <p><span id="click-data">None</span></p>
 
           <hr>
 
-          <strong>Spectrum cts:</strong>
+          <strong>Spectrum Counts:</strong>
           <p><span id="total-spec-cts">0</span></p>
 
-          <strong>Background cts:</strong>
+          <strong>Background Counts:</strong>
           <p><span id="total-bg-cts">0</span></p>
 
         </div>
@@ -323,17 +422,6 @@
       </div>
 
       <div class="plot-tools row border border-top-0 border-1 border-secondary bg-light">
-
-        <div class="col-md-auto d-md-flex">
-          <button class="btn btn-primary ps-2 pe-2 pt-1 pb-1" type="button" id="toggle-menu" data-bs-toggle="offcanvas" data-bs-target="#offcanvas" aria-controls="offcanvas" title="Open Settings Menu">
-            <i class="fas fa-sliders-h"></i> Settings
-          </button>
-        </div>
-
-        <div class="col-md-auto g-0">
-          <div class="vr h-100"></div>
-          <div class="vr h-100"></div>
-        </div>
 
         <div class="col-md-auto pt-1 pb-1">
           <button class="btn btn-primary btn-sm" type="button" id="reset-plot" title="Reset plot settings"> <i class="fas fa-redo"></i> Reset Plot </button>

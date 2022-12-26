@@ -9,18 +9,26 @@
   Possible Future Improvements:
     - (?) Hotkey to open/close settings
     - (?) Add desktop notifications
+    - (?) Social media share function
 
     - Sorting isotope list
-    - Social media share function
     - FWHM calculation for peaks
+    - Save Last Used Main Tab
 
-    - (!) Serial console read capability
+    - Badge with check mark for successfull calibration
+    - Badge with status of serial recording
+    - Badge with number of files ok files for file import
+
     - (!) Calibration n-polynomial regression
-    - (!) Update Raw Stream Import Data Structure, also "Chronological Stream"
-    - (!) Add dead time correction for cps
     - (!) Support XML combi-file export
+    - (!) Add dead time correction for cps
+
     - (!) Serial Record selection between "histogram" and "chronological stream"
-    - (!) New Layout with tabs
+    - (!) Update Raw Stream Import Data Structure, also "Chronological Stream"
+    - (!) Serial console read capability
+    - (!) Calibrate Button Click Error Msg reset button
+    - (!) Coefficient List Calibration Tab
+
 
   Known Performance Issues:
     - (Un)Selecting all isotopes from gamma-ray energies list (Plotly)
@@ -189,7 +197,7 @@ document.body.onload = async function(): Promise<void> {
 
 
 // Exit website confirmation alert
-window.onbeforeunload = (/*event*/) => {
+window.onbeforeunload = () => {
   return 'Are you sure to leave?';
 };
 
@@ -247,6 +255,13 @@ window.addEventListener('onappinstalled', () => {
   document.getElementById('manual-install')!.className += 'visually-hidden';
 });
 
+
+window.addEventListener('shown.bs.tab', (event: Event) => { // Adjust Plot Size For Main Tab Menu Content Size
+  if ((<HTMLButtonElement>event.target).getAttribute('data-bs-toggle') === 'pill') {
+    plot.updatePlot(spectrumData);
+    plot.updatePlot(spectrumData);
+  }
+});
 /*
 document.onkeydown = async function(event) {
   console.log(event.keyCode);
@@ -388,14 +403,9 @@ function removeFile(id: dataType): void {
 }
 
 
-const IMPORT_STRING = ': imported';
-
 function addImportLabel() {
   const titleElement = document.getElementById('calibration-title')!;
-
-  if (!titleElement.innerText.includes(IMPORT_STRING)) {
-    titleElement.innerText += IMPORT_STRING;
-  }
+  titleElement.className = titleElement.className.replaceAll('visually-hidden', '');
 }
 
 
@@ -631,8 +641,12 @@ function resetCal(): void {
     const changeType = <HTMLInputElement>element;
     changeType.disabled = false;
   }
+
   const titleElement = document.getElementById('calibration-title')!;
-  titleElement.innerText = titleElement.innerText.replaceAll(IMPORT_STRING, '');
+
+  if (!titleElement.className.includes('visually-hidden')) {
+    titleElement.className += 'visually-hidden';
+  }
 
   plot.clearCalibration();
   toggleCal(false);
