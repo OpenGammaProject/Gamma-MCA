@@ -195,6 +195,7 @@ function getFileData(file, background = false) {
                 if (importedCount >= 2) {
                     plot.calibration.coeff = coeff;
                     plot.calibration.imported = true;
+                    displayCoeffs();
                     for (const element of document.getElementsByClassName('cal-setting')) {
                         const changeType = element;
                         changeType.disabled = true;
@@ -432,12 +433,15 @@ function toggleCal(enabled) {
             plot.computeCoefficients();
         }
     }
-    document.getElementById('c1-coeff').innerText = plot.calibration.coeff.c1.toString();
-    document.getElementById('c2-coeff').innerText = plot.calibration.coeff.c2.toString();
-    document.getElementById('c3-coeff').innerText = plot.calibration.coeff.c3.toString();
+    displayCoeffs();
     plot.calibration.enabled = enabled;
     plot.plotData(spectrumData, false);
     bindPlotEvents();
+}
+function displayCoeffs() {
+    document.getElementById('c1-coeff').innerText = plot.calibration.coeff.c1.toString();
+    document.getElementById('c2-coeff').innerText = plot.calibration.coeff.c2.toString();
+    document.getElementById('c3-coeff').innerText = plot.calibration.coeff.c3.toString();
 }
 document.getElementById('calibration-reset').onclick = () => resetCal();
 function resetCal() {
@@ -569,7 +573,6 @@ function download(filename, text) {
     element.click();
     document.body.removeChild(element);
 }
-document.getElementById('show-coefficients').onclick = () => popupNotification('coefficients');
 function popupNotification(id) {
     const element = document.getElementById(id);
     const toast = new bootstrap.Toast(element);

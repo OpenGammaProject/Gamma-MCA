@@ -284,7 +284,7 @@
                     COL 1
                     #####
                   -->
-                  <p class="text-center fs-6 fw-semibold visually-hidden" id="calibration-title">IMPORTED</p>
+                  <p class="text-center fs-6 fw-bold text-success mb-1 visually-hidden" id="calibration-title"><i class="fa-regular fa-circle-check"></i> IMPORTED <i class="fa-regular fa-circle-check"></i></p>
 
                   <form>
 
@@ -370,11 +370,14 @@
                   -->
                   <p class="mb-1">Linear (2-point) or quadratic (3-point) calibration is supported.</p>
                   <p class="mb-1">E[keV] = c<sub>1</sub> x<sup>2</sup> + c<sub>2</sub> x + c<sub>3</sub> (x ... Channel Number)</p>
-                  <p><span class="link-primary fakelink" id="show-coefficients" title="Show calibration coefficients">Coefficients</span> will be computed automatically.</p>
 
                   <hr>
 
-                  <p>Coefficient List</p>
+                  <p>Coefficients will be computed automatically:</p>
+
+                  <p class="mb-1">c<sub>1</sub>: <span class="font-monospace" id="c1-coeff">0</span></p>
+                  <p class="mb-1">c<sub>2</sub>: <span class="font-monospace" id="c2-coeff">0</span></p>
+                  <p>c<sub>3</sub>: <span class="font-monospace" id="c3-coeff">0</span></p>
 
                 </div>
               </div>
@@ -1084,6 +1087,7 @@
         </div>
       </div>
 
+      <!--
       <div class="toast-container position-fixed bottom-0 end-0 p-3">
         <div id="coefficients" class="toast bg-light" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
           <div class="toast-header bg-secondary text-light">
@@ -1104,6 +1108,7 @@
             </div>
           </div>
         </div>
+      -->
 
     </div>
 

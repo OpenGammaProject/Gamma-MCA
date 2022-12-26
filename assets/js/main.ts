@@ -27,7 +27,6 @@
     - (!) Update Raw Stream Import Data Structure, also "Chronological Stream"
     - (!) Serial console read capability
     - (!) Calibrate Button Click Error Msg reset button
-    - (!) Coefficient List Calibration Tab
 
   Known Performance Issues:
     - (Un)Selecting all isotopes from gamma-ray energies list (Plotly)
@@ -317,6 +316,7 @@ function getFileData(file: File, background = false): void { // Gets called when
         if (importedCount >= 2) {
           plot.calibration.coeff = coeff;
           plot.calibration.imported = true;
+          displayCoeffs();
 
           for (const element of document.getElementsByClassName('cal-setting')) {
             const changeType = <HTMLInputElement>element;
@@ -619,13 +619,18 @@ function toggleCal(enabled: boolean): void {
       plot.computeCoefficients();
     }
   }
-  document.getElementById('c1-coeff')!.innerText = plot.calibration.coeff.c1.toString();
-  document.getElementById('c2-coeff')!.innerText = plot.calibration.coeff.c2.toString();
-  document.getElementById('c3-coeff')!.innerText = plot.calibration.coeff.c3.toString();
+  displayCoeffs();
 
   plot.calibration.enabled = enabled;
   plot.plotData(spectrumData, false);
   bindPlotEvents(); // needed, because of "false" above
+}
+
+
+function displayCoeffs(): void {
+  document.getElementById('c1-coeff')!.innerText = plot.calibration.coeff.c1.toString();
+  document.getElementById('c2-coeff')!.innerText = plot.calibration.coeff.c2.toString();
+  document.getElementById('c3-coeff')!.innerText = plot.calibration.coeff.c3.toString();
 }
 
 
@@ -802,8 +807,6 @@ function download(filename: string, text: string): void {
     document.body.removeChild(element);
 }
 
-
-document.getElementById('show-coefficients')!.onclick = () => popupNotification('coefficients');
 
 function popupNotification(id: string): void {
   // Uses Bootstrap Toasts already defined in HTML
