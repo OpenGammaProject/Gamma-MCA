@@ -29,7 +29,6 @@
     - (!) Calibrate Button Click Error Msg reset button
     - (!) Coefficient List Calibration Tab
 
-
   Known Performance Issues:
     - (Un)Selecting all isotopes from gamma-ray energies list (Plotly)
 
