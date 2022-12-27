@@ -9,24 +9,28 @@ export class SerialData {
     rawData;
     serData;
     constructor() {
-        this.maxSize = 10000;
+        this.maxSize = 100000;
         this.port = undefined;
         this.adcChannels = 4096;
         this.maxLength = 20;
         this.eolChar = ';';
-        this.consoleMemory = 10000;
+        this.consoleMemory = 100000;
         this.rawData = '';
         this.serInput = '';
         this.serData = [];
     }
-    addRaw(uintArray) {
+    addRaw(uintArray, onlyConsole) {
         if (this.serData.length > this.maxSize) {
             console.warn('Warning: Serial buffer is saturating!');
             return;
         }
         const string = new TextDecoder("utf-8").decode(uintArray);
+        if (onlyConsole) {
+            this.addRawData(string);
+            console.log('onlkyfans');
+            return;
+        }
         this.rawData += string;
-        this.addRawData(string);
         let stringArr = this.rawData.split(this.eolChar);
         stringArr.pop();
         stringArr.shift();
@@ -59,7 +63,6 @@ export class SerialData {
     addRawData(string) {
         this.serInput += string;
         if (this.serInput.length > this.consoleMemory) {
-            console.info('Serial console log is out of memory, deleting old history...');
             const toBeDeleted = this.serInput.length - this.consoleMemory;
             this.serInput = this.serInput.slice(toBeDeleted);
         }

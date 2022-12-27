@@ -1131,7 +1131,7 @@ async function readUntilClosed() {
             while (true) {
                 const { value, done } = await reader.read();
                 if (value) {
-                    ser.addRaw(value);
+                    ser.addRaw(value, onlyConsole);
                 }
                 if (done) {
                     break;
@@ -1163,6 +1163,7 @@ async function startRecord(pause = false, type = recordingType) {
         await ser.port.open(serOptions);
         keepReading = true;
         recordingType = type;
+        ser.flushData();
         if (!pause) {
             removeFile(recordingType);
             firstLoad = true;
@@ -1198,6 +1199,7 @@ window.addEventListener('hide.bs.modal', (event) => {
     if (event.target.getAttribute('id') === 'serialConsoleModal') {
         if (onlyConsole) {
             disconnectPort(true);
+            onlyConsole = false;
         }
         clearTimeout(consoleTimeout);
     }

@@ -14,6 +14,7 @@
     - Sorting isotope list
     - FWHM calculation for peaks
     - Save Last Used Main Tab
+    - Save Chronological/Histogram settings for file and serial
 
     - Badge with check mark for successfull calibration
     - Badge with status of serial recording
@@ -1514,7 +1515,7 @@ async function readUntilClosed(): Promise<void> {
         const {value, done} = await reader.read();
         if (value) {
           // value is a Uint8Array.
-          ser.addRaw(value);
+          ser.addRaw(value, onlyConsole);
         }
         if (done) {
           // reader.cancel() has been called.
@@ -1555,6 +1556,8 @@ async function startRecord(pause = false, type = <dataType>recordingType): Promi
 
     keepReading = true; // Reset keepReading
     recordingType = type;
+
+    ser.flushData(); // Remove all old data if the serial console has been used
 
     if (!pause) {
       removeFile(recordingType); // Remove old spectrum
@@ -1597,6 +1600,7 @@ window.addEventListener('hide.bs.modal', (event: Event) => { // Adjust Plot Size
   if ((<HTMLButtonElement>event.target).getAttribute('id') === 'serialConsoleModal') {
     if (onlyConsole) {
       disconnectPort(true);
+      onlyConsole = false;
     }
     clearTimeout(consoleTimeout);
   }

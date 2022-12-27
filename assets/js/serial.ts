@@ -20,19 +20,19 @@ export class SerialData {
   private serData: number[];
 
   constructor() {
-    this.maxSize = 10_000; // Maximum number of pulses/events to hold in the buffer
+    this.maxSize = 100_000; // Maximum number of pulses/events to hold in the buffer
     this.port = undefined;
     this.adcChannels = 4096; // For OSC
     this.maxLength = 20; // Maximum number of characters for a valid string/number
     this.eolChar = ';'; // End of Line/Data character
 
-    this.consoleMemory = 10_000;
+    this.consoleMemory = 100_000;
     this.rawData = ''; // Raw String Input from Serial Reading
     this.serInput = '';
     this.serData = []; // Ready to use Integer Pulse Heights, could use a setget meh
   }
 
-  addRaw(uintArray: Uint8Array): void {
+  addRaw(uintArray: Uint8Array, onlyConsole: boolean): void {
     if (this.serData.length > this.maxSize) { // Protect from overflow and crashes
       console.warn('Warning: Serial buffer is saturating!');
       return;
@@ -40,8 +40,13 @@ export class SerialData {
 
     const string = new TextDecoder("utf-8").decode(uintArray); //String.fromCharCode(...uintArray);
 
+    if (onlyConsole) {
+      this.addRawData(string);
+      console.log('onlkyfans')
+      return;
+    }
+
     this.rawData += string;
-    this.addRawData(string);
 
     let stringArr = this.rawData.split(this.eolChar); //('\r\n');
     stringArr.pop(); // Delete last entry to avoid counting unfinished transmissions
@@ -81,7 +86,7 @@ export class SerialData {
     this.serInput += string;
 
     if (this.serInput.length > this.consoleMemory) {
-      console.info('Serial console log is out of memory, deleting old history...');
+      //console.warn('Serial console log is out of memory, deleting old history...');
 
       const toBeDeleted = this.serInput.length - this.consoleMemory;
       this.serInput = this.serInput.slice(toBeDeleted);
