@@ -8,28 +8,36 @@
 
 */
 
+import {dataOrder} from './main.js';
+
 export class SerialData {
   maxSize: number;
   port: SerialPort | undefined; // Get the right data type
   adcChannels: number;
+  private maxHistLength: number;
   maxLength: number;
   eolChar: string;
+  orderType: dataOrder;
   readonly consoleMemory: number;
   private serInput: string;
   private rawData: string;
   private serData: number[];
+  private baseHist: number[];
 
   constructor() {
     this.maxSize = 100_000; // Maximum number of pulses/events to hold in the buffer
     this.port = undefined;
     this.adcChannels = 4096; // For OSC
     this.maxLength = 20; // Maximum number of characters for a valid string/number
+    this.maxHistLength = 2**16 * 2 * 10; // Maximum number of characters for a valid histogram string/number
     this.eolChar = ';'; // End of Line/Data character
+    this.orderType = 'chron'; // Chronological data order
 
     this.consoleMemory = 100_000;
     this.rawData = ''; // Raw String Input from Serial Reading
     this.serInput = '';
     this.serData = []; // Ready to use Integer Pulse Heights, could use a setget meh
+    this.baseHist = []; // Baseline histogram that will be subtracted from every other newer hist
   }
 
   addRaw(uintArray: Uint8Array, onlyConsole: boolean): void {
@@ -40,46 +48,103 @@ export class SerialData {
 
     const string = new TextDecoder("utf-8").decode(uintArray); //String.fromCharCode(...uintArray);
 
+    this.addRawData(string);
+
     if (onlyConsole) {
-      this.addRawData(string);
-      console.log('onlkyfans')
       return;
     }
 
     this.rawData += string;
 
-    let stringArr = this.rawData.split(this.eolChar); //('\r\n');
-    stringArr.pop(); // Delete last entry to avoid counting unfinished transmissions
-    stringArr.shift(); // Delete first entry. !FIX SERIAL COMMUNICATION ERRORS!
+    if (this.orderType === 'chron') { // CHRONOLOGICAL EVENTS
 
-    if (stringArr.length <= 1) {
-      if (this.rawData.length > this.maxLength) {
-        this.rawData = ''; // String too long without an EOL char, obvious error, delete.
-      }
-      return;
-    } else {
-      for (const element of stringArr) {
-        //this.rawData = this.rawData.replaceAll(element + '\r\n', '');
-        this.rawData = this.rawData.replace(element + this.eolChar, '');
-        const trimString = element.trim(); // Delete whitespace and line breaks
+      let stringArr = this.rawData.split(this.eolChar); //('\r\n');
+      stringArr.pop(); // Delete last entry to avoid counting unfinished transmissions
+      stringArr.shift(); // Delete first entry. !FIX SERIAL COMMUNICATION ERRORS!
 
-        if (trimString.length === 0 || trimString.length >= this.maxLength) {
-          continue; // String is empty or longer than maxLength --> Invalid, disregard
+      if (stringArr.length <= 1) {
+        if (this.rawData.length > this.maxLength) {
+          this.rawData = ''; // String too long without an EOL char, obvious error, delete.
         }
+        return;
+      } else {
+        for (const element of stringArr) {
+          //this.rawData = this.rawData.replaceAll(element + '\r\n', '');
+          this.rawData = this.rawData.replace(element + this.eolChar, '');
+          const trimString = element.trim(); // Delete whitespace and line breaks
 
-        const parsedInt = parseInt(trimString);
-
-        if (isNaN(parsedInt)) {
-          continue; // Not an integer -> throw away
-        } else {
-          if (parsedInt < 0 || parsedInt > this.adcChannels) { // Fixed value range. !FIX SERIAL COMMUNICATION ERRORS!
-            continue;
+          if (trimString.length === 0 || trimString.length >= this.maxLength) {
+            continue; // String is empty or longer than maxLength --> Invalid, disregard
           }
-          this.serData.push(parsedInt);
+
+          const parsedInt = parseInt(trimString);
+
+          if (isNaN(parsedInt)) {
+            continue; // Not an integer -> throw away
+          } else {
+            if (parsedInt < 0 || parsedInt > this.adcChannels) { // Fixed value range. !FIX SERIAL COMMUNICATION ERRORS!
+              continue;
+            }
+            this.serData.push(parsedInt);
+          }
         }
+      }
+
+    } else if (this.orderType === 'hist') { // HISTOGRAM DATA
+
+      let stringArr = this.rawData.split('\r\n');
+
+      stringArr.pop(); // Delete last entry to avoid counting unfinished transmissions
+      stringArr.shift(); // Delete first entry. !FIX SERIAL COMMUNICATION ERRORS!
+
+      if (stringArr.length < 1) {
+        if (this.rawData.length > this.maxHistLength) {
+          this.rawData = ''; // String too long without an EOL char, obvious error, delete.
+        }
+        return;
+      } else {
+        for (const element of stringArr) {
+          this.rawData = this.rawData.replaceAll(element + '\r\n', '');
+          const trimString = element.trim(); // Delete whitespace and line breaks
+
+          if (trimString.length === 0 || trimString.length >= this.maxHistLength) {
+            continue; // String is empty or longer than maxHistLength --> Invalid, disregard
+          }
+
+          const stringHist = trimString.split(this.eolChar);
+          stringHist.pop();
+
+          if (stringHist.length !== this.adcChannels) {
+            continue; // Something is wrong with this histogram
+          }
+
+          let numHist = stringHist.map(x => parseInt(x));
+          numHist = numHist.map(function(item) {
+            if (isNaN(item)) {
+              return 0;
+            } else {
+              return item;
+            }
+          });
+
+          if (this.baseHist.length === 0) {
+            this.baseHist = numHist;
+            return;
+          }
+
+          const diffHist = numHist.map((item, index) => item - this.baseHist[index]);
+
+          for (let ch = 0; ch < this.adcChannels; ch++) {
+            for (let num = 0; num < diffHist[ch]; num++) {
+              this.serData.push(ch);
+            }
+          }
+
+          this.baseHist = numHist; // Update baseline to the current array
+        }
+
       }
     }
-
   }
 
   addRawData(string: string): void {
@@ -110,6 +175,10 @@ export class SerialData {
   flushData(): void {
     this.rawData = '';
     this.serData = [];
+  }
+
+  clearBaseHist(): void {
+    this.baseHist = [];
   }
 
   updateData(oldDataArr: number[], newDataArr: number[]): number[] {

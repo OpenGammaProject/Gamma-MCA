@@ -1028,6 +1028,11 @@ function resetMCA() {
     }
     window.location.reload();
 }
+document.getElementById('s1').onchange = event => selectSerialType(event.target);
+document.getElementById('s2').onchange = event => selectSerialType(event.target);
+function selectSerialType(button) {
+    ser.orderType = button.value;
+}
 function serialConnect() {
     listSerial();
     popupNotification('serial-connect');
@@ -1264,6 +1269,7 @@ async function disconnectPort(stop = false) {
         cpsValues = [];
         const cpsButton = document.getElementById('plot-cps');
         toggleCps(cpsButton, true);
+        ser.clearBaseHist();
     }
     else {
         document.getElementById('resume-button').className = document.getElementById('resume-button').className.replaceAll(' visually-hidden', '');

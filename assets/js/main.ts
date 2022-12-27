@@ -24,7 +24,8 @@
     - (!) Support XML combi-file export
     - (!) Add dead time correction for cps
 
-    - (!) Serial Record selection between "histogram" and "chronological stream"
+    - (!) Private Variables for classes
+
 
   Known Performance Issues:
     - (Un)Selecting all isotopes from gamma-ray energies list (Plotly)
@@ -47,6 +48,7 @@ interface portList {
 
 type calType = 'a' | 'b' | 'c';
 type dataType = 'data' | 'background';
+export type dataOrder = 'hist' | 'chron';
 
 export class SpectrumData { // Will hold the measurement data globally.
   data: number[] = [];
@@ -1387,6 +1389,14 @@ function resetMCA(): void {
 =========================================
 */
 
+document.getElementById('s1')!.onchange = event => selectSerialType(<HTMLInputElement>event.target);
+document.getElementById('s2')!.onchange = event => selectSerialType(<HTMLInputElement>event.target);
+
+function selectSerialType(button: HTMLInputElement): void {
+  ser.orderType = <dataOrder>button.value;
+}
+
+
 function serialConnect(/*event: Event*/) {
   listSerial();
   popupNotification('serial-connect');
@@ -1690,6 +1700,7 @@ async function disconnectPort(stop = false): Promise<void> {
 
     const cpsButton = <HTMLButtonElement>document.getElementById('plot-cps');
     toggleCps(cpsButton, true); // Disable CPS again
+    ser.clearBaseHist(); // Clear base histogram for data processing
   } else {
     document.getElementById('resume-button')!.className = document.getElementById('resume-button')!.className.replaceAll(' visually-hidden','');
   }
