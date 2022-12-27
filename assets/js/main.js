@@ -1113,7 +1113,11 @@ function toggleCps(button, off = false) {
 async function selectPort() {
     const selector = document.getElementById('port-selector');
     const index = selector.selectedIndex;
-    ser.port = portsAvail[index];
+    const newport = portsAvail[index];
+    if (ser.port !== newport) {
+        ser.port = newport;
+        clearConsoleLog();
+    }
 }
 let keepReading = false;
 let reader;

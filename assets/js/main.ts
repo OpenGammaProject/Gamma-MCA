@@ -1490,7 +1490,13 @@ function toggleCps(button: HTMLButtonElement, off = false): void {
 async function selectPort(): Promise<void> {
   const selector = <HTMLSelectElement>document.getElementById('port-selector');
   const index = selector.selectedIndex;
-  ser.port = portsAvail[index];
+
+  const newport = portsAvail[index];
+
+  if (ser.port !== newport) {
+    ser.port = newport; // Changed
+    clearConsoleLog(); // Clear serial console history
+  }
 }
 
 
