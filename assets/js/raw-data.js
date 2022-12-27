@@ -4,7 +4,7 @@ export class RawData {
     adcChannels;
     fileType;
     tempValIndex;
-    constructor(valueIndex, delimiter = ',') {
+    constructor(valueIndex, delimiter = ';') {
         this.valueIndex = valueIndex;
         this.delimiter = delimiter;
         this.adcChannels = 4096;
@@ -27,9 +27,6 @@ export class RawData {
         return parseFloat(values[this.tempValIndex].trim());
     }
     histConverter(dataArr) {
-        if (this.fileType === 1) {
-            return dataArr;
-        }
         let xArray = Array(this.adcChannels).fill(0);
         for (const element of dataArr) {
             xArray[element] += 1;
@@ -38,10 +35,17 @@ export class RawData {
     }
     csvToArray(data) {
         this.tempValIndex = this.valueIndex;
-        const allLines = data.split('\n');
-        const dataLines = allLines.filter(this.checkLines, this);
-        const cleanData = dataLines.map(this.parseLines, this);
-        return this.histConverter(cleanData);
+        if (this.fileType === 1) {
+            const allLines = data.split('\n');
+            const dataLines = allLines.filter(this.checkLines, this);
+            return dataLines.map(this.parseLines, this);
+        }
+        else {
+            const allEvents = data.split(this.delimiter);
+            const dataEvents = allEvents.filter(this.checkLines, this);
+            const cleanData = dataEvents.map(this.parseLines, this);
+            return this.histConverter(cleanData);
+        }
     }
     xmlToArray(data) {
         const coeff = {

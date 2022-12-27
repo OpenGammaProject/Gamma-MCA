@@ -6,6 +6,8 @@
   2022, NuclearPhoenix.- Phoenix1747
   https://nuclearphoenix.xyz
 
+  TODO: Rewrite CSV stuff, it's ugly af and also pretty confusing.
+
 */
 
 import { coeffObj } from './plot.js';
@@ -17,7 +19,7 @@ export class RawData {
   fileType: number;
   private tempValIndex: number;
 
-  constructor(valueIndex: number, delimiter = ',') {
+  constructor(valueIndex: number, delimiter = ';') {
     this.valueIndex = valueIndex;
     this.delimiter = delimiter;
 
@@ -47,10 +49,6 @@ export class RawData {
   }
 
   histConverter(dataArr: number[]): number[] {
-    if (this.fileType === 1) {
-      return dataArr;
-    }
-
     let xArray: number[] = Array(this.adcChannels).fill(0);
 
     for(const element of dataArr) {
@@ -62,12 +60,20 @@ export class RawData {
   csvToArray(data: string): number[] {
     this.tempValIndex = this.valueIndex; // RESET VALUE INDEX
 
-    const allLines = data.split('\n');
+    if (this.fileType === 1) { // HISTOGRAM
+      const allLines = data.split('\n');
 
-    const dataLines = allLines.filter(this.checkLines, this);
-    const cleanData = dataLines.map(this.parseLines, this);
+      const dataLines = allLines.filter(this.checkLines, this);
 
-    return this.histConverter(cleanData);
+      return dataLines.map(this.parseLines, this);
+    } else { // CHRONOLOGICAL STREAM
+      const allEvents = data.split(this.delimiter);
+
+      const dataEvents = allEvents.filter(this.checkLines, this);
+      const cleanData = dataEvents.map(this.parseLines, this);
+
+      return this.histConverter(cleanData);
+    }
   }
 
   xmlToArray(data: string): {espectrum: number[], bgspectrum: number[], coeff: coeffObj} {

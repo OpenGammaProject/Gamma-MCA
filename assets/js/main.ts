@@ -24,7 +24,6 @@
     - (!) Add dead time correction for cps
 
     - (!) Serial Record selection between "histogram" and "chronological stream"
-    - (!) Update Raw Stream Import Data Structure, also "Chronological Stream"
 
   Known Performance Issues:
     - (Un)Selecting all isotopes from gamma-ray energies list (Plotly)
