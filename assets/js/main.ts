@@ -25,7 +25,6 @@
 
     - (!) Serial Record selection between "histogram" and "chronological stream"
     - (!) Update Raw Stream Import Data Structure, also "Chronological Stream"
-    - (!) Serial console read capability
 
   Known Performance Issues:
     - (Un)Selecting all isotopes from gamma-ray energies list (Plotly)
@@ -1583,29 +1582,68 @@ async function startRecord(pause = false, type = <dataType>recordingType): Promi
 }
 
 
-document.getElementById('send-command')!.onclick = () => sendSerial((<HTMLInputElement>document.getElementById('ser-command')).value);
+window.addEventListener('show.bs.modal', (event: Event) => { // Adjust Plot Size For Main Tab Menu Content Size
+  if ((<HTMLButtonElement>event.target).getAttribute('id') === 'serialConsoleModal') {
+    readSerial();
+  }
+});
 
-async function sendSerial(command: string): Promise<void> {
-  const wasReading = keepReading;
-
-  try {
-    if (wasReading) {
-      await disconnectPort();
+window.addEventListener('hide.bs.modal', (event: Event) => { // Adjust Plot Size For Main Tab Menu Content Size
+  if ((<HTMLButtonElement>event.target).getAttribute('id') === 'serialConsoleModal') {
+    if (onlyConsole) {
+      disconnectPort(true);
     }
+    clearTimeout(consoleTimeout);
+  }
+});
 
+let onlyConsole = false;
+
+async function readSerial(): Promise<void> {
+  try {
     selectPort();
 
     if (ser.port === undefined) {
       throw 'Port is undefined! This should not be happening.';
     }
 
+    if (keepReading) { // Check if already reading
+      refreshConsole();
+      onlyConsole = false;
+      return;
+    } else {
+      onlyConsole = true;
+    }
+
     await ser.port.open(serOptions); // Baud-Rate optional
+
+    keepReading = true; // Reset keepReading
+
+    refreshConsole(); // Start console update timer
+
+    closed = readUntilClosed();
+  } catch(err) {
+    console.error('Connection Error:', err);
+    popupNotification('serial-connect-error');
+
+    onlyConsole = false;
+  }
+}
+
+
+document.getElementById('send-command')!.onclick = () => sendSerial((<HTMLInputElement>document.getElementById('ser-command')).value);
+
+async function sendSerial(command: string): Promise<void> {
+  try {
+    if (ser.port === undefined) {
+      throw 'Port is undefined! This should not be happening.';
+    }
 
     const textEncoder = new TextEncoderStream();
     const writer = textEncoder.writable.getWriter();
     const writableStreamClosed = textEncoder.readable.pipeTo(ser.port.writable);
 
-    let formatCommand = command.trim() + '\n';
+    const formatCommand = command.trim() + '\n';
 
     writer.write(formatCommand);
     //writer.write('\x03\n');
@@ -1614,20 +1652,12 @@ async function sendSerial(command: string): Promise<void> {
     await writer.close();
     await writableStreamClosed;
 
-    document.getElementById('ser-output')!.innerText += '> ' + formatCommand.trim() + '\n';
+    //ser.addRawData('> ' + formatCommand.trim() + '\n');
     (<HTMLInputElement>document.getElementById('ser-command')).value = '';
 
   } catch (err) {
     console.error('Connection Error:', err);
     popupNotification('serial-connect-error');
-  } finally {
-
-    await ser.port?.close();
-
-    if (wasReading) {
-      startRecord(true);
-    }
-
   }
 }
 
@@ -1662,6 +1692,7 @@ async function disconnectPort(stop = false): Promise<void> {
   try {
     clearTimeout(refreshTimeout);
     clearTimeout(metaTimeout);
+    clearTimeout(consoleTimeout);
   } catch (err) {
     console.warn('No timeout to clear.', err);
   }
@@ -1672,6 +1703,36 @@ async function disconnectPort(stop = false): Promise<void> {
     console.warn('Nothing to disconnect.', err);
   }
   await closed;
+}
+
+
+document.getElementById('reconnect-console-log')!.onclick = () => reconnectConsole();
+
+async function reconnectConsole(): Promise<void> {
+  // This is just a copy of the hide and show modal events back to back ;)
+  if (onlyConsole) {
+    await disconnectPort(true);
+  }
+  clearTimeout(consoleTimeout);
+  readSerial();
+}
+
+
+document.getElementById('clear-console-log')!.onclick = () => clearConsoleLog();
+
+function clearConsoleLog(): void {
+  document.getElementById('ser-output')!.innerText = '';
+  ser.flushRawData();
+}
+
+
+let consoleTimeout: NodeJS.Timeout;
+
+function refreshConsole(): void {
+  if (ser.port?.readable) {
+    document.getElementById('ser-output')!.innerText = ser.getRawData();
+    consoleTimeout = setTimeout(refreshConsole, 1000);
+  }
 }
 
 

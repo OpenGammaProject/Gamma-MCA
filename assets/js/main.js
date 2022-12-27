@@ -1186,37 +1186,63 @@ async function startRecord(pause = false, type = recordingType) {
         popupNotification('serial-connect-error');
     }
 }
-document.getElementById('send-command').onclick = () => sendSerial(document.getElementById('ser-command').value);
-async function sendSerial(command) {
-    const wasReading = keepReading;
-    try {
-        if (wasReading) {
-            await disconnectPort();
+window.addEventListener('show.bs.modal', (event) => {
+    if (event.target.getAttribute('id') === 'serialConsoleModal') {
+        readSerial();
+    }
+});
+window.addEventListener('hide.bs.modal', (event) => {
+    if (event.target.getAttribute('id') === 'serialConsoleModal') {
+        if (onlyConsole) {
+            disconnectPort(true);
         }
+        clearTimeout(consoleTimeout);
+    }
+});
+let onlyConsole = false;
+async function readSerial() {
+    try {
         selectPort();
         if (ser.port === undefined) {
             throw 'Port is undefined! This should not be happening.';
         }
+        if (keepReading) {
+            refreshConsole();
+            onlyConsole = false;
+            return;
+        }
+        else {
+            onlyConsole = true;
+        }
         await ser.port.open(serOptions);
+        keepReading = true;
+        refreshConsole();
+        closed = readUntilClosed();
+    }
+    catch (err) {
+        console.error('Connection Error:', err);
+        popupNotification('serial-connect-error');
+        onlyConsole = false;
+    }
+}
+document.getElementById('send-command').onclick = () => sendSerial(document.getElementById('ser-command').value);
+async function sendSerial(command) {
+    try {
+        if (ser.port === undefined) {
+            throw 'Port is undefined! This should not be happening.';
+        }
         const textEncoder = new TextEncoderStream();
         const writer = textEncoder.writable.getWriter();
         const writableStreamClosed = textEncoder.readable.pipeTo(ser.port.writable);
-        let formatCommand = command.trim() + '\n';
+        const formatCommand = command.trim() + '\n';
         writer.write(formatCommand);
         await writer.close();
         await writableStreamClosed;
-        document.getElementById('ser-output').innerText += '> ' + formatCommand.trim() + '\n';
         document.getElementById('ser-command').value = '';
     }
     catch (err) {
         console.error('Connection Error:', err);
         popupNotification('serial-connect-error');
-    }
-    finally {
-        await ser.port?.close();
-        if (wasReading) {
-            startRecord(true);
-        }
     }
 }
 document.getElementById('pause-button').onclick = () => disconnectPort();
@@ -1243,6 +1269,7 @@ async function disconnectPort(stop = false) {
     try {
         clearTimeout(refreshTimeout);
         clearTimeout(metaTimeout);
+        clearTimeout(consoleTimeout);
     }
     catch (err) {
         console.warn('No timeout to clear.', err);
@@ -1254,6 +1281,26 @@ async function disconnectPort(stop = false) {
         console.warn('Nothing to disconnect.', err);
     }
     await closed;
+}
+document.getElementById('reconnect-console-log').onclick = () => reconnectConsole();
+async function reconnectConsole() {
+    if (onlyConsole) {
+        await disconnectPort(true);
+    }
+    clearTimeout(consoleTimeout);
+    readSerial();
+}
+document.getElementById('clear-console-log').onclick = () => clearConsoleLog();
+function clearConsoleLog() {
+    document.getElementById('ser-output').innerText = '';
+    ser.flushRawData();
+}
+let consoleTimeout;
+function refreshConsole() {
+    if (ser.port?.readable) {
+        document.getElementById('ser-output').innerText = ser.getRawData();
+        consoleTimeout = setTimeout(refreshConsole, 1000);
+    }
 }
 let metaTimeout;
 function refreshMeta(type) {

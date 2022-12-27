@@ -4,6 +4,8 @@ export class SerialData {
     adcChannels;
     maxLength;
     eolChar;
+    consoleMemory;
+    serInput;
     rawData;
     serData;
     constructor() {
@@ -12,7 +14,9 @@ export class SerialData {
         this.adcChannels = 4096;
         this.maxLength = 20;
         this.eolChar = ';';
+        this.consoleMemory = 5000;
         this.rawData = '';
+        this.serInput = '';
         this.serData = [];
     }
     addRaw(uintArray) {
@@ -20,8 +24,9 @@ export class SerialData {
             console.warn('Warning: Serial buffer is saturating!');
             return;
         }
-        const string = String.fromCharCode(...uintArray);
+        const string = new TextDecoder("utf-8").decode(uintArray);
         this.rawData += string;
+        this.addRawData(string);
         let stringArr = this.rawData.split(this.eolChar);
         stringArr.pop();
         stringArr.shift();
@@ -50,6 +55,20 @@ export class SerialData {
                 }
             }
         }
+    }
+    addRawData(string) {
+        this.serInput += string;
+        if (this.serInput.length > this.consoleMemory) {
+            console.info('Serial console log is out of memory, deleting old history...');
+            const toBeDeleted = this.serInput.length - this.consoleMemory;
+            this.serInput = this.serInput.slice(toBeDeleted);
+        }
+    }
+    getRawData() {
+        return this.serInput;
+    }
+    flushRawData() {
+        this.serInput = '';
     }
     getData() {
         const copyArr = [...this.serData];
