@@ -30,6 +30,7 @@ let refreshRate = 1000;
 let maxRecTimeEnabled = false;
 let maxRecTime = 1800000;
 const REFRESH_META_TIME = 100;
+const CONSOLE_REFRESH = 500;
 let cpsValues = [];
 let isoListURL = 'assets/isotopes_energies_min.json';
 let isoList = {};
@@ -108,8 +109,7 @@ document.body.onload = async function () {
             popupNotification('welcomeMsg');
             firstInstall = true;
         }
-        const time = new Date();
-        saveJSON('lastVisit', time.getTime());
+        saveJSON('lastVisit', Date.now());
         saveJSON('lastUsedVersion', APP_VERSION);
         const settingsNotSaveAlert = document.getElementById('ls-unavailable');
         settingsNotSaveAlert.parentNode.removeChild(settingsNotSaveAlert);
@@ -1169,8 +1169,7 @@ async function startRecord(pause = false, type = recordingType) {
         document.getElementById('record-button').className += ' visually-hidden';
         document.getElementById('resume-button').className += ' visually-hidden';
         document.getElementById('recording-spinner').className = document.getElementById('recording-spinner').className.replaceAll(' visually-hidden', '');
-        const timer = new Date();
-        startTime = timer.getTime();
+        startTime = performance.now();
         refreshRender(recordingType);
         refreshMeta(recordingType);
         if (pause) {
@@ -1248,8 +1247,7 @@ async function sendSerial(command) {
 document.getElementById('pause-button').onclick = () => disconnectPort();
 document.getElementById('stop-button').onclick = () => disconnectPort(true);
 async function disconnectPort(stop = false) {
-    const nowTime = new Date();
-    timeDone += nowTime.getTime() - startTime;
+    timeDone += performance.now() - startTime;
     document.getElementById('pause-button').className += ' visually-hidden';
     document.getElementById('recording-spinner').className += ' visually-hidden';
     if (stop) {
@@ -1299,17 +1297,17 @@ let consoleTimeout;
 function refreshConsole() {
     if (ser.port?.readable) {
         document.getElementById('ser-output').innerText = ser.getRawData();
-        consoleTimeout = setTimeout(refreshConsole, 1000);
+        consoleTimeout = setTimeout(refreshConsole, CONSOLE_REFRESH);
     }
 }
 let metaTimeout;
 function refreshMeta(type) {
     if (ser.port?.readable) {
-        const nowTime = new Date();
+        const nowTime = performance.now();
         const totalTimeElement = document.getElementById('total-record-time');
         const timeElement = document.getElementById('record-time');
         const progressBar = document.getElementById('ser-time-progress-bar');
-        const delta = new Date(nowTime.getTime() - startTime + timeDone);
+        const delta = new Date(nowTime - startTime + timeDone);
         timeElement.innerText = addLeadingZero(delta.getUTCHours().toString()) + ':' + addLeadingZero(delta.getUTCMinutes().toString()) + ':' + addLeadingZero(delta.getUTCSeconds().toString());
         if (maxRecTimeEnabled) {
             const progressElement = document.getElementById('ser-time-progress');
@@ -1330,7 +1328,7 @@ function refreshMeta(type) {
             popupNotification('auto-stop');
         }
         else {
-            const finishDelta = new Date().getTime() - nowTime.getTime();
+            const finishDelta = performance.now() - nowTime;
             if (REFRESH_META_TIME - finishDelta > 0) {
                 metaTimeout = setTimeout(refreshMeta, REFRESH_META_TIME - finishDelta, type);
             }
@@ -1340,14 +1338,14 @@ function refreshMeta(type) {
         }
     }
 }
-let lastUpdate = new Date();
+let lastUpdate = performance.now();
 let refreshTimeout;
 function refreshRender(type) {
     if (ser.port?.readable) {
-        const startDelay = new Date();
+        const startDelay = performance.now();
         const newData = ser.getData();
-        const endDelay = new Date();
-        const delta = new Date(timeDone - startTime + startDelay.getTime());
+        const endDelay = performance.now();
+        const delta = new Date(timeDone - startTime + startDelay);
         spectrumData[type] = ser.updateData(spectrumData[type], newData);
         spectrumData[`${type}Cps`] = spectrumData[type].map(val => val / delta.getTime() * 1000);
         if (firstLoad) {
@@ -1358,7 +1356,7 @@ function refreshRender(type) {
         else {
             plot.updatePlot(spectrumData);
         }
-        const deltaLastRefresh = endDelay.getTime() - lastUpdate.getTime();
+        const deltaLastRefresh = endDelay - lastUpdate;
         lastUpdate = endDelay;
         const cpsValue = newData.length / deltaLastRefresh * 1000;
         document.getElementById('cps').innerText = cpsValue.toFixed(1) + ' cps';
@@ -1374,7 +1372,7 @@ function refreshRender(type) {
         document.getElementById('avg-cps-std').innerHTML = ` &plusmn; ${std.toFixed(1)} cps (&#916; ${Math.round(std / mean * 100)}%)`;
         document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts(spectrumData.data).toString();
         document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts(spectrumData.background).toString();
-        const finishDelta = new Date().getTime() - startDelay.getTime();
+        const finishDelta = performance.now() - startDelay;
         if (refreshRate - finishDelta > 0) {
             refreshTimeout = setTimeout(refreshRender, refreshRate - finishDelta, type);
         }

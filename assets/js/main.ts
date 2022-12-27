@@ -77,6 +77,7 @@ let refreshRate = 1000; // Delay in ms between serial plot updates
 let maxRecTimeEnabled = false;
 let maxRecTime = 1800000; // 30 mins
 const REFRESH_META_TIME = 100; // 100 ms
+const CONSOLE_REFRESH = 500; // 500 ms
 
 let cpsValues: number[] = [];
 
@@ -172,8 +173,8 @@ document.body.onload = async function(): Promise<void> {
       popupNotification('welcomeMsg');
       firstInstall = true;
     }
-    const time = new Date();
-    saveJSON('lastVisit', time.getTime());
+
+    saveJSON('lastVisit', Date.now());
     saveJSON('lastUsedVersion', APP_VERSION);
 
     const settingsNotSaveAlert = document.getElementById('ls-unavailable')!; // Remove saving alert
@@ -1562,8 +1563,7 @@ async function startRecord(pause = false, type = <dataType>recordingType): Promi
     document.getElementById('resume-button')!.className += ' visually-hidden';
     document.getElementById('recording-spinner')!.className = document.getElementById('recording-spinner')!.className.replaceAll(' visually-hidden','');
 
-    const timer = new Date();
-    startTime = timer.getTime();
+    startTime = performance.now(); //Date.now();
 
     refreshRender(recordingType); // Start updating the plot
     refreshMeta(recordingType); // Start updating the meta data
@@ -1666,8 +1666,7 @@ document.getElementById('pause-button')!.onclick = () => disconnectPort();
 document.getElementById('stop-button')!.onclick = () => disconnectPort(true);
 
 async function disconnectPort(stop = false): Promise<void> {
-  const nowTime = new Date();
-  timeDone += nowTime.getTime() - startTime;
+  timeDone += performance.now() - startTime; //Date.now() - startTime;
 
   document.getElementById('pause-button')!.className += ' visually-hidden';
   document.getElementById('recording-spinner')!.className += ' visually-hidden';
@@ -1731,7 +1730,7 @@ let consoleTimeout: NodeJS.Timeout;
 function refreshConsole(): void {
   if (ser.port?.readable) {
     document.getElementById('ser-output')!.innerText = ser.getRawData();
-    consoleTimeout = setTimeout(refreshConsole, 1000);
+    consoleTimeout = setTimeout(refreshConsole, CONSOLE_REFRESH);
   }
 }
 
@@ -1740,13 +1739,13 @@ let metaTimeout: NodeJS.Timeout;
 
 function refreshMeta(type: dataType): void {
   if (ser.port?.readable) {
-    const nowTime = new Date();
+    const nowTime = performance.now(); //Date.now();
 
     const totalTimeElement = document.getElementById('total-record-time')!;
     const timeElement = document.getElementById('record-time')!;
     const progressBar = document.getElementById('ser-time-progress-bar')!;
 
-    const delta = new Date(nowTime.getTime() - startTime + timeDone);
+    const delta = new Date(nowTime - startTime + timeDone);
 
     timeElement.innerText = addLeadingZero(delta.getUTCHours().toString()) + ':' + addLeadingZero(delta.getUTCMinutes().toString()) + ':' + addLeadingZero(delta.getUTCSeconds().toString());
 
@@ -1769,7 +1768,7 @@ function refreshMeta(type: dataType): void {
       disconnectPort(true);
       popupNotification('auto-stop');
     } else {
-      const finishDelta = new Date().getTime() - nowTime.getTime();
+      const finishDelta = performance.now() - nowTime; //Date.now() - nowTime;
       if (REFRESH_META_TIME - finishDelta > 0) { // Only re-schedule if still available
         metaTimeout = setTimeout(refreshMeta, REFRESH_META_TIME - finishDelta, type);
       } else {
@@ -1780,16 +1779,16 @@ function refreshMeta(type: dataType): void {
 }
 
 
-let lastUpdate = new Date();
+let lastUpdate = performance.now(); //Date.now();
 let refreshTimeout: NodeJS.Timeout;
 
 function refreshRender(type: dataType): void {
   if (ser.port?.readable) {
-    const startDelay = new Date();
+    const startDelay = performance.now(); //Date.now();
     const newData = ser.getData(); // Get all the new data
-    const endDelay = new Date();
+    const endDelay = performance.now(); //Date.now();
 
-    const delta = new Date(timeDone - startTime + startDelay.getTime());
+    const delta = new Date(timeDone - startTime + startDelay);
 
     spectrumData[type] = ser.updateData(spectrumData[type], newData); // Depends on Background/Spectrum Aufnahme
     spectrumData[`${type}Cps`] = spectrumData[type].map(val => val / delta.getTime() * 1000);
@@ -1802,7 +1801,7 @@ function refreshRender(type: dataType): void {
       plot.updatePlot(spectrumData);
     }
 
-    const deltaLastRefresh = endDelay.getTime() - lastUpdate.getTime();
+    const deltaLastRefresh = endDelay - lastUpdate;
     lastUpdate = endDelay;
 
     const cpsValue = newData.length / deltaLastRefresh * 1000;
@@ -1826,7 +1825,7 @@ function refreshRender(type: dataType): void {
     document.getElementById('total-spec-cts')!.innerText = spectrumData.getTotalCounts(spectrumData.data).toString();
     document.getElementById('total-bg-cts')!.innerText = spectrumData.getTotalCounts(spectrumData.background).toString();
 
-    const finishDelta = new Date().getTime() - startDelay.getTime();
+    const finishDelta = performance.now() - startDelay; //Date.now() - startDelay;
     if (refreshRate - finishDelta > 0) { // Only re-schedule if still available
       refreshTimeout = setTimeout(refreshRender, refreshRate - finishDelta, type);
     } else {
