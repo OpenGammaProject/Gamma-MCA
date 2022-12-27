@@ -94,18 +94,18 @@ export class RawData {
       const bgspecArray = Array.from(bgspec);
       const calCoeffsArray = Array.from(calCoeffs);
 
-      const espectrum = this.histConverter(especArray.map(item => {
+      const espectrum = especArray.map(item => {
         if (item.textContent === null) {
           return -1;
         }
         return parseFloat(item.textContent);
-      }));
-      const bgspectrum = this.histConverter(bgspecArray.map(item => {
+      });
+      const bgspectrum = bgspecArray.map(item => {
         if (item.textContent === null) {
           return -1;
         }
         return parseFloat(item.textContent);
-      }));
+      });
 
       const coeffNumArray = calCoeffsArray.map(item => {
         if (item.textContent === null) {
