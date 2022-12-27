@@ -26,7 +26,7 @@ export class SerialData {
     this.maxLength = 20; // Maximum number of characters for a valid string/number
     this.eolChar = ';'; // End of Line/Data character
 
-    this.consoleMemory = 5_000;
+    this.consoleMemory = 10_000;
     this.rawData = ''; // Raw String Input from Serial Reading
     this.serInput = '';
     this.serData = []; // Ready to use Integer Pulse Heights, could use a setget meh

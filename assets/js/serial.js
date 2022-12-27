@@ -14,7 +14,7 @@ export class SerialData {
         this.adcChannels = 4096;
         this.maxLength = 20;
         this.eolChar = ';';
-        this.consoleMemory = 5000;
+        this.consoleMemory = 10000;
         this.rawData = '';
         this.serInput = '';
         this.serData = [];
