@@ -28,7 +28,7 @@ export class RawData {
     this.tempValIndex = valueIndex;
   }
 
-  checkLines(value: string): boolean {
+  private checkLines(value: string): boolean {
     const values = value.split(this.delimiter);
 
     const testParseFirst = parseFloat(values[0].trim());
@@ -43,12 +43,12 @@ export class RawData {
     return values.length > this.tempValIndex;
   }
 
-  parseLines(value: string): number {
+  private parseLines(value: string): number {
     const values = value.split(this.delimiter);
     return parseFloat(values[this.tempValIndex].trim());
   }
 
-  histConverter(dataArr: number[]): number[] {
+  private histConverter(dataArr: number[]): number[] {
     let xArray: number[] = Array(this.adcChannels).fill(0);
 
     for(const element of dataArr) {

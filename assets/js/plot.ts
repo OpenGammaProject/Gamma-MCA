@@ -109,7 +109,7 @@ export class SpectrumPlot {
     lastDataX: <number[]>[],
     lastDataY: <number[]>[],
   };
-  readonly customModeBarButtons = {
+  private customModeBarButtons = {
     name: 'Download plot as HTML',
     // @ts-ignore // Works just fine without TS complaining
     icon: Plotly.Icons['disk'],
@@ -179,7 +179,7 @@ export class SpectrumPlot {
   /*
     Get An Array with Length == Data.length containing ascending numbers
   */
-  getXAxis(len: number): number[] {
+  private getXAxis(len: number): number[] {
     let xArray: number[] = [];
     for(let i = 0; i < len; i++) {
       xArray.push(i);
@@ -241,7 +241,7 @@ export class SpectrumPlot {
   /*
     Get the calibrated x-axis using the values in this.calibration
   */
-  getCalAxis(len: number): number[] {
+  private getCalAxis(len: number): number[] {
     let calArray: number[] = [];
 
     const a = this.calibration.coeff.c1;
@@ -257,7 +257,7 @@ export class SpectrumPlot {
   /*
     Get The Moving Average
   */
-  computeMovingAverage(target: number[], length = this.smaLength): number[] {
+  private computeMovingAverage(target: number[], length = this.smaLength): number[] {
     let newData: number[] = Array(target.length).fill(0);
     const half = Math.round(length/2);
 
@@ -297,7 +297,7 @@ export class SpectrumPlot {
   /*
     Seek the closest matching isotope by energy from an isotope list
   */
-  seekClosest(value: number, maxDist = 100): {energy: number, name: string} | {energy: undefined, name: undefined} {
+  private seekClosest(value: number, maxDist = 100): {energy: number, name: string} | {energy: undefined, name: undefined} {
     const closeVals = Object.keys(this.isoList).filter(energy => { // Only allow closest values and disregard undefined
       if (energy) {
         return Math.abs(parseFloat(energy) - value) <= maxDist;

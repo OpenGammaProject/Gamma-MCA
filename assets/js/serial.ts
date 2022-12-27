@@ -15,10 +15,10 @@ export class SerialData {
   port: SerialPort | undefined; // Get the right data type
   adcChannels: number;
   private maxHistLength: number;
-  maxLength: number;
+  private maxLength: number;
   eolChar: string;
   orderType: dataOrder;
-  readonly consoleMemory: number;
+  private consoleMemory: number;
   private serInput: string;
   private rawData: string;
   private serData: number[];

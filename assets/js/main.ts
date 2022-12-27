@@ -13,18 +13,16 @@
 
     - Sorting isotope list
     - FWHM calculation for peaks
+    - Calibration n-polynomial regression
+
     - Save Last Used Main Tab
     - Save Chronological/Histogram settings for file and serial
-
     - Badge with check mark for successfull calibration
     - Badge with status of serial recording
-    - Badge with number of files ok files for file import
+    - Badge with number of files imported for file import
 
-    - (!) Calibration n-polynomial regression
-    - (!) Support XML combi-file export
+    - (!) Support XML combi-file export ( Serial Modal + File Tab )
     - (!) Add dead time correction for cps
-
-    - (!) Private Variables for classes
 
 
   Known Performance Issues:
