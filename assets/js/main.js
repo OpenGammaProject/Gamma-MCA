@@ -58,9 +58,10 @@ document.body.onload = async function () {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
     if ('standalone' in window.navigator || isStandalone) {
         document.title += ' PWA';
+        document.getElementById('main').classList.remove('p-1');
     }
     else {
-        document.getElementById('main').classList.remove('pb-1', 'p-1');
+        document.getElementById('main').classList.remove('pb-1');
         document.title += ' web application';
     }
     const domain = new URL(isoListURL, window.location.origin);

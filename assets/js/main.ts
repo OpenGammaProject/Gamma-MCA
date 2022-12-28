@@ -115,8 +115,9 @@ document.body.onload = async function(): Promise<void> {
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches; // Detect PWA or browser
   if ('standalone' in window.navigator || isStandalone) { // Standalone PWA mode
     document.title += ' PWA';
+    document.getElementById('main')!.classList.remove('p-1');
   } else { // Default browser window
-    document.getElementById('main')!.classList.remove('pb-1', 'p-1');
+    document.getElementById('main')!.classList.remove('pb-1');
     document.title += ' web application';
   }
 
