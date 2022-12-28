@@ -1178,7 +1178,9 @@ async function startRecord(pause = false, type = recordingType) {
         document.getElementById('pause-button').className = document.getElementById('pause-button').className.replaceAll(' visually-hidden', '');
         document.getElementById('record-button').className += ' visually-hidden';
         document.getElementById('resume-button').className += ' visually-hidden';
-        document.getElementById('recording-spinner').className = document.getElementById('recording-spinner').className.replaceAll(' visually-hidden', '');
+        for (const ele of document.getElementsByClassName('recording-spinner')) {
+            ele.className = ele.className.replaceAll(' visually-hidden', '');
+        }
         startTime = performance.now();
         refreshRender(recordingType);
         refreshMeta(recordingType);
@@ -1260,7 +1262,9 @@ document.getElementById('stop-button').onclick = () => disconnectPort(true);
 async function disconnectPort(stop = false) {
     timeDone += performance.now() - startTime;
     document.getElementById('pause-button').className += ' visually-hidden';
-    document.getElementById('recording-spinner').className += ' visually-hidden';
+    for (const ele of document.getElementsByClassName('recording-spinner')) {
+        ele.className += ' visually-hidden';
+    }
     if (stop) {
         document.getElementById('stop-button').disabled = true;
         document.getElementById('record-button').className = document.getElementById('record-button').className.replaceAll(' visually-hidden', '');

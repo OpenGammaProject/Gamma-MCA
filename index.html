@@ -77,17 +77,22 @@
 
         <div class="col-lg-auto p-2 text-center">
 
-          <div class="nav nav-pills flex-column" id="main-tabs" role="tablist" aria-orientation="vertical">
+          <nav class="nav nav-pills flex-column" id="main-tabs" role="tablist" aria-orientation="vertical">
             <button class="nav-link active mb-2" id="file-import-tab" data-bs-toggle="pill" data-bs-target="#v-file" type="button" role="tab" aria-controls="v-file" aria-selected="true" title="Select File Import Tab">
               <i class="fa-solid fa-file-import"></i> File Import
             </button>
             <button class="nav-link mb-2" id="serial-tab" data-bs-toggle="pill" data-bs-target="#v-serial" type="button" role="tab" aria-controls="v-serial" aria-selected="false" title="Select Serial Connection Tab">
               <i class="fa-solid fa-network-wired"></i> Serial Connection
+
+              <span class="align-middle badge border border-light rounded-circle bg-danger spinner-grow spinner-grow-sm text-danger recording-spinner visually-hidden" role="status">
+                <span class="visually-hidden">Recording...</span>
+              </span>
+
             </button>
             <button class="nav-link" id="calibration-tab" data-bs-toggle="pill" data-bs-target="#v-calibration" type="button" role="tab" aria-controls="v-calibration" aria-selected="false" title="Select Calibration Tab">
               <i class="fa-solid fa-calculator"></i> Calibration
             </button>
-          </div>
+          </nav>
 
           <hr>
 
@@ -208,7 +213,7 @@
                       <button class="btn btn-primary btn-sm ser-settings visually-hidden" id="resume-button" type="button" title="Resume recording"> <i class="fas fa-play"></i> Resume </button>
                       <button class="btn btn-primary btn-sm" id="stop-button" type="button" title="Stop recording" disabled> <i class="fas fa-stop"></i> Stop </button>
 
-                      <div id="recording-spinner" class="spinner-grow spinner-grow-sm text-danger visually-hidden align-middle" role="status">
+                      <div class="spinner-grow spinner-grow-sm text-danger align-middle recording-spinner visually-hidden" role="status">
                         <span class="visually-hidden">Recording...</span>
                       </div>
 

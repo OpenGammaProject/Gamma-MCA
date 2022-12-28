@@ -18,7 +18,6 @@
     - Save Last Used Main Tab
     - Save Chronological/Histogram settings for file and serial
     - Badge with check mark for successfull calibration
-    - Badge with status of serial recording
     - Badge with number of files imported for file import
 
     - (!) Support XML combi-file export ( Serial Modal + File Tab )
@@ -1577,7 +1576,10 @@ async function startRecord(pause = false, type = <dataType>recordingType): Promi
     document.getElementById('pause-button')!.className = document.getElementById('pause-button')!.className.replaceAll(' visually-hidden','');
     document.getElementById('record-button')!.className += ' visually-hidden';
     document.getElementById('resume-button')!.className += ' visually-hidden';
-    document.getElementById('recording-spinner')!.className = document.getElementById('recording-spinner')!.className.replaceAll(' visually-hidden','');
+
+    for (const ele of document.getElementsByClassName('recording-spinner')) {
+      ele.className = ele.className.replaceAll(' visually-hidden','');
+    }
 
     startTime = performance.now(); //Date.now();
 
@@ -1686,7 +1688,10 @@ async function disconnectPort(stop = false): Promise<void> {
   timeDone += performance.now() - startTime; //Date.now() - startTime;
 
   document.getElementById('pause-button')!.className += ' visually-hidden';
-  document.getElementById('recording-spinner')!.className += ' visually-hidden';
+
+  for (const ele of document.getElementsByClassName('recording-spinner')) {
+    ele.className += ' visually-hidden';
+  }
 
   if (stop) {
     (<HTMLButtonElement>document.getElementById('stop-button')).disabled = true;
