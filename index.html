@@ -177,19 +177,20 @@
                SERIAL CONNECTION TAB
                #####################
               -->
-             <div class="row h-100">
-               <div class="col">
-                 <!--
-                   #####
-                   COL 1
-                   #####
-                 -->
-                  <div class="alert alert-warning visually-hidden" role="alert" id="serial-error">
-                    Looks like the Web Serial API is not supported. Please switch to the latest Chromium-based browser (Chrome, Edge, Opera, ...) or enable it in your browser's settings to use serial connections.
-                  </div>
+              <div class="alert alert-warning visually-hidden" role="alert" id="serial-error">
+                <p>Looks like the Web Serial API is not supported. Please switch to the latest Chromium-based browser (e.g. Chrome, Edge, Opera, ...) or enable the Web Serial API in your browser's settings to use serial connections.</p>
+                <p>Reload this page after you enabled the Web Serial API or have a look at the browser compatability <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API#browser_compatibility" target="_blank" title="Web Serial API MDN">here</a>.</p>
+              </div>
 
-                  <div id="serial-div" class="invisible visually-hidden">
+              <div id="serial-div" class="invisible h-100 visually-hidden">
 
+               <div class="row h-100">
+                 <div class="col">
+                   <!--
+                     #####
+                     COL 1
+                     #####
+                   -->
                     <p>
                       <strong>Select Port:</strong>
                     </p>
@@ -258,31 +259,31 @@
 
                   </div>
 
+                  <div class="col-lg-auto g-0">
+                    <div class="vr h-100 opacity-50"></div>
+                  </div>
+
+                  <div class="col">
+                    <!--
+                      #####
+                      COL 2
+                      #####
+                    -->
+                    <p><strong>Data Order:</strong></p>
+
+                    <p>
+                      <input id="s1" class="form-check-input" type="radio" value="chron" name="serialtype" checked="checked">
+                      <label class="form-check-label align-middle" for="s1">Chronological Mode (serial events in succession)</label>
+                    </p>
+
+                    <p>
+                      <input id="s2" class="form-check-input" type="radio" value="hist" name="serialtype">
+                      <label class="form-check-label align-middle" for="s2">Histogram Mode (serial data is histogram)</label>
+                    </p>
+
+                  </div>
                 </div>
 
-                <div class="col-lg-auto g-0">
-                  <div class="vr h-100 opacity-50"></div>
-                </div>
-
-                <div class="col">
-                  <!--
-                    #####
-                    COL 2
-                    #####
-                  -->
-                  <p><strong>Data Order:</strong></p>
-
-                  <p>
-                    <input id="s1" class="form-check-input" type="radio" value="chron" name="serialtype" checked="checked">
-                    <label class="form-check-label align-middle" for="s1">Chronological Mode (serial events in succession)</label>
-                  </p>
-
-                  <p>
-                    <input id="s2" class="form-check-input" type="radio" value="hist" name="serialtype">
-                    <label class="form-check-label align-middle" for="s2">Histogram Mode (serial data is histogram)</label>
-                  </p>
-
-                </div>
               </div>
 
             </div>
