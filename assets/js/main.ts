@@ -17,8 +17,6 @@
 
     - Save Last Used Main Tab
     - Save Chronological/Histogram settings for file and serial
-    - Badge with check mark for successfull calibration
-    - Badge with number of files imported for file import
 
     - (!) Support XML combi-file export ( Serial Modal + File Tab )
     - (!) Add dead time correction for cps
