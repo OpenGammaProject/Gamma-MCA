@@ -242,7 +242,7 @@ function getFileData(file, background = false) {
 function sizeCheck() {
     const viewportWidth = document.documentElement.clientWidth;
     const viewportHeight = document.documentElement.clientHeight;
-    if (viewportWidth < 1250 || viewportHeight < 750) {
+    if (viewportWidth < 1100 || viewportHeight < 700) {
         popupNotification('screen-size-warning');
     }
     else {
