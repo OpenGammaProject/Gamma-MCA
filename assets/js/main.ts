@@ -202,6 +202,20 @@ document.body.onresize = () => {
   //sizeCheck(); // Do not spam the size warning notification
 };
 
+/*
+window.addEventListener('hidden.bs.collapse', (event: Event) => {
+  if ((<HTMLButtonElement>event.target).getAttribute('id') === 'collapse-tabs') {
+    plot.updatePlot(spectrumData);
+  }
+});
+
+
+window.addEventListener('shown.bs.collapse', (event: Event) => {
+  if ((<HTMLButtonElement>event.target).getAttribute('id') === 'collapse-tabs') {
+    plot.updatePlot(spectrumData);
+  }
+});
+*/
 
 // User changed from browser window to PWA (after installation) or backwards
 window.matchMedia('(display-mode: standalone)').addEventListener('change', (/*event*/) => {
