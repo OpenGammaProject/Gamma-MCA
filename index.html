@@ -84,7 +84,7 @@
             <button class="nav-link mb-2 fw-semibold border border-1 shadow-sm" id="serial-tab" data-bs-toggle="pill" data-bs-target="#v-serial" type="button" role="tab" aria-controls="v-serial" aria-selected="false" title="Select Serial Connection Tab">
               <i class="fa-solid fa-network-wired"></i> Serial Connection
 
-              <span class="align-middle border border-light rounded-circle spinner-grow spinner-grow-sm recording-spinner text-danger visually-hidden" role="status">
+              <span class="align-middle border border-light rounded-circle spinner-grow spinner-grow-sm recording-spinner text-danger d-none" role="status">
                 <span class="visually-hidden">Recording...</span>
               </span>
 
@@ -123,7 +123,7 @@
                     #####
                   -->
                   <p>
-                    <label id="data-label" for="data"><strong>Spectrum File:</strong> <i id="data-icon" class="fa-solid fa-circle-check align-baseline text-primary visually-hidden"></i></label>
+                    <label id="data-label" for="data"><strong>Spectrum File:</strong> <i id="data-icon" class="fa-solid fa-circle-check align-baseline text-primary d-none"></i></label>
                   </p>
 
                   <div class="input-group input-group-sm">
@@ -134,7 +134,7 @@
                   <br>
 
                   <p>
-                    <label id="background-label" for="background"><strong>Background File:</strong> <i id="background-icon" class="fa-solid fa-circle-check align-baseline text-primary visually-hidden"></i></label>
+                    <label id="background-label" for="background"><strong>Background File:</strong> <i id="background-icon" class="fa-solid fa-circle-check align-baseline text-primary d-none"></i></label>
                   </p>
 
                   <div class="input-group input-group-sm">
@@ -177,12 +177,12 @@
                SERIAL CONNECTION TAB
                #####################
               -->
-              <div class="alert alert-warning visually-hidden" role="alert" id="serial-error">
+              <div class="alert alert-warning d-none" role="alert" id="serial-error">
                 <p>Looks like the Web Serial API is not supported. Please switch to the latest Chromium-based browser (e.g. Chrome, Edge, Opera, ...) or enable the Web Serial API in your browser's settings to use serial connections.</p>
                 <p>Reload this page after you enabled the Web Serial API or have a look at the browser compatability <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API#browser_compatibility" target="_blank" title="Web Serial API MDN">here</a>.</p>
               </div>
 
-              <div id="serial-div" class="invisible h-100 visually-hidden">
+              <div id="serial-div" class="invisible h-100 d-none">
 
                <div class="row h-100">
                  <div class="col">
@@ -210,11 +210,11 @@
                     <div class="clearfix pe-3 align-middle">
 
                       <button class="btn btn-primary btn-sm ser-settings" id="record-button" type="button" data-bs-toggle="modal" data-bs-target="#recordModal" title="Start recording"> <i class="fas fa-play"></i> Record </button>
-                      <button class="btn btn-primary btn-sm ser-settings visually-hidden" id="pause-button" type="button" title="Pause recording"> <i class="fas fa-pause"></i> Pause </button>
-                      <button class="btn btn-primary btn-sm ser-settings visually-hidden" id="resume-button" type="button" title="Resume recording"> <i class="fas fa-play"></i> Resume </button>
+                      <button class="btn btn-primary btn-sm ser-settings d-none" id="pause-button" type="button" title="Pause recording"> <i class="fas fa-pause"></i> Pause </button>
+                      <button class="btn btn-primary btn-sm ser-settings d-none" id="resume-button" type="button" title="Resume recording"> <i class="fas fa-play"></i> Resume </button>
                       <button class="btn btn-primary btn-sm" id="stop-button" type="button" title="Stop recording" disabled> <i class="fas fa-stop"></i> Stop </button>
 
-                      <div class="spinner-grow spinner-grow-sm text-danger align-middle recording-spinner visually-hidden" role="status">
+                      <div class="spinner-grow spinner-grow-sm text-danger align-middle recording-spinner d-none" role="status">
                         <span class="visually-hidden">Recording...</span>
                       </div>
 
@@ -300,7 +300,7 @@
                     COL 1
                     #####
                   -->
-                  <p class="text-center fs-6 fw-bold mb-1 text-bg-primary rounded visually-hidden" id="calibration-title">IMPORTED XML</p>
+                  <p class="text-center fs-6 fw-bold mb-1 text-bg-primary rounded d-none" id="calibration-title">IMPORTED XML</p>
 
                   <form>
 
@@ -657,9 +657,9 @@
             <br>
 
             <div class="text-center">
-              <div class="alert alert-danger visually-hidden" role="alert" id="iso-load-error"></div>
+              <div class="alert alert-danger d-none" role="alert" id="iso-load-error"></div>
 
-              <div class="alert alert-primary visually-hidden" role="alert" id="iso-loading">
+              <div class="alert alert-primary d-none" role="alert" id="iso-loading">
                 <div class="spinner-border" role="status">
                   <span class="visually-hidden">Loading...</span>
                 </div>
@@ -890,7 +890,7 @@
 
             <p><span id="version-tag">Version </span> <a class="float-end" href="https://hits.seeyoufarm.com"><img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fspectrum.nuclearphoenix.xyz&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=true" title="Total Hits"></a> </p>
 
-            <div class="visually-hidden" id="manual-install">
+            <div class="d-none" id="manual-install">
               <hr>
 
               <button type="button" class="btn btn-primary btn-sm" id="install-pwa-btn" title="Install Gamma MCA"><i class="fa-solid fa-download"></i> Install MCA</button>

@@ -125,12 +125,12 @@ document.body.onload = async function(): Promise<void> {
   isoListURL = domain.href;
 
   if ('serial' in navigator) { // Web Serial API
-    document.getElementById('serial-div')!.className = ''; // Remove visually-hidden and invisible
+    document.getElementById('serial-div')!.className = ''; // Remove d-none and invisible
     navigator.serial.addEventListener('connect', serialConnect);
     navigator.serial.addEventListener('disconnect', serialDisconnect);
     listSerial(); // List Available Serial Ports
   } else {
-    document.getElementById('serial-error')!.classList.remove('visually-hidden');
+    document.getElementById('serial-error')!.classList.remove('d-none');
 
     const serSettingsElements = document.getElementsByClassName('ser-settings');
     for (const element of serSettingsElements) { // Disable serial settings
@@ -230,7 +230,7 @@ window.addEventListener('beforeinstallprompt', (event: Event) => {
     }
   }
 
-  document.getElementById('manual-install')!.classList.remove('visually-hidden');
+  document.getElementById('manual-install')!.classList.remove('d-none');
 });
 
 
@@ -247,7 +247,7 @@ async function installPWA() {
 window.addEventListener('onappinstalled', () => {
   deferredPrompt = null;
   hideNotification('pwa-installer');
-  document.getElementById('manual-install')!.classList.add('visually-hidden');
+  document.getElementById('manual-install')!.classList.add('d-none');
 });
 
 
@@ -338,10 +338,10 @@ function getFileData(file: File, background = false): void { // Gets called when
     document.getElementById('total-bg-cts')!.innerText = bgCounts.toString();
 
     if (sCounts > 0) {
-      document.getElementById('data-icon')!.classList.remove('visually-hidden');
+      document.getElementById('data-icon')!.classList.remove('d-none');
     }
     if (bgCounts > 0) {
-      document.getElementById('background-icon')!.classList.remove('visually-hidden');
+      document.getElementById('background-icon')!.classList.remove('d-none');
     }
 
     /*
@@ -389,14 +389,14 @@ function removeFile(id: dataType): void {
   document.getElementById('total-spec-cts')!.innerText = spectrumData.getTotalCounts(spectrumData.data).toString();
   document.getElementById('total-bg-cts')!.innerText = spectrumData.getTotalCounts(spectrumData.background).toString();
 
-  document.getElementById(id + '-icon')!.classList.add('visually-hidden');
+  document.getElementById(id + '-icon')!.classList.add('d-none');
 
   bindPlotEvents(); // Re-Bind Events for new plot
 }
 
 
 function addImportLabel() {
-  document.getElementById('calibration-title')!.classList.remove('visually-hidden');
+  document.getElementById('calibration-title')!.classList.remove('d-none');
 }
 
 
@@ -644,7 +644,7 @@ function resetCal(): void {
   }
 
   const titleElement = document.getElementById('calibration-title')!;
-  titleElement.classList.add('visually-hidden');
+  titleElement.classList.add('d-none');
 
   plot.clearCalibration();
   toggleCal(false);
@@ -829,7 +829,7 @@ async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope 
   }
 
   const loadingElement = document.getElementById('iso-loading')!;
-  loadingElement.classList.remove('visually-hidden');
+  loadingElement.classList.remove('d-none');
 
   const options: RequestInit = {
     cache: 'no-cache',
@@ -841,7 +841,7 @@ async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope 
 
   const isoError = document.getElementById('iso-load-error')!;
   //isoError.innerText = ''; // Remove any old error msges
-  isoError.classList.add('visually-hidden'); // Hide any old errors
+  isoError.classList.add('d-none'); // Hide any old errors
   let successFlag = true; // Ideally no errors
 
   try {
@@ -896,16 +896,16 @@ async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope 
       plot.isoList = isoList; // Copy list to plot object
     } else {
       isoError.innerText = `Could not load isotope list! HTTP Error: ${response.status}. Please try again.`;
-      isoError.classList.remove('visually-hidden');
+      isoError.classList.remove('d-none');
       successFlag = false;
     }
   } catch (err) { // No network connection!
     isoError.innerText = 'Could not load isotope list! Connection refused - you are probably offline.';
-    isoError.classList.remove('visually-hidden');
+    isoError.classList.remove('d-none');
     successFlag = false;
   }
 
-  loadingElement.classList.add('visually-hidden');
+  loadingElement.classList.add('d-none');
   return successFlag;
 }
 
@@ -1565,12 +1565,12 @@ async function startRecord(pause = false, type = <dataType>recordingType): Promi
 
     (<HTMLButtonElement>document.getElementById('export-button')).disabled = false;
     (<HTMLButtonElement>document.getElementById('stop-button')).disabled = false;
-    document.getElementById('pause-button')!.classList.remove('visually-hidden');
-    document.getElementById('record-button')!.classList.add('visually-hidden');
-    document.getElementById('resume-button')!.classList.add('visually-hidden');
+    document.getElementById('pause-button')!.classList.remove('d-none');
+    document.getElementById('record-button')!.classList.add('d-none');
+    document.getElementById('resume-button')!.classList.add('d-none');
 
     for (const ele of document.getElementsByClassName('recording-spinner')) {
-      ele.classList.remove('visually-hidden');
+      ele.classList.remove('d-none');
     }
 
     startTime = performance.now(); //Date.now();
@@ -1680,15 +1680,15 @@ document.getElementById('stop-button')!.onclick = () => disconnectPort(true);
 async function disconnectPort(stop = false): Promise<void> {
   timeDone += performance.now() - startTime; //Date.now() - startTime;
 
-  document.getElementById('pause-button')!.classList.add('visually-hidden');
+  document.getElementById('pause-button')!.classList.add('d-none');
 
   for (const ele of document.getElementsByClassName('recording-spinner')) {
-    ele.classList.add('visually-hidden');
+    ele.classList.add('d-none');
   }
 
   if (stop) {
     (<HTMLButtonElement>document.getElementById('stop-button')).disabled = true;
-    document.getElementById('record-button')!.classList.remove('visually-hidden');
+    document.getElementById('record-button')!.classList.remove('d-none');
     //recordingType = '';
     timeDone = 0;
     cpsValues = [];
@@ -1697,7 +1697,7 @@ async function disconnectPort(stop = false): Promise<void> {
     toggleCps(cpsButton, true); // Disable CPS again
     ser.clearBaseHist(); // Clear base histogram for data processing
   }
-  document.getElementById('resume-button')!.classList.toggle('visually-hidden', stop);
+  document.getElementById('resume-button')!.classList.toggle('d-none', stop);
 
   keepReading = false;
   ser.flushData(); // Remove all old data
@@ -1775,7 +1775,7 @@ function refreshMeta(type: dataType): void {
     } else {
       totalTimeElement.innerText = '';
     }
-    progressBar.classList.toggle('visually-hidden', !maxRecTimeEnabled);
+    progressBar.classList.toggle('d-none', !maxRecTimeEnabled);
 
     if (delta.getTime() > maxRecTime && maxRecTimeEnabled) {
       disconnectPort(true);
