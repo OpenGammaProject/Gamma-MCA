@@ -60,7 +60,7 @@ document.body.onload = async function () {
         document.title += ' PWA';
     }
     else {
-        document.getElementById('main').className = document.getElementById('main').className.replaceAll('pb-1', 'p-1');
+        document.getElementById('main').classList.remove('pb-1', 'p-1');
         document.title += ' web application';
     }
     const domain = new URL(isoListURL, window.location.origin);
@@ -72,8 +72,7 @@ document.body.onload = async function () {
         listSerial();
     }
     else {
-        const serError = document.getElementById('serial-error');
-        serError.className = serError.className.replaceAll(' visually-hidden', '');
+        document.getElementById('serial-error').classList.remove('visually-hidden');
         const serSettingsElements = document.getElementsByClassName('ser-settings');
         for (const element of serSettingsElements) {
             element.disabled = true;
@@ -143,8 +142,7 @@ window.addEventListener('beforeinstallprompt', (event) => {
             saveJSON('installPrompt', true);
         }
     }
-    const installButton = document.getElementById('manual-install');
-    installButton.className = installButton.className.replaceAll('visually-hidden', '');
+    document.getElementById('manual-install').classList.remove('visually-hidden');
 });
 document.getElementById('install-pwa-btn').onclick = () => installPWA();
 document.getElementById('install-pwa-toast-btn').onclick = () => installPWA();
@@ -155,7 +153,7 @@ async function installPWA() {
 window.addEventListener('onappinstalled', () => {
     deferredPrompt = null;
     hideNotification('pwa-installer');
-    document.getElementById('manual-install').className += 'visually-hidden';
+    document.getElementById('manual-install').classList.add('visually-hidden');
 });
 window.addEventListener('shown.bs.tab', (event) => {
     if (event.target.getAttribute('data-bs-toggle') === 'pill') {
@@ -217,13 +215,11 @@ function getFileData(file, background = false) {
         const bgCounts = spectrumData.getTotalCounts(spectrumData.background);
         document.getElementById('total-spec-cts').innerText = sCounts.toString();
         document.getElementById('total-bg-cts').innerText = bgCounts.toString();
-        const dataLabel = document.getElementById('data-icon');
-        const bgLabel = document.getElementById('background-icon');
         if (sCounts > 0) {
-            dataLabel.className = dataLabel.className.replaceAll(' visually-hidden', '');
+            document.getElementById('data-icon').classList.remove('visually-hidden');
         }
         if (bgCounts > 0) {
-            bgLabel.className = bgLabel.className.replaceAll(' visually-hidden', '');
+            document.getElementById('background-icon').classList.remove('visually-hidden');
         }
         if (!(spectrumData.background.length === spectrumData.data.length || spectrumData.data.length === 0 || spectrumData.background.length === 0)) {
             popupNotification('data-error');
@@ -260,13 +256,11 @@ function removeFile(id) {
     plot.resetPlot(spectrumData);
     document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts(spectrumData.data).toString();
     document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts(spectrumData.background).toString();
-    const dataLabel = document.getElementById(id + '-icon');
-    dataLabel.className += ' visually-hidden';
+    document.getElementById(id + '-icon').classList.add('visually-hidden');
     bindPlotEvents();
 }
 function addImportLabel() {
-    const titleElement = document.getElementById('calibration-title');
-    titleElement.className = titleElement.className.replaceAll('visually-hidden', '');
+    document.getElementById('calibration-title').classList.remove('visually-hidden');
 }
 function bindPlotEvents() {
     const myPlot = document.getElementById(plot.divId);
@@ -456,9 +450,7 @@ function resetCal() {
         changeType.disabled = false;
     }
     const titleElement = document.getElementById('calibration-title');
-    if (!titleElement.className.includes('visually-hidden')) {
-        titleElement.className += 'visually-hidden';
-    }
+    titleElement.classList.add('visually-hidden');
     plot.clearCalibration();
     toggleCal(false);
 }
@@ -593,7 +585,7 @@ async function loadIsotopes(reload = false) {
         return true;
     }
     const loadingElement = document.getElementById('iso-loading');
-    loadingElement.className = loadingElement.className.replaceAll(' visually-hidden', '');
+    loadingElement.classList.remove('visually-hidden');
     const options = {
         cache: 'no-cache',
         headers: {
@@ -601,7 +593,7 @@ async function loadIsotopes(reload = false) {
         },
     };
     const isoError = document.getElementById('iso-load-error');
-    isoError.className += ' visually-hidden';
+    isoError.classList.add('visually-hidden');
     let successFlag = true;
     try {
         let response = await fetch(isoListURL, options);
@@ -643,16 +635,16 @@ async function loadIsotopes(reload = false) {
         }
         else {
             isoError.innerText = `Could not load isotope list! HTTP Error: ${response.status}. Please try again.`;
-            isoError.className = isoError.className.replaceAll(' visually-hidden', '');
+            isoError.classList.remove('visually-hidden');
             successFlag = false;
         }
     }
     catch (err) {
         isoError.innerText = 'Could not load isotope list! Connection refused - you are probably offline.';
-        isoError.className = isoError.className.replaceAll(' visually-hidden', '');
+        isoError.classList.remove('visually-hidden');
         successFlag = false;
     }
-    loadingElement.className += ' visually-hidden';
+    loadingElement.classList.add('visually-hidden');
     return successFlag;
 }
 document.getElementById('reload-isos-btn').onclick = () => reloadIsotopes();
@@ -1175,11 +1167,11 @@ async function startRecord(pause = false, type = recordingType) {
         }
         document.getElementById('export-button').disabled = false;
         document.getElementById('stop-button').disabled = false;
-        document.getElementById('pause-button').className = document.getElementById('pause-button').className.replaceAll(' visually-hidden', '');
-        document.getElementById('record-button').className += ' visually-hidden';
-        document.getElementById('resume-button').className += ' visually-hidden';
+        document.getElementById('pause-button').classList.remove('visually-hidden');
+        document.getElementById('record-button').classList.add('visually-hidden');
+        document.getElementById('resume-button').classList.add('visually-hidden');
         for (const ele of document.getElementsByClassName('recording-spinner')) {
-            ele.className = ele.className.replaceAll(' visually-hidden', '');
+            ele.classList.remove('visually-hidden');
         }
         startTime = performance.now();
         refreshRender(recordingType);
@@ -1261,23 +1253,20 @@ document.getElementById('pause-button').onclick = () => disconnectPort();
 document.getElementById('stop-button').onclick = () => disconnectPort(true);
 async function disconnectPort(stop = false) {
     timeDone += performance.now() - startTime;
-    document.getElementById('pause-button').className += ' visually-hidden';
+    document.getElementById('pause-button').classList.add('visually-hidden');
     for (const ele of document.getElementsByClassName('recording-spinner')) {
-        ele.className += ' visually-hidden';
+        ele.classList.add('visually-hidden');
     }
     if (stop) {
         document.getElementById('stop-button').disabled = true;
-        document.getElementById('record-button').className = document.getElementById('record-button').className.replaceAll(' visually-hidden', '');
-        document.getElementById('resume-button').className += ' visually-hidden';
+        document.getElementById('record-button').classList.remove('visually-hidden');
         timeDone = 0;
         cpsValues = [];
         const cpsButton = document.getElementById('plot-cps');
         toggleCps(cpsButton, true);
         ser.clearBaseHist();
     }
-    else {
-        document.getElementById('resume-button').className = document.getElementById('resume-button').className.replaceAll(' visually-hidden', '');
-    }
+    document.getElementById('resume-button').classList.toggle('visually-hidden', stop);
     keepReading = false;
     ser.flushData();
     try {
@@ -1333,12 +1322,11 @@ function refreshMeta(type) {
             progressElement.setAttribute('aria-valuenow', progress.toString());
             const totalTime = new Date(maxRecTime);
             totalTimeElement.innerText = ' / ' + addLeadingZero(totalTime.getUTCHours().toString()) + ':' + addLeadingZero(totalTime.getUTCMinutes().toString()) + ':' + addLeadingZero(totalTime.getUTCSeconds().toString());
-            progressBar.className = progressBar.className.replaceAll(' visually-hidden', '');
         }
         else {
             totalTimeElement.innerText = '';
-            progressBar.className += ' visually-hidden';
         }
+        progressBar.classList.toggle('visually-hidden', !maxRecTimeEnabled);
         if (delta.getTime() > maxRecTime && maxRecTimeEnabled) {
             disconnectPort(true);
             popupNotification('auto-stop');

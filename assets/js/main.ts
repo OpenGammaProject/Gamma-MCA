@@ -116,7 +116,7 @@ document.body.onload = async function(): Promise<void> {
   if ('standalone' in window.navigator || isStandalone) { // Standalone PWA mode
     document.title += ' PWA';
   } else { // Default browser window
-    document.getElementById('main')!.className = document.getElementById('main')!.className.replaceAll('pb-1', 'p-1');
+    document.getElementById('main')!.classList.remove('pb-1', 'p-1');
     document.title += ' web application';
   }
 
@@ -129,8 +129,7 @@ document.body.onload = async function(): Promise<void> {
     navigator.serial.addEventListener('disconnect', serialDisconnect);
     listSerial(); // List Available Serial Ports
   } else {
-    const serError = document.getElementById('serial-error')!;
-    serError.className = serError.className.replaceAll(' visually-hidden', '');
+    document.getElementById('serial-error')!.classList.remove('visually-hidden');
 
     const serSettingsElements = document.getElementsByClassName('ser-settings');
     for (const element of serSettingsElements) { // Disable serial settings
@@ -230,8 +229,7 @@ window.addEventListener('beforeinstallprompt', (event: Event) => {
     }
   }
 
-  const installButton = document.getElementById('manual-install')!;
-  installButton.className = installButton.className.replaceAll('visually-hidden', '');
+  document.getElementById('manual-install')!.classList.remove('visually-hidden');
 });
 
 
@@ -248,7 +246,7 @@ async function installPWA() {
 window.addEventListener('onappinstalled', () => {
   deferredPrompt = null;
   hideNotification('pwa-installer');
-  document.getElementById('manual-install')!.className += 'visually-hidden';
+  document.getElementById('manual-install')!.classList.add('visually-hidden');
 });
 
 
@@ -338,14 +336,11 @@ function getFileData(file: File, background = false): void { // Gets called when
     document.getElementById('total-spec-cts')!.innerText = sCounts.toString();
     document.getElementById('total-bg-cts')!.innerText = bgCounts.toString();
 
-    const dataLabel = document.getElementById('data-icon')!;
-    const bgLabel = document.getElementById('background-icon')!;
-
     if (sCounts > 0) {
-      dataLabel.className = dataLabel.className.replaceAll(' visually-hidden', '');
+      document.getElementById('data-icon')!.classList.remove('visually-hidden');
     }
     if (bgCounts > 0) {
-      bgLabel.className = bgLabel.className.replaceAll(' visually-hidden', '');
+      document.getElementById('background-icon')!.classList.remove('visually-hidden');
     }
 
     /*
@@ -393,16 +388,14 @@ function removeFile(id: dataType): void {
   document.getElementById('total-spec-cts')!.innerText = spectrumData.getTotalCounts(spectrumData.data).toString();
   document.getElementById('total-bg-cts')!.innerText = spectrumData.getTotalCounts(spectrumData.background).toString();
 
-  const dataLabel = document.getElementById(id + '-icon')!;
-  dataLabel.className += ' visually-hidden';
+  document.getElementById(id + '-icon')!.classList.add('visually-hidden');
 
   bindPlotEvents(); // Re-Bind Events for new plot
 }
 
 
 function addImportLabel() {
-  const titleElement = document.getElementById('calibration-title')!;
-  titleElement.className = titleElement.className.replaceAll('visually-hidden', '');
+  document.getElementById('calibration-title')!.classList.remove('visually-hidden');
 }
 
 
@@ -650,10 +643,7 @@ function resetCal(): void {
   }
 
   const titleElement = document.getElementById('calibration-title')!;
-
-  if (!titleElement.className.includes('visually-hidden')) {
-    titleElement.className += 'visually-hidden';
-  }
+  titleElement.classList.add('visually-hidden');
 
   plot.clearCalibration();
   toggleCal(false);
@@ -838,7 +828,7 @@ async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope 
   }
 
   const loadingElement = document.getElementById('iso-loading')!;
-  loadingElement.className = loadingElement.className.replaceAll(' visually-hidden', '');
+  loadingElement.classList.remove('visually-hidden');
 
   const options: RequestInit = {
     cache: 'no-cache',
@@ -847,9 +837,10 @@ async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope 
     },
   };
 
+
   const isoError = document.getElementById('iso-load-error')!;
   //isoError.innerText = ''; // Remove any old error msges
-  isoError.className += ' visually-hidden'; // Hide any old errors
+  isoError.classList.add('visually-hidden'); // Hide any old errors
   let successFlag = true; // Ideally no errors
 
   try {
@@ -904,16 +895,16 @@ async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope 
       plot.isoList = isoList; // Copy list to plot object
     } else {
       isoError.innerText = `Could not load isotope list! HTTP Error: ${response.status}. Please try again.`;
-      isoError.className = isoError.className.replaceAll(' visually-hidden', '');
+      isoError.classList.remove('visually-hidden');
       successFlag = false;
     }
   } catch (err) { // No network connection!
     isoError.innerText = 'Could not load isotope list! Connection refused - you are probably offline.';
-    isoError.className = isoError.className.replaceAll(' visually-hidden', '');
+    isoError.classList.remove('visually-hidden');
     successFlag = false;
   }
 
-  loadingElement.className += ' visually-hidden';
+  loadingElement.classList.add('visually-hidden');
   return successFlag;
 }
 
@@ -1573,12 +1564,12 @@ async function startRecord(pause = false, type = <dataType>recordingType): Promi
 
     (<HTMLButtonElement>document.getElementById('export-button')).disabled = false;
     (<HTMLButtonElement>document.getElementById('stop-button')).disabled = false;
-    document.getElementById('pause-button')!.className = document.getElementById('pause-button')!.className.replaceAll(' visually-hidden','');
-    document.getElementById('record-button')!.className += ' visually-hidden';
-    document.getElementById('resume-button')!.className += ' visually-hidden';
+    document.getElementById('pause-button')!.classList.remove('visually-hidden');
+    document.getElementById('record-button')!.classList.add('visually-hidden');
+    document.getElementById('resume-button')!.classList.add('visually-hidden');
 
     for (const ele of document.getElementsByClassName('recording-spinner')) {
-      ele.className = ele.className.replaceAll(' visually-hidden','');
+      ele.classList.remove('visually-hidden');
     }
 
     startTime = performance.now(); //Date.now();
@@ -1687,16 +1678,15 @@ document.getElementById('stop-button')!.onclick = () => disconnectPort(true);
 async function disconnectPort(stop = false): Promise<void> {
   timeDone += performance.now() - startTime; //Date.now() - startTime;
 
-  document.getElementById('pause-button')!.className += ' visually-hidden';
+  document.getElementById('pause-button')!.classList.add('visually-hidden');
 
   for (const ele of document.getElementsByClassName('recording-spinner')) {
-    ele.className += ' visually-hidden';
+    ele.classList.add('visually-hidden');
   }
 
   if (stop) {
     (<HTMLButtonElement>document.getElementById('stop-button')).disabled = true;
-    document.getElementById('record-button')!.className = document.getElementById('record-button')!.className.replaceAll(' visually-hidden','');
-    document.getElementById('resume-button')!.className += ' visually-hidden';
+    document.getElementById('record-button')!.classList.remove('visually-hidden');
     //recordingType = '';
     timeDone = 0;
     cpsValues = [];
@@ -1704,9 +1694,8 @@ async function disconnectPort(stop = false): Promise<void> {
     const cpsButton = <HTMLButtonElement>document.getElementById('plot-cps');
     toggleCps(cpsButton, true); // Disable CPS again
     ser.clearBaseHist(); // Clear base histogram for data processing
-  } else {
-    document.getElementById('resume-button')!.className = document.getElementById('resume-button')!.className.replaceAll(' visually-hidden','');
   }
+  document.getElementById('resume-button')!.classList.toggle('visually-hidden', stop);
 
   keepReading = false;
   ser.flushData(); // Remove all old data
@@ -1781,11 +1770,10 @@ function refreshMeta(type: dataType): void {
 
       const totalTime = new Date(maxRecTime);
       totalTimeElement.innerText = ' / ' +  addLeadingZero(totalTime.getUTCHours().toString()) + ':' + addLeadingZero(totalTime.getUTCMinutes().toString()) + ':' + addLeadingZero(totalTime.getUTCSeconds().toString());
-      progressBar.className = progressBar.className.replaceAll(' visually-hidden','');
     } else {
       totalTimeElement.innerText = '';
-      progressBar.className += ' visually-hidden';
     }
+    progressBar.classList.toggle('visually-hidden', !maxRecTimeEnabled);
 
     if (delta.getTime() > maxRecTime && maxRecTimeEnabled) {
       disconnectPort(true);
