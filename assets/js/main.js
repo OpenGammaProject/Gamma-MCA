@@ -1183,6 +1183,7 @@ async function startRecord(pause = false, type = recordingType) {
             cpsValues.shift();
         }
         closed = readUntilClosed();
+        plot.updatePlot(spectrumData);
     }
     catch (err) {
         console.error('Connection Error:', err);

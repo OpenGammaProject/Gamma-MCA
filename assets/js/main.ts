@@ -1584,6 +1584,7 @@ async function startRecord(pause = false, type = <dataType>recordingType): Promi
     }
 
     closed = readUntilClosed();
+    plot.updatePlot(spectrumData); // Prevent the plot from moving all over the screen due to other things popping-up
   } catch(err) {
     console.error('Connection Error:', err);
     popupNotification('serial-connect-error');
