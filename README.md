@@ -15,6 +15,7 @@ Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://
 * Straightforward interface to get down to business
 * File import of common data formats (e.g. CSV, TKA)
 * Live plotting via the serial interface, compatible with any serial device (e.g. Arduino)
+* Serial console to control your device
 * Linear and quadratic energy calibration
 * Customizable list of common isotopes and their gamma-ray energies
 * Export interactive graphs of your spectrum to embed it into your website
@@ -23,17 +24,21 @@ Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://
 
 ## Importing Spectra
 
-There are essentially two types of files you can use - both being text files, e.g. CSVs:
+There are essentially two types of files you can use - both being text files, e.g. CSVs or XMLs:
 
-1. _Dumped serial streams_ with a random new event (energy) on each line. This includes streams from our [Open Gamma Detector](https://github.com/Open-Gamma-Project/Open-Gamma-Detector) or any other serial device. **Important:** If your file is CSV-formatted only the first element will be read. The delimiter can be changed in the settings.
-2. Ready-to-use _histograms_. This includes common file types like TKAs, CSVs and also RadiaCode exports. **Important:** If your file has more than one element per line, the first one will be regarded as channel index/energy and the second as the number of counts. If there's one element only, it will be regarded as the number of counts instead.
+1. _Chronological streams_ where each new detected event gets printed to the file after the previous one. This includes streams from our [Open Gamma Detector](https://github.com/Open-Gamma-Project/Open-Gamma-Detector) or any other serial device that has been set up to do so. **Important:** The whole file will be read and the individual events are confined using the delimiter. Whitespace or newlines do not matter. The delimiter can be changed in the settings.
+2. Ready-to-use _histograms_. This includes common file types like TKAs, CSVs and also, e.g., RadiaCode 101 XML exports. **Important:** If your file has more than one element per line (CSV), the first one will be regarded as channel index/energy and the second as the number of counts. If there's one element only, it will be regarded as the number of counts instead.
 
 ## Using Serial
 
-Thanks to the Web Serial API you can use any serial device capable of doing gamma spectroscopy to plot your data. The are only two requirements for this to work:
+Thanks to the Web Serial API you can use any serial device capable of doing gamma spectroscopy or processing the data to plot your spectra. The are two types of prints supported:
 
-1. The API is currently only supported by Chromium-based (desktop) browsers. This includes most browsers except Safari and Firefox. The feature is either enabled on default or you have to enable it in the settings. See [Can I Use?](https://caniuse.com/web-serial)
-2. Your device has to print an EOL character (a semicolon `;`) after every single event to signalize the end of a data entry. Whitespace or newlines do not matter.
+1. _Chronological streams_ where each new detected event gets printed to the serial interface after the other. **Important:** Your device has to print an EOL character (default's a semicolon `;`) after every single event to signalize the end of a data entry. Whitespace or newlines do not matter. The delimiter can be changed in the settings.
+2. Ready-to-use _histograms_. This data has been pre-processed and the finished histogram will be periodically transmitted. **Important:** Your device has to print an EOL character (default's a semicolon `;`) after every single histogram channel to signalize the end of a data entry and each new histogram needs to be on a new line (`\r\n` or Arduino `Serial.println(...)`)! The delimiter can be changed in the settings, as well as the correct number of ADC channels that is required for this to work.
+
+Both modes are currently supported by our [Open Gamma Detector](https://github.com/Open-Gamma-Project/Open-Gamma-Detector) or any other serial device that has been set up to do so.
+
+**Note:** The API is currently only supported by Chromium-based (desktop) browsers! This includes most browsers except for Safari and Firefox. The feature is either enabled by default or you have to enable it in the settings yourself. See [Can I Use?.com](https://caniuse.com/web-serial).
 
 ## Contributing
 
