@@ -7,17 +7,16 @@
   ===============================
 
   Possible Future Improvements:
-    - (?) Hotkey to open/close settings
+    - (?) Hotkeys
     - (?) Add desktop notifications
-    - (?) Social media share function
 
     - Sorting isotope list
     - FWHM calculation for peaks
     - Calibration n-polynomial regression
+    - Improve Mobile Layout
 
-    - Save Last Used Main Tab
-    - Save Chronological/Histogram settings for file and serial
-
+    - (!) Save Last Used Main Tab
+    - (!) Save Chronological/Histogram settings for file and serial
     - (!) Support XML combi-file export ( Serial Modal + File Tab )
     - (!) Add dead time correction for cps
 
