@@ -18,6 +18,15 @@ body {
   /*max-height: 1200px;*/
 }
 
+@media (max-width: 767.98px) { /* bootstrap md breakpoint */
+
+  .plot-div {
+    min-height: 500px;
+    /*max-height: 1200px;*/
+  }
+
+}
+
 .logo {
   width: 27%;
   height: auto;

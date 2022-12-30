@@ -13,7 +13,7 @@
     - Sorting isotope list
     - FWHM calculation for peaks
     - Calibration n-polynomial regression
-    - Improve Mobile Layout
+    - Toolbar Mobile Layout (Hstack?)
 
     - (!) Save Last Used Main Tab
     - (!) Save Chronological/Histogram settings for file and serial
@@ -198,7 +198,11 @@ window.onbeforeunload = () => {
 // Needed For Responsiveness! DO NOT REMOVE OR THE LAYOUT GOES TO SHIT!!!
 document.body.onresize = () => {
   plot.updatePlot(spectrumData);
-  //sizeCheck(); // Do not spam the size warning notification
+  if (navigator.userAgent.toLowerCase().match(/mobile|tablet|android|webos|iphone|ipad|ipod|blackberry|bb|playbook|iemobile|windows phone|kindle|silk|opera mini/i)) {
+    // Mobile device
+  } else {
+    sizeCheck();
+  }
 };
 
 /*

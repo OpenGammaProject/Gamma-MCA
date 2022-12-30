@@ -129,6 +129,11 @@ window.onbeforeunload = () => {
 };
 document.body.onresize = () => {
     plot.updatePlot(spectrumData);
+    if (navigator.userAgent.toLowerCase().match(/mobile|tablet|android|webos|iphone|ipad|ipod|blackberry|bb|playbook|iemobile|windows phone|kindle|silk|opera mini/i)) {
+    }
+    else {
+        sizeCheck();
+    }
 };
 window.matchMedia('(display-mode: standalone)').addEventListener('change', () => {
     window.location.reload();
