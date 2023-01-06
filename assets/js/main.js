@@ -552,10 +552,109 @@ function getDateString() {
     const time = new Date();
     return time.getFullYear() + addLeadingZero((time.getMonth() + 1).toString()) + addLeadingZero(time.getDate().toString()) + addLeadingZero(time.getHours().toString()) + addLeadingZero(time.getMinutes().toString());
 }
+function getDateStringMin() {
+    const time = new Date();
+    return time.getFullYear() + '-' + addLeadingZero((time.getMonth() + 1).toString()) + '-' + addLeadingZero(time.getDate().toString());
+}
 document.getElementById('calibration-download').onclick = () => downloadCal();
 function downloadCal() {
     const filename = `calibration_${getDateString()}.json`;
     download(filename, JSON.stringify(plot.calibration));
+}
+function makeXMLSpectrum(type, name, serial = false) {
+    let root;
+    let noc = document.createElementNS(null, 'NumberOfChannels');
+    if (type === 'data') {
+        root = document.createElementNS(null, 'EnergySpectrum');
+    }
+    else {
+        root = document.createElementNS(null, 'BackgroundEnergySpectrum');
+    }
+    noc.textContent = spectrumData[type].length.toString();
+    root.appendChild(noc);
+    let sn = document.createElementNS(null, 'SpectrumName');
+    sn.textContent = name;
+    root.appendChild(sn);
+    let ec = document.createElementNS(null, 'EnergyCalibration');
+    root.appendChild(ec);
+    let po = document.createElementNS(null, 'PolynomialOrder');
+    po.textContent = (2).toString();
+    ec.appendChild(po);
+    let c = document.createElementNS(null, 'Coefficients');
+    let coeffs = [];
+    for (const index in plot.calibration.coeff) {
+        coeffs.push(plot.calibration.coeff[index]);
+    }
+    for (const val of coeffs.reverse()) {
+        let coeff = document.createElementNS(null, 'Coefficient');
+        coeff.textContent = val.toString();
+        c.appendChild(coeff);
+    }
+    ec.appendChild(c);
+    let tpc = document.createElementNS(null, 'TotalPulseCount');
+    tpc.textContent = spectrumData.getTotalCounts(spectrumData[type]).toString();
+    root.appendChild(tpc);
+    let vpc = document.createElementNS(null, 'ValidPulseCount');
+    vpc.textContent = tpc.textContent;
+    root.appendChild(vpc);
+    let mt = document.createElementNS(null, 'MeasurementTime');
+    if (serial) {
+        mt.textContent = (Math.round(timeDone / 1000)).toString();
+    }
+    else {
+        mt.textContent = (1).toString();
+    }
+    root.appendChild(mt);
+    let s = document.createElementNS(null, 'Spectrum');
+    root.appendChild(s);
+    for (const datapoint of spectrumData[type]) {
+        let d = document.createElementNS(null, 'DataPoint');
+        d.textContent = datapoint.toString();
+        s.appendChild(d);
+    }
+    return root;
+}
+document.getElementById('xml-export-button-file').onclick = () => downloadXML();
+document.getElementById('xml-export-button-serial').onclick = () => downloadXML(true);
+function downloadXML(serial = false) {
+    const filename = `spectrum_${getDateString()}.xml`;
+    const formatVersion = 230106;
+    let spectrumName = 'Energy Spectrum';
+    let backgroundName = 'Background Energy Spectrum';
+    if (serial) {
+        spectrumName = getDateStringMin() + ' ' + spectrumName;
+        backgroundName = getDateStringMin() + ' ' + backgroundName;
+    }
+    let doc = document.implementation.createDocument(null, "ResultDataFile");
+    const pi = doc.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"');
+    doc.insertBefore(pi, doc.firstChild);
+    let root = doc.documentElement;
+    let fv = document.createElementNS(null, 'FormatVersion');
+    fv.textContent = formatVersion.toString();
+    root.appendChild(fv);
+    let rdl = document.createElementNS(null, 'ResultDataList');
+    root.appendChild(rdl);
+    let rd = document.createElementNS(null, 'ResultData');
+    rdl.appendChild(rd);
+    let dcr = document.createElementNS(null, 'DeviceConfigReference');
+    rd.appendChild(dcr);
+    let dcrName = document.createElementNS(null, 'Name');
+    if (serial) {
+        dcrName.textContent = 'Gamma MCA Serial Device';
+    }
+    else {
+        dcrName.textContent = 'Gamma MCA File';
+    }
+    dcr.appendChild(dcrName);
+    let bsf = document.createElementNS(null, 'BackgroundSpectrumFile');
+    bsf.textContent = backgroundName;
+    rd.appendChild(bsf);
+    rd.appendChild(makeXMLSpectrum('data', spectrumName, serial));
+    rd.appendChild(makeXMLSpectrum('background', backgroundName, serial));
+    let vis = document.createElementNS(null, 'Visible');
+    vis.textContent = true.toString();
+    rd.appendChild(vis);
+    download(filename, new XMLSerializer().serializeToString(doc));
 }
 document.getElementById('download-spectrum-btn').onclick = () => downloadData('spectrum', 'data');
 document.getElementById('download-bg-btn').onclick = () => downloadData('background', 'background');
@@ -1170,6 +1269,7 @@ async function startRecord(pause = false, type = recordingType) {
         if (!pause) {
             removeFile(recordingType);
             firstLoad = true;
+            timeDone = 0;
         }
         document.getElementById('export-button').disabled = false;
         document.getElementById('stop-button').disabled = false;
@@ -1267,7 +1367,6 @@ async function disconnectPort(stop = false) {
     if (stop) {
         document.getElementById('stop-button').disabled = true;
         document.getElementById('record-button').classList.remove('d-none');
-        timeDone = 0;
         cpsValues = [];
         const cpsButton = document.getElementById('plot-cps');
         toggleCps(cpsButton, true);

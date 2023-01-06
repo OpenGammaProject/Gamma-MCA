@@ -145,6 +145,13 @@
                     <button class="btn btn-primary btn-sm" type="button" id="clear-bg" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
                   </div>
 
+                  <hr>
+
+                  <p>
+                    <button class="btn btn-primary btn-sm" id="xml-export-button-file" type="button" title="Export spectrum as XML">
+                      <i class="fas fa-file-export"></i> Export XML
+                    </button>
+                  </p>
 
                 </div>
 
@@ -596,8 +603,9 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Cancel </button>
-            <button type="button" class="btn btn-primary" id="download-spectrum-btn"> Spectrum </button>
-            <button type="button" class="btn btn-primary" id="download-bg-btn"> Background </button>
+            <button type="button" class="btn btn-primary" id="download-spectrum-btn" title="Export spectrum as CSV"> Spectrum </button>
+            <button type="button" class="btn btn-primary" id="download-bg-btn" title="Export background as CSV"> Background </button>
+            <button type="button" class="btn btn-primary" id="xml-export-button-serial" title="Export spectrum as XML"> XML </button>
           </div>
         </div>
       </div>
