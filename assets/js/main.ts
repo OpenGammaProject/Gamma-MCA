@@ -814,18 +814,6 @@ function makeXMLSpectrum(type: dataType, name: string, serial = false): Element 
   let ec = document.createElementNS(null, 'EnergyCalibration');
   root.appendChild(ec);
 
-  let po = document.createElementNS(null, 'PolynomialOrder');
-  /*
-  // Specifies the number of coefficients in the XML
-  if (plot.calibration.coeff.c1 === 0) {
-    po.textContent = (1).toString();
-  } else {
-    po.textContent = (2).toString();
-  }
-  */
-  po.textContent = (2).toString();
-  ec.appendChild(po);
-
   let c = document.createElementNS(null, 'Coefficients');
   let coeffs: number[] = [];
 
@@ -838,6 +826,18 @@ function makeXMLSpectrum(type: dataType, name: string, serial = false): Element 
     c.appendChild(coeff);
   }
   ec.appendChild(c);
+
+  let po = document.createElementNS(null, 'PolynomialOrder');
+  /*
+  // Specifies the number of coefficients in the XML
+  if (plot.calibration.coeff.c1 === 0) {
+    po.textContent = (1).toString();
+  } else {
+    po.textContent = (2).toString();
+  }
+  */
+  po.textContent = (2).toString();
+  ec.appendChild(po);
 
   let tpc = document.createElementNS(null, 'TotalPulseCount');
   tpc.textContent = spectrumData.getTotalCounts(spectrumData[type]).toString();
@@ -911,12 +911,18 @@ function downloadXML(serial = false): void {
   }
   dcr.appendChild(dcrName);
 
-  let bsf = document.createElementNS(null, 'BackgroundSpectrumFile');
-  bsf.textContent = backgroundName;
-  rd.appendChild(bsf);
+  if (spectrumData['background'].length !== 0) {
+    let bsf = document.createElementNS(null, 'BackgroundSpectrumFile');
+    bsf.textContent = backgroundName;
+    rd.appendChild(bsf);
+  }
 
-  rd.appendChild(makeXMLSpectrum('data', spectrumName, serial));
-  rd.appendChild(makeXMLSpectrum('background', backgroundName, serial));
+  if (spectrumData['data'].length !== 0) {
+    rd.appendChild(makeXMLSpectrum('data', spectrumName, serial));
+  }
+  if (spectrumData['background'].length !== 0) {
+    rd.appendChild(makeXMLSpectrum('background', backgroundName, serial));
+  }
 
   let vis = document.createElementNS(null, 'Visible');
   vis.textContent = true.toString();

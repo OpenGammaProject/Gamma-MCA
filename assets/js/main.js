@@ -577,9 +577,6 @@ function makeXMLSpectrum(type, name, serial = false) {
     root.appendChild(sn);
     let ec = document.createElementNS(null, 'EnergyCalibration');
     root.appendChild(ec);
-    let po = document.createElementNS(null, 'PolynomialOrder');
-    po.textContent = (2).toString();
-    ec.appendChild(po);
     let c = document.createElementNS(null, 'Coefficients');
     let coeffs = [];
     for (const index in plot.calibration.coeff) {
@@ -591,6 +588,9 @@ function makeXMLSpectrum(type, name, serial = false) {
         c.appendChild(coeff);
     }
     ec.appendChild(c);
+    let po = document.createElementNS(null, 'PolynomialOrder');
+    po.textContent = (2).toString();
+    ec.appendChild(po);
     let tpc = document.createElementNS(null, 'TotalPulseCount');
     tpc.textContent = spectrumData.getTotalCounts(spectrumData[type]).toString();
     root.appendChild(tpc);
@@ -646,11 +646,17 @@ function downloadXML(serial = false) {
         dcrName.textContent = 'Gamma MCA File';
     }
     dcr.appendChild(dcrName);
-    let bsf = document.createElementNS(null, 'BackgroundSpectrumFile');
-    bsf.textContent = backgroundName;
-    rd.appendChild(bsf);
-    rd.appendChild(makeXMLSpectrum('data', spectrumName, serial));
-    rd.appendChild(makeXMLSpectrum('background', backgroundName, serial));
+    if (spectrumData['background'].length !== 0) {
+        let bsf = document.createElementNS(null, 'BackgroundSpectrumFile');
+        bsf.textContent = backgroundName;
+        rd.appendChild(bsf);
+    }
+    if (spectrumData['data'].length !== 0) {
+        rd.appendChild(makeXMLSpectrum('data', spectrumName, serial));
+    }
+    if (spectrumData['background'].length !== 0) {
+        rd.appendChild(makeXMLSpectrum('background', backgroundName, serial));
+    }
     let vis = document.createElementNS(null, 'Visible');
     vis.textContent = true.toString();
     rd.appendChild(vis);
