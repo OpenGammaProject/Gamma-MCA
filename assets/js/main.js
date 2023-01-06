@@ -575,22 +575,24 @@ function makeXMLSpectrum(type, name, serial = false) {
     let sn = document.createElementNS(null, 'SpectrumName');
     sn.textContent = name;
     root.appendChild(sn);
-    let ec = document.createElementNS(null, 'EnergyCalibration');
-    root.appendChild(ec);
-    let c = document.createElementNS(null, 'Coefficients');
-    let coeffs = [];
-    for (const index in plot.calibration.coeff) {
-        coeffs.push(plot.calibration.coeff[index]);
+    if (plot.calibration.enabled) {
+        let ec = document.createElementNS(null, 'EnergyCalibration');
+        root.appendChild(ec);
+        let c = document.createElementNS(null, 'Coefficients');
+        let coeffs = [];
+        for (const index in plot.calibration.coeff) {
+            coeffs.push(plot.calibration.coeff[index]);
+        }
+        for (const val of coeffs.reverse()) {
+            let coeff = document.createElementNS(null, 'Coefficient');
+            coeff.textContent = val.toString();
+            c.appendChild(coeff);
+        }
+        ec.appendChild(c);
+        let po = document.createElementNS(null, 'PolynomialOrder');
+        po.textContent = (2).toString();
+        ec.appendChild(po);
     }
-    for (const val of coeffs.reverse()) {
-        let coeff = document.createElementNS(null, 'Coefficient');
-        coeff.textContent = val.toString();
-        c.appendChild(coeff);
-    }
-    ec.appendChild(c);
-    let po = document.createElementNS(null, 'PolynomialOrder');
-    po.textContent = (2).toString();
-    ec.appendChild(po);
     let tpc = document.createElementNS(null, 'TotalPulseCount');
     tpc.textContent = spectrumData.getTotalCounts(spectrumData[type]).toString();
     root.appendChild(tpc);

@@ -811,33 +811,35 @@ function makeXMLSpectrum(type: dataType, name: string, serial = false): Element 
   sn.textContent = name;
   root.appendChild(sn);
 
-  let ec = document.createElementNS(null, 'EnergyCalibration');
-  root.appendChild(ec);
+  if (plot.calibration.enabled) {
+    let ec = document.createElementNS(null, 'EnergyCalibration');
+    root.appendChild(ec);
 
-  let c = document.createElementNS(null, 'Coefficients');
-  let coeffs: number[] = [];
+    let c = document.createElementNS(null, 'Coefficients');
+    let coeffs: number[] = [];
 
-  for (const index in plot.calibration.coeff) {
-    coeffs.push(plot.calibration.coeff[index]);
-  }
-  for (const val of coeffs.reverse()) {
-    let coeff = document.createElementNS(null, 'Coefficient');
-    coeff.textContent = val.toString();
-    c.appendChild(coeff);
-  }
-  ec.appendChild(c);
+    for (const index in plot.calibration.coeff) {
+      coeffs.push(plot.calibration.coeff[index]);
+    }
+    for (const val of coeffs.reverse()) {
+      let coeff = document.createElementNS(null, 'Coefficient');
+      coeff.textContent = val.toString();
+      c.appendChild(coeff);
+    }
+    ec.appendChild(c);
 
-  let po = document.createElementNS(null, 'PolynomialOrder');
-  /*
-  // Specifies the number of coefficients in the XML
-  if (plot.calibration.coeff.c1 === 0) {
-    po.textContent = (1).toString();
-  } else {
+    let po = document.createElementNS(null, 'PolynomialOrder');
+    /*
+    // Specifies the number of coefficients in the XML
+    if (plot.calibration.coeff.c1 === 0) {
+      po.textContent = (1).toString();
+    } else {
+      po.textContent = (2).toString();
+    }
+    */
     po.textContent = (2).toString();
+    ec.appendChild(po);
   }
-  */
-  po.textContent = (2).toString();
-  ec.appendChild(po);
 
   let tpc = document.createElementNS(null, 'TotalPulseCount');
   tpc.textContent = spectrumData.getTotalCounts(spectrumData[type]).toString();
