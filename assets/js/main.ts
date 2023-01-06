@@ -875,7 +875,13 @@ document.getElementById('xml-export-button-file')!.onclick = () => downloadXML()
 document.getElementById('xml-export-button-serial')!.onclick = () => downloadXML(true);
 
 function downloadXML(serial = false): void {
-  const filename = `spectrum_${getDateString()}.xml`;
+  let filename: string;
+  if (serial) {
+    filename = `spectrum_${getDateString()}_serial.xml`;
+  } else {
+    filename = `spectrum_${getDateString()}.xml`;
+  }
+
   const formatVersion = 230106;
 
   let spectrumName = 'Energy Spectrum';

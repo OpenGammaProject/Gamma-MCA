@@ -619,7 +619,13 @@ function makeXMLSpectrum(type, name, serial = false) {
 document.getElementById('xml-export-button-file').onclick = () => downloadXML();
 document.getElementById('xml-export-button-serial').onclick = () => downloadXML(true);
 function downloadXML(serial = false) {
-    const filename = `spectrum_${getDateString()}.xml`;
+    let filename;
+    if (serial) {
+        filename = `spectrum_${getDateString()}_serial.xml`;
+    }
+    else {
+        filename = `spectrum_${getDateString()}.xml`;
+    }
     const formatVersion = 230106;
     let spectrumName = 'Energy Spectrum';
     let backgroundName = 'Background Energy Spectrum';
