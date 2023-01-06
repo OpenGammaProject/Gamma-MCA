@@ -9,6 +9,7 @@
   Possible Future Improvements:
     - (?) Hotkeys
     - (?) Add desktop notifications
+    - (?) JSON file export. Copy format from the XML export.
 
     - Sorting isotope list
     - FWHM calculation for peaks
