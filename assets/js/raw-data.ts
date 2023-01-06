@@ -19,7 +19,7 @@ export class RawData {
   fileType: number;
   private tempValIndex: number;
 
-  constructor(valueIndex: number, delimiter = ';') {
+  constructor(valueIndex: number, delimiter = ',') {
     this.valueIndex = valueIndex;
     this.delimiter = delimiter;
 

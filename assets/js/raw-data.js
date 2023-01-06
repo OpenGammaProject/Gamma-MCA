@@ -4,7 +4,7 @@ export class RawData {
     adcChannels;
     fileType;
     tempValIndex;
-    constructor(valueIndex, delimiter = ';') {
+    constructor(valueIndex, delimiter = ',') {
         this.valueIndex = valueIndex;
         this.delimiter = delimiter;
         this.adcChannels = 4096;
