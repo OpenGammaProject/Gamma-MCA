@@ -9,16 +9,16 @@
   Possible Future Improvements:
     - (?) Hotkeys
     - (?) Add desktop notifications
-    - (?) JSON file export. Copy format from the XML export.
+    - (?) Add dead time correction for cps
 
     - Sorting isotope list
     - FWHM calculation for peaks
     - Calibration n-polynomial regression
+    - JSON file export. Copy format from the XML export.
 
     - (!) Toolbar Mobile Layout (Hstack?)
     - (!) Save Last Used Main Tab
     - (!) Save Chronological/Histogram settings for file and serial
-    - (!) Add dead time correction for cps
 
 
   Known Performance Issues:
