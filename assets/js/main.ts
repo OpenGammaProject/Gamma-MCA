@@ -12,8 +12,8 @@
     - (?) Add dead time correction for cps
 
     - Sorting isotope list
-    - FWHM calculation for peaks
     - Calibration n-polynomial regression
+    - User-selectable ROI with Gaussian fit and pulse FWHM + stats
     - JSON file export. Copy format from the XML export.
 
     - (!) Toolbar Mobile Layout (Hstack?)
