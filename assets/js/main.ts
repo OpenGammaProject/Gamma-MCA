@@ -82,7 +82,7 @@ let isoList: isotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2023-01-06';
+const APP_VERSION = '2023-01-14';
 let localStorageAvailable = false;
 let firstInstall = false;
 
@@ -1533,6 +1533,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
 document.getElementById('reset-gamma-mca')!.onclick = () => resetMCA();
 
 function resetMCA(): void {
+  // Maybe also reset service worker?
   if (localStorageAvailable) {
     localStorage.clear();
   }

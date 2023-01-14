@@ -9,13 +9,15 @@
   ===============================
 
   Possible Future Improvements:
-    - nothing.
+    - Somehow fetching and caching the hits tracker does not work:
+      URL = https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fspectrum.nuclearphoenix.xyz&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=true
 
 */
-const APP_VERSION = '2023-01-06';
+const APP_VERSION = '2023-01-14';
 const CACHE_NAME = "gamma-static"; // A random name for the cache
 const OFFLINE_RESOURCES = ['/',
                           '/index.html',
+                          '/404.html',
                           '/assets/css/bootstrap.min.css',
                           '/assets/css/all.min.css',
                           '/assets/css/main.css',
@@ -40,7 +42,7 @@ const OFFLINE_RESOURCES = ['/',
 
 
 self.addEventListener("install", event => { // First time install of a worker
-  console.log('Installing service worker.');
+  console.info('Installing service worker...');
 
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
@@ -51,7 +53,7 @@ self.addEventListener("install", event => { // First time install of a worker
       */
       cache.keys().then(keys => { // Delete the whole cache
         keys.forEach(async function(request, index, array) {
-          //console.log('Clearing cache!', request);
+          //console.info('Clearing cache!', request);
           await cache.delete(request);
         });
       })
@@ -64,32 +66,34 @@ self.addEventListener("install", event => { // First time install of a worker
 
 
 self.addEventListener("activate", event => { // New worker takes over
-  console.log('Activating service worker.');
+  console.info('Activating service worker...');
   self.clients.claim(); // Allows an active service worker to set itself as the controller for all clients within its scope
 });
 
 
 self.addEventListener("fetch", event => {
-  //console.log('mode', event.request.mode);
+  //console.info('mode', event.request);
 
   event.respondWith(async function() {
     const cache = await caches.open(CACHE_NAME);
     const cachedResponse = await cache.match(event.request);
 
     if (cachedResponse) { // Try to load from cache first, way faster
-      //console.log('Cache Response!', cachedResponse);
+      //console.info('Cache Response!', cachedResponse);
       updateCache(event.request); // Always also try to update the cache, dont wait for it though
       return cachedResponse;
     };
 
     try {  // Not found in cache -- request from network
       const networkResponse = await fetch(event.request);
-
-      console.log('Network Response!', networkResponse);
+      checkResponse(event.request, networkResponse);
       cache.put(event.request, networkResponse.clone());
+
+      //console.info('Network Response!', networkResponse);
+
       return networkResponse;
     } catch (error) { // Did not find in cache or network, probably new page and offline access!
-      throw error;
+      console.error(error);
     }
   }());
 });
@@ -97,11 +101,21 @@ self.addEventListener("fetch", event => {
 
 async function updateCache(request) {
   try {
-    const response = await fetch(request);
+    const networkResponse = await fetch(request);
+    checkResponse(request, networkResponse);
 
-    //console.log('Updating Cache!', response);
-    cache.put(request, response.clone());
-  } catch (e) {
-    ; // Ignore, not critical after all. Probably just offline
+    const cache = await caches.open(CACHE_NAME);
+    cache.put(request, networkResponse.clone());
+
+    //console.info('Updated Cache!', response);
+  } catch (error) {
+    console.warn(error); // Also fires when offline...
+  }
+}
+
+
+function checkResponse(target, response) {
+  if (!response.ok) {
+    console.warn(`Fetching URL "${target.url}" failed, response code: ${response.status}.`);
   }
 }
