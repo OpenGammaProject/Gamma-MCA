@@ -14,9 +14,9 @@
     - Sorting isotope list
     - Calibration n-polynomial regression
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
-    - JSON file export. Copy format from the XML export.
-    - Main Menu Tab for user sample/measurement info (XML)
 
+    - (!) NPES-JSON file export
+    - (!) Main Menu Tab for user sample/measurement info (XML)
     - (!) Toolbar Mobile Layout (Hstack?)
     - (!) Save Chronological/Histogram settings for file and serial
 
