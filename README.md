@@ -13,7 +13,7 @@ Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://
 * No installation required - accessible on every internet-connected device
 * Can be easily installed for stand-alone offline use
 * Straightforward interface to get down to business
-* File import of common data formats (e.g. CSV, TKA)
+* File import of common data formats (e.g. CSV, TKA, XML)
 * Live plotting via the serial interface, compatible with any serial device (e.g. Arduino)
 * Serial console to control your device
 * Linear and quadratic energy calibration
