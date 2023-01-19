@@ -12,6 +12,12 @@
 
 import { coeffObj } from './plot.js';
 
+interface xmlImportData {
+  espectrum: number[],
+  bgspectrum: number[],
+  coeff: coeffObj
+};
+
 export class RawData {
   valueIndex: number;
   delimiter: string;
@@ -76,7 +82,8 @@ export class RawData {
     }
   }
 
-  xmlToArray(data: string): {espectrum: number[], bgspectrum: number[], coeff: coeffObj} {
+  xmlToArray(data: string): xmlImportData {
+    //const time1 = performance.now();
     const coeff: coeffObj = {
       c1: 0,
       c2: 0,
@@ -118,6 +125,7 @@ export class RawData {
         coeff['c' + (parseInt(i) + 1).toString()] = coeffNumArray[2 - parseInt(i)];
       }
 
+      //console.log(performance.now() - time1);
       return {espectrum, bgspectrum, coeff};
     } catch (e) {
       return {espectrum: [], bgspectrum: [], coeff};
