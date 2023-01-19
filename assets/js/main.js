@@ -185,7 +185,18 @@ function getFileData(file, background = false) {
         const result = reader.result.trim();
         if (fileEnding.toLowerCase() === 'xml') {
             if (window.DOMParser) {
-                const { espectrum, bgspectrum, coeff } = raw.xmlToArray(result);
+                const { espectrum, bgspectrum, coeff, meta } = raw.xmlToArray(result);
+                document.getElementById('sample-name').value = meta.name;
+                document.getElementById('sample-loc').value = meta.location;
+                const date = new Date(meta.time);
+                const rightDate = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
+                document.getElementById('sample-time').value = rightDate.toISOString().slice(0, 16);
+                document.getElementById('sample-weight').value = meta.weight.toString();
+                document.getElementById('sample-vol').value = meta.volume.toString();
+                document.getElementById('device-name').value = meta.deviceName;
+                document.getElementById('add-notes').value = meta.notes;
+                startDate = new Date(meta.startTime);
+                endDate = new Date(meta.endTime);
                 if (espectrum === undefined && bgspectrum === undefined) {
                     popupNotification('file-error');
                 }

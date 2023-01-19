@@ -15,7 +15,18 @@ import { coeffObj } from './plot.js';
 interface xmlImportData {
   espectrum: number[],
   bgspectrum: number[],
-  coeff: coeffObj
+  coeff: coeffObj,
+  meta: {
+    name: string,
+    location: string,
+    time: string,
+    weight: number,
+    volume: number,
+    notes: string,
+    deviceName: string,
+    startTime: string,
+    endTime: string
+  }
 };
 
 export class RawData {
@@ -82,12 +93,31 @@ export class RawData {
     }
   }
 
+  checkNull(data: string | null | undefined) {
+    if (data) {
+      return data;
+    } else {
+      return "";
+    }
+  }
+
   xmlToArray(data: string): xmlImportData {
     //const time1 = performance.now();
-    const coeff: coeffObj = {
+    let coeff: coeffObj = {
       c1: 0,
       c2: 0,
       c3: 0
+    };
+    let meta = {
+      name: '',
+      location: '',
+      time: '',
+      weight: 0,
+      volume: 0,
+      notes: '',
+      deviceName: '',
+      startTime: '',
+      endTime: ''
     };
 
     try {
@@ -125,10 +155,23 @@ export class RawData {
         coeff['c' + (parseInt(i) + 1).toString()] = coeffNumArray[2 - parseInt(i)];
       }
 
+      const rdl = xmlDoc.getElementsByTagName('SampleInfo')[0];
+      const dcr = xmlDoc.getElementsByTagName('DeviceConfigReference')[0];
+
+      meta.name = this.checkNull(rdl.getElementsByTagName('Name')[0].textContent);
+      meta.location = this.checkNull(rdl.getElementsByTagName('Location')[0].textContent);
+      meta.time = this.checkNull(rdl.getElementsByTagName('Time')[0].textContent);
+      meta.weight = parseFloat(this.checkNull(rdl.getElementsByTagName('Weight')[0].textContent))*1000;
+      meta.volume = parseFloat(this.checkNull(rdl.getElementsByTagName('Volume')[0].textContent))*1000;
+      meta.notes = this.checkNull(rdl.getElementsByTagName('Note')[0].textContent);
+      meta.deviceName = this.checkNull(dcr.getElementsByTagName('Name')[0].textContent);
+      meta.startTime = this.checkNull(xmlDoc.getElementsByTagName('StartTime')[0].textContent);
+      meta.endTime = this.checkNull(xmlDoc.getElementsByTagName('EndTime')[0].textContent);
+
       //console.log(performance.now() - time1);
-      return {espectrum, bgspectrum, coeff};
+      return {espectrum, bgspectrum, coeff, meta};
     } catch (e) {
-      return {espectrum: [], bgspectrum: [], coeff};
+      return {espectrum: [], bgspectrum: [], coeff, meta};
     }
   }
 }
