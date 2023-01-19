@@ -14,6 +14,7 @@
     - Sorting isotope list
     - Calibration n-polynomial regression
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
+    - Single file export button in "file import" (-> file config) tab
 
     - (!) NPES-JSON file export
     - (!) Main Menu Tab for user sample/measurement info (XML)
@@ -872,6 +873,27 @@ function makeXMLSpectrum(type: dataType, name: string, serial = false): Element 
 }
 
 
+function toLocalIsoString(date: Date) {
+  let localIsoString = date.getFullYear() + '-'
+    + addLeadingZero((date.getMonth() + 1).toString()) + '-'
+    + addLeadingZero(date.getDate().toString()) + 'T'
+    + addLeadingZero(date.getHours().toString()) + ':'
+    + addLeadingZero(date.getMinutes().toString()) + ':'
+    + addLeadingZero(date.getSeconds().toString());
+
+  if (-date.getTimezoneOffset() < 0) {
+    localIsoString += '-';
+  } else {
+    localIsoString += '+';
+  }
+  const tzDate = new Date(Math.abs(date.getTimezoneOffset()));
+  const tzString = addLeadingZero(tzDate.getHours().toString()) + ':' + addLeadingZero(tzDate.getMinutes().toString());
+
+  localIsoString += tzString;
+  return localIsoString;
+}
+
+
 document.getElementById('xml-export-button-file')!.onclick = () => downloadXML();
 document.getElementById('xml-export-button-serial')!.onclick = () => downloadXML(true);
 
@@ -883,7 +905,7 @@ function downloadXML(serial = false): void {
     filename = `spectrum_${getDateString()}.xml`;
   }
 
-  const formatVersion = 230106;
+  const formatVersion = 230119;
 
   let spectrumName = 'Energy Spectrum';
   let backgroundName = 'Background Energy Spectrum';
@@ -913,12 +935,51 @@ function downloadXML(serial = false): void {
   rd.appendChild(dcr);
 
   let dcrName = document.createElementNS(null, 'Name');
+  /*
   if (serial) {
     dcrName.textContent = 'Gamma MCA Serial Device';
   } else {
     dcrName.textContent = 'Gamma MCA File';
   }
+  */
+  dcrName.textContent = (<HTMLInputElement>document.getElementById('device-name')).value;
   dcr.appendChild(dcrName);
+
+  let si = document.createElementNS(null, 'SampleInfo');
+  rd.appendChild(si);
+
+  let name = document.createElementNS(null, 'Name');
+  name.textContent = (<HTMLInputElement>document.getElementById('sample-name')).value;
+  si.appendChild(name);
+
+  let l = document.createElementNS(null, 'Location');
+  l.textContent = (<HTMLInputElement>document.getElementById('sample-loc')).value;
+  si.appendChild(l);
+
+  let t = document.createElementNS(null, 'Time');
+  const tval = (<HTMLInputElement>document.getElementById('sample-time')).value;
+  if (tval.length !== 0) {
+    t.textContent = toLocalIsoString(new Date(tval));
+    si.appendChild(t);
+  }
+
+  let w = document.createElementNS(null, 'Weight');
+  const wval = (<HTMLInputElement>document.getElementById('sample-weight')).value;
+  if (wval.length !== 0) {
+    w.textContent = (parseFloat(wval)/1000).toString();
+    si.appendChild(w);
+  }
+
+  let v = document.createElementNS(null, 'Volume');
+  const vval = (<HTMLInputElement>document.getElementById('sample-vol')).value;
+  if (vval.length !== 0) {
+    v.textContent = (parseFloat(vval)/1000).toString();
+    si.appendChild(v);
+  }
+
+  let note = document.createElementNS(null, 'Note');
+  note.textContent = (<HTMLInputElement>document.getElementById('add-notes')).value;
+  si.appendChild(note);
 
   if (spectrumData['background'].length !== 0) {
     let bsf = document.createElementNS(null, 'BackgroundSpectrumFile');

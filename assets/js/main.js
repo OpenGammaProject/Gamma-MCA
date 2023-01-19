@@ -616,6 +616,24 @@ function makeXMLSpectrum(type, name, serial = false) {
     }
     return root;
 }
+function toLocalIsoString(date) {
+    let localIsoString = date.getFullYear() + '-'
+        + addLeadingZero((date.getMonth() + 1).toString()) + '-'
+        + addLeadingZero(date.getDate().toString()) + 'T'
+        + addLeadingZero(date.getHours().toString()) + ':'
+        + addLeadingZero(date.getMinutes().toString()) + ':'
+        + addLeadingZero(date.getSeconds().toString());
+    if (-date.getTimezoneOffset() < 0) {
+        localIsoString += '-';
+    }
+    else {
+        localIsoString += '+';
+    }
+    const tzDate = new Date(Math.abs(date.getTimezoneOffset()));
+    const tzString = addLeadingZero(tzDate.getHours().toString()) + ':' + addLeadingZero(tzDate.getMinutes().toString());
+    localIsoString += tzString;
+    return localIsoString;
+}
 document.getElementById('xml-export-button-file').onclick = () => downloadXML();
 document.getElementById('xml-export-button-serial').onclick = () => downloadXML(true);
 function downloadXML(serial = false) {
@@ -626,7 +644,7 @@ function downloadXML(serial = false) {
     else {
         filename = `spectrum_${getDateString()}.xml`;
     }
-    const formatVersion = 230106;
+    const formatVersion = 230119;
     let spectrumName = 'Energy Spectrum';
     let backgroundName = 'Background Energy Spectrum';
     if (serial) {
@@ -647,13 +665,37 @@ function downloadXML(serial = false) {
     let dcr = document.createElementNS(null, 'DeviceConfigReference');
     rd.appendChild(dcr);
     let dcrName = document.createElementNS(null, 'Name');
-    if (serial) {
-        dcrName.textContent = 'Gamma MCA Serial Device';
-    }
-    else {
-        dcrName.textContent = 'Gamma MCA File';
-    }
+    dcrName.textContent = document.getElementById('device-name').value;
     dcr.appendChild(dcrName);
+    let si = document.createElementNS(null, 'SampleInfo');
+    rd.appendChild(si);
+    let name = document.createElementNS(null, 'Name');
+    name.textContent = document.getElementById('sample-name').value;
+    si.appendChild(name);
+    let l = document.createElementNS(null, 'Location');
+    l.textContent = document.getElementById('sample-loc').value;
+    si.appendChild(l);
+    let t = document.createElementNS(null, 'Time');
+    const tval = document.getElementById('sample-time').value;
+    if (tval.length !== 0) {
+        t.textContent = toLocalIsoString(new Date(tval));
+        si.appendChild(t);
+    }
+    let w = document.createElementNS(null, 'Weight');
+    const wval = document.getElementById('sample-weight').value;
+    if (wval.length !== 0) {
+        w.textContent = (parseFloat(wval) / 1000).toString();
+        si.appendChild(w);
+    }
+    let v = document.createElementNS(null, 'Volume');
+    const vval = document.getElementById('sample-vol').value;
+    if (vval.length !== 0) {
+        v.textContent = (parseFloat(vval) / 1000).toString();
+        si.appendChild(v);
+    }
+    let note = document.createElementNS(null, 'Note');
+    note.textContent = document.getElementById('add-notes').value;
+    si.appendChild(note);
     if (spectrumData['background'].length !== 0) {
         let bsf = document.createElementNS(null, 'BackgroundSpectrumFile');
         bsf.textContent = backgroundName;

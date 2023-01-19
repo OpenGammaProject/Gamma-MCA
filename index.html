@@ -431,6 +431,34 @@
                     COL 1
                     #####
                   -->
+                  <p><strong>Sample Information</strong></p>
+
+                  <div class="vstack gap-2">
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="sample-name">Name</label>
+                      <input type="text" class="form-control" id="sample-name" aria-label="Sample name" placeholder="Name of sample">
+                    </div>
+
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="sample-loc">Location</label>
+                      <input type="text" class="form-control" id="sample-loc" aria-label="Sample location" placeholder="Location of sample">
+                    </div>
+
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="sample-time">Time</label>
+                      <input type="datetime-local" class="form-control" id="sample-time" aria-label="Sample time">
+                    </div>
+
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="sample-weight">Weight</label>
+                      <input type="number" min="0" step="0.1" class="form-control" id="sample-weight" aria-label="Sample weight" placeholder="Sample weight [g]">
+                    </div>
+
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="sample-vol">Volume</label>
+                      <input type="number" min="0" step="0.1" class="form-control" id="sample-vol" aria-label="Sample volume" placeholder="Sample volume [cm^3]">
+                    </div>
+                  </div>
 
                 </div>
 
@@ -445,6 +473,17 @@
                     COL 2
                     #####
                   -->
+                  <p><strong>Device Information</strong></p>
+
+                  <div class="input-group input-group-sm mb-2">
+                    <label class="input-group-text" for="device-name">Device Name</label>
+                    <input type="text" class="form-control" id="device-name" aria-label="Recording device name" placeholder="Recording device name">
+                  </div>
+
+                  <div class="form-floating mb-2">
+                    <textarea class="form-control" placeholder="Leave additional notes here" id="add-notes"></textarea>
+                    <label for="add-notes">Additional notes</label>
+                  </div>
 
                 </div>
               </div>
