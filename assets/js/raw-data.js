@@ -105,15 +105,15 @@ export class RawData {
             }
             const rdl = xmlDoc.getElementsByTagName('SampleInfo')[0];
             const dcr = xmlDoc.getElementsByTagName('DeviceConfigReference')[0];
-            meta.name = this.checkNull(rdl.getElementsByTagName('Name')[0].textContent);
-            meta.location = this.checkNull(rdl.getElementsByTagName('Location')[0].textContent);
-            meta.time = this.checkNull(rdl.getElementsByTagName('Time')[0].textContent);
-            meta.weight = parseFloat(this.checkNull(rdl.getElementsByTagName('Weight')[0].textContent)) * 1000;
-            meta.volume = parseFloat(this.checkNull(rdl.getElementsByTagName('Volume')[0].textContent)) * 1000;
-            meta.notes = this.checkNull(rdl.getElementsByTagName('Note')[0].textContent);
-            meta.deviceName = this.checkNull(dcr.getElementsByTagName('Name')[0].textContent);
-            meta.startTime = this.checkNull(xmlDoc.getElementsByTagName('StartTime')[0].textContent);
-            meta.endTime = this.checkNull(xmlDoc.getElementsByTagName('EndTime')[0].textContent);
+            meta.name = this.checkNull(rdl.getElementsByTagName('Name')[0].textContent?.trim());
+            meta.location = this.checkNull(rdl.getElementsByTagName('Location')[0].textContent?.trim());
+            meta.time = this.checkNull(rdl.getElementsByTagName('Time')[0].textContent?.trim());
+            meta.weight = parseFloat(this.checkNull(rdl.getElementsByTagName('Weight')[0].textContent?.trim())) * 1000;
+            meta.volume = parseFloat(this.checkNull(rdl.getElementsByTagName('Volume')[0].textContent?.trim())) * 1000;
+            meta.notes = this.checkNull(rdl.getElementsByTagName('Note')[0].textContent?.trim());
+            meta.deviceName = this.checkNull(dcr.getElementsByTagName('Name')[0].textContent?.trim());
+            meta.startTime = this.checkNull(xmlDoc.getElementsByTagName('StartTime')[0].textContent?.trim());
+            meta.endTime = this.checkNull(xmlDoc.getElementsByTagName('EndTime')[0].textContent?.trim());
             return { espectrum, bgspectrum, coeff, meta };
         }
         catch (e) {
