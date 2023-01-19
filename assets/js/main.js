@@ -556,6 +556,24 @@ function getDateStringMin() {
     const time = new Date();
     return time.getFullYear() + '-' + addLeadingZero((time.getMonth() + 1).toString()) + '-' + addLeadingZero(time.getDate().toString());
 }
+function toLocalIsoString(date) {
+    let localIsoString = date.getFullYear() + '-'
+        + addLeadingZero((date.getMonth() + 1).toString()) + '-'
+        + addLeadingZero(date.getDate().toString()) + 'T'
+        + addLeadingZero(date.getHours().toString()) + ':'
+        + addLeadingZero(date.getMinutes().toString()) + ':'
+        + addLeadingZero(date.getSeconds().toString());
+    if (-date.getTimezoneOffset() < 0) {
+        localIsoString += '-';
+    }
+    else {
+        localIsoString += '+';
+    }
+    const tzDate = new Date(Math.abs(date.getTimezoneOffset()));
+    const tzString = addLeadingZero(tzDate.getHours().toString()) + ':' + addLeadingZero(tzDate.getMinutes().toString());
+    localIsoString += tzString;
+    return localIsoString;
+}
 document.getElementById('calibration-download').onclick = () => downloadCal();
 function downloadCal() {
     const filename = `calibration_${getDateString()}.json`;
@@ -616,24 +634,6 @@ function makeXMLSpectrum(type, name, serial = false) {
     }
     return root;
 }
-function toLocalIsoString(date) {
-    let localIsoString = date.getFullYear() + '-'
-        + addLeadingZero((date.getMonth() + 1).toString()) + '-'
-        + addLeadingZero(date.getDate().toString()) + 'T'
-        + addLeadingZero(date.getHours().toString()) + ':'
-        + addLeadingZero(date.getMinutes().toString()) + ':'
-        + addLeadingZero(date.getSeconds().toString());
-    if (-date.getTimezoneOffset() < 0) {
-        localIsoString += '-';
-    }
-    else {
-        localIsoString += '+';
-    }
-    const tzDate = new Date(Math.abs(date.getTimezoneOffset()));
-    const tzString = addLeadingZero(tzDate.getHours().toString()) + ':' + addLeadingZero(tzDate.getMinutes().toString());
-    localIsoString += tzString;
-    return localIsoString;
-}
 document.getElementById('xml-export-button-file').onclick = () => downloadXML();
 document.getElementById('xml-export-button-serial').onclick = () => downloadXML(true);
 function downloadXML(serial = false) {
@@ -667,6 +667,19 @@ function downloadXML(serial = false) {
     let dcrName = document.createElementNS(null, 'Name');
     dcrName.textContent = document.getElementById('device-name').value;
     dcr.appendChild(dcrName);
+    if (startDate) {
+        let st = document.createElementNS(null, 'StartTime');
+        st.textContent = toLocalIsoString(startDate);
+        rd.appendChild(st);
+        let et = document.createElementNS(null, 'EndTime');
+        rd.appendChild(et);
+        if (endDate && endDate.getTime() - startDate.getTime() >= 0) {
+            et.textContent = toLocalIsoString(endDate);
+        }
+        else {
+            et.textContent = toLocalIsoString(new Date());
+        }
+    }
     let si = document.createElementNS(null, 'SampleInfo');
     rd.appendChild(si);
     let name = document.createElementNS(null, 'Name');
@@ -1312,6 +1325,8 @@ document.getElementById('record-spectrum-btn').onclick = () => startRecord(false
 document.getElementById('record-bg-btn').onclick = () => startRecord(false, 'background');
 let closed;
 let firstLoad = false;
+let startDate;
+let endDate;
 async function startRecord(pause = false, type = recordingType) {
     try {
         selectPort();
@@ -1326,6 +1341,7 @@ async function startRecord(pause = false, type = recordingType) {
             removeFile(recordingType);
             firstLoad = true;
             timeDone = 0;
+            startDate = new Date();
         }
         document.getElementById('export-button').disabled = false;
         document.getElementById('stop-button').disabled = false;
@@ -1427,6 +1443,7 @@ async function disconnectPort(stop = false) {
         const cpsButton = document.getElementById('plot-cps');
         toggleCps(cpsButton, true);
         ser.clearBaseHist();
+        endDate = new Date();
     }
     document.getElementById('resume-button').classList.toggle('d-none', stop);
     keepReading = false;

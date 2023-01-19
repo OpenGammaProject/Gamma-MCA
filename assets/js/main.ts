@@ -788,6 +788,27 @@ function getDateStringMin(): string {
 }
 
 
+function toLocalIsoString(date: Date) {
+  let localIsoString = date.getFullYear() + '-'
+    + addLeadingZero((date.getMonth() + 1).toString()) + '-'
+    + addLeadingZero(date.getDate().toString()) + 'T'
+    + addLeadingZero(date.getHours().toString()) + ':'
+    + addLeadingZero(date.getMinutes().toString()) + ':'
+    + addLeadingZero(date.getSeconds().toString());
+
+  if (-date.getTimezoneOffset() < 0) {
+    localIsoString += '-';
+  } else {
+    localIsoString += '+';
+  }
+  const tzDate = new Date(Math.abs(date.getTimezoneOffset()));
+  const tzString = addLeadingZero(tzDate.getHours().toString()) + ':' + addLeadingZero(tzDate.getMinutes().toString());
+
+  localIsoString += tzString;
+  return localIsoString;
+}
+
+
 document.getElementById('calibration-download')!.onclick = () => downloadCal();
 
 function downloadCal(): void {
@@ -873,27 +894,6 @@ function makeXMLSpectrum(type: dataType, name: string, serial = false): Element 
 }
 
 
-function toLocalIsoString(date: Date) {
-  let localIsoString = date.getFullYear() + '-'
-    + addLeadingZero((date.getMonth() + 1).toString()) + '-'
-    + addLeadingZero(date.getDate().toString()) + 'T'
-    + addLeadingZero(date.getHours().toString()) + ':'
-    + addLeadingZero(date.getMinutes().toString()) + ':'
-    + addLeadingZero(date.getSeconds().toString());
-
-  if (-date.getTimezoneOffset() < 0) {
-    localIsoString += '-';
-  } else {
-    localIsoString += '+';
-  }
-  const tzDate = new Date(Math.abs(date.getTimezoneOffset()));
-  const tzString = addLeadingZero(tzDate.getHours().toString()) + ':' + addLeadingZero(tzDate.getMinutes().toString());
-
-  localIsoString += tzString;
-  return localIsoString;
-}
-
-
 document.getElementById('xml-export-button-file')!.onclick = () => downloadXML();
 document.getElementById('xml-export-button-serial')!.onclick = () => downloadXML(true);
 
@@ -944,6 +944,21 @@ function downloadXML(serial = false): void {
   */
   dcrName.textContent = (<HTMLInputElement>document.getElementById('device-name')).value;
   dcr.appendChild(dcrName);
+
+  if (startDate) {
+    let st = document.createElementNS(null, 'StartTime');
+    st.textContent = toLocalIsoString(startDate);
+    rd.appendChild(st);
+
+    let et = document.createElementNS(null, 'EndTime');
+    rd.appendChild(et);
+
+    if (endDate && endDate.getTime() - startDate.getTime() >= 0) {
+      et.textContent = toLocalIsoString(endDate);
+    } else {
+      et.textContent = toLocalIsoString(new Date());
+    }
+  }
 
   let si = document.createElementNS(null, 'SampleInfo');
   rd.appendChild(si);
@@ -1771,6 +1786,8 @@ document.getElementById('record-bg-btn')!.onclick = () => startRecord(false, 'ba
 
 let closed: Promise<void>;
 let firstLoad = false;
+let startDate: Date;
+let endDate: Date;
 
 async function startRecord(pause = false, type = <dataType>recordingType): Promise<void> {
   try {
@@ -1791,6 +1808,7 @@ async function startRecord(pause = false, type = <dataType>recordingType): Promi
       removeFile(recordingType); // Remove old spectrum
       firstLoad = true;
       timeDone = 0;
+      startDate = new Date();
     }
 
     (<HTMLButtonElement>document.getElementById('export-button')).disabled = false;
@@ -1925,6 +1943,7 @@ async function disconnectPort(stop = false): Promise<void> {
     const cpsButton = <HTMLButtonElement>document.getElementById('plot-cps');
     toggleCps(cpsButton, true); // Disable CPS again
     ser.clearBaseHist(); // Clear base histogram for data processing
+    endDate = new Date();
   }
   document.getElementById('resume-button')!.classList.toggle('d-none', stop);
 
