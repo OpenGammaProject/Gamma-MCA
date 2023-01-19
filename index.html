@@ -154,7 +154,11 @@
                   <hr>
 
                   <p>
-                    <button class="btn btn-primary btn-sm" id="xml-export-button-file" type="button" title="Export spectrum as XML">
+                    <button class="btn btn-primary btn-sm" id="npes-export-button-file" type="button" title="Export all data as JSON (NPES), recommended">
+                      <i class="fas fa-file-export"></i> Export JSON
+                    </button>
+                    
+                    <button class="btn btn-primary btn-sm" id="xml-export-button-file" type="button" title="Export all data as XML, deprecated">
                       <i class="fas fa-file-export"></i> Export XML
                     </button>
                   </p>
@@ -676,13 +680,14 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            What do you want to export?
+            <p>What do you want to export?</p>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Cancel </button>
             <button type="button" class="btn btn-primary" id="download-spectrum-btn" title="Export spectrum as CSV"> Spectrum </button>
             <button type="button" class="btn btn-primary" id="download-bg-btn" title="Export background as CSV"> Background </button>
-            <button type="button" class="btn btn-primary" id="xml-export-button-serial" title="Export spectrum as XML"> XML </button>
+            <button type="button" class="btn btn-primary" id="xml-export-button-serial" title="Export all data as XML, deprecated"> XML </button>
+            <button type="button" class="btn btn-primary" id="npes-export-button-serial"  title="Export all data as JSON (NPES), recommended"> JSON </button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Cancel </button>
           </div>
         </div>
       </div>
