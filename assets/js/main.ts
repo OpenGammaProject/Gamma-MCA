@@ -17,7 +17,6 @@
     - Single file export button in "file import" (-> file config) tab
 
     - (!) NPES-JSON file export
-    - (!) Main Menu Tab for user sample/measurement info (XML)
     - (!) Toolbar Mobile Layout (Hstack?)
     - (!) Save Chronological/Histogram settings for file and serial
 
@@ -319,7 +318,7 @@ function getFileData(file: File, background = false): void { // Gets called when
 
         const date = new Date(meta.time);
         const rightDate = new Date(date.getTime() - date.getTimezoneOffset()*60*1000);
-        
+
         (<HTMLInputElement>document.getElementById('sample-time')).value = rightDate.toISOString().slice(0,16);
         (<HTMLInputElement>document.getElementById('sample-weight')).value = meta.weight.toString();
         (<HTMLInputElement>document.getElementById('sample-vol')).value = meta.volume.toString();
