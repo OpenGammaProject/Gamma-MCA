@@ -59,7 +59,7 @@
     },
     {
       "src": "/assets/screenshots/file.PNG",
-      "sizes": "1341x897",
+      "sizes": "1177x788",
       "type": "image/png",
       "platform": "wide",
       "label": "CSV spectrum files imported into the PWA and plotted"
