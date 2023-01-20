@@ -8,25 +8,31 @@
 
   TODO: Rewrite CSV stuff, it's ugly af and also pretty confusing.
 
+  TODO: Check crash if coefficients or energy spectrum or background energy spectrum not available
+
 */
 
 import { coeffObj } from './plot.js';
+
+interface importDataMeta {
+  name: string,
+  location: string,
+  time: string,
+  weight?: number,
+  volume?: number,
+  notes: string,
+  deviceName: string,
+  startTime: string,
+  endTime: string,
+  dataMt: number, // Measurement time for the energy spectrum
+  backgroundMt: number // Measurement time for the background energy spectrum
+}
 
 interface xmlImportData {
   espectrum: number[],
   bgspectrum: number[],
   coeff: coeffObj,
-  meta: {
-    name: string,
-    location: string,
-    time: string,
-    weight: number,
-    volume: number,
-    notes: string,
-    deviceName: string,
-    startTime: string,
-    endTime: string
-  }
+  meta: importDataMeta
 };
 
 export class RawData {
@@ -93,11 +99,19 @@ export class RawData {
     }
   }
 
-  checkNull(data: string | null | undefined) {
+  checkNullString(data: string | null | undefined, defaultReturn = ""): string {
     if (data) {
       return data;
     } else {
-      return "";
+      return defaultReturn;
+    }
+  }
+
+  checkNullNumber(data: string | null | undefined, defaultReturn = 0): number {
+    if (data) {
+      return parseFloat(data);
+    } else {
+      return defaultReturn;
     }
   }
 
@@ -108,23 +122,25 @@ export class RawData {
       c2: 0,
       c3: 0
     };
-    let meta = {
+    let meta: importDataMeta = {
       name: '',
       location: '',
       time: '',
-      weight: 0,
-      volume: 0,
       notes: '',
       deviceName: '',
       startTime: '',
-      endTime: ''
+      endTime: '',
+      dataMt: 0,
+      backgroundMt: 0
     };
 
     try {
       const parser = new DOMParser();
       let xmlDoc = parser.parseFromString(data, 'text/xml');
-      const espec = xmlDoc.getElementsByTagName('EnergySpectrum')[0].getElementsByTagName('DataPoint');
-      const bgspec = xmlDoc.getElementsByTagName('BackgroundEnergySpectrum')[0].getElementsByTagName('DataPoint');
+      const especTop = xmlDoc.getElementsByTagName('EnergySpectrum')[0];
+      const espec = especTop.getElementsByTagName('DataPoint');
+      const bgspecTop = xmlDoc.getElementsByTagName('BackgroundEnergySpectrum')[0];
+      const bgspec = bgspecTop.getElementsByTagName('DataPoint');
       const calCoeffs = xmlDoc.getElementsByTagName('EnergySpectrum')[0].getElementsByTagName('Coefficient');
 
       const especArray = Array.from(espec);
@@ -158,19 +174,27 @@ export class RawData {
       const rdl = xmlDoc.getElementsByTagName('SampleInfo')[0];
       const dcr = xmlDoc.getElementsByTagName('DeviceConfigReference')[0];
 
-      meta.name = this.checkNull(rdl.getElementsByTagName('Name')[0].textContent?.trim());
-      meta.location = this.checkNull(rdl.getElementsByTagName('Location')[0].textContent?.trim());
-      meta.time = this.checkNull(rdl.getElementsByTagName('Time')[0].textContent?.trim());
-      meta.weight = parseFloat(this.checkNull(rdl.getElementsByTagName('Weight')[0].textContent?.trim()))*1000;
-      meta.volume = parseFloat(this.checkNull(rdl.getElementsByTagName('Volume')[0].textContent?.trim()))*1000;
-      meta.notes = this.checkNull(rdl.getElementsByTagName('Note')[0].textContent?.trim());
-      meta.deviceName = this.checkNull(dcr.getElementsByTagName('Name')[0].textContent?.trim());
-      meta.startTime = this.checkNull(xmlDoc.getElementsByTagName('StartTime')[0].textContent?.trim());
-      meta.endTime = this.checkNull(xmlDoc.getElementsByTagName('EndTime')[0].textContent?.trim());
+      meta.name = this.checkNullString(rdl.getElementsByTagName('Name')[0]?.textContent?.trim());
+      meta.location = this.checkNullString(rdl.getElementsByTagName('Location')[0]?.textContent?.trim());
+      meta.time = this.checkNullString(rdl.getElementsByTagName('Time')[0]?.textContent?.trim());
+      meta.notes = this.checkNullString(rdl.getElementsByTagName('Note')[0]?.textContent?.trim());
+      meta.deviceName = this.checkNullString(dcr.getElementsByTagName('Name')[0]?.textContent?.trim());
+      meta.startTime = this.checkNullString(xmlDoc.getElementsByTagName('StartTime')[0]?.textContent?.trim());
+      meta.endTime = this.checkNullString(xmlDoc.getElementsByTagName('EndTime')[0]?.textContent?.trim());
+
+      let val = this.checkNullNumber(rdl.getElementsByTagName('Weight')[0]?.textContent?.trim());
+      if (val > 0) meta.weight = val*1000; // Convert from kg to g
+
+      val = this.checkNullNumber(rdl.getElementsByTagName('Volume')[0]?.textContent?.trim()); // Convert from L to ml
+      if (val > 0) meta.volume = val*1000;
+
+      meta.dataMt = this.checkNullNumber(especTop.getElementsByTagName('MeasurementTime')[0]?.textContent?.trim(), 1)*1000; // Convert from s to ms
+      meta.backgroundMt = this.checkNullNumber(bgspecTop.getElementsByTagName('MeasurementTime')[0].textContent?.trim(), 1)*1000; // Convert from s to ms
 
       //console.log(performance.now() - time1);
       return {espectrum, bgspectrum, coeff, meta};
     } catch (e) {
+      console.error(e);
       return {espectrum: [], bgspectrum: [], coeff, meta};
     }
   }
