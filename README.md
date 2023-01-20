@@ -6,7 +6,7 @@ Progressive web application for gamma spectroscopy including file and live plot 
 
 ![example spectrum](/assets/screenshots/pwa.PNG)
 
-Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://github.com/plotly/plotly.js) and [Font Awesome](https://github.com/FortAwesome/Font-Awesome).
+Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://github.com/plotly/plotly.js), [Font Awesome](https://github.com/FortAwesome/Font-Awesome) and [z-schema](https://github.com/zaggino/z-schema).
 
 ## Feature Overview
 
@@ -45,7 +45,7 @@ Both modes are currently supported by our [Open Gamma Detector](https://github.c
 
 ## Contributing
 
-The PWA is written with TypeScript. The files can be found in `assets/js/`, please only modify the `.ts` files -- all `.js` files are auto-generated.
+The PWA is written with TypeScript. The files can be found in `assets/js/`. Please only modify the Typescript `.ts` files -- all `.js` files are auto-generated!
 
 ---
 
