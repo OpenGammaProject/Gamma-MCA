@@ -18,7 +18,6 @@
     - Single file export button in "file import" (-> file config) tab
 
     - (!) Toolbar Mobile Layout (Hstack?)
-    - (!) Save Chronological/Histogram settings for file and serial
 
 
   Known Performance Issues:
@@ -208,6 +207,19 @@ document.body.onload = async function(): Promise<void> {
 
     saveJSON('lastVisit', Date.now());
     saveJSON('lastUsedVersion', APP_VERSION);
+
+    const sVal = loadJSON('serialDataMode'); // ids: s1, s2
+    const rVal = loadJSON('fileDataMode'); // ids: r1, r2
+
+    if (sVal) {
+      (<HTMLInputElement>document.getElementById(sVal)).checked = true;
+      selectSerialType(<HTMLInputElement>document.getElementById(sVal));
+    }
+
+    if (rVal) {
+      (<HTMLInputElement>document.getElementById(rVal)).checked = true;
+      selectFileType(<HTMLInputElement>document.getElementById(rVal));
+    }
 
     const settingsNotSaveAlert = document.getElementById('ls-unavailable')!; // Remove saving alert
     settingsNotSaveAlert.parentNode!.removeChild(settingsNotSaveAlert);
@@ -550,6 +562,9 @@ document.getElementById('r2')!.onchange = event => selectFileType(<HTMLInputElem
 function selectFileType(button: HTMLInputElement): void {
   raw.fileType = parseInt(button.value);
   raw.valueIndex = parseInt(button.value);
+  if (localStorageAvailable) {
+    saveJSON('fileDataMode', button.id);
+  }
 }
 
 
@@ -1822,6 +1837,9 @@ document.getElementById('s2')!.onchange = event => selectSerialType(<HTMLInputEl
 
 function selectSerialType(button: HTMLInputElement): void {
   ser.orderType = <dataOrder>button.value;
+  if (localStorageAvailable) {
+    saveJSON('serialDataMode', button.id);
+  }
 }
 
 

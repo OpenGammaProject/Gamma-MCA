@@ -111,6 +111,16 @@ document.body.onload = async function () {
         }
         saveJSON('lastVisit', Date.now());
         saveJSON('lastUsedVersion', APP_VERSION);
+        const sVal = loadJSON('serialDataMode');
+        const rVal = loadJSON('fileDataMode');
+        if (sVal) {
+            document.getElementById(sVal).checked = true;
+            selectSerialType(document.getElementById(sVal));
+        }
+        if (rVal) {
+            document.getElementById(rVal).checked = true;
+            selectFileType(document.getElementById(rVal));
+        }
         const settingsNotSaveAlert = document.getElementById('ls-unavailable');
         settingsNotSaveAlert.parentNode.removeChild(settingsNotSaveAlert);
     }
@@ -359,6 +369,9 @@ document.getElementById('r2').onchange = event => selectFileType(event.target);
 function selectFileType(button) {
     raw.fileType = parseInt(button.value);
     raw.valueIndex = parseInt(button.value);
+    if (localStorageAvailable) {
+        saveJSON('fileDataMode', button.id);
+    }
 }
 document.getElementById('reset-plot').onclick = () => resetPlot();
 function resetPlot() {
@@ -1341,6 +1354,9 @@ document.getElementById('s1').onchange = event => selectSerialType(event.target)
 document.getElementById('s2').onchange = event => selectSerialType(event.target);
 function selectSerialType(button) {
     ser.orderType = button.value;
+    if (localStorageAvailable) {
+        saveJSON('serialDataMode', button.id);
+    }
 }
 function serialConnect() {
     listSerial();
