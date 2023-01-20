@@ -136,7 +136,7 @@
                   </p>
 
                   <div class="input-group input-group-sm">
-                    <input class="form-control form-control-sm" type="file" id="data" accept=".csv, .TKA, .xml, .txt">
+                    <input class="form-control form-control-sm" type="file" id="data" accept=".csv, .tka, .xml, .txt, .json">
                     <button class="btn btn-primary btn-sm" type="button" id="clear-data" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
                   </div>
 
@@ -147,7 +147,7 @@
                   </p>
 
                   <div class="input-group input-group-sm">
-                    <input class="form-control form-control-sm" type="file" id="background" accept=".csv, .TKA, .xml, .txt">
+                    <input class="form-control form-control-sm" type="file" id="background" accept=".csv, .tka, .xml, .txt, .json">
                     <button class="btn btn-primary btn-sm" type="button" id="clear-bg" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
                   </div>
 
@@ -1079,6 +1079,18 @@
         </div>
         <div class="toast-body">
           Something went wrong, please reload and try again or report this issue.
+        </div>
+      </div>
+
+      <div id="npes-error" class="toast text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
+        <div class="toast-header">
+          <i class="fas fa-exclamation-triangle me-2"></i>
+          <strong class="me-auto">JSON Import Error</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          The file you uploaded is not formatted correctly. It does not validate the NPES JSON Schema!
+          For more information, please head to <a title="GitHub/NPES-JSON" class="link-light" href="https://github.com/OpenGammaProject/NPES-JSON" target="_blank">NPES-JSON</a>.
         </div>
       </div>
 
