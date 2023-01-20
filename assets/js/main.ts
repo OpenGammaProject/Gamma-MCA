@@ -16,7 +16,6 @@
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
     - Single file export button in "file import" (-> file config) tab
 
-    - Truthy value checks
     - (!) JSON NPES imports
     - (!) Toolbar Mobile Layout (Hstack?)
     - (!) Save Chronological/Histogram settings for file and serial
@@ -560,7 +559,7 @@ document.getElementById('sma')!.onclick = event => toggleSma((<HTMLInputElement>
 
 function toggleSma(value: boolean, thisValue: HTMLInputElement | null = null ): void {
   plot.sma = value;
-  if (thisValue !== null) {
+  if (thisValue) {
     thisValue.checked = false;
   }
   plot.updatePlot(spectrumData);
@@ -1331,7 +1330,7 @@ async function closestIso(value: number): Promise<void> {
     }
   }
 
-  if (energy !== undefined && name !== undefined) {
+  if (energy && name) {
     let newIso: isotopeList = {};
     newIso[energy] = name;
 

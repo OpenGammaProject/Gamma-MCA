@@ -361,7 +361,7 @@ function enterPress(event, id) {
 document.getElementById('sma').onclick = event => toggleSma(event.target.checked);
 function toggleSma(value, thisValue = null) {
     plot.sma = value;
-    if (thisValue !== null) {
+    if (thisValue) {
         thisValue.checked = false;
     }
     plot.updatePlot(spectrumData);
@@ -938,7 +938,7 @@ async function closestIso(value) {
             plot.toggleLine(energyVal, Object.keys(prevIso)[0], false);
         }
     }
-    if (energy !== undefined && name !== undefined) {
+    if (energy && name) {
         let newIso = {};
         newIso[energy] = name;
         if (prevIso !== newIso) {
