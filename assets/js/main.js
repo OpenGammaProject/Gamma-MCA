@@ -188,9 +188,11 @@ function getFileData(file, background = false) {
                 const { espectrum, bgspectrum, coeff, meta } = raw.xmlToArray(result);
                 document.getElementById('sample-name').value = meta.name;
                 document.getElementById('sample-loc').value = meta.location;
-                const date = new Date(meta.time);
-                const rightDate = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
-                document.getElementById('sample-time').value = rightDate.toISOString().slice(0, 16);
+                if (meta.time) {
+                    const date = new Date(meta.time);
+                    const rightDate = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
+                    document.getElementById('sample-time').value = rightDate.toISOString().slice(0, 16);
+                }
                 const volumeElement = document.getElementById('sample-vol');
                 const weightElement = document.getElementById('sample-weight');
                 volumeElement.value = "";
@@ -207,11 +209,13 @@ function getFileData(file, background = false) {
                     popupNotification('file-error');
                 }
                 if (espectrum) {
-                    spectrumData.dataTime = meta.dataMt;
+                    if (meta.dataMt)
+                        spectrumData.dataTime = meta.dataMt;
                     spectrumData.data = espectrum;
                 }
                 if (bgspectrum) {
-                    spectrumData.backgroundTime = meta.backgroundMt;
+                    if (meta.backgroundMt)
+                        spectrumData.backgroundTime = meta.backgroundMt;
                     spectrumData.background = bgspectrum;
                 }
                 const importedCount = Object.values(coeff).filter(value => value !== 0).length;

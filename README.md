@@ -13,7 +13,8 @@ Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://
 * No installation required - accessible on every internet-connected device
 * Can be easily installed for stand-alone offline use
 * Straightforward interface to get down to business
-* File import of common data formats (e.g. CSV, TKA, XML)
+* File import of common data formats (e.g. CSV, TKA, XML, JSON)
+* Export JSON/XML files combining all the spectra, calibration data and sample info
 * Live plotting via the serial interface, compatible with any serial device (e.g. Arduino)
 * Serial console to control your device
 * Linear and quadratic energy calibration
@@ -24,10 +25,12 @@ Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://
 
 ## Importing Spectra
 
-There are essentially two types of files you can use - both being text files, e.g. CSVs or XMLs:
+There are essentially two types of files you can use - both being text files, e.g. CSVs, XMLs or JSONs:
 
 1. _Chronological streams_ where each new detected event gets printed to the file after the previous one. This includes streams from our [Open Gamma Detector](https://github.com/OpenGammaProject/Open-Gamma-Detector) or any other serial device that has been set up to do so. **Important:** The whole file will be read and the individual events are confined using the delimiter. Whitespace or newlines do not matter. The delimiter can be changed in the settings.
 2. Ready-to-use _histograms_. This includes common file types like TKAs, CSVs and also, e.g., RadiaCode 101 XML exports. **Important:** If your file has more than one element per line (CSV), the first one will be regarded as channel index/energy and the second as the number of counts. If there's one element only, it will be regarded as the number of counts instead.
+
+Gamma MCA can import JSON files complying with the [NPES JSON Schema](https://github.com/OpenGammaProject/NPES-JSON).
 
 ## Using Serial
 

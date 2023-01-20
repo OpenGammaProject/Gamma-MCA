@@ -17,7 +17,6 @@
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
     - Single file export button in "file import" (-> file config) tab
 
-    - (!) Compare performance XML/JSON
     - (!) Toolbar Mobile Layout (Hstack?)
     - (!) Save Chronological/Histogram settings for file and serial
 
@@ -347,16 +346,18 @@ function getFileData(file: File, background = false): void { // Gets called when
     const result = (<string>reader.result).trim(); // A bit unclean for typescript, I'm sorry
 
     if (fileEnding.toLowerCase() === 'xml') {
+      //const time1 = performance.now();
       if (window.DOMParser) {
         const {espectrum, bgspectrum, coeff, meta} = raw.xmlToArray(result);
 
         (<HTMLInputElement>document.getElementById('sample-name')).value = meta.name;
         (<HTMLInputElement>document.getElementById('sample-loc')).value = meta.location;
 
-        const date = new Date(meta.time);
-        const rightDate = new Date(date.getTime() - date.getTimezoneOffset()*60*1000);
-
-        (<HTMLInputElement>document.getElementById('sample-time')).value = rightDate.toISOString().slice(0,16);
+        if (meta.time) {
+          const date = new Date(meta.time);
+          const rightDate = new Date(date.getTime() - date.getTimezoneOffset()*60*1000);
+          (<HTMLInputElement>document.getElementById('sample-time')).value = rightDate.toISOString().slice(0,16);
+        }
 
         const volumeElement = (<HTMLInputElement>document.getElementById('sample-vol'));
         const weightElement = (<HTMLInputElement>document.getElementById('sample-weight'));
@@ -376,11 +377,11 @@ function getFileData(file: File, background = false): void { // Gets called when
           popupNotification('file-error');
         }
         if (espectrum) {
-          spectrumData.dataTime = meta.dataMt;
+          if (meta.dataMt) spectrumData.dataTime = meta.dataMt;
           spectrumData.data = espectrum;
         }
         if (bgspectrum) {
-          spectrumData.backgroundTime = meta.backgroundMt;
+          if (meta.backgroundMt) spectrumData.backgroundTime = meta.backgroundMt;
           spectrumData.background = bgspectrum;
         }
 
@@ -401,7 +402,9 @@ function getFileData(file: File, background = false): void { // Gets called when
       } else {
         console.error('No DOM parser in this browser!');
       }
+      //console.log(performance.now() - time1);
     } else if (fileEnding.toLowerCase() === 'json') { // THIS SECTION MAKES EVERYTHING ASYNC!!!
+      //const time1 = performance.now();
       const importData = await raw.jsonToObject(result);
 
       if (!importData) { // Data does not validate the schema
@@ -456,6 +459,7 @@ function getFileData(file: File, background = false): void { // Gets called when
           }
         }
       }
+      //console.log(performance.now() - time1);
     } else if (background) {
       spectrumData.backgroundTime = 1000;
       spectrumData.background = raw.csvToArray(result);

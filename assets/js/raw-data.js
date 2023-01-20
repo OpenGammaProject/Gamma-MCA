@@ -85,52 +85,64 @@ export class RawData {
         try {
             const parser = new DOMParser();
             let xmlDoc = parser.parseFromString(data, 'text/xml');
-            const especTop = xmlDoc.getElementsByTagName('EnergySpectrum')[0];
-            const espec = especTop.getElementsByTagName('DataPoint');
-            const bgspecTop = xmlDoc.getElementsByTagName('BackgroundEnergySpectrum')[0];
-            const bgspec = bgspecTop.getElementsByTagName('DataPoint');
-            const calCoeffs = xmlDoc.getElementsByTagName('EnergySpectrum')[0].getElementsByTagName('Coefficient');
-            const especArray = Array.from(espec);
-            const bgspecArray = Array.from(bgspec);
-            const calCoeffsArray = Array.from(calCoeffs);
-            const espectrum = especArray.map(item => {
-                if (item.textContent === null) {
-                    return -1;
+            const especTop = xmlDoc.getElementsByTagName('EnergySpectrum');
+            let espectrum = [];
+            let bgspectrum = [];
+            if (especTop[0]) {
+                const espec = especTop[0].getElementsByTagName('DataPoint');
+                const especArray = Array.from(espec);
+                espectrum = especArray.map(item => {
+                    if (item.textContent === null) {
+                        return -1;
+                    }
+                    return parseFloat(item.textContent);
+                });
+                meta.dataMt = this.checkNullNumber(especTop[0].getElementsByTagName('MeasurementTime')[0]?.textContent?.trim(), 1) * 1000;
+            }
+            const bgspecTop = xmlDoc.getElementsByTagName('BackgroundEnergySpectrum');
+            if (bgspecTop[0]) {
+                const bgspec = bgspecTop[0].getElementsByTagName('DataPoint');
+                const bgspecArray = Array.from(bgspec);
+                bgspectrum = bgspecArray.map(item => {
+                    if (item.textContent === null) {
+                        return -1;
+                    }
+                    return parseFloat(item.textContent);
+                });
+                meta.backgroundMt = this.checkNullNumber(bgspecTop[0].getElementsByTagName('MeasurementTime')[0].textContent?.trim(), 1) * 1000;
+            }
+            const calCoeffsTop = xmlDoc.getElementsByTagName('EnergySpectrum')[0];
+            if (calCoeffsTop) {
+                const calCoeffs = calCoeffsTop.getElementsByTagName('Coefficient');
+                const calCoeffsArray = Array.from(calCoeffs);
+                const coeffNumArray = calCoeffsArray.map(item => {
+                    if (item.textContent === null) {
+                        return 0;
+                    }
+                    return parseFloat(item.textContent);
+                });
+                for (const i in coeffNumArray) {
+                    coeff['c' + (parseInt(i) + 1).toString()] = coeffNumArray[2 - parseInt(i)];
                 }
-                return parseFloat(item.textContent);
-            });
-            const bgspectrum = bgspecArray.map(item => {
-                if (item.textContent === null) {
-                    return -1;
-                }
-                return parseFloat(item.textContent);
-            });
-            const coeffNumArray = calCoeffsArray.map(item => {
-                if (item.textContent === null) {
-                    return 0;
-                }
-                return parseFloat(item.textContent);
-            });
-            for (const i in coeffNumArray) {
-                coeff['c' + (parseInt(i) + 1).toString()] = coeffNumArray[2 - parseInt(i)];
             }
             const rdl = xmlDoc.getElementsByTagName('SampleInfo')[0];
+            if (rdl) {
+                meta.name = this.checkNullString(rdl.getElementsByTagName('Name')[0]?.textContent?.trim());
+                meta.location = this.checkNullString(rdl.getElementsByTagName('Location')[0]?.textContent?.trim());
+                meta.time = this.checkNullString(rdl.getElementsByTagName('Time')[0]?.textContent?.trim());
+                meta.notes = this.checkNullString(rdl.getElementsByTagName('Note')[0]?.textContent?.trim());
+                let val = this.checkNullNumber(rdl.getElementsByTagName('Weight')[0]?.textContent?.trim());
+                if (val > 0)
+                    meta.weight = val * 1000;
+                val = this.checkNullNumber(rdl.getElementsByTagName('Volume')[0]?.textContent?.trim());
+                if (val > 0)
+                    meta.volume = val * 1000;
+            }
             const dcr = xmlDoc.getElementsByTagName('DeviceConfigReference')[0];
-            meta.name = this.checkNullString(rdl.getElementsByTagName('Name')[0]?.textContent?.trim());
-            meta.location = this.checkNullString(rdl.getElementsByTagName('Location')[0]?.textContent?.trim());
-            meta.time = this.checkNullString(rdl.getElementsByTagName('Time')[0]?.textContent?.trim());
-            meta.notes = this.checkNullString(rdl.getElementsByTagName('Note')[0]?.textContent?.trim());
-            meta.deviceName = this.checkNullString(dcr.getElementsByTagName('Name')[0]?.textContent?.trim());
+            if (dcr)
+                meta.deviceName = this.checkNullString(dcr.getElementsByTagName('Name')[0]?.textContent?.trim());
             meta.startTime = this.checkNullString(xmlDoc.getElementsByTagName('StartTime')[0]?.textContent?.trim());
             meta.endTime = this.checkNullString(xmlDoc.getElementsByTagName('EndTime')[0]?.textContent?.trim());
-            let val = this.checkNullNumber(rdl.getElementsByTagName('Weight')[0]?.textContent?.trim());
-            if (val > 0)
-                meta.weight = val * 1000;
-            val = this.checkNullNumber(rdl.getElementsByTagName('Volume')[0]?.textContent?.trim());
-            if (val > 0)
-                meta.volume = val * 1000;
-            meta.dataMt = this.checkNullNumber(especTop.getElementsByTagName('MeasurementTime')[0]?.textContent?.trim(), 1) * 1000;
-            meta.backgroundMt = this.checkNullNumber(bgspecTop.getElementsByTagName('MeasurementTime')[0].textContent?.trim(), 1) * 1000;
             return { espectrum, bgspectrum, coeff, meta };
         }
         catch (e) {
