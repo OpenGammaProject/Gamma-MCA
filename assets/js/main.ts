@@ -16,7 +16,8 @@
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
     - Single file export button in "file import" (-> file config) tab
 
-    - (!) NPES-JSON file export
+    - Truthy value checks
+    - (!) JSON NPES imports
     - (!) Toolbar Mobile Layout (Hstack?)
     - (!) Save Chronological/Histogram settings for file and serial
 
@@ -40,6 +41,39 @@ interface portList {
   [key: number]: SerialPort | undefined;
 };
 
+interface NPESv1 {
+  'schemaVersion': 'NPESv1',
+  'deviceData'?: {
+    'deviceName'?: string,
+    'softwareName': string
+  },
+  'sampleInfo'?: {
+    'name'?: string,
+    'location'?: string,
+    'time'?: string,
+    'weight'?: number,
+    'volume'?: number,
+    'note'?: string
+  },
+  'resultData': {
+    'startTime'?: string,
+    'endTime'?: string,
+    'energySpectrum'?: NPESv1Spectrum,
+    'backgroundEnergySpectrum'?: NPESv1Spectrum
+  }
+};
+
+interface NPESv1Spectrum {
+  'numberOfChannels': number,
+  'validPulseCount'?: number,
+  'measurementTime'?: number,
+  'energyCalibration'?: {
+    'polynomialOrder': number,
+    'coefficients': number[]
+  },
+  'spectrum': number[]
+};
+
 type calType = 'a' | 'b' | 'c';
 type dataType = 'data' | 'background';
 export type dataOrder = 'hist' | 'chron';
@@ -49,6 +83,8 @@ export class SpectrumData { // Will hold the measurement data globally.
   background: number[] = [];
   dataCps: number[] = [];
   backgroundCps: number[] = [];
+  dataTime = 1000; // Measurement time in ms
+  backgroundTime = 1000; // Measurement time in ms
 
   getTotalCounts = (data: number[]) => {
     let sum = 0;
@@ -320,8 +356,16 @@ function getFileData(file: File, background = false): void { // Gets called when
         const rightDate = new Date(date.getTime() - date.getTimezoneOffset()*60*1000);
 
         (<HTMLInputElement>document.getElementById('sample-time')).value = rightDate.toISOString().slice(0,16);
-        (<HTMLInputElement>document.getElementById('sample-weight')).value = meta.weight.toString();
-        (<HTMLInputElement>document.getElementById('sample-vol')).value = meta.volume.toString();
+
+        const volumeElement = (<HTMLInputElement>document.getElementById('sample-vol'));
+        const weightElement = (<HTMLInputElement>document.getElementById('sample-weight'));
+
+        volumeElement.value = "";
+        if (meta.volume) volumeElement.value = meta.volume.toString();
+
+        weightElement.value = "";
+        if (meta.weight) weightElement.value = meta.weight.toString();
+
         (<HTMLInputElement>document.getElementById('device-name')).value = meta.deviceName;
         (<HTMLInputElement>document.getElementById('add-notes')).value = meta.notes;
         startDate = new Date(meta.startTime);
@@ -330,10 +374,12 @@ function getFileData(file: File, background = false): void { // Gets called when
         if (espectrum === undefined && bgspectrum === undefined) {
           popupNotification('file-error');
         }
-        if (espectrum !== undefined) {
+        if (espectrum) {
+          spectrumData.dataTime = meta.dataMt;
           spectrumData.data = espectrum;
         }
-        if (bgspectrum !== undefined) {
+        if (bgspectrum) {
+          spectrumData.backgroundTime = meta.backgroundMt;
           spectrumData.background = bgspectrum;
         }
 
@@ -356,8 +402,10 @@ function getFileData(file: File, background = false): void { // Gets called when
         console.error('No DOM parser in this browser!');
       }
     } else if (background) {
+      spectrumData.backgroundTime = 1000;
       spectrumData.background = raw.csvToArray(result);
     } else {
+      spectrumData.dataTime = 1000;
       spectrumData.data = raw.csvToArray(result);
     }
 
@@ -830,7 +878,7 @@ function downloadCal(): void {
 }
 
 
-function makeXMLSpectrum(type: dataType, name: string, serial = false): Element {
+function makeXMLSpectrum(type: dataType, name: string): Element {
   let root: Element;
   let noc = document.createElementNS(null, 'NumberOfChannels');
 
@@ -887,11 +935,7 @@ function makeXMLSpectrum(type: dataType, name: string, serial = false): Element 
 
   let mt = document.createElementNS(null, 'MeasurementTime');
 
-  if (serial) {
-    mt.textContent = (Math.round(timeDone/1000)).toString();
-  } else {
-    mt.textContent = (1).toString();
-  }
+  mt.textContent = (Math.round(spectrumData[`${type}Time`]/1000)).toString();
   root.appendChild(mt)
 
   let s = document.createElementNS(null, 'Spectrum');
@@ -955,7 +999,7 @@ function downloadXML(serial = false): void {
     dcrName.textContent = 'Gamma MCA File';
   }
   */
-  dcrName.textContent = (<HTMLInputElement>document.getElementById('device-name')).value;
+  dcrName.textContent = (<HTMLInputElement>document.getElementById('device-name')).value.trim();
   dcr.appendChild(dcrName);
 
   if (startDate) {
@@ -977,36 +1021,36 @@ function downloadXML(serial = false): void {
   rd.appendChild(si);
 
   let name = document.createElementNS(null, 'Name');
-  name.textContent = (<HTMLInputElement>document.getElementById('sample-name')).value;
+  name.textContent = (<HTMLInputElement>document.getElementById('sample-name')).value.trim();
   si.appendChild(name);
 
   let l = document.createElementNS(null, 'Location');
-  l.textContent = (<HTMLInputElement>document.getElementById('sample-loc')).value;
+  l.textContent = (<HTMLInputElement>document.getElementById('sample-loc')).value.trim();
   si.appendChild(l);
 
   let t = document.createElementNS(null, 'Time');
-  const tval = (<HTMLInputElement>document.getElementById('sample-time')).value;
+  const tval = (<HTMLInputElement>document.getElementById('sample-time')).value.trim();
   if (tval.length !== 0) {
     t.textContent = toLocalIsoString(new Date(tval));
     si.appendChild(t);
   }
 
   let w = document.createElementNS(null, 'Weight');
-  const wval = (<HTMLInputElement>document.getElementById('sample-weight')).value;
+  const wval = (<HTMLInputElement>document.getElementById('sample-weight')).value.trim();
   if (wval.length !== 0) {
     w.textContent = (parseFloat(wval)/1000).toString();
     si.appendChild(w);
   }
 
   let v = document.createElementNS(null, 'Volume');
-  const vval = (<HTMLInputElement>document.getElementById('sample-vol')).value;
+  const vval = (<HTMLInputElement>document.getElementById('sample-vol')).value.trim();
   if (vval.length !== 0) {
     v.textContent = (parseFloat(vval)/1000).toString();
     si.appendChild(v);
   }
 
   let note = document.createElementNS(null, 'Note');
-  note.textContent = (<HTMLInputElement>document.getElementById('add-notes')).value;
+  note.textContent = (<HTMLInputElement>document.getElementById('add-notes')).value.trim();
   si.appendChild(note);
 
   if (spectrumData['background'].length !== 0) {
@@ -1016,10 +1060,10 @@ function downloadXML(serial = false): void {
   }
 
   if (spectrumData['data'].length !== 0) {
-    rd.appendChild(makeXMLSpectrum('data', spectrumName, serial));
+    rd.appendChild(makeXMLSpectrum('data', spectrumName));
   }
   if (spectrumData['background'].length !== 0) {
-    rd.appendChild(makeXMLSpectrum('background', backgroundName, serial));
+    rd.appendChild(makeXMLSpectrum('background', backgroundName));
   }
 
   let vis = document.createElementNS(null, 'Visible');
@@ -1027,6 +1071,75 @@ function downloadXML(serial = false): void {
   rd.appendChild(vis);
 
   download(filename, new XMLSerializer().serializeToString(doc));
+}
+
+
+function makeJSONSpectrum(type: dataType): NPESv1Spectrum {
+  let spec: NPESv1Spectrum = {
+    'numberOfChannels': spectrumData[type].length,
+    'validPulseCount': spectrumData.getTotalCounts(spectrumData[type]),
+    'measurementTime': 0,
+    'spectrum': spectrumData[type]
+  }
+  spec.measurementTime = Math.round(spectrumData[`${type}Time`]/1000);
+
+  return spec;
+}
+
+
+document.getElementById('npes-export-button-file')!.onclick = () => downloadNPES();
+document.getElementById('npes-export-button-serial')!.onclick = () => downloadNPES(true);
+
+function downloadNPES(serial = false): void {
+  let filename: string;
+  if (serial) {
+    filename = `spectrum_${getDateString()}_serial.json`;
+  } else {
+    filename = `spectrum_${getDateString()}.json`;
+  }
+
+  let data: NPESv1 = {
+    'schemaVersion': 'NPESv1',
+    'deviceData': {
+      'softwareName': 'Gamma MCA, ' + APP_VERSION,
+      'deviceName': (<HTMLInputElement>document.getElementById('device-name')).value.trim()
+    },
+    'sampleInfo': {
+      'name': (<HTMLInputElement>document.getElementById('sample-name')).value.trim(),
+      'location': (<HTMLInputElement>document.getElementById('sample-loc')).value.trim(),
+      'note': (<HTMLInputElement>document.getElementById('add-notes')).value.trim()
+    },
+    'resultData': {}
+  }
+
+  let val = parseFloat((<HTMLInputElement>document.getElementById('sample-weight')).value.trim());
+  if (val) data.sampleInfo!.weight = val;
+
+  val = parseFloat((<HTMLInputElement>document.getElementById('sample-vol')).value.trim());
+  if (val) data.sampleInfo!.volume = val;
+
+  const tval = (<HTMLInputElement>document.getElementById('sample-time')).value.trim();
+  if (tval.length !== 0 && new Date(tval)) data.sampleInfo!.time = toLocalIsoString(new Date(tval));
+
+  if (startDate) {
+    data.resultData.startTime = toLocalIsoString(startDate);
+
+    if (endDate && endDate.getTime() - startDate.getTime() >= 0) {
+      data.resultData.endTime = toLocalIsoString(endDate);
+    } else {
+      data.resultData.endTime = toLocalIsoString(new Date());
+    }
+  }
+
+  if (spectrumData.data.length !== 0 && spectrumData.getTotalCounts(spectrumData.data) > 0) {
+    data.resultData.energySpectrum = makeJSONSpectrum('data');
+  }
+  if (spectrumData.background.length !== 0 && spectrumData.getTotalCounts(spectrumData.background) > 0) {
+    data.resultData.backgroundEnergySpectrum = makeJSONSpectrum('background');
+  }
+
+  // Validate the JSON Schema?
+  download(filename, JSON.stringify(data));
 }
 
 
@@ -1760,7 +1873,7 @@ let keepReading = false;
 let reader: ReadableStreamDefaultReader | undefined;
 let recordingType: dataType;
 let startTime = 0;
-let timeDone = 0;
+//let timeDone = 0;
 
 async function readUntilClosed(): Promise<void> {
   while (ser.port?.readable && keepReading) {
@@ -1820,7 +1933,8 @@ async function startRecord(pause = false, type = <dataType>recordingType): Promi
     if (!pause) {
       removeFile(recordingType); // Remove old spectrum
       firstLoad = true;
-      timeDone = 0;
+      spectrumData[`${type}Time`] = 0;
+      //timeDone = 0;
       startDate = new Date();
     }
 
@@ -1939,7 +2053,8 @@ document.getElementById('pause-button')!.onclick = () => disconnectPort();
 document.getElementById('stop-button')!.onclick = () => disconnectPort(true);
 
 async function disconnectPort(stop = false): Promise<void> {
-  timeDone += performance.now() - startTime; //Date.now() - startTime;
+  //timeDone += performance.now() - startTime; //Date.now() - startTime;
+  spectrumData[`${recordingType}Time`] += performance.now() - startTime; // Maybe using recordingType here creates a bug...
 
   document.getElementById('pause-button')!.classList.add('d-none');
 
@@ -2020,7 +2135,7 @@ function refreshMeta(type: dataType): void {
     const timeElement = document.getElementById('record-time')!;
     const progressBar = document.getElementById('ser-time-progress-bar')!;
 
-    const delta = new Date(nowTime - startTime + timeDone);
+    const delta = new Date(nowTime - startTime + spectrumData[`${type}Time`]);
 
     timeElement.innerText = addLeadingZero(delta.getUTCHours().toString()) + ':' + addLeadingZero(delta.getUTCMinutes().toString()) + ':' + addLeadingZero(delta.getUTCSeconds().toString());
 
@@ -2062,7 +2177,7 @@ function refreshRender(type: dataType): void {
     const newData = ser.getData(); // Get all the new data
     const endDelay = performance.now(); //Date.now();
 
-    const delta = new Date(timeDone - startTime + startDelay);
+    const delta = new Date(spectrumData[`${type}Time`] - startTime + startDelay);
 
     spectrumData[type] = ser.updateData(spectrumData[type], newData); // Depends on Background/Spectrum Aufnahme
     spectrumData[`${type}Cps`] = spectrumData[type].map(val => val / delta.getTime() * 1000);
