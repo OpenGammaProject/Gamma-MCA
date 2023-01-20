@@ -13,6 +13,7 @@
 */
 
 import { coeffObj } from './plot.js';
+//import './external/ZSchema-browser-min.js';
 
 interface importDataMeta {
   name: string,
@@ -41,6 +42,7 @@ export class RawData {
   adcChannels: number;
   fileType: number;
   private tempValIndex: number;
+  private schemaURL = '/assets/npes-1.schema.json';
 
   constructor(valueIndex: number, delimiter = ',') {
     this.valueIndex = valueIndex;
@@ -197,5 +199,40 @@ export class RawData {
       console.error(e);
       return {espectrum: [], bgspectrum: [], coeff, meta};
     }
+  }
+
+  async jsonToObject(data: string): Promise<any | false> {
+    // @ts-ignore // Works just fine without TS complaining
+    const validator = new ZSchema();
+    let json: any;
+
+    try {
+      json = JSON.parse(data);
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
+
+    try {
+      let response = await fetch(this.schemaURL);
+
+      if (response.ok) {
+        const schema = await response.json();
+        delete schema['$schema']; // Remove, otherwise it will crash because it cannot resolve the schema URI, wow...
+
+        validator.validate(json, schema);
+        const errors = validator.getLastErrors();
+
+        if (errors) throw errors; // Catch validation errors, but ignore the $schema URL
+
+        return json;
+      } else {
+        throw 'Could not load the schema file!';
+      }
+    } catch(e) {
+      console.error(e);
+    }
+
+    return false;
   }
 }

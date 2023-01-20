@@ -1,4 +1,3 @@
-import './external/bootstrap.min.js';
 import { SpectrumPlot } from './plot.js';
 import { RawData } from './raw-data.js';
 import { SerialData } from './serial.js';
@@ -95,12 +94,9 @@ document.body.onload = async function () {
             const fileHandle = launchParams.files[0];
             const file = await fileHandle.getFile();
             const fileEnding = file.name.split('.')[1].toLowerCase();
-            const spectrumEndings = ['csv', 'tka', 'xml', 'txt'];
+            const spectrumEndings = ['csv', 'tka', 'xml', 'txt', 'json'];
             if (spectrumEndings.includes(fileEnding)) {
                 getFileData(file);
-            }
-            else if (fileEnding === 'json') {
-                importCal(file);
             }
             console.warn('File could not be imported!');
         });
@@ -185,7 +181,7 @@ function getFileData(file, background = false) {
     let reader = new FileReader();
     const fileEnding = file.name.split('.')[1];
     reader.readAsText(file);
-    reader.onload = () => {
+    reader.onload = async () => {
         const result = reader.result.trim();
         if (fileEnding.toLowerCase() === 'xml') {
             if (window.DOMParser) {
@@ -232,6 +228,61 @@ function getFileData(file, background = false) {
             }
             else {
                 console.error('No DOM parser in this browser!');
+            }
+        }
+        else if (fileEnding.toLowerCase() === 'json') {
+            const importData = await raw.jsonToObject(result);
+            if (!importData) {
+                popupNotification('npes-error');
+                return;
+            }
+            if ('deviceData' in importData) {
+                if ('deviceName' in importData.deviceData)
+                    document.getElementById('device-name').value = importData.deviceData.deviceName;
+            }
+            if ('sampleInfo' in importData) {
+                if ('name' in importData.sampleInfo)
+                    document.getElementById('sample-name').value = importData.sampleInfo.name;
+                if ('location' in importData.sampleInfo)
+                    document.getElementById('sample-loc').value = importData.sampleInfo.location;
+                if ('time' in importData.sampleInfo) {
+                    const date = new Date(importData.sampleInfo.time);
+                    const rightDate = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
+                    document.getElementById('sample-time').value = rightDate.toISOString().slice(0, 16);
+                }
+                if ('weight' in importData.sampleInfo)
+                    document.getElementById('sample-weight').value = importData.sampleInfo.weight.toString();
+                if ('volume' in importData.sampleInfo)
+                    document.getElementById('sample-vol').value = importData.sampleInfo.volume.toString();
+                if ('note' in importData.sampleInfo)
+                    document.getElementById('add-notes').value = importData.sampleInfo.note;
+            }
+            if ('startTime' in importData.resultData) {
+                startDate = new Date(importData.resultData.startTime);
+                endDate = new Date(importData.resultData.endTime);
+            }
+            const localKeys = ['data', 'background'];
+            const importKeys = ['energySpectrum', 'backgroundEnergySpectrum'];
+            for (const i in localKeys) {
+                if (importKeys[i] in importData.resultData) {
+                    spectrumData[localKeys[i]] = importData.resultData[importKeys[i]].spectrum;
+                    if ('measurementTime' in importData.resultData[importKeys[i]])
+                        spectrumData.dataTime = importData.resultData[importKeys[i]].measurementTime;
+                    if ('energyCalibration' in importData.resultData[importKeys[i]]) {
+                        const coeffArray = importData.resultData[importKeys[i]].energyCalibration.coefficients;
+                        const numCoeff = importData.resultData[importKeys[i]].energyCalibration.polynomialOrder;
+                        for (const index in coeffArray) {
+                            plot.calibration.coeff[`c${numCoeff - parseInt(index) + 1}`] = coeffArray[index];
+                        }
+                        plot.calibration.imported = true;
+                        displayCoeffs();
+                        for (const element of document.getElementsByClassName('cal-setting')) {
+                            const changeType = element;
+                            changeType.disabled = true;
+                        }
+                        addImportLabel();
+                    }
+                }
             }
         }
         else if (background) {
@@ -753,6 +804,15 @@ function makeJSONSpectrum(type) {
         'spectrum': spectrumData[type]
     };
     spec.measurementTime = Math.round(spectrumData[`${type}Time`] / 1000);
+    if (plot.calibration.enabled) {
+        let calObj = {
+            'polynomialOrder': 0,
+            'coefficients': []
+        };
+        calObj.polynomialOrder = 2;
+        calObj.coefficients = [plot.calibration.coeff.c3, plot.calibration.coeff.c2, plot.calibration.coeff.c1];
+        spec.energyCalibration = calObj;
+    }
     return spec;
 }
 document.getElementById('npes-export-button-file').onclick = () => downloadNPES();

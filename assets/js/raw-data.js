@@ -5,6 +5,7 @@ export class RawData {
     adcChannels;
     fileType;
     tempValIndex;
+    schemaURL = '/assets/npes-1.schema.json';
     constructor(valueIndex, delimiter = ',') {
         this.valueIndex = valueIndex;
         this.delimiter = delimiter;
@@ -136,5 +137,35 @@ export class RawData {
             console.error(e);
             return { espectrum: [], bgspectrum: [], coeff, meta };
         }
+    }
+    async jsonToObject(data) {
+        const validator = new ZSchema();
+        let json;
+        try {
+            json = JSON.parse(data);
+        }
+        catch (e) {
+            console.error(e);
+            return false;
+        }
+        try {
+            let response = await fetch(this.schemaURL);
+            if (response.ok) {
+                const schema = await response.json();
+                delete schema['$schema'];
+                validator.validate(json, schema);
+                const errors = validator.getLastErrors();
+                if (errors)
+                    throw errors;
+                return json;
+            }
+            else {
+                throw 'Could not load the schema file!';
+            }
+        }
+        catch (e) {
+            console.error(e);
+        }
+        return false;
     }
 }

@@ -38,7 +38,8 @@ const OFFLINE_RESOURCES = ['/',
                           '/assets/files/xml.png',
                           '/assets/favicon/favicon-32x32.png',
                           '/assets/favicon/favicon.ico',
-                          '/assets/isotopes_energies_min.json'];
+                          '/assets/isotopes_energies_min.json',
+                          '/assets/npes-1.schema.json'];
 
 
 self.addEventListener("install", event => { // First time install of a worker
