@@ -10,7 +10,6 @@
     - (?) Hotkeys
     - (?) Add desktop notifications
     - (?) Add dead time correction for cps
-    - (?) JS load only when/if used
 
     - Sorting isotope list
     - Calibration n-polynomial regression
@@ -18,6 +17,7 @@
     - Single file export button in "file import" (-> file config) tab
 
     - (!) Toolbar Mobile Layout (Hstack?)
+    - (!) JS load only when/if used
 
 
   Known Performance Issues:
