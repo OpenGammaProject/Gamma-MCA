@@ -6,7 +6,7 @@ Progressive web application for gamma spectroscopy including file and live plot 
 
 ![example spectrum](/assets/screenshots/file.PNG)
 
-Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://github.com/plotly/plotly.js), [Font Awesome](https://github.com/FortAwesome/Font-Awesome) and [z-schema](https://github.com/zaggino/z-schema).
+Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://github.com/plotly/plotly.js), [Font Awesome](https://github.com/FortAwesome/Font-Awesome) and [Z-Schema](https://github.com/zaggino/z-schema).
 
 ## Feature Overview
 
