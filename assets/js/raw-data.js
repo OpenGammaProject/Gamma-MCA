@@ -15,8 +15,7 @@ export class RawData {
     }
     checkLines(value) {
         const values = value.split(this.delimiter);
-        const testParseFirst = parseFloat(values[0].trim());
-        if (isNaN(testParseFirst))
+        if (isNaN(parseFloat(values[0].trim())))
             return false;
         if (values.length === 1)
             this.tempValIndex = 0;
@@ -36,15 +35,12 @@ export class RawData {
     csvToArray(data) {
         this.tempValIndex = this.valueIndex;
         if (this.fileType === 1) {
-            const allLines = data.split('\n');
-            const dataLines = allLines.filter(this.checkLines, this);
+            const dataLines = data.split('\n').filter(this.checkLines, this);
             return dataLines.map(this.parseLines, this);
         }
         else {
-            const allEvents = data.split(this.delimiter);
-            const dataEvents = allEvents.filter(this.checkLines, this);
-            const cleanData = dataEvents.map(this.parseLines, this);
-            return this.histConverter(cleanData);
+            const dataEvents = data.split(this.delimiter).filter(this.checkLines, this);
+            return this.histConverter(dataEvents.map(this.parseLines, this));
         }
     }
     xmlToArray(data) {
@@ -65,29 +61,25 @@ export class RawData {
             backgroundMt: 0
         };
         try {
-            const parser = new DOMParser();
-            let xmlDoc = parser.parseFromString(data, 'text/xml');
+            let xmlDoc = new DOMParser().parseFromString(data, 'text/xml');
             const especTop = xmlDoc.getElementsByTagName('EnergySpectrum');
             let espectrum = [];
             let bgspectrum = [];
             if (especTop[0]) {
                 const espec = especTop[0].getElementsByTagName('DataPoint');
-                const especArray = Array.from(espec);
-                espectrum = especArray.map(item => parseFloat(item.textContent ?? '-1'));
+                espectrum = Array.from(espec).map(item => parseFloat(item.textContent ?? '-1'));
                 meta.dataMt = parseFloat(especTop[0].getElementsByTagName('MeasurementTime')[0]?.textContent?.trim() ?? '1') * 1000;
             }
             const bgspecTop = xmlDoc.getElementsByTagName('BackgroundEnergySpectrum');
             if (bgspecTop[0]) {
                 const bgspec = bgspecTop[0].getElementsByTagName('DataPoint');
-                const bgspecArray = Array.from(bgspec);
-                bgspectrum = bgspecArray.map(item => parseFloat(item.textContent ?? '-1'));
+                bgspectrum = Array.from(bgspec).map(item => parseFloat(item.textContent ?? '-1'));
                 meta.backgroundMt = parseFloat(bgspecTop[0].getElementsByTagName('MeasurementTime')[0]?.textContent?.trim() ?? '1') * 1000;
             }
             const calCoeffsTop = xmlDoc.getElementsByTagName('EnergySpectrum')[0];
             if (calCoeffsTop) {
                 const calCoeffs = calCoeffsTop.getElementsByTagName('Coefficient');
-                const calCoeffsArray = Array.from(calCoeffs);
-                const coeffNumArray = calCoeffsArray.map(item => parseFloat((item.textContent ?? '0')));
+                const coeffNumArray = Array.from(calCoeffs).map(item => parseFloat((item.textContent ?? '0')));
                 for (const i in coeffNumArray) {
                     coeff['c' + (parseInt(i) + 1).toString()] = coeffNumArray[2 - parseInt(i)];
                 }
@@ -124,7 +116,7 @@ export class RawData {
             return false;
         }
         try {
-            let response = await fetch(this.schemaURL);
+            const response = await fetch(this.schemaURL);
             if (response.ok) {
                 const schema = await response.json();
                 delete schema['$schema'];
