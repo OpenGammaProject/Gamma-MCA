@@ -12,9 +12,9 @@ export class SpectrumData {
     backgroundCps = [];
     dataTime = 1000;
     backgroundTime = 1000;
-    getTotalCounts = (data) => {
+    getTotalCounts = (type) => {
         let sum = 0;
-        data.forEach(item => {
+        this[type].forEach(item => {
             sum += item;
         });
         return sum;
@@ -286,8 +286,8 @@ function getFileData(file, background = false) {
             spectrumData.dataTime = 1000;
             spectrumData.data = raw.csvToArray(result);
         }
-        const sCounts = spectrumData.getTotalCounts(spectrumData.data);
-        const bgCounts = spectrumData.getTotalCounts(spectrumData.background);
+        const sCounts = spectrumData.getTotalCounts('data');
+        const bgCounts = spectrumData.getTotalCounts('background');
         document.getElementById('total-spec-cts').innerText = sCounts.toString();
         document.getElementById('total-bg-cts').innerText = bgCounts.toString();
         if (sCounts)
@@ -327,8 +327,8 @@ function removeFile(id) {
     spectrumData[id] = [];
     document.getElementById(id).value = '';
     plot.resetPlot(spectrumData);
-    document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts(spectrumData.data).toString();
-    document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts(spectrumData.background).toString();
+    document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts('data').toString();
+    document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts('background').toString();
     document.getElementById(id + '-icon').classList.add('d-none');
     bindPlotEvents();
 }
@@ -669,7 +669,7 @@ function makeXMLSpectrum(type, name) {
         ec.appendChild(po);
     }
     let tpc = document.createElementNS(null, 'TotalPulseCount');
-    tpc.textContent = spectrumData.getTotalCounts(spectrumData[type]).toString();
+    tpc.textContent = spectrumData.getTotalCounts(type).toString();
     root.appendChild(tpc);
     let vpc = document.createElementNS(null, 'ValidPulseCount');
     vpc.textContent = tpc.textContent;
@@ -778,7 +778,7 @@ function downloadXML(serial = false) {
 function makeJSONSpectrum(type) {
     let spec = {
         'numberOfChannels': spectrumData[type].length,
-        'validPulseCount': spectrumData.getTotalCounts(spectrumData[type]),
+        'validPulseCount': spectrumData.getTotalCounts(type),
         'measurementTime': 0,
         'spectrum': spectrumData[type]
     };
@@ -835,9 +835,9 @@ function downloadNPES(serial = false) {
             data.resultData.endTime = toLocalIsoString(new Date());
         }
     }
-    if (spectrumData.data.length && spectrumData.getTotalCounts(spectrumData.data))
+    if (spectrumData.data.length && spectrumData.getTotalCounts('data'))
         data.resultData.energySpectrum = makeJSONSpectrum('data');
-    if (spectrumData.background.length && spectrumData.getTotalCounts(spectrumData.background))
+    if (spectrumData.background.length && spectrumData.getTotalCounts('background'))
         data.resultData.backgroundEnergySpectrum = makeJSONSpectrum('background');
     download(filename, JSON.stringify(data));
 }
@@ -1620,8 +1620,8 @@ function refreshRender(type) {
         std /= (cpsValues.length - 1);
         std = Math.sqrt(std);
         document.getElementById('avg-cps-std').innerHTML = ` &plusmn; ${std.toFixed(1)} cps (&#916; ${Math.round(std / mean * 100)}%)`;
-        document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts(spectrumData.data).toString();
-        document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts(spectrumData.background).toString();
+        document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts('data').toString();
+        document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts('background').toString();
         const finishDelta = performance.now() - startDelay;
         if (refreshRate - finishDelta > 0) {
             refreshTimeout = setTimeout(refreshRender, refreshRate - finishDelta, type);

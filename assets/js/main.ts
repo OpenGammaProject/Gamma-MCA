@@ -21,7 +21,6 @@
     - (!) JS load only when/if used, improve (loading) performance
     - (!) Clear Sample Info Button
 
-    - spectrumData sum method
     - check local storage avail in saveJSON loadJSON
 
 
@@ -89,9 +88,9 @@ export class SpectrumData { // Will hold the measurement data globally.
   dataTime = 1000; // Measurement time in ms
   backgroundTime = 1000; // Measurement time in ms
 
-  getTotalCounts = (data: number[]) => {
+  getTotalCounts = (type: dataType) => {
     let sum = 0;
-    data.forEach(item => {
+    this[type].forEach(item => {
       sum += item;
     });
     return sum;
@@ -473,8 +472,8 @@ function getFileData(file: File, background = false): void { // Gets called when
       spectrumData.data = raw.csvToArray(result);
     }
 
-    const sCounts = spectrumData.getTotalCounts(spectrumData.data);
-    const bgCounts = spectrumData.getTotalCounts(spectrumData.background);
+    const sCounts = spectrumData.getTotalCounts('data');
+    const bgCounts = spectrumData.getTotalCounts('background');
     document.getElementById('total-spec-cts')!.innerText = sCounts.toString();
     document.getElementById('total-bg-cts')!.innerText = bgCounts.toString();
 
@@ -523,8 +522,8 @@ function removeFile(id: dataType): void {
   (<HTMLInputElement>document.getElementById(id)).value = '';
   plot.resetPlot(spectrumData);
 
-  document.getElementById('total-spec-cts')!.innerText = spectrumData.getTotalCounts(spectrumData.data).toString();
-  document.getElementById('total-bg-cts')!.innerText = spectrumData.getTotalCounts(spectrumData.background).toString();
+  document.getElementById('total-spec-cts')!.innerText = spectrumData.getTotalCounts('data').toString();
+  document.getElementById('total-bg-cts')!.innerText = spectrumData.getTotalCounts('background').toString();
 
   document.getElementById(id + '-icon')!.classList.add('d-none');
 
@@ -967,7 +966,7 @@ function makeXMLSpectrum(type: dataType, name: string): Element {
   }
 
   let tpc = document.createElementNS(null, 'TotalPulseCount');
-  tpc.textContent = spectrumData.getTotalCounts(spectrumData[type]).toString();
+  tpc.textContent = spectrumData.getTotalCounts(type).toString();
   root.appendChild(tpc);
 
   let vpc = document.createElementNS(null, 'ValidPulseCount');
@@ -1114,7 +1113,7 @@ function downloadXML(serial = false): void {
 function makeJSONSpectrum(type: dataType): NPESv1Spectrum {
   let spec: NPESv1Spectrum = {
     'numberOfChannels': spectrumData[type].length,
-    'validPulseCount': spectrumData.getTotalCounts(spectrumData[type]),
+    'validPulseCount': spectrumData.getTotalCounts(type),
     'measurementTime': 0,
     'spectrum': spectrumData[type]
   }
@@ -1178,8 +1177,8 @@ function downloadNPES(serial = false): void {
     }
   }
 
-  if (spectrumData.data.length && spectrumData.getTotalCounts(spectrumData.data)) data.resultData.energySpectrum = makeJSONSpectrum('data');
-  if (spectrumData.background.length && spectrumData.getTotalCounts(spectrumData.background)) data.resultData.backgroundEnergySpectrum = makeJSONSpectrum('background');
+  if (spectrumData.data.length && spectrumData.getTotalCounts('data')) data.resultData.energySpectrum = makeJSONSpectrum('data');
+  if (spectrumData.background.length && spectrumData.getTotalCounts('background')) data.resultData.backgroundEnergySpectrum = makeJSONSpectrum('background');
 
   // Validate the JSON Schema?
   download(filename, JSON.stringify(data));
@@ -2174,8 +2173,8 @@ function refreshRender(type: dataType): void {
 
     document.getElementById('avg-cps-std')!.innerHTML = ` &plusmn; ${std.toFixed(1)} cps (&#916; ${Math.round(std/mean*100)}%)`;
 
-    document.getElementById('total-spec-cts')!.innerText = spectrumData.getTotalCounts(spectrumData.data).toString();
-    document.getElementById('total-bg-cts')!.innerText = spectrumData.getTotalCounts(spectrumData.background).toString();
+    document.getElementById('total-spec-cts')!.innerText = spectrumData.getTotalCounts('data').toString();
+    document.getElementById('total-bg-cts')!.innerText = spectrumData.getTotalCounts('background').toString();
 
     const finishDelta = performance.now() - startDelay; //Date.now() - startDelay;
     if (refreshRate - finishDelta > 0) { // Only re-schedule if still available
