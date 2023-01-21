@@ -185,9 +185,8 @@ export class SpectrumPlot {
     }
     seekClosest(value, maxDist = 100) {
         const closeVals = Object.keys(this.isoList).filter(energy => {
-            if (energy) {
+            if (energy)
                 return Math.abs(parseFloat(energy) - value) <= maxDist;
-            }
             return false;
         });
         const closeValsNum = closeVals.map(energy => parseFloat(energy));
@@ -217,9 +216,8 @@ export class SpectrumPlot {
         let peakLines = [];
         const shortLen = shortData.length;
         for (let i = 0; i < shortLen; i++) {
-            if (shortData[i] - longData[i] > this.peakConfig.thres * maxVal) {
+            if (shortData[i] - longData[i] > this.peakConfig.thres * maxVal)
                 peakLines.push(xAxisData[i]);
-            }
         }
         let values = [];
         peakLines.push(0);
@@ -298,28 +296,24 @@ export class SpectrumPlot {
                 },
             };
             for (const shape of this.shapes) {
-                if (JSON.stringify(shape) === JSON.stringify(newLine)) {
+                if (JSON.stringify(shape) === JSON.stringify(newLine))
                     return;
-                }
             }
             for (const anno of this.annotations) {
-                if (JSON.stringify(anno) === JSON.stringify(newAnno)) {
+                if (JSON.stringify(anno) === JSON.stringify(newAnno))
                     return;
-                }
             }
             this.shapes.push(newLine);
             this.annotations.push(newAnno);
         }
         else {
             for (const i in this.shapes) {
-                if (this.shapes[i].x0 === energy) {
+                if (this.shapes[i].x0 === energy)
                     this.shapes.splice(parseInt(i), 1);
-                }
             }
             for (const i in this.annotations) {
-                if (this.annotations[i].x === parseFloat(energy.toFixed(2))) {
+                if (this.annotations[i].x === parseFloat(energy.toFixed(2)))
                     this.annotations.splice(parseInt(i), 1);
-                }
             }
         }
     }
@@ -347,9 +341,8 @@ export class SpectrumPlot {
         };
         let maxXValue = Math.max(...trace.x);
         let data = [trace];
-        if (this.cps) {
+        if (this.cps)
             data[0].y = dataObj.dataCps;
-        }
         if (dataObj.background.length > 0) {
             let bgTrace = {
                 name: 'Background',
@@ -368,12 +361,10 @@ export class SpectrumPlot {
                 },
                 width: 1,
             };
-            if (bgTrace.x.length > maxXValue) {
+            if (bgTrace.x.length > maxXValue)
                 maxXValue = Math.max(...bgTrace.x);
-            }
-            if (this.cps) {
+            if (this.cps)
                 bgTrace.y = dataObj.backgroundCps;
-            }
             const newData = [];
             const dataLen = data[0].y.length;
             for (let i = 0; i < dataLen; i++) {

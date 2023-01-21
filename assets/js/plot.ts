@@ -13,7 +13,6 @@
   - Remove all ! operators
 
   - Use of Nullish Coalescing & Optional Chaining
-  - Streamline ifs
 
 */
 
@@ -294,9 +293,7 @@ export class SpectrumPlot {
   */
   private seekClosest(value: number, maxDist = 100): {energy: number, name: string} | {energy: undefined, name: undefined} {
     const closeVals = Object.keys(this.isoList).filter(energy => { // Only allow closest values and disregard undefined
-      if (energy) {
-        return Math.abs(parseFloat(energy) - value) <= maxDist;
-      }
+      if (energy) return Math.abs(parseFloat(energy) - value) <= maxDist;
       return false;
     });
     const closeValsNum = closeVals.map(energy => parseFloat(energy)) // After this step there are 100% only numbers left
@@ -336,9 +333,7 @@ export class SpectrumPlot {
     const shortLen = shortData.length;
 
     for (let i = 0; i < shortLen; i++) {
-      if (shortData[i] - longData[i] > this.peakConfig.thres * maxVal)  {
-        peakLines.push(xAxisData[i]);
-      }
+      if (shortData[i] - longData[i] > this.peakConfig.thres * maxVal) peakLines.push(xAxisData[i]);
     }
 
     let values: number[] = [];
@@ -437,14 +432,10 @@ export class SpectrumPlot {
 
       // Check for duplicates!
       for (const shape of this.shapes) {
-        if (JSON.stringify(shape) === JSON.stringify(newLine)) {
-          return;
-        }
+        if (JSON.stringify(shape) === JSON.stringify(newLine)) return;
       }
       for (const anno of this.annotations) {
-        if (JSON.stringify(anno) === JSON.stringify(newAnno)) {
-          return;
-        }
+        if (JSON.stringify(anno) === JSON.stringify(newAnno)) return;
       }
 
       // Not a duplicate
@@ -452,14 +443,10 @@ export class SpectrumPlot {
       this.annotations.push(newAnno);
     } else {
       for (const i in this.shapes) {
-        if (this.shapes[i].x0 === energy) {
-          this.shapes.splice(parseInt(i),1);
-        }
+        if (this.shapes[i].x0 === energy) this.shapes.splice(parseInt(i),1);
       }
       for (const i in this.annotations) {
-        if (this.annotations[i].x === parseFloat(energy.toFixed(2))) {
-          this.annotations.splice(parseInt(i),1);
-        }
+        if (this.annotations[i].x === parseFloat(energy.toFixed(2))) this.annotations.splice(parseInt(i),1);
       }
     }
   }
@@ -501,9 +488,7 @@ export class SpectrumPlot {
     /*
       Total number of pulses divided by seconds running. Counts Per Second
     */
-    if (this.cps) {
-      data[0].y = dataObj.dataCps;
-    }
+    if (this.cps) data[0].y = dataObj.dataCps;
     /*
       Compute Background and Corrected Spectrum
     */
@@ -528,13 +513,9 @@ export class SpectrumPlot {
         width: 1,
       };
 
-      if (bgTrace.x.length > maxXValue) {
-        maxXValue = Math.max(...bgTrace.x);
-      }
+      if (bgTrace.x.length > maxXValue) maxXValue = Math.max(...bgTrace.x);
 
-      if (this.cps) {
-        bgTrace.y = dataObj.backgroundCps;
-      }
+      if (this.cps) bgTrace.y = dataObj.backgroundCps;
 
       const newData: number[] = []; // Compute the corrected data, i.e. data - background
       const dataLen = data[0].y.length;
