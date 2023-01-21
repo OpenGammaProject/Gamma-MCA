@@ -346,8 +346,7 @@ document.getElementById('r2').onchange = event => selectFileType(event.target);
 function selectFileType(button) {
     raw.fileType = parseInt(button.value);
     raw.valueIndex = parseInt(button.value);
-    if (localStorageAvailable)
-        saveJSON('fileDataMode', button.id);
+    saveJSON('fileDataMode', button.id);
 }
 document.getElementById('reset-plot').onclick = () => resetPlot();
 function resetPlot() {
@@ -1025,7 +1024,11 @@ async function findPeaks(button) {
     plot.updatePlot(spectrumData);
 }
 function saveJSON(name, value) {
-    localStorage.setItem(name, JSON.stringify(value));
+    if (localStorageAvailable) {
+        localStorage.setItem(name, JSON.stringify(value));
+        return true;
+    }
+    return false;
 }
 function loadJSON(name) {
     return JSON.parse(localStorage.getItem(name));
@@ -1145,16 +1148,14 @@ function changeSettings(name, element) {
             boolVal = element.checked;
             plot.editableMode = boolVal;
             plot.resetPlot(spectrumData);
-            if (localStorageAvailable)
-                saveJSON(name, boolVal);
+            saveJSON(name, boolVal);
             break;
         case 'customURL':
             try {
                 const newUrl = new URL(value);
                 isoListURL = newUrl.href;
                 reloadIsotopes();
-                if (localStorageAvailable)
-                    saveJSON(name, isoListURL);
+                saveJSON(name, isoListURL);
             }
             catch (e) {
                 popupNotification('setting-error');
@@ -1163,97 +1164,82 @@ function changeSettings(name, element) {
             break;
         case 'fileDelimiter':
             raw.delimiter = value;
-            if (localStorageAvailable)
-                saveJSON(name, value);
+            saveJSON(name, value);
             break;
         case 'fileChannels':
             numVal = parseInt(value);
             raw.adcChannels = numVal;
-            if (localStorageAvailable)
-                saveJSON(name, numVal);
+            saveJSON(name, numVal);
             break;
         case 'timeLimitBool':
             boolVal = element.checked;
             document.getElementById('ser-limit').disabled = !boolVal;
             document.getElementById('ser-limit-btn').disabled = !boolVal;
             maxRecTimeEnabled = boolVal;
-            if (localStorageAvailable)
-                saveJSON(name, boolVal);
+            saveJSON(name, boolVal);
             break;
         case 'timeLimit':
             numVal = parseFloat(value);
             maxRecTime = numVal * 1000;
-            if (localStorageAvailable)
-                saveJSON(name, maxRecTime);
+            saveJSON(name, maxRecTime);
             break;
         case 'maxIsoDist':
             numVal = parseFloat(value);
             maxDist = numVal;
-            if (localStorageAvailable)
-                saveJSON(name, maxDist);
+            saveJSON(name, maxDist);
             break;
         case 'plotRefreshRate':
             numVal = parseFloat(value);
             refreshRate = numVal * 1000;
-            if (localStorageAvailable)
-                saveJSON(name, refreshRate);
+            saveJSON(name, refreshRate);
             break;
         case 'serBufferSize':
             numVal = parseInt(value);
             ser.maxSize = numVal;
-            if (localStorageAvailable)
-                saveJSON(name, ser.maxSize);
+            saveJSON(name, ser.maxSize);
             break;
         case 'baudRate':
             numVal = parseInt(value);
             serOptions.baudRate = numVal;
-            if (localStorageAvailable)
-                saveJSON(name, serOptions.baudRate);
+            saveJSON(name, serOptions.baudRate);
             break;
         case 'eolChar':
             ser.eolChar = value;
-            if (localStorageAvailable)
-                saveJSON(name, value);
+            saveJSON(name, value);
             break;
         case 'serChannels':
             numVal = parseInt(value);
             ser.adcChannels = numVal;
-            if (localStorageAvailable)
-                saveJSON(name, numVal);
+            saveJSON(name, numVal);
             break;
         case 'peakThres':
             numVal = parseFloat(value);
             plot.peakConfig.thres = numVal;
             plot.updatePlot(spectrumData);
-            if (localStorageAvailable)
-                saveJSON(name, numVal);
+            saveJSON(name, numVal);
             break;
         case 'peakLag':
             numVal = parseInt(value);
             plot.peakConfig.lag = numVal;
             plot.updatePlot(spectrumData);
-            if (localStorageAvailable)
-                saveJSON(name, numVal);
+            saveJSON(name, numVal);
             break;
         case 'peakWidth':
             numVal = parseInt(value);
             plot.peakConfig.width = numVal;
             plot.updatePlot(spectrumData);
-            if (localStorageAvailable)
-                saveJSON(name, numVal);
+            saveJSON(name, numVal);
             break;
         case 'seekWidth':
             numVal = parseFloat(value);
             plot.peakConfig.seekWidth = numVal;
             plot.updatePlot(spectrumData);
-            if (localStorageAvailable)
-                saveJSON(name, numVal);
+            saveJSON(name, numVal);
             break;
         case 'plotDownload':
             plot.downloadFormat = value;
             plot.updatePlot(spectrumData);
-            if (localStorageAvailable)
-                saveJSON(name, value);
+            saveJSON(name, value);
             break;
         default:
             popupNotification('setting-error');
@@ -1271,8 +1257,7 @@ document.getElementById('s1').onchange = event => selectSerialType(event.target)
 document.getElementById('s2').onchange = event => selectSerialType(event.target);
 function selectSerialType(button) {
     ser.orderType = button.value;
-    if (localStorageAvailable)
-        saveJSON('serialDataMode', button.id);
+    saveJSON('serialDataMode', button.id);
 }
 function serialConnect() {
     listSerial();

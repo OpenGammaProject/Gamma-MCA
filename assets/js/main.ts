@@ -21,8 +21,6 @@
     - (!) JS load only when/if used, improve (loading) performance
     - (!) Clear Sample Info Button
 
-    - check local storage avail in saveJSON loadJSON
-
 
   Known Performance Issues:
     - (Un)Selecting all isotopes from gamma-ray energies list (Plotly)
@@ -550,7 +548,7 @@ document.getElementById('r2')!.onchange = event => selectFileType(<HTMLInputElem
 function selectFileType(button: HTMLInputElement): void {
   raw.fileType = parseInt(button.value);
   raw.valueIndex = parseInt(button.value);
-  if (localStorageAvailable) saveJSON('fileDataMode', button.id);
+  saveJSON('fileDataMode', button.id);
 }
 
 
@@ -1439,8 +1437,12 @@ async function findPeaks(button: HTMLButtonElement): Promise<void> {
 =========================================
 */
 
-function saveJSON(name: string, value: string | boolean | number): void {
-  localStorage.setItem(name, JSON.stringify(value));
+function saveJSON(name: string, value: string | boolean | number): boolean {
+  if (localStorageAvailable) {
+    localStorage.setItem(name, JSON.stringify(value));
+    return true;
+  }
+  return false;
 }
 
 
@@ -1575,7 +1577,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       plot.editableMode = boolVal;
       plot.resetPlot(spectrumData);
 
-      if (localStorageAvailable) saveJSON(name, boolVal);
+      saveJSON(name, boolVal);
       break;
 
     case 'customURL':
@@ -1585,7 +1587,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
 
         reloadIsotopes();
 
-        if (localStorageAvailable) saveJSON(name, isoListURL);
+        saveJSON(name, isoListURL);
 
       } catch(e) {
         popupNotification('setting-error');
@@ -1596,14 +1598,14 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
     case 'fileDelimiter':
       raw.delimiter = value;
 
-      if (localStorageAvailable) saveJSON(name, value);
+      saveJSON(name, value);
       break;
 
     case 'fileChannels':
       numVal = parseInt(value);
       raw.adcChannels = numVal;
 
-      if (localStorageAvailable) saveJSON(name, numVal);
+      saveJSON(name, numVal);
       break;
 
     case 'timeLimitBool':
@@ -1613,55 +1615,55 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
 
       maxRecTimeEnabled = boolVal;
 
-      if (localStorageAvailable) saveJSON(name, boolVal);
+      saveJSON(name, boolVal);
       break;
 
     case 'timeLimit':
       numVal = parseFloat(value);
       maxRecTime = numVal * 1000; // convert s to ms
 
-      if (localStorageAvailable) saveJSON(name, maxRecTime);
+      saveJSON(name, maxRecTime);
       break;
 
     case 'maxIsoDist':
       numVal = parseFloat(value);
       maxDist = numVal;
 
-      if (localStorageAvailable) saveJSON(name, maxDist);
+      saveJSON(name, maxDist);
       break;
 
     case 'plotRefreshRate':
       numVal = parseFloat(value);
       refreshRate = numVal * 1000; // convert s to ms
 
-      if (localStorageAvailable) saveJSON(name, refreshRate);
+      saveJSON(name, refreshRate);
       break;
 
     case 'serBufferSize':
       numVal = parseInt(value);
       ser.maxSize = numVal;
 
-      if (localStorageAvailable) saveJSON(name, ser.maxSize);
+      saveJSON(name, ser.maxSize);
       break;
 
     case 'baudRate':
       numVal = parseInt(value);
       serOptions.baudRate = numVal;
 
-      if (localStorageAvailable) saveJSON(name, serOptions.baudRate);
+      saveJSON(name, serOptions.baudRate);
       break;
 
     case 'eolChar':
       ser.eolChar = value;
 
-      if (localStorageAvailable) saveJSON(name, value);
+      saveJSON(name, value);
       break;
 
     case 'serChannels':
       numVal = parseInt(value);
       ser.adcChannels = numVal;
 
-      if (localStorageAvailable) saveJSON(name, numVal);
+      saveJSON(name, numVal);
       break;
 
     case 'peakThres':
@@ -1669,7 +1671,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       plot.peakConfig.thres = numVal;
       plot.updatePlot(spectrumData);
 
-      if (localStorageAvailable) saveJSON(name, numVal);
+      saveJSON(name, numVal);
       break;
 
     case 'peakLag':
@@ -1677,7 +1679,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       plot.peakConfig.lag = numVal;
       plot.updatePlot(spectrumData);
 
-      if (localStorageAvailable) saveJSON(name, numVal);
+      saveJSON(name, numVal);
       break;
 
     case 'peakWidth':
@@ -1685,7 +1687,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       plot.peakConfig.width = numVal;
       plot.updatePlot(spectrumData);
 
-      if (localStorageAvailable) saveJSON(name, numVal);
+      saveJSON(name, numVal);
       break;
 
     case 'seekWidth':
@@ -1693,14 +1695,14 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       plot.peakConfig.seekWidth = numVal;
       plot.updatePlot(spectrumData);
 
-      if (localStorageAvailable) saveJSON(name, numVal);
+      saveJSON(name, numVal);
       break;
 
     case 'plotDownload':
       plot.downloadFormat = value;
       plot.updatePlot(spectrumData);
 
-      if (localStorageAvailable) saveJSON(name, value);
+      saveJSON(name, value);
       break;
 
     default:
@@ -1730,7 +1732,7 @@ document.getElementById('s2')!.onchange = event => selectSerialType(<HTMLInputEl
 
 function selectSerialType(button: HTMLInputElement): void {
   ser.orderType = <dataOrder>button.value;
-  if (localStorageAvailable) saveJSON('serialDataMode', button.id);
+  saveJSON('serialDataMode', button.id);
 }
 
 
