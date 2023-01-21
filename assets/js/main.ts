@@ -20,6 +20,7 @@
     - (!) Toolbar Mobile Layout (Hstack?)
     - (!) JS load only when/if used, improve (loading) performance
     - (!) "Clear All" Sample Info Button
+    - (!) JSON/XML allow different spectrum/background spectrum measurement times and auto adjust + calculate cps
 
 
   Known Performance Issues:
