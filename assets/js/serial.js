@@ -95,8 +95,10 @@ export class SerialData {
                         return;
                     }
                     const diffHist = numHist.map((item, index) => item - this.baseHist[index]);
-                    for (let ch = 0; ch < this.adcChannels; ch++) {
-                        for (let num = 0; num < diffHist[ch]; num++) {
+                    const adcChannels = this.adcChannels;
+                    for (let ch = 0; ch < adcChannels; ch++) {
+                        const val = diffHist[ch];
+                        for (let num = 0; num < val; num++) {
                             this.serData.push(ch);
                         }
                     }
