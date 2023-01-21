@@ -1,4 +1,7 @@
 User-Agent: *
+Allow: /assets/favicon/
+Allow: /assets/screenshots/
+Allow: /assets/logo.svg
 Disallow: /assets/
 Disallow: /404.html
 Sitemap: https://spectrum.nuclearphoenix.xyz/sitemap.xml
