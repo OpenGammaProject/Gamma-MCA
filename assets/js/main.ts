@@ -438,7 +438,7 @@ function getFileData(file: File, background = false): void { // Gets called when
         const newKey = <'energySpectrum' | 'backgroundEnergySpectrum'>importKeys[i];
         if (newKey in importData.resultData) {
           spectrumData[localKeys[i]] = importData.resultData[newKey]!.spectrum; // Always present if startTime is present --> validated NPESv1
-          if ('measurementTime' in importData.resultData[newKey]!) spectrumData.dataTime = importData.resultData[newKey]!.measurementTime!;
+          if ('measurementTime' in importData.resultData[newKey]!) spectrumData.dataTime = importData.resultData[newKey]!.measurementTime!*1000;
           if ('energyCalibration' in importData.resultData[newKey]!) {
             const coeffArray: number[] = importData.resultData[newKey]!.energyCalibration!.coefficients;
             const numCoeff: number = importData.resultData[newKey]!.energyCalibration!.polynomialOrder;

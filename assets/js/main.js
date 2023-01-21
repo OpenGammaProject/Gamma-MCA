@@ -255,7 +255,7 @@ function getFileData(file, background = false) {
                 if (newKey in importData.resultData) {
                     spectrumData[localKeys[i]] = importData.resultData[newKey].spectrum;
                     if ('measurementTime' in importData.resultData[newKey])
-                        spectrumData.dataTime = importData.resultData[newKey].measurementTime;
+                        spectrumData.dataTime = importData.resultData[newKey].measurementTime * 1000;
                     if ('energyCalibration' in importData.resultData[newKey]) {
                         const coeffArray = importData.resultData[newKey].energyCalibration.coefficients;
                         const numCoeff = importData.resultData[newKey].energyCalibration.polynomialOrder;
