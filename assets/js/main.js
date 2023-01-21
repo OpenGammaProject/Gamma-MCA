@@ -58,8 +58,7 @@ document.body.onload = async function () {
             });
         }
     }
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    if ('standalone' in window.navigator || isStandalone) {
+    if ('standalone' in window.navigator || window.matchMedia('(display-mode: standalone)').matches) {
         document.title += ' PWA';
         document.getElementById('main').classList.remove('p-1');
     }
@@ -67,8 +66,7 @@ document.body.onload = async function () {
         document.getElementById('main').classList.remove('pb-1');
         document.title += ' web application';
     }
-    const domain = new URL(isoListURL, window.location.origin);
-    isoListURL = domain.href;
+    isoListURL = new URL(isoListURL, window.location.origin).href;
     if ('serial' in navigator) {
         document.getElementById('serial-div').className = '';
         navigator.serial.addEventListener('connect', serialConnect);
@@ -91,8 +89,7 @@ document.body.onload = async function () {
             if (!launchParams.files.length) {
                 return;
             }
-            const fileHandle = launchParams.files[0];
-            const file = await fileHandle.getFile();
+            const file = await launchParams.files[0].getFile();
             const fileEnding = file.name.split('.')[1].toLowerCase();
             const spectrumEndings = ['csv', 'tka', 'xml', 'txt', 'json'];
             if (spectrumEndings.includes(fileEnding)) {
@@ -202,10 +199,8 @@ function getFileData(file, background = false) {
                     const rightDate = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
                     document.getElementById('sample-time').value = rightDate.toISOString().slice(0, 16);
                 }
-                const volumeElement = document.getElementById('sample-vol');
-                const weightElement = document.getElementById('sample-weight');
-                volumeElement.value = meta.volume?.toString() ?? '';
-                weightElement.value = meta.weight?.toString() ?? '';
+                document.getElementById('sample-vol').value = meta.volume?.toString() ?? '';
+                document.getElementById('sample-weight').value = meta.weight?.toString() ?? '';
                 document.getElementById('device-name').value = meta.deviceName;
                 document.getElementById('add-notes').value = meta.notes;
                 startDate = new Date(meta.startTime);
@@ -221,9 +216,9 @@ function getFileData(file, background = false) {
                     plot.calibration.coeff = coeff;
                     plot.calibration.imported = true;
                     displayCoeffs();
-                    for (const element of document.getElementsByClassName('cal-setting')) {
-                        const changeType = element;
-                        changeType.disabled = true;
+                    const calSettings = document.getElementsByClassName('cal-setting');
+                    for (const element of calSettings) {
+                        element.disabled = true;
                     }
                     addImportLabel();
                 }
@@ -269,7 +264,8 @@ function getFileData(file, background = false) {
                         }
                         plot.calibration.imported = true;
                         displayCoeffs();
-                        for (const element of document.getElementsByClassName('cal-setting')) {
+                        const calSettings = document.getElementsByClassName('cal-setting');
+                        for (const element of calSettings) {
                             const changeType = element;
                             changeType.disabled = true;
                         }
@@ -312,9 +308,7 @@ function getFileData(file, background = false) {
     };
 }
 function sizeCheck() {
-    const viewportWidth = document.documentElement.clientWidth;
-    const viewportHeight = document.documentElement.clientHeight;
-    if (viewportWidth < 1100 || viewportHeight < 700) {
+    if (document.documentElement.clientWidth < 1100 || document.documentElement.clientHeight < 700) {
         popupNotification('screen-size-warning');
     }
     else {
@@ -393,10 +387,8 @@ document.getElementById('peak-lag').onkeydown = event => enterPress(event, 'sett
 document.getElementById('peak-width').onkeydown = event => enterPress(event, 'setting11');
 document.getElementById('seek-width').onkeydown = event => enterPress(event, 'setting12');
 function enterPress(event, id) {
-    if (event.key === 'Enter') {
-        const button = document.getElementById(id);
-        button?.click();
-    }
+    if (event.key === 'Enter')
+        document.getElementById(id)?.click();
 }
 document.getElementById('sma').onclick = event => toggleSma(event.target.checked);
 function toggleSma(value, thisValue = null) {
@@ -418,8 +410,7 @@ function changeSma(input) {
     }
 }
 function hoverEvent(data) {
-    const hoverData = document.getElementById('hover-data');
-    hoverData.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
+    document.getElementById('hover-data').innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
     for (const key in calClick) {
         const castKey = key;
         if (calClick[castKey])
@@ -429,8 +420,7 @@ function hoverEvent(data) {
         closestIso(data.points[0].x);
 }
 function unHover() {
-    const hoverData = document.getElementById('hover-data');
-    hoverData.innerText = 'None';
+    document.getElementById('hover-data').innerText = 'None';
     for (const key in calClick) {
         const castKey = key;
         if (calClick[castKey])
@@ -438,8 +428,7 @@ function unHover() {
     }
 }
 function clickEvent(data) {
-    const clickData = document.getElementById('click-data');
-    clickData.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
+    document.getElementById('click-data').innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
     for (const key in calClick) {
         const castKey = key;
         if (calClick[castKey]) {
@@ -511,12 +500,11 @@ function resetCal() {
     for (const point in calClick) {
         calClick[point] = false;
     }
-    for (const element of document.getElementsByClassName('cal-setting')) {
-        const changeType = element;
-        changeType.disabled = false;
+    const calSettings = document.getElementsByClassName('cal-setting');
+    for (const element of calSettings) {
+        element.disabled = false;
     }
-    const titleElement = document.getElementById('calibration-title');
-    titleElement.classList.add('d-none');
+    document.getElementById('calibration-title').classList.add('d-none');
     plot.clearCalibration();
     toggleCal(false);
 }
@@ -560,9 +548,9 @@ function importCal(file) {
                 document.getElementById('cal-c')
             ];
             if (obj.imported) {
-                for (const element of document.getElementsByClassName('cal-setting')) {
-                    const changeType = element;
-                    changeType.disabled = true;
+                const calSettings = document.getElementsByClassName('cal-setting');
+                for (const element of calSettings) {
+                    element.disabled = true;
                 }
                 addImportLabel();
                 plot.calibration.coeff = obj.coeff;
@@ -575,8 +563,7 @@ function importCal(file) {
                         readoutArray[index].value = obj[inputArr[index]];
                     }
                     else {
-                        const value = obj.points[inputArr[index]];
-                        if (value === -1) {
+                        if (obj.points[inputArr[index]] === -1) {
                             readoutArray[index].value = '';
                         }
                         else {
@@ -626,14 +613,12 @@ function toLocalIsoString(date) {
         localIsoString += '+';
     }
     const tzDate = new Date(Math.abs(date.getTimezoneOffset()));
-    const tzString = addLeadingZero(tzDate.getHours().toString()) + ':' + addLeadingZero(tzDate.getMinutes().toString());
-    localIsoString += tzString;
+    localIsoString += addLeadingZero(tzDate.getHours().toString()) + ':' + addLeadingZero(tzDate.getMinutes().toString());
     return localIsoString;
 }
 document.getElementById('calibration-download').onclick = () => downloadCal();
 function downloadCal() {
-    const filename = `calibration_${getDateString()}.json`;
-    download(filename, JSON.stringify(plot.calibration));
+    download(`calibration_${getDateString()}.json`, JSON.stringify(plot.calibration));
 }
 function makeXMLSpectrum(type, name) {
     let root;
@@ -654,10 +639,12 @@ function makeXMLSpectrum(type, name) {
         root.appendChild(ec);
         let c = document.createElementNS(null, 'Coefficients');
         let coeffs = [];
-        for (const index in plot.calibration.coeff) {
-            coeffs.push(plot.calibration.coeff[index]);
+        const coeffObj = plot.calibration.coeff;
+        for (const index in coeffObj) {
+            coeffs.push(coeffObj[index]);
         }
-        for (const val of coeffs.reverse()) {
+        const coeffsRev = coeffs.reverse();
+        for (const val of coeffsRev) {
             let coeff = document.createElementNS(null, 'Coefficient');
             coeff.textContent = val.toString();
             c.appendChild(coeff);
@@ -705,24 +692,24 @@ function downloadXML(serial = false) {
     let doc = document.implementation.createDocument(null, "ResultDataFile");
     const pi = doc.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"');
     doc.insertBefore(pi, doc.firstChild);
-    let root = doc.documentElement;
-    let fv = document.createElementNS(null, 'FormatVersion');
+    const root = doc.documentElement;
+    const fv = document.createElementNS(null, 'FormatVersion');
     fv.textContent = formatVersion.toString();
     root.appendChild(fv);
-    let rdl = document.createElementNS(null, 'ResultDataList');
+    const rdl = document.createElementNS(null, 'ResultDataList');
     root.appendChild(rdl);
-    let rd = document.createElementNS(null, 'ResultData');
+    const rd = document.createElementNS(null, 'ResultData');
     rdl.appendChild(rd);
-    let dcr = document.createElementNS(null, 'DeviceConfigReference');
+    const dcr = document.createElementNS(null, 'DeviceConfigReference');
     rd.appendChild(dcr);
-    let dcrName = document.createElementNS(null, 'Name');
+    const dcrName = document.createElementNS(null, 'Name');
     dcrName.textContent = document.getElementById('device-name').value.trim();
     dcr.appendChild(dcrName);
     if (startDate) {
-        let st = document.createElementNS(null, 'StartTime');
+        const st = document.createElementNS(null, 'StartTime');
         st.textContent = toLocalIsoString(startDate);
         rd.appendChild(st);
-        let et = document.createElementNS(null, 'EndTime');
+        const et = document.createElementNS(null, 'EndTime');
         rd.appendChild(et);
         if (endDate && endDate.getTime() - startDate.getTime() >= 0) {
             et.textContent = toLocalIsoString(endDate);
@@ -731,37 +718,37 @@ function downloadXML(serial = false) {
             et.textContent = toLocalIsoString(new Date());
         }
     }
-    let si = document.createElementNS(null, 'SampleInfo');
+    const si = document.createElementNS(null, 'SampleInfo');
     rd.appendChild(si);
-    let name = document.createElementNS(null, 'Name');
+    const name = document.createElementNS(null, 'Name');
     name.textContent = document.getElementById('sample-name').value.trim();
     si.appendChild(name);
-    let l = document.createElementNS(null, 'Location');
+    const l = document.createElementNS(null, 'Location');
     l.textContent = document.getElementById('sample-loc').value.trim();
     si.appendChild(l);
-    let t = document.createElementNS(null, 'Time');
+    const t = document.createElementNS(null, 'Time');
     const tval = document.getElementById('sample-time').value.trim();
     if (tval.length) {
         t.textContent = toLocalIsoString(new Date(tval));
         si.appendChild(t);
     }
-    let w = document.createElementNS(null, 'Weight');
+    const w = document.createElementNS(null, 'Weight');
     const wval = document.getElementById('sample-weight').value.trim();
     if (wval.length) {
         w.textContent = (parseFloat(wval) / 1000).toString();
         si.appendChild(w);
     }
-    let v = document.createElementNS(null, 'Volume');
+    const v = document.createElementNS(null, 'Volume');
     const vval = document.getElementById('sample-vol').value.trim();
     if (vval.length) {
         v.textContent = (parseFloat(vval) / 1000).toString();
         si.appendChild(v);
     }
-    let note = document.createElementNS(null, 'Note');
+    const note = document.createElementNS(null, 'Note');
     note.textContent = document.getElementById('add-notes').value.trim();
     si.appendChild(note);
     if (spectrumData['background'].length) {
-        let bsf = document.createElementNS(null, 'BackgroundSpectrumFile');
+        const bsf = document.createElementNS(null, 'BackgroundSpectrumFile');
         bsf.textContent = backgroundName;
         rd.appendChild(bsf);
     }
@@ -769,7 +756,7 @@ function downloadXML(serial = false) {
         rd.appendChild(makeXMLSpectrum('data', spectrumName));
     if (spectrumData['background'].length)
         rd.appendChild(makeXMLSpectrum('background', backgroundName));
-    let vis = document.createElementNS(null, 'Visible');
+    const vis = document.createElementNS(null, 'Visible');
     vis.textContent = true.toString();
     rd.appendChild(vis);
     download(filename, new XMLSerializer().serializeToString(doc));
@@ -858,14 +845,10 @@ function download(filename, text) {
     document.body.removeChild(element);
 }
 function popupNotification(id) {
-    const element = document.getElementById(id);
-    const toast = new bootstrap.Toast(element);
-    toast.show();
+    new bootstrap.Toast(document.getElementById(id)).show();
 }
 function hideNotification(id) {
-    const element = document.getElementById(id);
-    const toast = new bootstrap.Toast(element);
-    toast.hide();
+    new bootstrap.Toast(document.getElementById(id)).hide();
 }
 document.getElementById('toggle-menu').onclick = () => loadIsotopes();
 let loadedIsos = false;
@@ -884,7 +867,7 @@ async function loadIsotopes(reload = false) {
     isoError.classList.add('d-none');
     let successFlag = true;
     try {
-        let response = await fetch(isoListURL, options);
+        const response = await fetch(isoListURL, options);
         if (response.ok) {
             const json = await response.json();
             loadedIsos = true;
@@ -909,8 +892,7 @@ async function loadIsotopes(reload = false) {
                 cell2.style.cursor = 'pointer';
                 cell3.style.cursor = 'pointer';
                 const energy = parseFloat(key.trim());
-                const dirtyName = json[key].toLowerCase();
-                const lowercaseName = dirtyName.replace(/[^a-z0-9 -]/gi, '').trim();
+                const lowercaseName = json[key].toLowerCase().replace(/[^a-z0-9 -]/gi, '').trim();
                 const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1) + '-' + index;
                 cell1.innerHTML = `<input class="form-check-input iso-table-label" id="${name}" type="checkbox" value="${energy}">`;
                 cell3.innerHTML = `<span class="iso-table-label">${energy.toFixed(2)}</span>`;
@@ -948,8 +930,7 @@ function seekClosest(value) {
     const closeValsNum = closeVals.map(energy => parseFloat(energy));
     if (closeValsNum.length) {
         const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
-        const name = isoList[closest];
-        return { energy: closest, name: name };
+        return { energy: closest, name: isoList[closest] };
     }
     else {
         return { energy: undefined, name: undefined };
@@ -980,22 +961,18 @@ async function closestIso(value) {
 }
 function plotIsotope(checkbox) {
     const wordArray = checkbox.id.split('-');
-    const name = wordArray[0] + '-' + wordArray[1];
-    plot.toggleLine(parseFloat(checkbox.value), name, checkbox.checked);
+    plot.toggleLine(parseFloat(checkbox.value), wordArray[0] + '-' + wordArray[1], checkbox.checked);
     plot.updatePlot(spectrumData);
 }
 document.getElementById('check-all-isos').onclick = (event) => selectAll(event.target);
 function selectAll(selectBox) {
-    const tableElement = document.getElementById('table');
-    const tableBody = tableElement.tBodies[0];
-    const tableRows = tableBody.rows;
+    const tableRows = document.getElementById('table').tBodies[0].rows;
     for (const row of tableRows) {
         const checkBox = row.cells[0].firstChild;
         checkBox.checked = selectBox.checked;
         if (selectBox.checked) {
             const wordArray = checkBox.id.split('-');
-            const name = wordArray[0] + '-' + wordArray[1];
-            plot.toggleLine(parseFloat(checkBox.value), name, checkBox.checked);
+            plot.toggleLine(parseFloat(checkBox.value), wordArray[0] + '-' + wordArray[1], checkBox.checked);
         }
     }
     if (!selectBox.checked)
@@ -1055,7 +1032,8 @@ function loadSettingsDefault() {
     document.getElementById('peak-width').value = plot.peakConfig.width.toString();
     document.getElementById('seek-width').value = plot.peakConfig.seekWidth.toString();
     const formatSelector = document.getElementById('download-format');
-    for (let i = 0; i < formatSelector.options.length; i++) {
+    const len = formatSelector.options.length;
+    for (let i = 0; i < len; i++) {
         if (formatSelector.options[i].value === plot.downloadFormat)
             formatSelector.selectedIndex = i;
     }
@@ -1152,8 +1130,7 @@ function changeSettings(name, element) {
             break;
         case 'customURL':
             try {
-                const newUrl = new URL(value);
-                isoListURL = newUrl.href;
+                isoListURL = new URL(value).href;
                 reloadIsotopes();
                 saveJSON(name, isoListURL);
             }
@@ -1280,15 +1257,15 @@ function serialDisconnect(event) {
 document.getElementById('serial-list-btn').onclick = () => listSerial();
 async function listSerial() {
     const portSelector = document.getElementById('port-selector');
-    for (const index in portSelector.options) {
+    const options = portSelector.options;
+    for (const index in options) {
         portSelector.remove(parseInt(index));
     }
     const ports = await navigator.serial.getPorts();
     for (const index in ports) {
         portsAvail[index] = ports[index];
         const option = document.createElement('option');
-        const usbId = ports[index].getInfo().usbProductId;
-        option.text = `Port ${index} (Id: 0x${usbId?.toString(16)})`;
+        option.text = `Port ${index} (Id: 0x${ports[index].getInfo().usbProductId?.toString(16)})`;
         portSelector.add(option, parseInt(index));
     }
     const serSettingsElements = document.getElementsByClassName('ser-settings');
@@ -1315,8 +1292,7 @@ async function requestSerial() {
         }
         else {
             const intKeys = Object.keys(portsAvail).map(value => parseInt(value));
-            const max = Math.max(...intKeys);
-            portsAvail[max + 1] = port;
+            portsAvail[Math.max(...intKeys) + 1] = port;
         }
         listSerial();
     }
@@ -1341,9 +1317,7 @@ function toggleCps(button, off = false) {
     plot.updatePlot(spectrumData);
 }
 async function selectPort() {
-    const selector = document.getElementById('port-selector');
-    const index = selector.selectedIndex;
-    const newport = portsAvail[index];
+    const newport = portsAvail[document.getElementById('port-selector').selectedIndex];
     if (ser.port !== newport) {
         ser.port = newport;
         clearConsoleLog();
@@ -1404,7 +1378,8 @@ async function startRecord(pause = false, type = recordingType) {
         document.getElementById('pause-button').classList.remove('d-none');
         document.getElementById('record-button').classList.add('d-none');
         document.getElementById('resume-button').classList.add('d-none');
-        for (const ele of document.getElementsByClassName('recording-spinner')) {
+        const spinnerElements = document.getElementsByClassName('recording-spinner');
+        for (const ele of spinnerElements) {
             ele.classList.remove('d-none');
         }
         startTime = performance.now();
@@ -1470,8 +1445,7 @@ async function sendSerial(command) {
         const textEncoder = new TextEncoderStream();
         const writer = textEncoder.writable.getWriter();
         const writableStreamClosed = textEncoder.readable.pipeTo(ser.port.writable);
-        const formatCommand = command.trim() + '\n';
-        writer.write(formatCommand);
+        writer.write(command.trim() + '\n');
         await writer.close();
         await writableStreamClosed;
         document.getElementById('ser-command').value = '';
@@ -1486,15 +1460,15 @@ document.getElementById('stop-button').onclick = () => disconnectPort(true);
 async function disconnectPort(stop = false) {
     spectrumData[`${recordingType}Time`] += performance.now() - startTime;
     document.getElementById('pause-button').classList.add('d-none');
-    for (const ele of document.getElementsByClassName('recording-spinner')) {
+    const spinnerElements = document.getElementsByClassName('recording-spinner');
+    for (const ele of spinnerElements) {
         ele.classList.add('d-none');
     }
     if (stop) {
         document.getElementById('stop-button').disabled = true;
         document.getElementById('record-button').classList.remove('d-none');
         cpsValues = [];
-        const cpsButton = document.getElementById('plot-cps');
-        toggleCps(cpsButton, true);
+        toggleCps(document.getElementById('plot-cps'), true);
         ser.clearBaseHist();
         endDate = new Date();
     }
@@ -1541,10 +1515,8 @@ function refreshMeta(type) {
     if (ser.port?.readable) {
         const nowTime = performance.now();
         const totalTimeElement = document.getElementById('total-record-time');
-        const timeElement = document.getElementById('record-time');
-        const progressBar = document.getElementById('ser-time-progress-bar');
         const delta = new Date(nowTime - startTime + spectrumData[`${type}Time`]);
-        timeElement.innerText = addLeadingZero(delta.getUTCHours().toString()) + ':' + addLeadingZero(delta.getUTCMinutes().toString()) + ':' + addLeadingZero(delta.getUTCSeconds().toString());
+        document.getElementById('record-time').innerText = addLeadingZero(delta.getUTCHours().toString()) + ':' + addLeadingZero(delta.getUTCMinutes().toString()) + ':' + addLeadingZero(delta.getUTCSeconds().toString());
         if (maxRecTimeEnabled) {
             const progressElement = document.getElementById('ser-time-progress');
             const progress = Math.round(delta.getTime() / maxRecTime * 100);
@@ -1557,7 +1529,7 @@ function refreshMeta(type) {
         else {
             totalTimeElement.innerText = '';
         }
-        progressBar.classList.toggle('d-none', !maxRecTimeEnabled);
+        document.getElementById('ser-time-progress-bar').classList.toggle('d-none', !maxRecTimeEnabled);
         if (delta.getTime() > maxRecTime && maxRecTimeEnabled) {
             disconnectPort(true);
             popupNotification('auto-stop');

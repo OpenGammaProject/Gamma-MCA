@@ -16,7 +16,7 @@
     - Sorting isotope list
     - Calibration n-polynomial regression
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
-    
+
     - (!) Toolbar Mobile Layout (Hstack?)
     - (!) JS load only when/if used, improve (loading) performance
     - (!) "Clear All" Sample Info Button
@@ -146,8 +146,7 @@ document.body.onload = async function(): Promise<void> {
     }
   }
 
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches; // Detect PWA or browser
-  if ('standalone' in window.navigator || isStandalone) { // Standalone PWA mode
+  if ('standalone' in window.navigator || window.matchMedia('(display-mode: standalone)').matches) { // Standalone PWA mode
     document.title += ' PWA';
     document.getElementById('main')!.classList.remove('p-1');
   } else { // Default browser window
@@ -155,8 +154,7 @@ document.body.onload = async function(): Promise<void> {
     document.title += ' web application';
   }
 
-  const domain = new URL(isoListURL, window.location.origin);
-  isoListURL = domain.href;
+  isoListURL = new URL(isoListURL, window.location.origin).href;
 
   if ('serial' in navigator) { // Web Serial API
     document.getElementById('serial-div')!.className = ''; // Remove d-none and invisible
@@ -182,8 +180,7 @@ document.body.onload = async function(): Promise<void> {
         if (!launchParams.files.length) {
           return;
         }
-        const fileHandle = launchParams.files[0];
-        const file: File = await fileHandle.getFile();
+        const file: File = await launchParams.files[0].getFile();
 
         const fileEnding = file.name.split('.')[1].toLowerCase();
         const spectrumEndings = ['csv', 'tka', 'xml', 'txt', 'json'];
@@ -372,14 +369,11 @@ function getFileData(file: File, background = false): void { // Gets called when
           (<HTMLInputElement>document.getElementById('sample-time')).value = rightDate.toISOString().slice(0,16);
         }
 
-        const volumeElement = (<HTMLInputElement>document.getElementById('sample-vol'));
-        const weightElement = (<HTMLInputElement>document.getElementById('sample-weight'));
-
-        volumeElement.value = meta.volume?.toString() ?? '';
-        weightElement.value = meta.weight?.toString() ?? '';
-
+        (<HTMLInputElement>document.getElementById('sample-vol')).value = meta.volume?.toString() ?? '';
+        (<HTMLInputElement>document.getElementById('sample-weight')).value = meta.weight?.toString() ?? '';
         (<HTMLInputElement>document.getElementById('device-name')).value = meta.deviceName;
         (<HTMLInputElement>document.getElementById('add-notes')).value = meta.notes;
+
         startDate = new Date(meta.startTime);
         endDate = new Date(meta.endTime);
 
@@ -397,9 +391,9 @@ function getFileData(file: File, background = false): void { // Gets called when
           plot.calibration.imported = true;
           displayCoeffs();
 
-          for (const element of document.getElementsByClassName('cal-setting')) {
-            const changeType = <HTMLInputElement>element;
-            changeType.disabled = true;
+          const calSettings = document.getElementsByClassName('cal-setting');
+          for (const element of calSettings) {
+            (<HTMLInputElement>element).disabled = true;
           }
 
           addImportLabel();
@@ -454,7 +448,9 @@ function getFileData(file: File, background = false): void { // Gets called when
             }
             plot.calibration.imported = true;
             displayCoeffs();
-            for (const element of document.getElementsByClassName('cal-setting')) {
+
+            const calSettings = document.getElementsByClassName('cal-setting');
+            for (const element of calSettings) {
               const changeType = <HTMLInputElement>element;
               changeType.disabled = true;
             }
@@ -503,9 +499,7 @@ function getFileData(file: File, background = false): void { // Gets called when
 
 
 function sizeCheck(): void {
-  const viewportWidth = document.documentElement.clientWidth;
-  const viewportHeight = document.documentElement.clientHeight;
-  if (viewportWidth < 1100 || viewportHeight < 700) {
+  if (document.documentElement.clientWidth < 1100 || document.documentElement.clientHeight < 700) {
     popupNotification('screen-size-warning');
   } else {
     hideNotification('screen-size-warning');
@@ -603,10 +597,7 @@ document.getElementById('peak-width')!.onkeydown = event => enterPress(event, 's
 document.getElementById('seek-width')!.onkeydown = event => enterPress(event, 'setting12');
 
 function enterPress(event: KeyboardEvent, id: string): void {
-  if (event.key === 'Enter') { // ENTER key
-    const button = document.getElementById(id);
-    button?.click();
-  }
+  if (event.key === 'Enter') document.getElementById(id)?.click(); // ENTER key
 }
 
 
@@ -634,8 +625,7 @@ function changeSma(input: HTMLInputElement): void {
 
 
 function hoverEvent(data: any): void {
-  const hoverData = document.getElementById('hover-data')!;
-  hoverData.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
+  document.getElementById('hover-data')!.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
 
   for (const key in calClick) {
     const castKey = <calType>key;
@@ -647,8 +637,7 @@ function hoverEvent(data: any): void {
 
 
 function unHover(/*data: any*/): void {
-  const hoverData = document.getElementById('hover-data')!;
-  hoverData.innerText = 'None';
+  document.getElementById('hover-data')!.innerText = 'None';
 
   for (const key in calClick) {
     const castKey = <calType>key;
@@ -664,8 +653,7 @@ function unHover(/*data: any*/): void {
 
 
 function clickEvent(data: any): void {
-  const clickData = document.getElementById('click-data')!;
-  clickData.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
+  document.getElementById('click-data')!.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
 
   for (const key in calClick) {
     const castKey = <calType>key;
@@ -759,13 +747,12 @@ function resetCal(): void {
     calClick[<calType>point] = false;
   }
 
-  for (const element of document.getElementsByClassName('cal-setting')) {
-    const changeType = <HTMLInputElement>element;
-    changeType.disabled = false;
+  const calSettings = document.getElementsByClassName('cal-setting');
+  for (const element of calSettings) {
+    (<HTMLInputElement>element).disabled = false;
   }
 
-  const titleElement = document.getElementById('calibration-title')!;
-  titleElement.classList.add('d-none');
+  document.getElementById('calibration-title')!.classList.add('d-none');
 
   plot.clearCalibration();
   toggleCal(false);
@@ -826,9 +813,9 @@ function importCal(file: File): void {
 
       if (obj.imported) {
 
-        for (const element of document.getElementsByClassName('cal-setting')) {
-          const changeType = <HTMLInputElement>element;
-          changeType.disabled = true;
+        const calSettings = document.getElementsByClassName('cal-setting');
+        for (const element of calSettings) {
+          (<HTMLInputElement>element).disabled = true;
         }
 
         addImportLabel();
@@ -843,8 +830,7 @@ function importCal(file: File): void {
           if (obj.points === undefined || typeof obj.points === 'number') { // Keep compatability with old calibration files
             readoutArray[index].value = obj[inputArr[index]];
           } else { // New calibration files
-            const value: number = obj.points[inputArr[index]];
-            if (value === -1) {
+            if ((<number>obj.points[inputArr[index]]) === -1) {
               readoutArray[index].value = '';
             } else {
               readoutArray[index].value = obj.points[inputArr[index]];
@@ -902,9 +888,8 @@ function toLocalIsoString(date: Date) {
     localIsoString += '+';
   }
   const tzDate = new Date(Math.abs(date.getTimezoneOffset()));
-  const tzString = addLeadingZero(tzDate.getHours().toString()) + ':' + addLeadingZero(tzDate.getMinutes().toString());
 
-  localIsoString += tzString;
+  localIsoString += addLeadingZero(tzDate.getHours().toString()) + ':' + addLeadingZero(tzDate.getMinutes().toString());
   return localIsoString;
 }
 
@@ -912,8 +897,7 @@ function toLocalIsoString(date: Date) {
 document.getElementById('calibration-download')!.onclick = () => downloadCal();
 
 function downloadCal(): void {
-  const filename = `calibration_${getDateString()}.json`;
-  download(filename, JSON.stringify(plot.calibration));
+  download(`calibration_${getDateString()}.json`, JSON.stringify(plot.calibration));
 }
 
 
@@ -940,11 +924,13 @@ function makeXMLSpectrum(type: dataType, name: string): Element {
 
     let c = document.createElementNS(null, 'Coefficients');
     let coeffs: number[] = [];
+    const coeffObj = plot.calibration.coeff;
 
-    for (const index in plot.calibration.coeff) {
-      coeffs.push(plot.calibration.coeff[index]);
+    for (const index in coeffObj) {
+      coeffs.push(coeffObj[index]);
     }
-    for (const val of coeffs.reverse()) {
+    const coeffsRev = coeffs.reverse();
+    for (const val of coeffsRev) {
       let coeff = document.createElementNS(null, 'Coefficient');
       coeff.textContent = val.toString();
       c.appendChild(coeff);
@@ -1016,21 +1002,21 @@ function downloadXML(serial = false): void {
   const pi = doc.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"');
   doc.insertBefore(pi, doc.firstChild);
 
-  let root = doc.documentElement;
-  let fv = document.createElementNS(null, 'FormatVersion');
+  const root = doc.documentElement;
+  const fv = document.createElementNS(null, 'FormatVersion');
   fv.textContent = formatVersion.toString();
   root.appendChild(fv);
 
-  let rdl = document.createElementNS(null, 'ResultDataList');
+  const rdl = document.createElementNS(null, 'ResultDataList');
   root.appendChild(rdl);
 
-  let rd = document.createElementNS(null, 'ResultData');
+  const rd = document.createElementNS(null, 'ResultData');
   rdl.appendChild(rd);
 
-  let dcr = document.createElementNS(null, 'DeviceConfigReference');
+  const dcr = document.createElementNS(null, 'DeviceConfigReference');
   rd.appendChild(dcr);
 
-  let dcrName = document.createElementNS(null, 'Name');
+  const dcrName = document.createElementNS(null, 'Name');
   /*
   if (serial) {
     dcrName.textContent = 'Gamma MCA Serial Device';
@@ -1042,11 +1028,11 @@ function downloadXML(serial = false): void {
   dcr.appendChild(dcrName);
 
   if (startDate) {
-    let st = document.createElementNS(null, 'StartTime');
+    const st = document.createElementNS(null, 'StartTime');
     st.textContent = toLocalIsoString(startDate);
     rd.appendChild(st);
 
-    let et = document.createElementNS(null, 'EndTime');
+    const et = document.createElementNS(null, 'EndTime');
     rd.appendChild(et);
 
     if (endDate && endDate.getTime() - startDate.getTime() >= 0) {
@@ -1056,44 +1042,44 @@ function downloadXML(serial = false): void {
     }
   }
 
-  let si = document.createElementNS(null, 'SampleInfo');
+  const si = document.createElementNS(null, 'SampleInfo');
   rd.appendChild(si);
 
-  let name = document.createElementNS(null, 'Name');
+  const name = document.createElementNS(null, 'Name');
   name.textContent = (<HTMLInputElement>document.getElementById('sample-name')).value.trim();
   si.appendChild(name);
 
-  let l = document.createElementNS(null, 'Location');
+  const l = document.createElementNS(null, 'Location');
   l.textContent = (<HTMLInputElement>document.getElementById('sample-loc')).value.trim();
   si.appendChild(l);
 
-  let t = document.createElementNS(null, 'Time');
+  const t = document.createElementNS(null, 'Time');
   const tval = (<HTMLInputElement>document.getElementById('sample-time')).value.trim();
   if (tval.length) {
     t.textContent = toLocalIsoString(new Date(tval));
     si.appendChild(t);
   }
 
-  let w = document.createElementNS(null, 'Weight');
+  const w = document.createElementNS(null, 'Weight');
   const wval = (<HTMLInputElement>document.getElementById('sample-weight')).value.trim();
   if (wval.length) {
     w.textContent = (parseFloat(wval)/1000).toString();
     si.appendChild(w);
   }
 
-  let v = document.createElementNS(null, 'Volume');
+  const v = document.createElementNS(null, 'Volume');
   const vval = (<HTMLInputElement>document.getElementById('sample-vol')).value.trim();
   if (vval.length) {
     v.textContent = (parseFloat(vval)/1000).toString();
     si.appendChild(v);
   }
 
-  let note = document.createElementNS(null, 'Note');
+  const note = document.createElementNS(null, 'Note');
   note.textContent = (<HTMLInputElement>document.getElementById('add-notes')).value.trim();
   si.appendChild(note);
 
   if (spectrumData['background'].length) {
-    let bsf = document.createElementNS(null, 'BackgroundSpectrumFile');
+    const bsf = document.createElementNS(null, 'BackgroundSpectrumFile');
     bsf.textContent = backgroundName;
     rd.appendChild(bsf);
   }
@@ -1101,7 +1087,7 @@ function downloadXML(serial = false): void {
   if (spectrumData['data'].length) rd.appendChild(makeXMLSpectrum('data', spectrumName));
   if (spectrumData['background'].length) rd.appendChild(makeXMLSpectrum('background', backgroundName));
 
-  let vis = document.createElementNS(null, 'Visible');
+  const vis = document.createElementNS(null, 'Visible');
   vis.textContent = true.toString();
   rd.appendChild(vis);
 
@@ -1212,20 +1198,15 @@ function download(filename: string, text: string): void {
 }
 
 
-function popupNotification(id: string): void {
-  // Uses Bootstrap Toasts already defined in HTML
-  const element = document.getElementById(id);
+function popupNotification(id: string): void { // Uses Bootstrap Toasts already defined in HTML
   // @ts-ignore // Works just fine without TS complaining
-  const toast = new bootstrap.Toast(element);
-  toast.show();
+  new bootstrap.Toast(document.getElementById(id)).show();
 }
 
 
 function hideNotification(id: string): void {
-  const element = document.getElementById(id);
   // @ts-ignore // Works just fine without TS complaining
-  const toast = new bootstrap.Toast(element);
-  toast.hide();
+  new bootstrap.Toast(document.getElementById(id)).hide();
 }
 
 
@@ -1253,7 +1234,7 @@ async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope 
   let successFlag = true; // Ideally no errors
 
   try {
-    let response = await fetch(isoListURL, options);
+    const response = await fetch(isoListURL, options);
 
     if (response.ok) { // If HTTP-status is 200-299
       const json = await response.json();
@@ -1287,8 +1268,7 @@ async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope 
         cell3.style.cursor = 'pointer';
 
         const energy = parseFloat(key.trim());
-        const dirtyName: string = json[key].toLowerCase();
-        const lowercaseName = dirtyName.replace(/[^a-z0-9 -]/gi, '').trim(); // Fixes security issue. Clean everything except for letters, numbers and minus. See GitHub: #2
+        const lowercaseName = json[key].toLowerCase().replace(/[^a-z0-9 -]/gi, '').trim(); // Fixes security issue. Clean everything except for letters, numbers and minus. See GitHub: #2
         const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1) + '-' + index; // Capitalize Name and append index number
 
         cell1.innerHTML = `<input class="form-check-input iso-table-label" id="${name}" type="checkbox" value="${energy}">`;
@@ -1335,9 +1315,9 @@ function seekClosest(value: number): {energy: number, name: string} | {energy: u
 
   if (closeValsNum.length) {
     const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
-    const name = isoList[closest]!; // closest will always be somewhere in isoList with a key, because we got it from there!
 
-    return {energy: closest, name: name};
+    // closest will always be somewhere in isoList with a key, because we got it from there!
+    return {energy: closest, name: isoList[closest]!};
   } else {
     return {energy: undefined, name: undefined};
   }
@@ -1380,8 +1360,7 @@ async function closestIso(value: number): Promise<void> {
 
 function plotIsotope(checkbox: HTMLInputElement): void {
   const wordArray = checkbox.id.split('-');
-  const name = wordArray[0] + '-' + wordArray[1];
-  plot.toggleLine(parseFloat(checkbox.value), name, checkbox.checked);
+  plot.toggleLine(parseFloat(checkbox.value), wordArray[0] + '-' + wordArray[1], checkbox.checked);
   plot.updatePlot(spectrumData);
 }
 
@@ -1390,17 +1369,14 @@ document.getElementById('check-all-isos')!.onclick = (event) => selectAll(<HTMLI
 
 function selectAll(selectBox: HTMLInputElement): void {
   // Bad performance mostly because of the updatePlot with that many lines!
-  const tableElement = <HTMLTableElement>document.getElementById('table'); //selectBox.closest('table');
-  const tableBody = tableElement.tBodies[0];
-  const tableRows = tableBody.rows;
+  const tableRows = (<HTMLTableElement>document.getElementById('table')).tBodies[0].rows;
 
   for (const row of tableRows) {
     const checkBox = <HTMLInputElement>row.cells[0].firstChild;
     checkBox.checked = selectBox.checked;
     if (selectBox.checked) {
       const wordArray = checkBox.id.split('-');
-      const name = wordArray[0] + '-' + wordArray[1];
-      plot.toggleLine(parseFloat(checkBox.value), name, checkBox.checked);
+      plot.toggleLine(parseFloat(checkBox.value), wordArray[0] + '-' + wordArray[1], checkBox.checked);
     }
   }
   if (!selectBox.checked) plot.clearShapeAnno();
@@ -1477,7 +1453,8 @@ function loadSettingsDefault(): void {
   (<HTMLInputElement>document.getElementById('seek-width')).value = plot.peakConfig.seekWidth.toString();
 
   const formatSelector = <HTMLSelectElement>document.getElementById('download-format');
-  for (let i = 0; i < formatSelector.options.length; i++) {
+  const len = formatSelector.options.length;
+  for (let i = 0; i < len; i++) {
     if (formatSelector.options[i].value === plot.downloadFormat) formatSelector.selectedIndex = i;
   }
 }
@@ -1583,8 +1560,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
 
     case 'customURL':
       try {
-        const newUrl = new URL(value);
-        isoListURL = newUrl.href;
+        isoListURL = new URL(value).href;
 
         reloadIsotopes();
 
@@ -1762,7 +1738,8 @@ document.getElementById('serial-list-btn')!.onclick = () => listSerial();
 
 async function listSerial(): Promise<void> {
   const portSelector = <HTMLSelectElement>document.getElementById('port-selector');
-  for (const index in portSelector.options) { // Remove all "old" ports
+  const options = portSelector.options;
+  for (const index in options) { // Remove all "old" ports
     portSelector.remove(parseInt(index));
   }
 
@@ -1772,9 +1749,8 @@ async function listSerial(): Promise<void> {
     portsAvail[index] = ports[index];
 
     const option = document.createElement('option');
-    const usbId = ports[index].getInfo().usbProductId;
 
-    option.text = `Port ${index} (Id: 0x${usbId?.toString(16)})`;
+    option.text = `Port ${index} (Id: 0x${ports[index].getInfo().usbProductId?.toString(16)})`;
 
     portSelector.add(option, parseInt(index));
   }
@@ -1807,8 +1783,7 @@ async function requestSerial(): Promise<void> {
       portsAvail[0] = port;
     } else {
       const intKeys = Object.keys(portsAvail).map(value => parseInt(value));
-      const max = Math.max(...intKeys);
-      portsAvail[max + 1] = port; // Put new port in max+1 index  to get a new, unused number
+      portsAvail[Math.max(...intKeys) + 1] = port; // Put new port in max+1 index  to get a new, unused number
     }
     listSerial();
   } catch(err) {
@@ -1836,10 +1811,7 @@ function toggleCps(button: HTMLButtonElement, off = false): void {
 
 
 async function selectPort(): Promise<void> {
-  const selector = <HTMLSelectElement>document.getElementById('port-selector');
-  const index = selector.selectedIndex;
-
-  const newport = portsAvail[index];
+  const newport = portsAvail[(<HTMLSelectElement>document.getElementById('port-selector')).selectedIndex];
 
   if (ser.port !== newport) {
     ser.port = newport; // Changed
@@ -1917,7 +1889,9 @@ async function startRecord(pause = false, type = <dataType>recordingType): Promi
     document.getElementById('record-button')!.classList.add('d-none');
     document.getElementById('resume-button')!.classList.add('d-none');
 
-    for (const ele of document.getElementsByClassName('recording-spinner')) {
+    const spinnerElements = document.getElementsByClassName('recording-spinner');
+
+    for (const ele of spinnerElements) {
       ele.classList.remove('d-none');
     }
 
@@ -1997,9 +1971,7 @@ async function sendSerial(command: string): Promise<void> {
     const writer = textEncoder.writable.getWriter();
     const writableStreamClosed = textEncoder.readable.pipeTo(ser.port.writable);
 
-    const formatCommand = command.trim() + '\n';
-
-    writer.write(formatCommand);
+    writer.write(command.trim() + '\n');
     //writer.write('\x03\n');
 
     //writer.releaseLock();
@@ -2023,8 +1995,9 @@ async function disconnectPort(stop = false): Promise<void> {
   spectrumData[`${recordingType}Time`] += performance.now() - startTime; // Maybe using recordingType here creates a bug...
 
   document.getElementById('pause-button')!.classList.add('d-none');
+  const spinnerElements = document.getElementsByClassName('recording-spinner');
 
-  for (const ele of document.getElementsByClassName('recording-spinner')) {
+  for (const ele of spinnerElements) {
     ele.classList.add('d-none');
   }
 
@@ -2034,8 +2007,7 @@ async function disconnectPort(stop = false): Promise<void> {
     //recordingType = '';
     cpsValues = [];
 
-    const cpsButton = <HTMLButtonElement>document.getElementById('plot-cps');
-    toggleCps(cpsButton, true); // Disable CPS again
+    toggleCps(<HTMLButtonElement>document.getElementById('plot-cps'), true); // Disable CPS again
     ser.clearBaseHist(); // Clear base histogram for data processing
     endDate = new Date();
   }
@@ -2096,12 +2068,10 @@ function refreshMeta(type: dataType): void {
     const nowTime = performance.now(); //Date.now();
 
     const totalTimeElement = document.getElementById('total-record-time')!;
-    const timeElement = document.getElementById('record-time')!;
-    const progressBar = document.getElementById('ser-time-progress-bar')!;
 
     const delta = new Date(nowTime - startTime + spectrumData[`${type}Time`]);
 
-    timeElement.innerText = addLeadingZero(delta.getUTCHours().toString()) + ':' + addLeadingZero(delta.getUTCMinutes().toString()) + ':' + addLeadingZero(delta.getUTCSeconds().toString());
+    document.getElementById('record-time')!.innerText = addLeadingZero(delta.getUTCHours().toString()) + ':' + addLeadingZero(delta.getUTCMinutes().toString()) + ':' + addLeadingZero(delta.getUTCSeconds().toString());
 
     if (maxRecTimeEnabled) {
       const progressElement = document.getElementById('ser-time-progress')!;
@@ -2115,7 +2085,7 @@ function refreshMeta(type: dataType): void {
     } else {
       totalTimeElement.innerText = '';
     }
-    progressBar.classList.toggle('d-none', !maxRecTimeEnabled);
+    document.getElementById('ser-time-progress-bar')!.classList.toggle('d-none', !maxRecTimeEnabled);
 
     if (delta.getTime() > maxRecTime && maxRecTimeEnabled) {
       disconnectPort(true);
