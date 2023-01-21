@@ -19,7 +19,7 @@
 
     - (!) Toolbar Mobile Layout (Hstack?)
     - (!) JS load only when/if used, improve (loading) performance
-    - (!) Clear Sample Info Button
+    - (!) "Clear All" Sample Info Button
 
 
   Known Performance Issues:
@@ -118,7 +118,7 @@ let isoList: isotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2023-01-20';
+const APP_VERSION = '2023-01-21';
 let localStorageAvailable = false;
 let firstInstall = false;
 

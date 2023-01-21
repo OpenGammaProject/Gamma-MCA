@@ -13,7 +13,7 @@
       URL = https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fspectrum.nuclearphoenix.xyz&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=true
 
 */
-const APP_VERSION = '2023-01-20';
+const APP_VERSION = '2023-01-21';
 const CACHE_NAME = "gamma-static"; // A random name for the cache
 const OFFLINE_RESOURCES = ['/',
                           '/index.html',
