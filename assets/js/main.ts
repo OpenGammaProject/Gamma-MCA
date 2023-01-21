@@ -20,7 +20,7 @@
     - (!) Toolbar Mobile Layout (Hstack?)
     - (!) JS load only when/if used, improve (loading) performance
     - (!) "Clear All" Sample Info Button
-    - (!) JSON/XML allow different spectrum/background spectrum measurement times and auto adjust + calculate cps
+    - (!) Calculate CPS from JSON/XML-imported measurementTime + unblock cps button
 
 
   Known Performance Issues:
@@ -2006,7 +2006,6 @@ async function sendSerial(command: string): Promise<void> {
     await writer.close();
     await writableStreamClosed;
 
-    //ser.addRawData('> ' + formatCommand.trim() + '\n');
     (<HTMLInputElement>document.getElementById('ser-command')).value = '';
 
   } catch (err) {
