@@ -12,10 +12,13 @@
   - Remove all any types
   - Remove all ! operators
 
+  - Use of Nullish Coalescing & Optional Chaining
+  - Streamline ifs
+
 */
 
 
-import './external/plotly-basic.min.js';
+//import './external/plotly-basic.min.js';
 
 import {SpectrumData, isotopeList} from './main.js';
 
@@ -116,8 +119,7 @@ export class SpectrumPlot {
     direction: 'up',
     click: (plotElement: any) => {
       let newLayout = JSON.parse(JSON.stringify(plotElement.layout));
-      const logoUrl = new URL('/assets/logo.svg', window.location.origin);
-      newLayout.images[0].source = logoUrl.href;
+      newLayout.images[0].source = new URL('/assets/logo.svg', window.location.origin).href;
 
       const newAnno = {
         x: 1,
@@ -162,13 +164,11 @@ export class SpectrumPlot {
       </html>\
       `;
 
-      let element = document.createElement('a');
+      const element = document.createElement('a');
       element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
       element.setAttribute('download', 'gamma_mca_export.html');
       element.style.display = 'none';
-      document.body.appendChild(element);
       element.click();
-      document.body.removeChild(element);
   }};
   /*
     Constructor
@@ -219,14 +219,9 @@ export class SpectrumPlot {
     if (cT >= 0 && cF >= 0) { // Pretty ugly hard scripted, could be dynamically calculated for n-poly using Math.js and matrices. Meh.
 
       const denom = (aF - bF) * (aF - cF) * (bF - cF);
-
-      const k = (Math.pow(cF,2) * (aT - bT) + Math.pow(aF,2) * (bT - cT) + Math.pow(bF,2) * (cT - aT)) / denom;
-      const d = (bF * (bF - cF) * cF * aT + aF * cF * (cF - aF) * bT + aF * (aF - bF) * bF * cT) / denom;
-      const a = (cF * (bT - aT) + bF * (aT - cT) + aF * (cT - bT)) / denom;
-
-      this.calibration.coeff.c1 = a;
-      this.calibration.coeff.c2 = k;
-      this.calibration.coeff.c3 = d;
+      this.calibration.coeff.c1 = (cF * (bT - aT) + bF * (aT - cT) + aF * (cT - bT)) / denom;
+      this.calibration.coeff.c2 = (Math.pow(cF,2) * (aT - bT) + Math.pow(aF,2) * (bT - cT) + Math.pow(bF,2) * (cT - aT)) / denom;
+      this.calibration.coeff.c3 = (bF * (bF - cF) * cF * aT + aF * cF * (cF - aF) * bT + aF * (aF - bF) * bF * cT) / denom;
 
     } else {
 
@@ -308,9 +303,9 @@ export class SpectrumPlot {
 
     if (closeValsNum.length > 0) {
       const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
-      const name = this.isoList[closest]!; // closest will always be somewhere in isoList with a key, because we got it from there!
 
-      return {energy: closest, name: name};
+      // closest will always be somewhere in isoList with a key, because we got it from there!
+      return {energy: closest, name: this.isoList[closest]!};
     } else {
       return {energy: undefined, name: undefined};
     }
@@ -320,7 +315,8 @@ export class SpectrumPlot {
   */
   peakFinder(doFind = true): void {
     if (this.peakConfig.lines.length !== 0) {
-      for (const line of this.peakConfig.lines) {
+      const lines = this.peakConfig.lines
+      for (const line of lines) {
         this.toggleLine(line, '', false);
       }
       this.peakConfig.lines = [];
@@ -337,7 +333,9 @@ export class SpectrumPlot {
     const xAxisData: number[] = this.peakConfig.lastDataX;
     let peakLines: number[] = [];
 
-    for (let i = 0; i < shortData.length; i++) {
+    const shortLen = shortData.length;
+
+    for (let i = 0; i < shortLen; i++) {
       if (shortData[i] - longData[i] > this.peakConfig.thres * maxVal)  {
         peakLines.push(xAxisData[i]);
       }
@@ -346,7 +344,9 @@ export class SpectrumPlot {
     let values: number[] = [];
     peakLines.push(0);
 
-    for (let i = 0; i < peakLines.length; i++) {
+    const peakLen = peakLines.length
+
+    for (let i = 0; i < peakLen; i++) {
       values.push(peakLines[i]);
 
       if (Math.abs(peakLines[i + 1] - peakLines[i]) > this.peakConfig.width) {
@@ -369,7 +369,7 @@ export class SpectrumPlot {
           this.peakConfig.lines.push(result);
         } else { // Isotope Mode
           const { energy, name } = this.seekClosest(result, size);
-          if (energy !== undefined && name !== undefined) {
+          if (energy && name) {
             this.toggleLine(energy, name);
             this.peakConfig.lines.push(energy);
           }
@@ -537,7 +537,8 @@ export class SpectrumPlot {
       }
 
       const newData: number[] = []; // Compute the corrected data, i.e. data - background
-      for (let i = 0; i < data[0].y.length; i++) {
+      const dataLen = data[0].y.length;
+      for (let i = 0; i < dataLen; i++) {
         newData.push(data[0].y[i] - bgTrace.y[i]);
       }
 
