@@ -23,7 +23,6 @@
 
     - spectrumData sum method
     - check local storage avail in saveJSON loadJSON
-    - close serial console when device connection gone
 
 
   Known Performance Issues:
