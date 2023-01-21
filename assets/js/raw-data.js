@@ -16,12 +16,10 @@ export class RawData {
     checkLines(value) {
         const values = value.split(this.delimiter);
         const testParseFirst = parseFloat(values[0].trim());
-        if (isNaN(testParseFirst)) {
+        if (isNaN(testParseFirst))
             return false;
-        }
-        if (values.length === 1) {
+        if (values.length === 1)
             this.tempValIndex = 0;
-        }
         return values.length > this.tempValIndex;
     }
     parseLines(value) {
@@ -47,22 +45,6 @@ export class RawData {
             const dataEvents = allEvents.filter(this.checkLines, this);
             const cleanData = dataEvents.map(this.parseLines, this);
             return this.histConverter(cleanData);
-        }
-    }
-    checkNullString(data, defaultReturn = "") {
-        if (data) {
-            return data;
-        }
-        else {
-            return defaultReturn;
-        }
-    }
-    checkNullNumber(data, defaultReturn = 0) {
-        if (data) {
-            return parseFloat(data);
-        }
-        else {
-            return defaultReturn;
         }
     }
     xmlToArray(data) {
@@ -91,58 +73,39 @@ export class RawData {
             if (especTop[0]) {
                 const espec = especTop[0].getElementsByTagName('DataPoint');
                 const especArray = Array.from(espec);
-                espectrum = especArray.map(item => {
-                    if (item.textContent === null) {
-                        return -1;
-                    }
-                    return parseFloat(item.textContent);
-                });
-                meta.dataMt = this.checkNullNumber(especTop[0].getElementsByTagName('MeasurementTime')[0]?.textContent?.trim(), 1) * 1000;
+                espectrum = especArray.map(item => parseFloat(item.textContent ?? '-1'));
+                meta.dataMt = parseFloat(especTop[0].getElementsByTagName('MeasurementTime')[0]?.textContent?.trim() ?? '1') * 1000;
             }
             const bgspecTop = xmlDoc.getElementsByTagName('BackgroundEnergySpectrum');
             if (bgspecTop[0]) {
                 const bgspec = bgspecTop[0].getElementsByTagName('DataPoint');
                 const bgspecArray = Array.from(bgspec);
-                bgspectrum = bgspecArray.map(item => {
-                    if (item.textContent === null) {
-                        return -1;
-                    }
-                    return parseFloat(item.textContent);
-                });
-                meta.backgroundMt = this.checkNullNumber(bgspecTop[0].getElementsByTagName('MeasurementTime')[0].textContent?.trim(), 1) * 1000;
+                bgspectrum = bgspecArray.map(item => parseFloat(item.textContent ?? '-1'));
+                meta.backgroundMt = parseFloat(bgspecTop[0].getElementsByTagName('MeasurementTime')[0]?.textContent?.trim() ?? '1') * 1000;
             }
             const calCoeffsTop = xmlDoc.getElementsByTagName('EnergySpectrum')[0];
             if (calCoeffsTop) {
                 const calCoeffs = calCoeffsTop.getElementsByTagName('Coefficient');
                 const calCoeffsArray = Array.from(calCoeffs);
-                const coeffNumArray = calCoeffsArray.map(item => {
-                    if (item.textContent === null) {
-                        return 0;
-                    }
-                    return parseFloat(item.textContent);
-                });
+                const coeffNumArray = calCoeffsArray.map(item => parseFloat((item.textContent ?? '0')));
                 for (const i in coeffNumArray) {
                     coeff['c' + (parseInt(i) + 1).toString()] = coeffNumArray[2 - parseInt(i)];
                 }
             }
             const rdl = xmlDoc.getElementsByTagName('SampleInfo')[0];
-            if (rdl) {
-                meta.name = this.checkNullString(rdl.getElementsByTagName('Name')[0]?.textContent?.trim());
-                meta.location = this.checkNullString(rdl.getElementsByTagName('Location')[0]?.textContent?.trim());
-                meta.time = this.checkNullString(rdl.getElementsByTagName('Time')[0]?.textContent?.trim());
-                meta.notes = this.checkNullString(rdl.getElementsByTagName('Note')[0]?.textContent?.trim());
-                let val = this.checkNullNumber(rdl.getElementsByTagName('Weight')[0]?.textContent?.trim());
-                if (val > 0)
-                    meta.weight = val * 1000;
-                val = this.checkNullNumber(rdl.getElementsByTagName('Volume')[0]?.textContent?.trim());
-                if (val > 0)
-                    meta.volume = val * 1000;
-            }
-            const dcr = xmlDoc.getElementsByTagName('DeviceConfigReference')[0];
-            if (dcr)
-                meta.deviceName = this.checkNullString(dcr.getElementsByTagName('Name')[0]?.textContent?.trim());
-            meta.startTime = this.checkNullString(xmlDoc.getElementsByTagName('StartTime')[0]?.textContent?.trim());
-            meta.endTime = this.checkNullString(xmlDoc.getElementsByTagName('EndTime')[0]?.textContent?.trim());
+            meta.name = rdl?.getElementsByTagName('Name')[0]?.textContent?.trim() ?? '';
+            meta.location = rdl?.getElementsByTagName('Location')[0]?.textContent?.trim() ?? '';
+            meta.time = rdl?.getElementsByTagName('Time')[0]?.textContent?.trim() ?? '';
+            meta.notes = rdl?.getElementsByTagName('Note')[0]?.textContent?.trim() ?? '';
+            let val = parseFloat(rdl?.getElementsByTagName('Weight')[0]?.textContent?.trim() ?? '0');
+            if (val > 0)
+                meta.weight = val * 1000;
+            val = parseFloat(rdl?.getElementsByTagName('Volume')[0]?.textContent?.trim() ?? '0');
+            if (val > 0)
+                meta.volume = val * 1000;
+            meta.deviceName = xmlDoc.getElementsByTagName('DeviceConfigReference')[0]?.getElementsByTagName('Name')[0]?.textContent?.trim() ?? '';
+            meta.startTime = xmlDoc.getElementsByTagName('StartTime')[0]?.textContent?.trim() ?? '';
+            meta.endTime = xmlDoc.getElementsByTagName('EndTime')[0]?.textContent?.trim() ?? '';
             return { espectrum, bgspectrum, coeff, meta };
         }
         catch (e) {
