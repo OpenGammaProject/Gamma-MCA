@@ -16,10 +16,11 @@
     - Sorting isotope list
     - Calibration n-polynomial regression
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
+    - Decrease DOM Size
 
+    - (!) Plot.ts todos
     - (!) Toolbar Mobile Layout (Hstack?)
     - (!) JS load only when/if used, improve (loading) performance
-    - (!) Decrease DOM Size
     - (!) "Clear All" Sample Info Button
     - (!) Calculate CPS from JSON/XML-imported measurementTime + unblock cps button
 

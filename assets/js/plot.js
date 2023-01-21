@@ -190,7 +190,7 @@ export class SpectrumPlot {
             return false;
         });
         const closeValsNum = closeVals.map(energy => parseFloat(energy));
-        if (closeValsNum.length > 0) {
+        if (closeValsNum.length) {
             const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
             return { energy: closest, name: this.isoList[closest] };
         }
@@ -199,7 +199,7 @@ export class SpectrumPlot {
         }
     }
     peakFinder(doFind = true) {
-        if (this.peakConfig.lines.length !== 0) {
+        if (this.peakConfig.lines.length) {
             const lines = this.peakConfig.lines;
             for (const line of lines) {
                 this.toggleLine(line, '', false);
@@ -343,7 +343,7 @@ export class SpectrumPlot {
         let data = [trace];
         if (this.cps)
             data[0].y = dataObj.dataCps;
-        if (dataObj.background.length > 0) {
+        if (dataObj.background.length) {
             let bgTrace = {
                 name: 'Background',
                 stackgroup: 'data',

@@ -12,7 +12,7 @@
   - Remove all any types
   - Remove all ! operators
 
-  - Use of Nullish Coalescing & Optional Chaining
+  - Improve updatePlot performance!
 
 */
 
@@ -298,7 +298,7 @@ export class SpectrumPlot {
     });
     const closeValsNum = closeVals.map(energy => parseFloat(energy)) // After this step there are 100% only numbers left
 
-    if (closeValsNum.length > 0) {
+    if (closeValsNum.length) {
       const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
 
       // closest will always be somewhere in isoList with a key, because we got it from there!
@@ -311,7 +311,7 @@ export class SpectrumPlot {
     Find and mark energy peaks by using two different moving averages
   */
   peakFinder(doFind = true): void {
-    if (this.peakConfig.lines.length !== 0) {
+    if (this.peakConfig.lines.length) {
       const lines = this.peakConfig.lines
       for (const line of lines) {
         this.toggleLine(line, '', false);
@@ -492,7 +492,7 @@ export class SpectrumPlot {
     /*
       Compute Background and Corrected Spectrum
     */
-    if (dataObj.background.length > 0) { //== dataObj.data.length)
+    if (dataObj.background.length) { //== dataObj.data.length)
       let bgTrace = {
         name: 'Background',
         stackgroup: 'data', // Stack line charts on top of each other
