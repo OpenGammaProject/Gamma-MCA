@@ -32,35 +32,31 @@ export class SerialData {
         }
         const string = new TextDecoder("utf-8").decode(uintArray);
         this.addRawData(string);
-        if (onlyConsole) {
+        if (onlyConsole)
             return;
-        }
         this.rawData += string;
         if (this.orderType === 'chron') {
             let stringArr = this.rawData.split(this.eolChar);
             stringArr.pop();
             stringArr.shift();
             if (stringArr.length <= 1) {
-                if (this.rawData.length > this.maxLength) {
+                if (this.rawData.length > this.maxLength)
                     this.rawData = '';
-                }
                 return;
             }
             else {
                 for (const element of stringArr) {
                     this.rawData = this.rawData.replace(element + this.eolChar, '');
                     const trimString = element.trim();
-                    if (trimString.length === 0 || trimString.length >= this.maxLength) {
+                    if (!trimString.length || trimString.length >= this.maxLength)
                         continue;
-                    }
                     const parsedInt = parseInt(trimString);
                     if (isNaN(parsedInt)) {
                         continue;
                     }
                     else {
-                        if (parsedInt < 0 || parsedInt > this.adcChannels) {
+                        if (parsedInt < 0 || parsedInt > this.adcChannels)
                             continue;
-                        }
                         this.serData.push(parsedInt);
                     }
                 }
@@ -70,24 +66,21 @@ export class SerialData {
             let stringArr = this.rawData.split('\r\n');
             stringArr.pop();
             stringArr.shift();
-            if (stringArr.length < 1) {
-                if (this.rawData.length > this.maxHistLength) {
+            if (!stringArr.length) {
+                if (this.rawData.length > this.maxHistLength)
                     this.rawData = '';
-                }
                 return;
             }
             else {
                 for (const element of stringArr) {
                     this.rawData = this.rawData.replaceAll(element + '\r\n', '');
                     const trimString = element.trim();
-                    if (trimString.length === 0 || trimString.length >= this.maxHistLength) {
+                    if (!trimString.length || trimString.length >= this.maxHistLength)
                         continue;
-                    }
                     const stringHist = trimString.split(this.eolChar);
                     stringHist.pop();
-                    if (stringHist.length !== this.adcChannels) {
+                    if (stringHist.length !== this.adcChannels)
                         continue;
-                    }
                     let numHist = stringHist.map(x => parseInt(x));
                     numHist = numHist.map(function (item) {
                         if (isNaN(item)) {
@@ -97,7 +90,7 @@ export class SerialData {
                             return item;
                         }
                     });
-                    if (this.baseHist.length === 0) {
+                    if (!this.baseHist.length) {
                         this.baseHist = numHist;
                         return;
                     }
@@ -115,8 +108,7 @@ export class SerialData {
     addRawData(string) {
         this.serInput += string;
         if (this.serInput.length > this.consoleMemory) {
-            const toBeDeleted = this.serInput.length - this.consoleMemory;
-            this.serInput = this.serInput.slice(toBeDeleted);
+            this.serInput = this.serInput.slice(this.serInput.length - this.consoleMemory);
         }
     }
     getRawData() {
@@ -138,9 +130,8 @@ export class SerialData {
         this.baseHist = [];
     }
     updateData(oldDataArr, newDataArr) {
-        if (oldDataArr.length === 0) {
+        if (!oldDataArr.length)
             oldDataArr = Array(this.adcChannels).fill(0);
-        }
         for (const value of newDataArr) {
             oldDataArr[value] += 1;
         }

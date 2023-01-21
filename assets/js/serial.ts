@@ -50,9 +50,7 @@ export class SerialData {
 
     this.addRawData(string);
 
-    if (onlyConsole) {
-      return;
-    }
+    if (onlyConsole) return;
 
     this.rawData += string;
 
@@ -63,9 +61,7 @@ export class SerialData {
       stringArr.shift(); // Delete first entry. !FIX SERIAL COMMUNICATION ERRORS!
 
       if (stringArr.length <= 1) {
-        if (this.rawData.length > this.maxLength) {
-          this.rawData = ''; // String too long without an EOL char, obvious error, delete.
-        }
+        if (this.rawData.length > this.maxLength) this.rawData = ''; // String too long without an EOL char, obvious error, delete.
         return;
       } else {
         for (const element of stringArr) {
@@ -73,18 +69,14 @@ export class SerialData {
           this.rawData = this.rawData.replace(element + this.eolChar, '');
           const trimString = element.trim(); // Delete whitespace and line breaks
 
-          if (trimString.length === 0 || trimString.length >= this.maxLength) {
-            continue; // String is empty or longer than maxLength --> Invalid, disregard
-          }
+          if (!trimString.length || trimString.length >= this.maxLength) continue; // String is empty or longer than maxLength --> Invalid, disregard
 
           const parsedInt = parseInt(trimString);
 
           if (isNaN(parsedInt)) {
             continue; // Not an integer -> throw away
           } else {
-            if (parsedInt < 0 || parsedInt > this.adcChannels) { // Fixed value range. !FIX SERIAL COMMUNICATION ERRORS!
-              continue;
-            }
+            if (parsedInt < 0 || parsedInt > this.adcChannels) continue; // Fixed value range. !FIX SERIAL COMMUNICATION ERRORS!
             this.serData.push(parsedInt);
           }
         }
@@ -97,26 +89,20 @@ export class SerialData {
       stringArr.pop(); // Delete last entry to avoid counting unfinished transmissions
       stringArr.shift(); // Delete first entry. !FIX SERIAL COMMUNICATION ERRORS!
 
-      if (stringArr.length < 1) {
-        if (this.rawData.length > this.maxHistLength) {
-          this.rawData = ''; // String too long without an EOL char, obvious error, delete.
-        }
+      if (!stringArr.length) {
+        if (this.rawData.length > this.maxHistLength) this.rawData = ''; // String too long without an EOL char, obvious error, delete.
         return;
       } else {
         for (const element of stringArr) {
           this.rawData = this.rawData.replaceAll(element + '\r\n', '');
           const trimString = element.trim(); // Delete whitespace and line breaks
 
-          if (trimString.length === 0 || trimString.length >= this.maxHistLength) {
-            continue; // String is empty or longer than maxHistLength --> Invalid, disregard
-          }
+          if (!trimString.length || trimString.length >= this.maxHistLength) continue; // String is empty or longer than maxHistLength --> Invalid, disregard
 
           const stringHist = trimString.split(this.eolChar);
           stringHist.pop();
 
-          if (stringHist.length !== this.adcChannels) {
-            continue; // Something is wrong with this histogram
-          }
+          if (stringHist.length !== this.adcChannels) continue; // Something is wrong with this histogram
 
           let numHist = stringHist.map(x => parseInt(x));
           numHist = numHist.map(function(item) {
@@ -127,7 +113,7 @@ export class SerialData {
             }
           });
 
-          if (this.baseHist.length === 0) {
+          if (!this.baseHist.length) {
             this.baseHist = numHist;
             return;
           }
@@ -152,9 +138,7 @@ export class SerialData {
 
     if (this.serInput.length > this.consoleMemory) {
       //console.warn('Serial console log is out of memory, deleting old history...');
-
-      const toBeDeleted = this.serInput.length - this.consoleMemory;
-      this.serInput = this.serInput.slice(toBeDeleted);
+      this.serInput = this.serInput.slice(this.serInput.length - this.consoleMemory);
     }
   }
 
@@ -182,9 +166,7 @@ export class SerialData {
   }
 
   updateData(oldDataArr: number[], newDataArr: number[]): number[] {
-    if(oldDataArr.length === 0) {
-      oldDataArr = Array(this.adcChannels).fill(0);
-    }
+    if(!oldDataArr.length) oldDataArr = Array(this.adcChannels).fill(0);
 
     for (const value of newDataArr) {
       oldDataArr[value] += 1;
