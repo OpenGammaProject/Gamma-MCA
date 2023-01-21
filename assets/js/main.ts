@@ -10,6 +10,7 @@
     - (?) Hotkeys
     - (?) Add desktop notifications
     - (?) Add dead time correction for cps
+    - (?) Manual update button
 
     - Sorting isotope list
     - Calibration n-polynomial regression
@@ -17,7 +18,12 @@
     - Single file export button in "file import" (-> file config) tab
 
     - (!) Toolbar Mobile Layout (Hstack?)
-    - (!) JS load only when/if used
+    - (!) JS load only when/if used, improve (loading) performance
+    - (!) Clear Sample Info Button
+
+    - spectrumData sum method
+    - check local storage avail in saveJSON loadJSON
+    - close serial console when device connection gone
 
 
   Known Performance Issues:
@@ -340,9 +346,7 @@ document.getElementById('data')!.onchange = event => importFile(<HTMLInputElemen
 document.getElementById('background')!.onchange = event => importFile(<HTMLInputElement>event.target, true);
 
 function importFile(input: HTMLInputElement, background = false): void {
-  if (input.files === null || input.files.length === 0) { // File selection has been canceled
-    return;
-  }
+  if (!input.files?.length) return; // File selection has been canceled
   getFileData(input.files[0], background);
 }
 
@@ -374,28 +378,20 @@ function getFileData(file: File, background = false): void { // Gets called when
         const volumeElement = (<HTMLInputElement>document.getElementById('sample-vol'));
         const weightElement = (<HTMLInputElement>document.getElementById('sample-weight'));
 
-        volumeElement.value = "";
-        if (meta.volume) volumeElement.value = meta.volume.toString();
-
-        weightElement.value = "";
-        if (meta.weight) weightElement.value = meta.weight.toString();
+        volumeElement.value = meta.volume?.toString() ?? '';
+        weightElement.value = meta.weight?.toString() ?? '';
 
         (<HTMLInputElement>document.getElementById('device-name')).value = meta.deviceName;
         (<HTMLInputElement>document.getElementById('add-notes')).value = meta.notes;
         startDate = new Date(meta.startTime);
         endDate = new Date(meta.endTime);
 
-        if (espectrum === undefined && bgspectrum === undefined) {
-          popupNotification('file-error');
-        }
-        if (espectrum) {
-          if (meta.dataMt) spectrumData.dataTime = meta.dataMt;
-          spectrumData.data = espectrum;
-        }
-        if (bgspectrum) {
-          if (meta.backgroundMt) spectrumData.backgroundTime = meta.backgroundMt;
-          spectrumData.background = bgspectrum;
-        }
+        if (!espectrum && !bgspectrum) popupNotification('file-error');
+
+        spectrumData.data = espectrum;
+        spectrumData.background = bgspectrum;
+        spectrumData.dataTime = meta.dataMt;
+        spectrumData.backgroundTime = meta.backgroundMt;
 
         const importedCount = Object.values(coeff).filter(value => value !== 0).length;
 
@@ -417,46 +413,44 @@ function getFileData(file: File, background = false): void { // Gets called when
       //console.log(performance.now() - time1);
     } else if (fileEnding.toLowerCase() === 'json') { // THIS SECTION MAKES EVERYTHING ASYNC!!!
       //const time1 = performance.now();
-      const importData = await raw.jsonToObject(result);
+      const importData: NPESv1 = await raw.jsonToObject(result);
 
       if (!importData) { // Data does not validate the schema
         popupNotification('npes-error');
         return;
       }
 
-      if ('deviceData' in importData) {
-        if ('deviceName' in importData.deviceData) (<HTMLInputElement>document.getElementById('device-name')).value = importData.deviceData.deviceName;
+      (<HTMLInputElement>document.getElementById('device-name')).value = importData?.deviceData?.deviceName ?? '';
+      (<HTMLInputElement>document.getElementById('sample-name')).value = importData?.sampleInfo?.name ?? '';
+      (<HTMLInputElement>document.getElementById('sample-loc')).value = importData?.sampleInfo?.location ?? '';
+
+      if (importData.sampleInfo?.time) {
+        const date = new Date(importData.sampleInfo.time);
+        const rightDate = new Date(date.getTime() - date.getTimezoneOffset()*60*1000);
+
+        (<HTMLInputElement>document.getElementById('sample-time')).value = rightDate.toISOString().slice(0,16);
       }
 
-      if ('sampleInfo' in importData) {
-        if ('name' in importData.sampleInfo) (<HTMLInputElement>document.getElementById('sample-name')).value = importData.sampleInfo.name;
-        if ('location' in importData.sampleInfo) (<HTMLInputElement>document.getElementById('sample-loc')).value = importData.sampleInfo.location;
-        if ('time' in importData.sampleInfo) {
-          const date = new Date(importData.sampleInfo.time);
-          const rightDate = new Date(date.getTime() - date.getTimezoneOffset()*60*1000);
+      (<HTMLInputElement>document.getElementById('sample-weight')).value = importData.sampleInfo?.weight?.toString() ?? '';
+      (<HTMLInputElement>document.getElementById('sample-vol')).value = importData.sampleInfo?.volume?.toString() ?? '';
+      (<HTMLInputElement>document.getElementById('add-notes')).value = importData.sampleInfo?.note ?? '';
 
-          (<HTMLInputElement>document.getElementById('sample-time')).value = rightDate.toISOString().slice(0,16);
-        }
-        if ('weight' in importData.sampleInfo) (<HTMLInputElement>document.getElementById('sample-weight')).value = importData.sampleInfo.weight.toString();
-        if ('volume' in importData.sampleInfo) (<HTMLInputElement>document.getElementById('sample-vol')).value = importData.sampleInfo.volume.toString();
-        if ('note' in importData.sampleInfo) (<HTMLInputElement>document.getElementById('add-notes')).value = importData.sampleInfo.note;
-      }
-
-      if ('startTime' in importData.resultData) {
+      if (importData.resultData.startTime) {
         startDate = new Date(importData.resultData.startTime);
-        endDate = new Date(importData.resultData.endTime);
+        endDate = new Date(importData.resultData.endTime!); // Always present if startTime is present --> validated NPESv1
       }
 
       const localKeys = <dataType[]>['data', 'background'];
       const importKeys = ['energySpectrum', 'backgroundEnergySpectrum'];
 
       for (const i in localKeys) {
-        if (importKeys[i] in importData.resultData) {
-          spectrumData[localKeys[i]] = importData.resultData[importKeys[i]].spectrum;
-          if ('measurementTime' in importData.resultData[importKeys[i]]) spectrumData.dataTime = importData.resultData[importKeys[i]].measurementTime;
-          if ('energyCalibration' in importData.resultData[importKeys[i]]) {
-            const coeffArray: number[] = importData.resultData[importKeys[i]].energyCalibration.coefficients;
-            const numCoeff: number = importData.resultData[importKeys[i]].energyCalibration.polynomialOrder;
+        const newKey = <'energySpectrum' | 'backgroundEnergySpectrum'>importKeys[i];
+        if (newKey in importData.resultData) {
+          spectrumData[localKeys[i]] = importData.resultData[newKey]!.spectrum; // Always present if startTime is present --> validated NPESv1
+          if ('measurementTime' in importData.resultData[newKey]!) spectrumData.dataTime = importData.resultData[newKey]!.measurementTime!;
+          if ('energyCalibration' in importData.resultData[newKey]!) {
+            const coeffArray: number[] = importData.resultData[newKey]!.energyCalibration!.coefficients;
+            const numCoeff: number = importData.resultData[newKey]!.energyCalibration!.polynomialOrder;
 
             for (const index in coeffArray) {
               plot.calibration.coeff[`c${numCoeff-parseInt(index)+1}`] = coeffArray[index];
@@ -485,12 +479,8 @@ function getFileData(file: File, background = false): void { // Gets called when
     document.getElementById('total-spec-cts')!.innerText = sCounts.toString();
     document.getElementById('total-bg-cts')!.innerText = bgCounts.toString();
 
-    if (sCounts > 0) {
-      document.getElementById('data-icon')!.classList.remove('d-none');
-    }
-    if (bgCounts > 0) {
-      document.getElementById('background-icon')!.classList.remove('d-none');
-    }
+    if (sCounts) document.getElementById('data-icon')!.classList.remove('d-none');
+    if (bgCounts) document.getElementById('background-icon')!.classList.remove('d-none');
 
     /*
       Error Msg Problem with RAW Stream selection?
@@ -562,24 +552,17 @@ document.getElementById('r2')!.onchange = event => selectFileType(<HTMLInputElem
 function selectFileType(button: HTMLInputElement): void {
   raw.fileType = parseInt(button.value);
   raw.valueIndex = parseInt(button.value);
-  if (localStorageAvailable) {
-    saveJSON('fileDataMode', button.id);
-  }
+  if (localStorageAvailable) saveJSON('fileDataMode', button.id);
 }
 
 
 document.getElementById('reset-plot')!.onclick = () => resetPlot();
 
 function resetPlot(): void {
-  if (plot.xAxis === 'log'){
-    changeAxis(<HTMLButtonElement>document.getElementById('xAxis'));
-  }
-  if (plot.yAxis === 'log'){
-    changeAxis(<HTMLButtonElement>document.getElementById('yAxis'));
-  }
-  if(plot.sma) {
-    toggleSma(false, <HTMLInputElement>document.getElementById('sma'));
-  }
+  if (plot.xAxis === 'log') changeAxis(<HTMLButtonElement>document.getElementById('xAxis'));
+  if (plot.yAxis === 'log') changeAxis(<HTMLButtonElement>document.getElementById('yAxis'));
+  if (plot.sma) toggleSma(false, <HTMLInputElement>document.getElementById('sma'));
+
   plot.clearAnnos();
   (<HTMLInputElement>document.getElementById('check-all-isos')).checked = false; // reset "select all" checkbox
   loadIsotopes(true);
@@ -634,9 +617,7 @@ document.getElementById('sma')!.onclick = event => toggleSma((<HTMLInputElement>
 
 function toggleSma(value: boolean, thisValue: HTMLInputElement | null = null ): void {
   plot.sma = value;
-  if (thisValue) {
-    thisValue.checked = false;
-  }
+  if (thisValue) thisValue.checked = false;
   plot.updatePlot(spectrumData);
 }
 
@@ -661,14 +642,10 @@ function hoverEvent(data: any): void {
 
   for (const key in calClick) {
     const castKey = <calType>key;
-    if (calClick[castKey]) {
-      (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = data.points[0].x.toFixed(2);
-    }
+    if (calClick[castKey]) (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = data.points[0].x.toFixed(2);
   }
 
-  if (checkNearIso) {
-    closestIso(data.points[0].x);
-  }
+  if (checkNearIso) closestIso(data.points[0].x);
 }
 
 
@@ -678,9 +655,7 @@ function unHover(/*data: any*/): void {
 
   for (const key in calClick) {
     const castKey = <calType>key;
-    if (calClick[castKey]) {
-      (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = oldCalVals[castKey];
-    }
+    if (calClick[castKey]) (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = oldCalVals[castKey];
   }
 
   /*
@@ -753,9 +728,7 @@ function toggleCal(enabled: boolean): void {
         }
       }
 
-      if (validArray.length === 2) {
-        validArray.push([-1, -1]);
-      }
+      if (validArray.length === 2) validArray.push([-1, -1]);
 
       plot.calibration.points.aFrom = validArray[0][0];
       plot.calibration.points.bFrom = validArray[1][0];
@@ -776,9 +749,9 @@ function toggleCal(enabled: boolean): void {
 
 
 function displayCoeffs(): void {
-  document.getElementById('c1-coeff')!.innerText = plot.calibration.coeff.c1.toString();
-  document.getElementById('c2-coeff')!.innerText = plot.calibration.coeff.c2.toString();
-  document.getElementById('c3-coeff')!.innerText = plot.calibration.coeff.c3.toString();
+  for (const elem of ['c1','c2','c3']) {
+    document.getElementById(`${elem}-coeff`)!.innerText = plot.calibration.coeff[elem].toString();
+  }
 }
 
 
@@ -829,9 +802,7 @@ function changeType(button: HTMLButtonElement): void {
 document.getElementById('cal-input')!.onchange = event => importCalButton(<HTMLInputElement>event.target);
 
 function importCalButton(input: HTMLInputElement): void {
-  if (input.files === null || input.files.length === 0) { // File selection has been canceled
-    return;
-  }
+  if (!input.files?.length) return; // File selection has been canceled
   importCal(input.files[0]);
 }
 
@@ -903,11 +874,8 @@ function importCal(file: File): void {
 
 
 function addLeadingZero(number: string): string {
-  if (parseFloat(number) < 10) {
-    return '0' + number;
-  } else {
-    return number;
-  }
+  if (parseFloat(number) < 10) return '0' + number;
+  return number;
 }
 
 
@@ -1104,21 +1072,21 @@ function downloadXML(serial = false): void {
 
   let t = document.createElementNS(null, 'Time');
   const tval = (<HTMLInputElement>document.getElementById('sample-time')).value.trim();
-  if (tval.length !== 0) {
+  if (tval.length) {
     t.textContent = toLocalIsoString(new Date(tval));
     si.appendChild(t);
   }
 
   let w = document.createElementNS(null, 'Weight');
   const wval = (<HTMLInputElement>document.getElementById('sample-weight')).value.trim();
-  if (wval.length !== 0) {
+  if (wval.length) {
     w.textContent = (parseFloat(wval)/1000).toString();
     si.appendChild(w);
   }
 
   let v = document.createElementNS(null, 'Volume');
   const vval = (<HTMLInputElement>document.getElementById('sample-vol')).value.trim();
-  if (vval.length !== 0) {
+  if (vval.length) {
     v.textContent = (parseFloat(vval)/1000).toString();
     si.appendChild(v);
   }
@@ -1127,18 +1095,14 @@ function downloadXML(serial = false): void {
   note.textContent = (<HTMLInputElement>document.getElementById('add-notes')).value.trim();
   si.appendChild(note);
 
-  if (spectrumData['background'].length !== 0) {
+  if (spectrumData['background'].length) {
     let bsf = document.createElementNS(null, 'BackgroundSpectrumFile');
     bsf.textContent = backgroundName;
     rd.appendChild(bsf);
   }
 
-  if (spectrumData['data'].length !== 0) {
-    rd.appendChild(makeXMLSpectrum('data', spectrumName));
-  }
-  if (spectrumData['background'].length !== 0) {
-    rd.appendChild(makeXMLSpectrum('background', backgroundName));
-  }
+  if (spectrumData['data'].length) rd.appendChild(makeXMLSpectrum('data', spectrumName));
+  if (spectrumData['background'].length) rd.appendChild(makeXMLSpectrum('background', backgroundName));
 
   let vis = document.createElementNS(null, 'Visible');
   vis.textContent = true.toString();
@@ -1203,7 +1167,7 @@ function downloadNPES(serial = false): void {
   if (val) data.sampleInfo!.volume = val;
 
   const tval = (<HTMLInputElement>document.getElementById('sample-time')).value.trim();
-  if (tval.length !== 0 && new Date(tval)) data.sampleInfo!.time = toLocalIsoString(new Date(tval));
+  if (tval.length && new Date(tval)) data.sampleInfo!.time = toLocalIsoString(new Date(tval));
 
   if (startDate) {
     data.resultData.startTime = toLocalIsoString(startDate);
@@ -1215,12 +1179,8 @@ function downloadNPES(serial = false): void {
     }
   }
 
-  if (spectrumData.data.length !== 0 && spectrumData.getTotalCounts(spectrumData.data) > 0) {
-    data.resultData.energySpectrum = makeJSONSpectrum('data');
-  }
-  if (spectrumData.background.length !== 0 && spectrumData.getTotalCounts(spectrumData.background) > 0) {
-    data.resultData.backgroundEnergySpectrum = makeJSONSpectrum('background');
-  }
+  if (spectrumData.data.length && spectrumData.getTotalCounts(spectrumData.data)) data.resultData.energySpectrum = makeJSONSpectrum('data');
+  if (spectrumData.background.length && spectrumData.getTotalCounts(spectrumData.background)) data.resultData.backgroundEnergySpectrum = makeJSONSpectrum('background');
 
   // Validate the JSON Schema?
   download(filename, JSON.stringify(data));
@@ -1277,9 +1237,7 @@ document.getElementById('toggle-menu')!.onclick = () => loadIsotopes();
 let loadedIsos = false;
 
 async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope Energies JSON ONCE
-  if (loadedIsos && !reload) { // Isotopes already loaded
-    return true;
-  }
+  if (loadedIsos && !reload) return true; // Isotopes already loaded
 
   const loadingElement = document.getElementById('iso-loading')!;
   loadingElement.classList.remove('d-none');
@@ -1373,14 +1331,12 @@ function reloadIsotopes(): void {
 
 function seekClosest(value: number): {energy: number, name: string} | {energy: undefined, name: undefined} {
   const closeVals = Object.keys(isoList).filter(energy => { // Only allow closest values and disregard undefined
-    if (energy) {
-      return Math.abs(parseFloat(energy) - value) <= maxDist;
-    }
+    if (energy) return Math.abs(parseFloat(energy) - value) <= maxDist;
     return false;
   });
   const closeValsNum = closeVals.map(energy => parseFloat(energy)) // After this step there are 100% only numbers left
 
-  if (closeValsNum.length > 0) {
+  if (closeValsNum.length) {
     const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
     const name = isoList[closest]!; // closest will always be somewhere in isoList with a key, because we got it from there!
 
@@ -1402,18 +1358,14 @@ function toggleIsoHover(): void {
 
 
 async function closestIso(value: number): Promise<void> {
-  if(!await loadIsotopes()) { // User has not yet opened the settings panel
-    return;
-  }
+  if(!await loadIsotopes()) return; // User has not yet opened the settings panel
 
   const { energy, name } = seekClosest(value);
 
-  if (Object.keys(prevIso).length >= 0) {
-    const energyVal = parseFloat(Object.keys(prevIso)[0]);
-    if (!isNaN(energyVal)) {
-      plot.toggleLine(energyVal, Object.keys(prevIso)[0], false);
-    }
-  }
+  //if (Object.keys(prevIso).length >= 0) { // Always true???
+  const energyVal = parseFloat(Object.keys(prevIso)[0]);
+  if (!isNaN(energyVal)) plot.toggleLine(energyVal, Object.keys(prevIso)[0], false);
+  //}
 
   if (energy && name) {
     let newIso: isotopeList = {};
@@ -1454,9 +1406,7 @@ function selectAll(selectBox: HTMLInputElement): void {
       plot.toggleLine(parseFloat(checkBox.value), name, checkBox.checked);
     }
   }
-  if (!selectBox.checked) {
-    plot.clearShapeAnno();
-  }
+  if (!selectBox.checked) plot.clearShapeAnno();
 
   plot.updatePlot(spectrumData);
 }
@@ -1527,9 +1477,7 @@ function loadSettingsDefault(): void {
 
   const formatSelector = <HTMLSelectElement>document.getElementById('download-format');
   for (let i = 0; i < formatSelector.options.length; i++) {
-    if (formatSelector.options[i].value === plot.downloadFormat) {
-      formatSelector.selectedIndex = i;
-    }
+    if (formatSelector.options[i].value === plot.downloadFormat) formatSelector.selectedIndex = i;
   }
 }
 
@@ -1540,74 +1488,57 @@ function loadSettingsStorage(): void {
     const newUrl = new URL(setting);
     isoListURL = newUrl.href;
   }
+
   setting = loadJSON('editMode');
-  if (setting) {
-    plot.editableMode = setting;
-  }
+  if (setting) plot.editableMode = setting;
+
   setting = loadJSON('fileDelimiter');
-  if (setting) {
-    raw.delimiter = setting;
-  }
+  if (setting) raw.delimiter = setting;
+
   setting = loadJSON('fileChannels');
-  if (setting) {
-    raw.adcChannels = setting;
-  }
+  if (setting) raw.adcChannels = setting;
+
   setting = loadJSON('plotRefreshRate');
-  if (setting) {
-    refreshRate = setting;
-  }
+  if (setting) refreshRate = setting;
+
   setting = loadJSON('serBufferSize');
-  if (setting) {
-    ser.maxSize = setting;
-  }
+  if (setting) ser.maxSize = setting;
+
   setting = loadJSON('serADC');
-  if (setting) {
-    ser.adcChannels = setting;
-  }
+  if (setting) ser.adcChannels = setting;
+
   setting = loadJSON('timeLimitBool');
-  if (setting) {
-    maxRecTimeEnabled = setting;
-  }
+  if (setting) maxRecTimeEnabled = setting;
+
   setting = loadJSON('timeLimit');
-  if (setting) {
-    maxRecTime = setting;
-  }
+  if (setting) maxRecTime = setting;
+
   setting = loadJSON('maxIsoDist');
-  if (setting) {
-    maxDist = setting;
-  }
+  if (setting) maxDist = setting;
+
   setting = loadJSON('baudRate');
-  if (setting) {
-    serOptions.baudRate = setting;
-  }
+  if (setting) serOptions.baudRate = setting;
+
   setting = loadJSON('eolChar');
-  if (setting) {
-    ser.eolChar = setting;
-  }
+  if (setting) ser.eolChar = setting;
+
   setting = loadJSON('smaLength');
-  if (setting) {
-    plot.smaLength = setting;
-  }
+  if (setting) plot.smaLength = setting;
+
   setting = loadJSON('peakThres');
-  if (setting) {
-    plot.peakConfig.thres = setting;
-  }
+  if (setting) plot.peakConfig.thres = setting;
+
   setting = loadJSON('peakLag');
-  if (setting) {
-    plot.peakConfig.lag = setting;
-  }
+  if (setting) plot.peakConfig.lag = setting;
+
   setting = loadJSON('peakWidth');
-  if (setting) {
-    plot.peakConfig.width = setting;
-  }
+  if (setting) plot.peakConfig.width = setting;
+
   setting = loadJSON('seekWidth');
-  if (setting) {
-    plot.peakConfig.seekWidth = setting;
-  }
+  if (setting) plot.peakConfig.seekWidth = setting;
+
   setting = loadJSON('plotDownload');
-  if (setting) {
-    plot.downloadFormat = setting;
-  }
+  if (setting) plot.downloadFormat = setting;
 }
 
 
@@ -1646,9 +1577,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       plot.editableMode = boolVal;
       plot.resetPlot(spectrumData);
 
-      if (localStorageAvailable) {
-        saveJSON(name, boolVal);
-      }
+      if (localStorageAvailable) saveJSON(name, boolVal);
       break;
 
     case 'customURL':
@@ -1658,9 +1587,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
 
         reloadIsotopes();
 
-        if (localStorageAvailable) {
-          saveJSON(name, isoListURL);
-        }
+        if (localStorageAvailable) saveJSON(name, isoListURL);
 
       } catch(e) {
         popupNotification('setting-error');
@@ -1671,18 +1598,14 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
     case 'fileDelimiter':
       raw.delimiter = value;
 
-      if (localStorageAvailable) {
-        saveJSON(name, value);
-      }
+      if (localStorageAvailable) saveJSON(name, value);
       break;
 
     case 'fileChannels':
       numVal = parseInt(value);
       raw.adcChannels = numVal;
 
-      if (localStorageAvailable) {
-        saveJSON(name, numVal);
-      }
+      if (localStorageAvailable) saveJSON(name, numVal);
       break;
 
     case 'timeLimitBool':
@@ -1692,71 +1615,55 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
 
       maxRecTimeEnabled = boolVal;
 
-      if (localStorageAvailable) {
-        saveJSON(name, boolVal);
-      }
+      if (localStorageAvailable) saveJSON(name, boolVal);
       break;
 
     case 'timeLimit':
       numVal = parseFloat(value);
       maxRecTime = numVal * 1000; // convert s to ms
 
-      if (localStorageAvailable) {
-        saveJSON(name, maxRecTime);
-      }
+      if (localStorageAvailable) saveJSON(name, maxRecTime);
       break;
 
     case 'maxIsoDist':
       numVal = parseFloat(value);
       maxDist = numVal;
 
-      if (localStorageAvailable) {
-        saveJSON(name, maxDist);
-      }
+      if (localStorageAvailable) saveJSON(name, maxDist);
       break;
 
     case 'plotRefreshRate':
       numVal = parseFloat(value);
       refreshRate = numVal * 1000; // convert s to ms
 
-      if (localStorageAvailable) {
-        saveJSON(name, refreshRate);
-      }
+      if (localStorageAvailable) saveJSON(name, refreshRate);
       break;
 
     case 'serBufferSize':
       numVal = parseInt(value);
       ser.maxSize = numVal;
 
-      if (localStorageAvailable) {
-        saveJSON(name, ser.maxSize);
-      }
+      if (localStorageAvailable) saveJSON(name, ser.maxSize);
       break;
 
     case 'baudRate':
       numVal = parseInt(value);
       serOptions.baudRate = numVal;
 
-      if (localStorageAvailable) {
-        saveJSON(name, serOptions.baudRate);
-      }
+      if (localStorageAvailable) saveJSON(name, serOptions.baudRate);
       break;
 
     case 'eolChar':
       ser.eolChar = value;
 
-      if (localStorageAvailable) {
-        saveJSON(name, value);
-      }
+      if (localStorageAvailable) saveJSON(name, value);
       break;
 
     case 'serChannels':
       numVal = parseInt(value);
       ser.adcChannels = numVal;
 
-      if (localStorageAvailable) {
-        saveJSON(name, numVal);
-      }
+      if (localStorageAvailable) saveJSON(name, numVal);
       break;
 
     case 'peakThres':
@@ -1764,9 +1671,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       plot.peakConfig.thres = numVal;
       plot.updatePlot(spectrumData);
 
-      if (localStorageAvailable) {
-        saveJSON(name, numVal);
-      }
+      if (localStorageAvailable) saveJSON(name, numVal);
       break;
 
     case 'peakLag':
@@ -1774,9 +1679,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       plot.peakConfig.lag = numVal;
       plot.updatePlot(spectrumData);
 
-      if (localStorageAvailable) {
-        saveJSON(name, numVal);
-      }
+      if (localStorageAvailable) saveJSON(name, numVal);
       break;
 
     case 'peakWidth':
@@ -1784,9 +1687,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       plot.peakConfig.width = numVal;
       plot.updatePlot(spectrumData);
 
-      if (localStorageAvailable) {
-        saveJSON(name, numVal);
-      }
+      if (localStorageAvailable) saveJSON(name, numVal);
       break;
 
     case 'seekWidth':
@@ -1794,18 +1695,14 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       plot.peakConfig.seekWidth = numVal;
       plot.updatePlot(spectrumData);
 
-      if (localStorageAvailable) {
-        saveJSON(name, numVal);
-      }
+      if (localStorageAvailable) saveJSON(name, numVal);
       break;
 
     case 'plotDownload':
       plot.downloadFormat = value;
       plot.updatePlot(spectrumData);
 
-      if (localStorageAvailable) {
-        saveJSON(name, value);
-      }
+      if (localStorageAvailable) saveJSON(name, value);
       break;
 
     default:
@@ -1820,9 +1717,7 @@ document.getElementById('reset-gamma-mca')!.onclick = () => resetMCA();
 
 function resetMCA(): void {
   // Maybe also reset service worker?
-  if (localStorageAvailable) {
-    localStorage.clear();
-  }
+  if (localStorageAvailable) localStorage.clear();
   window.location.reload();
 }
 
@@ -1837,9 +1732,7 @@ document.getElementById('s2')!.onchange = event => selectSerialType(<HTMLInputEl
 
 function selectSerialType(button: HTMLInputElement): void {
   ser.orderType = <dataOrder>button.value;
-  if (localStorageAvailable) {
-    saveJSON('serialDataMode', button.id);
-  }
+  if (localStorageAvailable) saveJSON('serialDataMode', button.id);
 }
 
 
@@ -1856,9 +1749,7 @@ function serialDisconnect(event: Event): void {
       break;
     }
   }
-  if (event.target === ser.port) {
-    disconnectPort(true);
-  }
+  if (event.target === ser.port) disconnectPort(true);
 
   listSerial();
 
@@ -1889,7 +1780,7 @@ async function listSerial(): Promise<void> {
 
   const serSettingsElements = document.getElementsByClassName('ser-settings') as HTMLCollectionOf<HTMLInputElement> | HTMLCollectionOf<HTMLSelectElement>;
 
-  if (ports.length === 0) {
+  if (!ports.length) {
     const option = document.createElement('option');
     option.text = 'No Ports Available';
     portSelector.add(option);
@@ -1969,10 +1860,7 @@ async function readUntilClosed(): Promise<void> {
 
       while (true) {
         const {value, done} = await reader.read();
-        if (value) {
-          // value is a Uint8Array.
-          ser.addRaw(value, onlyConsole);
-        }
+        if (value) ser.addRaw(value, onlyConsole); // value is a Uint8Array.
         if (done) {
           // reader.cancel() has been called.
           break;
@@ -1988,7 +1876,6 @@ async function readUntilClosed(): Promise<void> {
       reader = undefined;
     }
   }
-
   await ser.port?.close();
 }
 
@@ -2006,9 +1893,7 @@ async function startRecord(pause = false, type = <dataType>recordingType): Promi
   try {
     selectPort();
 
-    if (ser.port === undefined) {
-      throw 'Port is undefined! This should not be happening.';
-    }
+    if (!ser.port) throw 'Port is undefined! This should not be happening.';
 
     await ser.port.open(serOptions); // Baud-Rate optional
 
@@ -2056,9 +1941,7 @@ async function startRecord(pause = false, type = <dataType>recordingType): Promi
 
 
 window.addEventListener('show.bs.modal', (event: Event) => { // Adjust Plot Size For Main Tab Menu Content Size
-  if ((<HTMLButtonElement>event.target).getAttribute('id') === 'serialConsoleModal') {
-    readSerial();
-  }
+  if ((<HTMLButtonElement>event.target).getAttribute('id') === 'serialConsoleModal') readSerial();
 });
 
 window.addEventListener('hide.bs.modal', (event: Event) => { // Adjust Plot Size For Main Tab Menu Content Size
@@ -2077,9 +1960,7 @@ async function readSerial(): Promise<void> {
   try {
     selectPort();
 
-    if (ser.port === undefined) {
-      throw 'Port is undefined! This should not be happening.';
-    }
+    if (!ser.port) throw 'Port is undefined! This should not be happening.';
 
     if (keepReading) { // Check if already reading
       refreshConsole();
@@ -2109,9 +1990,7 @@ document.getElementById('send-command')!.onclick = () => sendSerial((<HTMLInputE
 
 async function sendSerial(command: string): Promise<void> {
   try {
-    if (ser.port === undefined) {
-      throw 'Port is undefined! This should not be happening.';
-    }
+    if (!ser.port) throw 'Port is undefined! This should not be happening.';
 
     const textEncoder = new TextEncoderStream();
     const writer = textEncoder.writable.getWriter();
@@ -2186,9 +2065,7 @@ document.getElementById('reconnect-console-log')!.onclick = () => reconnectConso
 
 async function reconnectConsole(): Promise<void> {
   // This is just a copy of the hide and show modal events back to back ;)
-  if (onlyConsole) {
-    await disconnectPort(true);
-  }
+  if (onlyConsole) await disconnectPort(true);
   clearTimeout(consoleTimeout);
   readSerial();
 }

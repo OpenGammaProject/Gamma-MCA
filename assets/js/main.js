@@ -182,9 +182,8 @@ document.getElementById('background').onclick = event => { event.target.value = 
 document.getElementById('data').onchange = event => importFile(event.target);
 document.getElementById('background').onchange = event => importFile(event.target, true);
 function importFile(input, background = false) {
-    if (input.files === null || input.files.length === 0) {
+    if (!input.files?.length)
         return;
-    }
     getFileData(input.files[0], background);
 }
 function getFileData(file, background = false) {
@@ -205,29 +204,18 @@ function getFileData(file, background = false) {
                 }
                 const volumeElement = document.getElementById('sample-vol');
                 const weightElement = document.getElementById('sample-weight');
-                volumeElement.value = "";
-                if (meta.volume)
-                    volumeElement.value = meta.volume.toString();
-                weightElement.value = "";
-                if (meta.weight)
-                    weightElement.value = meta.weight.toString();
+                volumeElement.value = meta.volume?.toString() ?? '';
+                weightElement.value = meta.weight?.toString() ?? '';
                 document.getElementById('device-name').value = meta.deviceName;
                 document.getElementById('add-notes').value = meta.notes;
                 startDate = new Date(meta.startTime);
                 endDate = new Date(meta.endTime);
-                if (espectrum === undefined && bgspectrum === undefined) {
+                if (!espectrum && !bgspectrum)
                     popupNotification('file-error');
-                }
-                if (espectrum) {
-                    if (meta.dataMt)
-                        spectrumData.dataTime = meta.dataMt;
-                    spectrumData.data = espectrum;
-                }
-                if (bgspectrum) {
-                    if (meta.backgroundMt)
-                        spectrumData.backgroundTime = meta.backgroundMt;
-                    spectrumData.background = bgspectrum;
-                }
+                spectrumData.data = espectrum;
+                spectrumData.background = bgspectrum;
+                spectrumData.dataTime = meta.dataMt;
+                spectrumData.backgroundTime = meta.backgroundMt;
                 const importedCount = Object.values(coeff).filter(value => value !== 0).length;
                 if (importedCount >= 2) {
                     plot.calibration.coeff = coeff;
@@ -250,41 +238,32 @@ function getFileData(file, background = false) {
                 popupNotification('npes-error');
                 return;
             }
-            if ('deviceData' in importData) {
-                if ('deviceName' in importData.deviceData)
-                    document.getElementById('device-name').value = importData.deviceData.deviceName;
+            document.getElementById('device-name').value = importData?.deviceData?.deviceName ?? '';
+            document.getElementById('sample-name').value = importData?.sampleInfo?.name ?? '';
+            document.getElementById('sample-loc').value = importData?.sampleInfo?.location ?? '';
+            if (importData.sampleInfo?.time) {
+                const date = new Date(importData.sampleInfo.time);
+                const rightDate = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
+                document.getElementById('sample-time').value = rightDate.toISOString().slice(0, 16);
             }
-            if ('sampleInfo' in importData) {
-                if ('name' in importData.sampleInfo)
-                    document.getElementById('sample-name').value = importData.sampleInfo.name;
-                if ('location' in importData.sampleInfo)
-                    document.getElementById('sample-loc').value = importData.sampleInfo.location;
-                if ('time' in importData.sampleInfo) {
-                    const date = new Date(importData.sampleInfo.time);
-                    const rightDate = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
-                    document.getElementById('sample-time').value = rightDate.toISOString().slice(0, 16);
-                }
-                if ('weight' in importData.sampleInfo)
-                    document.getElementById('sample-weight').value = importData.sampleInfo.weight.toString();
-                if ('volume' in importData.sampleInfo)
-                    document.getElementById('sample-vol').value = importData.sampleInfo.volume.toString();
-                if ('note' in importData.sampleInfo)
-                    document.getElementById('add-notes').value = importData.sampleInfo.note;
-            }
-            if ('startTime' in importData.resultData) {
+            document.getElementById('sample-weight').value = importData.sampleInfo?.weight?.toString() ?? '';
+            document.getElementById('sample-vol').value = importData.sampleInfo?.volume?.toString() ?? '';
+            document.getElementById('add-notes').value = importData.sampleInfo?.note ?? '';
+            if (importData.resultData.startTime) {
                 startDate = new Date(importData.resultData.startTime);
                 endDate = new Date(importData.resultData.endTime);
             }
             const localKeys = ['data', 'background'];
             const importKeys = ['energySpectrum', 'backgroundEnergySpectrum'];
             for (const i in localKeys) {
-                if (importKeys[i] in importData.resultData) {
-                    spectrumData[localKeys[i]] = importData.resultData[importKeys[i]].spectrum;
-                    if ('measurementTime' in importData.resultData[importKeys[i]])
-                        spectrumData.dataTime = importData.resultData[importKeys[i]].measurementTime;
-                    if ('energyCalibration' in importData.resultData[importKeys[i]]) {
-                        const coeffArray = importData.resultData[importKeys[i]].energyCalibration.coefficients;
-                        const numCoeff = importData.resultData[importKeys[i]].energyCalibration.polynomialOrder;
+                const newKey = importKeys[i];
+                if (newKey in importData.resultData) {
+                    spectrumData[localKeys[i]] = importData.resultData[newKey].spectrum;
+                    if ('measurementTime' in importData.resultData[newKey])
+                        spectrumData.dataTime = importData.resultData[newKey].measurementTime;
+                    if ('energyCalibration' in importData.resultData[newKey]) {
+                        const coeffArray = importData.resultData[newKey].energyCalibration.coefficients;
+                        const numCoeff = importData.resultData[newKey].energyCalibration.polynomialOrder;
                         for (const index in coeffArray) {
                             plot.calibration.coeff[`c${numCoeff - parseInt(index) + 1}`] = coeffArray[index];
                         }
@@ -311,12 +290,10 @@ function getFileData(file, background = false) {
         const bgCounts = spectrumData.getTotalCounts(spectrumData.background);
         document.getElementById('total-spec-cts').innerText = sCounts.toString();
         document.getElementById('total-bg-cts').innerText = bgCounts.toString();
-        if (sCounts > 0) {
+        if (sCounts)
             document.getElementById('data-icon').classList.remove('d-none');
-        }
-        if (bgCounts > 0) {
+        if (bgCounts)
             document.getElementById('background-icon').classList.remove('d-none');
-        }
         if (!(spectrumData.background.length === spectrumData.data.length || spectrumData.data.length === 0 || spectrumData.background.length === 0)) {
             popupNotification('data-error');
             if (background) {
@@ -369,21 +346,17 @@ document.getElementById('r2').onchange = event => selectFileType(event.target);
 function selectFileType(button) {
     raw.fileType = parseInt(button.value);
     raw.valueIndex = parseInt(button.value);
-    if (localStorageAvailable) {
+    if (localStorageAvailable)
         saveJSON('fileDataMode', button.id);
-    }
 }
 document.getElementById('reset-plot').onclick = () => resetPlot();
 function resetPlot() {
-    if (plot.xAxis === 'log') {
+    if (plot.xAxis === 'log')
         changeAxis(document.getElementById('xAxis'));
-    }
-    if (plot.yAxis === 'log') {
+    if (plot.yAxis === 'log')
         changeAxis(document.getElementById('yAxis'));
-    }
-    if (plot.sma) {
+    if (plot.sma)
         toggleSma(false, document.getElementById('sma'));
-    }
     plot.clearAnnos();
     document.getElementById('check-all-isos').checked = false;
     loadIsotopes(true);
@@ -429,9 +402,8 @@ function enterPress(event, id) {
 document.getElementById('sma').onclick = event => toggleSma(event.target.checked);
 function toggleSma(value, thisValue = null) {
     plot.sma = value;
-    if (thisValue) {
+    if (thisValue)
         thisValue.checked = false;
-    }
     plot.updatePlot(spectrumData);
 }
 document.getElementById('smaVal').oninput = event => changeSma(event.target);
@@ -451,22 +423,19 @@ function hoverEvent(data) {
     hoverData.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
     for (const key in calClick) {
         const castKey = key;
-        if (calClick[castKey]) {
+        if (calClick[castKey])
             document.getElementById(`adc-${castKey}`).value = data.points[0].x.toFixed(2);
-        }
     }
-    if (checkNearIso) {
+    if (checkNearIso)
         closestIso(data.points[0].x);
-    }
 }
 function unHover() {
     const hoverData = document.getElementById('hover-data');
     hoverData.innerText = 'None';
     for (const key in calClick) {
         const castKey = key;
-        if (calClick[castKey]) {
+        if (calClick[castKey])
             document.getElementById(`adc-${castKey}`).value = oldCalVals[castKey];
-        }
     }
 }
 function clickEvent(data) {
@@ -517,9 +486,8 @@ function toggleCal(enabled) {
                     return;
                 }
             }
-            if (validArray.length === 2) {
+            if (validArray.length === 2)
                 validArray.push([-1, -1]);
-            }
             plot.calibration.points.aFrom = validArray[0][0];
             plot.calibration.points.bFrom = validArray[1][0];
             plot.calibration.points.cFrom = validArray[2][0];
@@ -535,9 +503,9 @@ function toggleCal(enabled) {
     bindPlotEvents();
 }
 function displayCoeffs() {
-    document.getElementById('c1-coeff').innerText = plot.calibration.coeff.c1.toString();
-    document.getElementById('c2-coeff').innerText = plot.calibration.coeff.c2.toString();
-    document.getElementById('c3-coeff').innerText = plot.calibration.coeff.c3.toString();
+    for (const elem of ['c1', 'c2', 'c3']) {
+        document.getElementById(`${elem}-coeff`).innerText = plot.calibration.coeff[elem].toString();
+    }
 }
 document.getElementById('calibration-reset').onclick = () => resetCal();
 function resetCal() {
@@ -573,9 +541,8 @@ function changeType(button) {
 }
 document.getElementById('cal-input').onchange = event => importCalButton(event.target);
 function importCalButton(input) {
-    if (input.files === null || input.files.length === 0) {
+    if (!input.files?.length)
         return;
-    }
     importCal(input.files[0]);
 }
 function importCal(file) {
@@ -634,12 +601,9 @@ function importCal(file) {
     };
 }
 function addLeadingZero(number) {
-    if (parseFloat(number) < 10) {
+    if (parseFloat(number) < 10)
         return '0' + number;
-    }
-    else {
-        return number;
-    }
+    return number;
 }
 function getDateString() {
     const time = new Date();
@@ -778,36 +742,34 @@ function downloadXML(serial = false) {
     si.appendChild(l);
     let t = document.createElementNS(null, 'Time');
     const tval = document.getElementById('sample-time').value.trim();
-    if (tval.length !== 0) {
+    if (tval.length) {
         t.textContent = toLocalIsoString(new Date(tval));
         si.appendChild(t);
     }
     let w = document.createElementNS(null, 'Weight');
     const wval = document.getElementById('sample-weight').value.trim();
-    if (wval.length !== 0) {
+    if (wval.length) {
         w.textContent = (parseFloat(wval) / 1000).toString();
         si.appendChild(w);
     }
     let v = document.createElementNS(null, 'Volume');
     const vval = document.getElementById('sample-vol').value.trim();
-    if (vval.length !== 0) {
+    if (vval.length) {
         v.textContent = (parseFloat(vval) / 1000).toString();
         si.appendChild(v);
     }
     let note = document.createElementNS(null, 'Note');
     note.textContent = document.getElementById('add-notes').value.trim();
     si.appendChild(note);
-    if (spectrumData['background'].length !== 0) {
+    if (spectrumData['background'].length) {
         let bsf = document.createElementNS(null, 'BackgroundSpectrumFile');
         bsf.textContent = backgroundName;
         rd.appendChild(bsf);
     }
-    if (spectrumData['data'].length !== 0) {
+    if (spectrumData['data'].length)
         rd.appendChild(makeXMLSpectrum('data', spectrumName));
-    }
-    if (spectrumData['background'].length !== 0) {
+    if (spectrumData['background'].length)
         rd.appendChild(makeXMLSpectrum('background', backgroundName));
-    }
     let vis = document.createElementNS(null, 'Visible');
     vis.textContent = true.toString();
     rd.appendChild(vis);
@@ -862,7 +824,7 @@ function downloadNPES(serial = false) {
     if (val)
         data.sampleInfo.volume = val;
     const tval = document.getElementById('sample-time').value.trim();
-    if (tval.length !== 0 && new Date(tval))
+    if (tval.length && new Date(tval))
         data.sampleInfo.time = toLocalIsoString(new Date(tval));
     if (startDate) {
         data.resultData.startTime = toLocalIsoString(startDate);
@@ -873,12 +835,10 @@ function downloadNPES(serial = false) {
             data.resultData.endTime = toLocalIsoString(new Date());
         }
     }
-    if (spectrumData.data.length !== 0 && spectrumData.getTotalCounts(spectrumData.data) > 0) {
+    if (spectrumData.data.length && spectrumData.getTotalCounts(spectrumData.data))
         data.resultData.energySpectrum = makeJSONSpectrum('data');
-    }
-    if (spectrumData.background.length !== 0 && spectrumData.getTotalCounts(spectrumData.background) > 0) {
+    if (spectrumData.background.length && spectrumData.getTotalCounts(spectrumData.background))
         data.resultData.backgroundEnergySpectrum = makeJSONSpectrum('background');
-    }
     download(filename, JSON.stringify(data));
 }
 document.getElementById('download-spectrum-btn').onclick = () => downloadData('spectrum', 'data');
@@ -911,9 +871,8 @@ function hideNotification(id) {
 document.getElementById('toggle-menu').onclick = () => loadIsotopes();
 let loadedIsos = false;
 async function loadIsotopes(reload = false) {
-    if (loadedIsos && !reload) {
+    if (loadedIsos && !reload)
         return true;
-    }
     const loadingElement = document.getElementById('iso-loading');
     loadingElement.classList.remove('d-none');
     const options = {
@@ -983,13 +942,12 @@ function reloadIsotopes() {
 }
 function seekClosest(value) {
     const closeVals = Object.keys(isoList).filter(energy => {
-        if (energy) {
+        if (energy)
             return Math.abs(parseFloat(energy) - value) <= maxDist;
-        }
         return false;
     });
     const closeValsNum = closeVals.map(energy => parseFloat(energy));
-    if (closeValsNum.length > 0) {
+    if (closeValsNum.length) {
         const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
         const name = isoList[closest];
         return { energy: closest, name: name };
@@ -1005,16 +963,12 @@ function toggleIsoHover() {
     closestIso(-100000);
 }
 async function closestIso(value) {
-    if (!await loadIsotopes()) {
+    if (!await loadIsotopes())
         return;
-    }
     const { energy, name } = seekClosest(value);
-    if (Object.keys(prevIso).length >= 0) {
-        const energyVal = parseFloat(Object.keys(prevIso)[0]);
-        if (!isNaN(energyVal)) {
-            plot.toggleLine(energyVal, Object.keys(prevIso)[0], false);
-        }
-    }
+    const energyVal = parseFloat(Object.keys(prevIso)[0]);
+    if (!isNaN(energyVal))
+        plot.toggleLine(energyVal, Object.keys(prevIso)[0], false);
     if (energy && name) {
         let newIso = {};
         newIso[energy] = name;
@@ -1045,9 +999,8 @@ function selectAll(selectBox) {
             plot.toggleLine(parseFloat(checkBox.value), name, checkBox.checked);
         }
     }
-    if (!selectBox.checked) {
+    if (!selectBox.checked)
         plot.clearShapeAnno();
-    }
     plot.updatePlot(spectrumData);
 }
 document.getElementById('peak-finder-btn').onclick = event => findPeaks(event.target);
@@ -1100,9 +1053,8 @@ function loadSettingsDefault() {
     document.getElementById('seek-width').value = plot.peakConfig.seekWidth.toString();
     const formatSelector = document.getElementById('download-format');
     for (let i = 0; i < formatSelector.options.length; i++) {
-        if (formatSelector.options[i].value === plot.downloadFormat) {
+        if (formatSelector.options[i].value === plot.downloadFormat)
             formatSelector.selectedIndex = i;
-        }
     }
 }
 function loadSettingsStorage() {
@@ -1112,73 +1064,56 @@ function loadSettingsStorage() {
         isoListURL = newUrl.href;
     }
     setting = loadJSON('editMode');
-    if (setting) {
+    if (setting)
         plot.editableMode = setting;
-    }
     setting = loadJSON('fileDelimiter');
-    if (setting) {
+    if (setting)
         raw.delimiter = setting;
-    }
     setting = loadJSON('fileChannels');
-    if (setting) {
+    if (setting)
         raw.adcChannels = setting;
-    }
     setting = loadJSON('plotRefreshRate');
-    if (setting) {
+    if (setting)
         refreshRate = setting;
-    }
     setting = loadJSON('serBufferSize');
-    if (setting) {
+    if (setting)
         ser.maxSize = setting;
-    }
     setting = loadJSON('serADC');
-    if (setting) {
+    if (setting)
         ser.adcChannels = setting;
-    }
     setting = loadJSON('timeLimitBool');
-    if (setting) {
+    if (setting)
         maxRecTimeEnabled = setting;
-    }
     setting = loadJSON('timeLimit');
-    if (setting) {
+    if (setting)
         maxRecTime = setting;
-    }
     setting = loadJSON('maxIsoDist');
-    if (setting) {
+    if (setting)
         maxDist = setting;
-    }
     setting = loadJSON('baudRate');
-    if (setting) {
+    if (setting)
         serOptions.baudRate = setting;
-    }
     setting = loadJSON('eolChar');
-    if (setting) {
+    if (setting)
         ser.eolChar = setting;
-    }
     setting = loadJSON('smaLength');
-    if (setting) {
+    if (setting)
         plot.smaLength = setting;
-    }
     setting = loadJSON('peakThres');
-    if (setting) {
+    if (setting)
         plot.peakConfig.thres = setting;
-    }
     setting = loadJSON('peakLag');
-    if (setting) {
+    if (setting)
         plot.peakConfig.lag = setting;
-    }
     setting = loadJSON('peakWidth');
-    if (setting) {
+    if (setting)
         plot.peakConfig.width = setting;
-    }
     setting = loadJSON('seekWidth');
-    if (setting) {
+    if (setting)
         plot.peakConfig.seekWidth = setting;
-    }
     setting = loadJSON('plotDownload');
-    if (setting) {
+    if (setting)
         plot.downloadFormat = setting;
-    }
 }
 document.getElementById('edit-plot').onclick = event => changeSettings('editMode', event.target);
 document.getElementById('setting1').onclick = () => changeSettings('maxIsoDist', document.getElementById('iso-hover-prox'));
@@ -1210,18 +1145,16 @@ function changeSettings(name, element) {
             boolVal = element.checked;
             plot.editableMode = boolVal;
             plot.resetPlot(spectrumData);
-            if (localStorageAvailable) {
+            if (localStorageAvailable)
                 saveJSON(name, boolVal);
-            }
             break;
         case 'customURL':
             try {
                 const newUrl = new URL(value);
                 isoListURL = newUrl.href;
                 reloadIsotopes();
-                if (localStorageAvailable) {
+                if (localStorageAvailable)
                     saveJSON(name, isoListURL);
-                }
             }
             catch (e) {
                 popupNotification('setting-error');
@@ -1230,112 +1163,97 @@ function changeSettings(name, element) {
             break;
         case 'fileDelimiter':
             raw.delimiter = value;
-            if (localStorageAvailable) {
+            if (localStorageAvailable)
                 saveJSON(name, value);
-            }
             break;
         case 'fileChannels':
             numVal = parseInt(value);
             raw.adcChannels = numVal;
-            if (localStorageAvailable) {
+            if (localStorageAvailable)
                 saveJSON(name, numVal);
-            }
             break;
         case 'timeLimitBool':
             boolVal = element.checked;
             document.getElementById('ser-limit').disabled = !boolVal;
             document.getElementById('ser-limit-btn').disabled = !boolVal;
             maxRecTimeEnabled = boolVal;
-            if (localStorageAvailable) {
+            if (localStorageAvailable)
                 saveJSON(name, boolVal);
-            }
             break;
         case 'timeLimit':
             numVal = parseFloat(value);
             maxRecTime = numVal * 1000;
-            if (localStorageAvailable) {
+            if (localStorageAvailable)
                 saveJSON(name, maxRecTime);
-            }
             break;
         case 'maxIsoDist':
             numVal = parseFloat(value);
             maxDist = numVal;
-            if (localStorageAvailable) {
+            if (localStorageAvailable)
                 saveJSON(name, maxDist);
-            }
             break;
         case 'plotRefreshRate':
             numVal = parseFloat(value);
             refreshRate = numVal * 1000;
-            if (localStorageAvailable) {
+            if (localStorageAvailable)
                 saveJSON(name, refreshRate);
-            }
             break;
         case 'serBufferSize':
             numVal = parseInt(value);
             ser.maxSize = numVal;
-            if (localStorageAvailable) {
+            if (localStorageAvailable)
                 saveJSON(name, ser.maxSize);
-            }
             break;
         case 'baudRate':
             numVal = parseInt(value);
             serOptions.baudRate = numVal;
-            if (localStorageAvailable) {
+            if (localStorageAvailable)
                 saveJSON(name, serOptions.baudRate);
-            }
             break;
         case 'eolChar':
             ser.eolChar = value;
-            if (localStorageAvailable) {
+            if (localStorageAvailable)
                 saveJSON(name, value);
-            }
             break;
         case 'serChannels':
             numVal = parseInt(value);
             ser.adcChannels = numVal;
-            if (localStorageAvailable) {
+            if (localStorageAvailable)
                 saveJSON(name, numVal);
-            }
             break;
         case 'peakThres':
             numVal = parseFloat(value);
             plot.peakConfig.thres = numVal;
             plot.updatePlot(spectrumData);
-            if (localStorageAvailable) {
+            if (localStorageAvailable)
                 saveJSON(name, numVal);
-            }
             break;
         case 'peakLag':
             numVal = parseInt(value);
             plot.peakConfig.lag = numVal;
             plot.updatePlot(spectrumData);
-            if (localStorageAvailable) {
+            if (localStorageAvailable)
                 saveJSON(name, numVal);
-            }
             break;
         case 'peakWidth':
             numVal = parseInt(value);
             plot.peakConfig.width = numVal;
             plot.updatePlot(spectrumData);
-            if (localStorageAvailable) {
+            if (localStorageAvailable)
                 saveJSON(name, numVal);
-            }
             break;
         case 'seekWidth':
             numVal = parseFloat(value);
             plot.peakConfig.seekWidth = numVal;
             plot.updatePlot(spectrumData);
-            if (localStorageAvailable) {
+            if (localStorageAvailable)
                 saveJSON(name, numVal);
-            }
             break;
         case 'plotDownload':
             plot.downloadFormat = value;
             plot.updatePlot(spectrumData);
-            if (localStorageAvailable) {
+            if (localStorageAvailable)
                 saveJSON(name, value);
-            }
             break;
         default:
             popupNotification('setting-error');
@@ -1345,18 +1263,16 @@ function changeSettings(name, element) {
 }
 document.getElementById('reset-gamma-mca').onclick = () => resetMCA();
 function resetMCA() {
-    if (localStorageAvailable) {
+    if (localStorageAvailable)
         localStorage.clear();
-    }
     window.location.reload();
 }
 document.getElementById('s1').onchange = event => selectSerialType(event.target);
 document.getElementById('s2').onchange = event => selectSerialType(event.target);
 function selectSerialType(button) {
     ser.orderType = button.value;
-    if (localStorageAvailable) {
+    if (localStorageAvailable)
         saveJSON('serialDataMode', button.id);
-    }
 }
 function serialConnect() {
     listSerial();
@@ -1370,9 +1286,8 @@ function serialDisconnect(event) {
             break;
         }
     }
-    if (event.target === ser.port) {
+    if (event.target === ser.port)
         disconnectPort(true);
-    }
     listSerial();
     popupNotification('serial-disconnect');
 }
@@ -1392,7 +1307,7 @@ async function listSerial() {
         portSelector.add(option, parseInt(index));
     }
     const serSettingsElements = document.getElementsByClassName('ser-settings');
-    if (ports.length === 0) {
+    if (!ports.length) {
         const option = document.createElement('option');
         option.text = 'No Ports Available';
         portSelector.add(option);
@@ -1459,9 +1374,8 @@ async function readUntilClosed() {
             reader = ser.port.readable.getReader();
             while (true) {
                 const { value, done } = await reader.read();
-                if (value) {
+                if (value)
                     ser.addRaw(value, onlyConsole);
-                }
                 if (done) {
                     break;
                 }
@@ -1488,9 +1402,8 @@ let endDate;
 async function startRecord(pause = false, type = recordingType) {
     try {
         selectPort();
-        if (ser.port === undefined) {
+        if (!ser.port)
             throw 'Port is undefined! This should not be happening.';
-        }
         await ser.port.open(serOptions);
         keepReading = true;
         recordingType = type;
@@ -1527,9 +1440,8 @@ async function startRecord(pause = false, type = recordingType) {
     }
 }
 window.addEventListener('show.bs.modal', (event) => {
-    if (event.target.getAttribute('id') === 'serialConsoleModal') {
+    if (event.target.getAttribute('id') === 'serialConsoleModal')
         readSerial();
-    }
 });
 window.addEventListener('hide.bs.modal', (event) => {
     if (event.target.getAttribute('id') === 'serialConsoleModal') {
@@ -1544,9 +1456,8 @@ let onlyConsole = false;
 async function readSerial() {
     try {
         selectPort();
-        if (ser.port === undefined) {
+        if (!ser.port)
             throw 'Port is undefined! This should not be happening.';
-        }
         if (keepReading) {
             refreshConsole();
             onlyConsole = false;
@@ -1569,9 +1480,8 @@ async function readSerial() {
 document.getElementById('send-command').onclick = () => sendSerial(document.getElementById('ser-command').value);
 async function sendSerial(command) {
     try {
-        if (ser.port === undefined) {
+        if (!ser.port)
             throw 'Port is undefined! This should not be happening.';
-        }
         const textEncoder = new TextEncoderStream();
         const writer = textEncoder.writable.getWriter();
         const writableStreamClosed = textEncoder.readable.pipeTo(ser.port.writable);
@@ -1624,9 +1534,8 @@ async function disconnectPort(stop = false) {
 }
 document.getElementById('reconnect-console-log').onclick = () => reconnectConsole();
 async function reconnectConsole() {
-    if (onlyConsole) {
+    if (onlyConsole)
         await disconnectPort(true);
-    }
     clearTimeout(consoleTimeout);
     readSerial();
 }
