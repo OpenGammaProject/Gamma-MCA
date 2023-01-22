@@ -1,10 +1,6 @@
 import { SpectrumPlot } from './plot.js';
 import { RawData } from './raw-data.js';
 import { SerialData } from './serial.js';
-;
-;
-;
-;
 export class SpectrumData {
     data = [];
     background = [];

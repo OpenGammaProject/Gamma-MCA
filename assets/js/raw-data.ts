@@ -32,7 +32,7 @@ interface xmlImportData {
   bgspectrum: number[],
   coeff: coeffObj,
   meta: importDataMeta
-};
+}
 
 export class RawData {
   valueIndex: number;

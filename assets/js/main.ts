@@ -38,11 +38,11 @@ import {SerialData} from './serial.js';
 
 export interface isotopeList {
   [key: number]: string | undefined;
-};
+}
 
 interface portList {
   [key: number]: SerialPort | undefined;
-};
+}
 
 interface NPESv1 {
   'schemaVersion': 'NPESv1',
@@ -64,7 +64,7 @@ interface NPESv1 {
     'energySpectrum'?: NPESv1Spectrum,
     'backgroundEnergySpectrum'?: NPESv1Spectrum
   }
-};
+}
 
 interface NPESv1Spectrum {
   'numberOfChannels': number,
@@ -75,7 +75,7 @@ interface NPESv1Spectrum {
     'coefficients': number[]
   },
   'spectrum': number[]
-};
+}
 
 type calType = 'a' | 'b' | 'c';
 type dataType = 'data' | 'background';
@@ -89,7 +89,7 @@ export class SpectrumData { // Will hold the measurement data globally.
   dataTime = 1000; // Measurement time in ms
   backgroundTime = 1000; // Measurement time in ms
 
-  getTotalCounts = (type: dataType) => {
+  getTotalCounts = (type: dataType): number => {
     let sum = 0;
     this[type].forEach(item => {
       sum += item;
@@ -240,13 +240,13 @@ document.body.onload = async function(): Promise<void> {
 
 
 // Exit website confirmation alert
-window.onbeforeunload = () => {
+window.onbeforeunload = (): string => {
   return 'Are you sure to leave?';
 };
 
 
 // Needed For Responsiveness! DO NOT REMOVE OR THE LAYOUT GOES TO SHIT!!!
-document.body.onresize = () => {
+document.body.onresize = (): void => {
   plot.updatePlot(spectrumData);
   if (navigator.userAgent.toLowerCase().match(/mobile|tablet|android|webos|iphone|ipad|ipod|blackberry|bb|playbook|iemobile|windows phone|kindle|silk|opera mini/i)) {
     // Mobile device
@@ -271,7 +271,7 @@ window.addEventListener('shown.bs.collapse', (event: Event) => {
 */
 
 // User changed from browser window to PWA (after installation) or backwards
-window.matchMedia('(display-mode: standalone)').addEventListener('change', (/*event*/) => {
+window.matchMedia('(display-mode: standalone)').addEventListener('change', (/*event*/): void => {
   /*
   let displayMode = 'browser';
   if (event.matches) {
@@ -284,7 +284,7 @@ window.matchMedia('(display-mode: standalone)').addEventListener('change', (/*ev
 
 let deferredPrompt: any;
 
-window.addEventListener('beforeinstallprompt', (event: Event) => {
+window.addEventListener('beforeinstallprompt', (event: Event): void => {
   event.preventDefault(); // Prevent the mini-infobar from appearing on mobile
   deferredPrompt = event;
 
@@ -302,21 +302,21 @@ window.addEventListener('beforeinstallprompt', (event: Event) => {
 document.getElementById('install-pwa-btn')!.onclick = () => installPWA();
 document.getElementById('install-pwa-toast-btn')!.onclick = () => installPWA();
 
-async function installPWA() {
+async function installPWA(): Promise<void> {
   //hideNotification('pwa-installer');
   deferredPrompt.prompt();
   await deferredPrompt.userChoice;
 }
 
 
-window.addEventListener('onappinstalled', () => {
+window.addEventListener('onappinstalled', (): void => {
   deferredPrompt = null;
   hideNotification('pwa-installer');
   document.getElementById('manual-install')!.classList.add('d-none');
 });
 
 
-window.addEventListener('shown.bs.tab', (event: Event) => { // Adjust Plot Size For Main Tab Menu Content Size
+window.addEventListener('shown.bs.tab', (event: Event): void => { // Adjust Plot Size For Main Tab Menu Content Size
   if ((<HTMLButtonElement>event.target).getAttribute('data-bs-toggle') === 'pill') {
     plot.updatePlot(spectrumData);
     plot.updatePlot(spectrumData);
@@ -526,7 +526,7 @@ function removeFile(id: dataType): void {
 }
 
 
-function addImportLabel() {
+function addImportLabel(): void {
   document.getElementById('calibration-title')!.classList.remove('d-none');
 }
 
@@ -1715,7 +1715,7 @@ function selectSerialType(button: HTMLInputElement): void {
 }
 
 
-function serialConnect(/*event: Event*/) {
+function serialConnect(/*event: Event*/): void {
   listSerial();
   popupNotification('serial-connect');
 };
@@ -1917,11 +1917,11 @@ async function startRecord(pause = false, type = <dataType>recordingType): Promi
 }
 
 
-window.addEventListener('show.bs.modal', (event: Event) => { // Adjust Plot Size For Main Tab Menu Content Size
+window.addEventListener('show.bs.modal', (event: Event): void => { // Adjust Plot Size For Main Tab Menu Content Size
   if ((<HTMLButtonElement>event.target).getAttribute('id') === 'serialConsoleModal') readSerial();
 });
 
-window.addEventListener('hide.bs.modal', (event: Event) => { // Adjust Plot Size For Main Tab Menu Content Size
+window.addEventListener('hide.bs.modal', (event: Event): void => { // Adjust Plot Size For Main Tab Menu Content Size
   if ((<HTMLButtonElement>event.target).getAttribute('id') === 'serialConsoleModal') {
     if (onlyConsole) {
       disconnectPort(true);
