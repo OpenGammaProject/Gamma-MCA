@@ -11,6 +11,7 @@
     - (?) Add desktop notifications
     - (?) Add dead time correction for cps
     - (?) Manual update button
+    - (?) plot.isoList copied from here, so twice the same dict
 
     - Single file export button in "file import" (-> file config) tab
     - Sorting isotope list
@@ -98,6 +99,7 @@ export class SpectrumData { // Will hold the measurement data globally.
   };
 };
 
+// Holds all the classes
 let spectrumData = new SpectrumData();
 let plot = new SpectrumPlot('plot');
 let raw = new RawData(1); // 2=raw, 1=hist
@@ -105,13 +107,15 @@ let ser = new SerialData();
 
 let calClick = { a: false, b: false, c: false };
 let oldCalVals = { a: '', b: '', c: ''};
-let portsAvail: portList = {};
 
+/* Put these 2 into serial.ts?! */
+let portsAvail: portList = {};
 let serOptions = { baudRate: 9600 }; // Standard baud-rate of 9600 bps
+
 let refreshRate = 1000; // Delay in ms between serial plot updates
 let maxRecTimeEnabled = false;
 let maxRecTime = 1800000; // 30 mins
-const REFRESH_META_TIME = 100; // 100 ms
+const REFRESH_META_TIME = 200; // 100 ms
 const CONSOLE_REFRESH = 500; // 500 ms
 
 let cpsValues: number[] = [];
@@ -1317,12 +1321,11 @@ function seekClosest(value: number): {energy: number, name: string} | {energy: u
 
   if (closeValsNum.length) {
     const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
+    const endResult = isoList[closest];
 
-    // closest will always be somewhere in isoList with a key, because we got it from there!
-    return {energy: closest, name: isoList[closest]!};
-  } else {
-    return {energy: undefined, name: undefined};
+    if (endResult) return {energy: closest, name: endResult};
   }
+  return {energy: undefined, name: undefined};
 }
 
 

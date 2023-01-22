@@ -28,7 +28,7 @@ let serOptions = { baudRate: 9600 };
 let refreshRate = 1000;
 let maxRecTimeEnabled = false;
 let maxRecTime = 1800000;
-const REFRESH_META_TIME = 100;
+const REFRESH_META_TIME = 200;
 const CONSOLE_REFRESH = 500;
 let cpsValues = [];
 let isoListURL = 'assets/isotopes_energies_min.json';
@@ -926,11 +926,11 @@ function seekClosest(value) {
     const closeValsNum = closeVals.map(energy => parseFloat(energy));
     if (closeValsNum.length) {
         const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
-        return { energy: closest, name: isoList[closest] };
+        const endResult = isoList[closest];
+        if (endResult)
+            return { energy: closest, name: endResult };
     }
-    else {
-        return { energy: undefined, name: undefined };
-    }
+    return { energy: undefined, name: undefined };
 }
 document.getElementById('iso-hover').onclick = () => toggleIsoHover();
 let prevIso = {};
