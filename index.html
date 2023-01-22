@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="keywords" content="online, gamma, spectroscopy, spectrometry, scintillator, mca, open-source, physics, science, web, application, particle-physics, nuclear, radiation, serial, spectrum, radiation, multi-channel analyzer">
@@ -48,7 +47,6 @@
     <script type="module" src="/assets/js/main.js"></script>
   </head>
   <body>
-
     <!--
 
       LOADING AND NOSCRIPT ALERT
@@ -70,17 +68,14 @@
         </div>
 
       </div>
-
       <div class="vh-100 vw-100 bg-dark bg-opacity-75"></div>
     </div>
-
     <!--
 
       MAIN PAGE CONTENT
 
     -->
     <div class="container-fluid flex-column d-flex vh-100 pb-1 p-1 text-dark lh-sm main" id="main"> <!-- pb-1 needed for vertical scroll bar -->
-
       <div class="row border border-1 border-secondary bg-light">
 
         <div class="col-md-auto p-2 text-center">
@@ -331,7 +326,6 @@
                     #####
                   -->
                   <p class="text-center fs-6 fw-bold mb-1 text-bg-primary rounded d-none" id="calibration-title">IMPORTED XML</p>
-
                   <form>
 
                     <div class="vstack gap-1">
@@ -401,7 +395,6 @@
                     </p>
 
                   </form>
-
                 </div>
 
                 <div class="col-lg-auto g-0">
@@ -529,17 +522,14 @@
           <p class="mb-1"><span id="total-bg-cts">0</span></p>
 
         </div>
-
       </div>
 
       <div class="row bg-light flex-grow-1 plot-div border border-top-0 border-1 border-secondary bg-light"> <!-- flex-fill -->
         <div class="col">
-
           <!--
             PLOT DIV
           -->
           <div class="w-100 h-100" id="plot"></div>
-
         </div>
       </div>
 
@@ -555,21 +545,17 @@
         </div>
 
         <div class="col-sm-auto p-1">
-
           <div class="input-group input-group-sm">
             <span class="input-group-text">X</span>
             <button class="btn btn-primary btn-sm" type="button" id="xAxis" title="Toggle x-axis scale">Linear</button>
           </div>
-
         </div>
 
         <div class="col-sm-auto p-1">
-
           <div class="input-group input-group-sm">
             <span class="input-group-text">Y</span>
             <button class="btn btn-primary btn-sm" type="button" id="yAxis" title="Toggle y-axis scale">Linear</button>
           </div>
-
         </div>
 
         <div class="col-sm-auto ps-1 pe-1">
@@ -578,7 +564,6 @@
         </div>
 
         <div class="col-sm-auto p-1">
-
           <div class="input-group input-group-sm">
             <label class="input-group-text" for="smaVal">SMA Length</label>
             <input class="form-control form-control-sm" type="number" id="smaVal" min="1" max="1000" value="" title="Width of simple moving average">
@@ -586,7 +571,6 @@
             <input type="checkbox" class="btn-check" id="sma">
             <label class="btn btn-outline-primary" for="sma" title="Toggle simple moving average">Enable</label>
           </div>
-
         </div>
 
         <div class="col-sm-auto ps-1 pe-1">
@@ -595,12 +579,10 @@
         </div>
 
         <div class="col-sm-auto p-1">
-
           <div class="input-group input-group-sm">
             <span class="input-group-text">Type</span>
             <button class="btn btn-primary btn-sm" type="button" id="plotType" title="Switch plot type"><i class="fas fa-chart-line"></i> Line</button>
           </div>
-
         </div>
 
         <div class="col-sm-auto ps-1 pe-1">
@@ -609,12 +591,10 @@
         </div>
 
         <div class="col-sm-auto p-1">
-
           <div class="input-group input-group-sm">
             <span class="input-group-text">Counts</span>
             <button class="btn btn-primary btn-sm ser-settings" type="button" id="plot-cps" title="Switch total or counts per second"> Total </button>
           </div>
-
         </div>
 
         <div class="col-sm-auto ps-1 pe-1">
@@ -623,12 +603,10 @@
         </div>
 
         <div class="col-sm-auto p-1">
-
           <div class="input-group input-group-sm">
             <span class="input-group-text">Peaks</span>
             <button class="btn btn-primary btn-sm" type="button" id="peak-finder-btn" title="Find energy peaks or isotopes (experimental)">None</button>
           </div>
-
         </div>
 
         <div class="col-sm-auto ps-1 pe-1">
@@ -637,22 +615,17 @@
         </div>
 
         <div class="col-sm-auto p-1">
-
           <input type="checkbox" class="btn-check" id="iso-hover">
           <label class="btn btn-outline-primary btn-sm" title="Show closest isotope when hovering (experimental)" for="iso-hover"> <i class="fa-solid fa-magnifying-glass"></i> Isotopes </label>
-
         </div>
 
       </div>
-
     </div>
-
     <!--
 
-      BOOTSTRAP MODELS FOR SELECTION SCREENS,
+      BOOTSTRAP MODALS FOR SELECTION SCREENS, SERIAL CONSOLE, ...
 
     -->
-
     <!-- Record Modal -->
     <div class="modal fade" id="recordModal" tabindex="-1" aria-labelledby="exportModal" aria-hidden="true">
       <div class="modal-dialog">
@@ -731,7 +704,6 @@
         </div>
       </div>
     </div>
-
     <!--
 
       BOOTSTRAP OFFCANVAS FOR SETTINGS, INFO AND ISOTOPE VIEWER
@@ -789,7 +761,6 @@
             </div>
 
           </div>
-
           <div class="tab-pane fade me-2" id="settings" role="tabpanel" aria-labelledby="settings">
             <br>
 
@@ -976,7 +947,6 @@
             </div>
 
           </div>
-
           <div class="tab-pane fade me-2" id="info" role="tabpanel" aria-labelledby="info">
             <br>
             <p>Gamma MCA is a complete progressive web app for gamma spectroscopy. It is free and open-source with online and offline functionality. You can import and export spectrum files or record new ones using the serial interface.</p>
@@ -1019,7 +989,6 @@
 
       </div>
     </div>
-
     <!--
 
       BOOTSTRAP TOASTS FOR NOTIFICATIONS
