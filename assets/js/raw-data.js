@@ -105,7 +105,7 @@ export class RawData {
         }
     }
     async jsonToObject(data) {
-        const validator = new ZSchema();
+        const validator = new window.ZSchema();
         let json;
         try {
             json = JSON.parse(data);

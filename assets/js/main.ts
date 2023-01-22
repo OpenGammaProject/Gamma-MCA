@@ -1205,14 +1205,12 @@ function download(filename: string, text: string): void {
 
 
 function popupNotification(id: string): void { // Uses Bootstrap Toasts already defined in HTML
-  // @ts-ignore // Works just fine without TS complaining
-  new bootstrap.Toast(document.getElementById(id)).show();
+  new (<any>window).bootstrap.Toast(document.getElementById(id)).show();
 }
 
 
 function hideNotification(id: string): void {
-  // @ts-ignore // Works just fine without TS complaining
-  new bootstrap.Toast(document.getElementById(id)).hide();
+  new (<any>window).bootstrap.Toast(document.getElementById(id)).hide();
 }
 
 

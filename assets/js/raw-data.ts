@@ -168,8 +168,7 @@ export class RawData {
   }
 
   async jsonToObject(data: string): Promise<any | false> {
-    // @ts-ignore // Works just fine without TS complaining
-    const validator = new ZSchema();
+    const validator: any = new (<any>window).ZSchema();
     let json: any;
 
     try {

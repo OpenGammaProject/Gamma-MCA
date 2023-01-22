@@ -841,10 +841,10 @@ function download(filename, text) {
     element.click();
 }
 function popupNotification(id) {
-    new bootstrap.Toast(document.getElementById(id)).show();
+    new window.bootstrap.Toast(document.getElementById(id)).show();
 }
 function hideNotification(id) {
-    new bootstrap.Toast(document.getElementById(id)).hide();
+    new window.bootstrap.Toast(document.getElementById(id)).hide();
 }
 document.getElementById('toggle-menu').onclick = () => loadIsotopes();
 let loadedIsos = false;
