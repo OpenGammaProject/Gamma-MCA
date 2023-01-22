@@ -10,7 +10,6 @@
 
   TODO:
   - Remove all any types
-  - Remove all ! operators
 
   - Improve updatePlot performance!
 
@@ -34,8 +33,8 @@ interface shape {
       color: string;
       width: number;
       dash: string;
-    };
-};
+  };
+}
 
 interface anno {
   x: number;
@@ -51,7 +50,7 @@ interface anno {
   font: {
     size: number;
   };
-};
+}
 
 interface coeffPoints {
   aFrom: number,
@@ -61,14 +60,14 @@ interface coeffPoints {
   cFrom: number,
   cTo: number,
   [index: string]: number
-};
+}
 
 export interface coeffObj {
   c1: number,
   c2: number,
   c3: number,
   [index: string]: number
-};
+}
 
 export class SpectrumPlot {
   readonly divId: string;
@@ -300,12 +299,11 @@ export class SpectrumPlot {
 
     if (closeValsNum.length) {
       const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
+      const endResult = this.isoList[closest];
 
-      // closest will always be somewhere in isoList with a key, because we got it from there!
-      return {energy: closest, name: this.isoList[closest]!};
-    } else {
-      return {energy: undefined, name: undefined};
+      if (endResult) return {energy: closest, name: endResult};
     }
+    return {energy: undefined, name: undefined};
   }
   /*
     Find and mark energy peaks by using two different moving averages

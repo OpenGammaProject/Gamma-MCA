@@ -1,7 +1,3 @@
-;
-;
-;
-;
 export class SpectrumPlot {
     divId;
     xAxis = 'linear';
@@ -192,11 +188,11 @@ export class SpectrumPlot {
         const closeValsNum = closeVals.map(energy => parseFloat(energy));
         if (closeValsNum.length) {
             const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
-            return { energy: closest, name: this.isoList[closest] };
+            const endResult = this.isoList[closest];
+            if (endResult)
+                return { energy: closest, name: endResult };
         }
-        else {
-            return { energy: undefined, name: undefined };
-        }
+        return { energy: undefined, name: undefined };
     }
     peakFinder(doFind = true) {
         if (this.peakConfig.lines.length) {
