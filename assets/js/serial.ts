@@ -135,7 +135,7 @@ export class SerialData {
     }
   }
 
-  addRawData(string: string): void {
+  private addRawData(string: string): void {
     this.serInput += string;
 
     if (this.serInput.length > this.consoleMemory) {
