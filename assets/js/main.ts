@@ -181,7 +181,7 @@ document.body.onload = async function(): Promise<void> {
   }
 
   if ('launchQueue' in window && 'LaunchParams' in window) { // File Handling API
-    (window as any).launchQueue.setConsumer(
+    (<any>window).launchQueue.setConsumer(
       async (launchParams: { files: any[] }) => {
         if (!launchParams.files.length) {
           return;

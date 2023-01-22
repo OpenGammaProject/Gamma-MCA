@@ -10,7 +10,7 @@
 
 */
 
-import { coeffObj } from './plot.js';
+import {coeffObj} from './plot.js';
 //import './external/ZSchema-browser-min.js';
 
 interface importDataMeta {
