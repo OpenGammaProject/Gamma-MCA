@@ -13,13 +13,13 @@
     - (?) Manual update button
     - (?) plot.isoList copied from here, so twice the same dict
 
-    - Single file export button in "file import" (-> file config) tab
     - Sorting isotope list
     - Calibration n-polynomial regression
-    - User-selectable ROI with Gaussian fit and pulse FWHM + stats
     - Decrease DOM Size
+    - User-selectable ROI with Gaussian fit and pulse FWHM + stats
 
-    - (!) Plot.ts todos
+    - (!) Single file export button in "file import" (-> file control) tab (highlight JSON NPES)
+    - (!) Improve updatePlot performance
     - (!) Toolbar Mobile Layout (Hstack?)
     - (!) JS load only when/if used, improve (loading) performance
     - (!) "Clear All" Sample Info Button
