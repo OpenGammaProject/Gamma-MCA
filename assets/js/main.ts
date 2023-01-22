@@ -19,6 +19,8 @@
     - Decrease DOM Size
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
 
+    - (!) "IMPORTED XML" Tag for non-XML imports
+    - (!) JSON check file validity on export
     - (!) enterPress() events into object -> for loop for events
     - (!) Single file export button in "file import" (-> file control) tab (highlight JSON NPES)
     - (!) Improve updatePlot performance
