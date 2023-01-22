@@ -107,12 +107,14 @@ document.body.onload = async function () {
         const sVal = loadJSON('serialDataMode');
         const rVal = loadJSON('fileDataMode');
         if (sVal) {
-            document.getElementById(sVal).checked = true;
-            selectSerialType(document.getElementById(sVal));
+            const element = document.getElementById(sVal);
+            element.checked = true;
+            selectSerialType(element);
         }
         if (rVal) {
-            document.getElementById(rVal).checked = true;
-            selectFileType(document.getElementById(rVal));
+            const element = document.getElementById(rVal);
+            element.checked = true;
+            selectFileType(element);
         }
         const settingsNotSaveAlert = document.getElementById('ls-unavailable');
         settingsNotSaveAlert.parentNode.removeChild(settingsNotSaveAlert);
@@ -262,8 +264,7 @@ function getFileData(file, background = false) {
                         displayCoeffs();
                         const calSettings = document.getElementsByClassName('cal-setting');
                         for (const element of calSettings) {
-                            const changeType = element;
-                            changeType.disabled = true;
+                            element.disabled = true;
                         }
                         addImportLabel();
                     }
@@ -510,8 +511,9 @@ document.getElementById('select-c').onclick = event => toggleCalClick('c', event
 function toggleCalClick(point, value) {
     calClick[point] = value;
 }
-document.getElementById('plotType').onclick = () => changeType(document.getElementById('plotType'));
-function changeType(button) {
+document.getElementById('plotType').onclick = () => changeType();
+function changeType() {
+    const button = document.getElementById('plotType');
     if (plot.plotType === 'scatter') {
         button.innerHTML = '<i class="fas fa-chart-bar"></i> Bar';
         plot.plotType = 'bar';
@@ -832,13 +834,11 @@ function downloadData(filename, data) {
     download(filename, text);
 }
 function download(filename, text) {
-    let element = document.createElement('a');
+    const element = document.createElement('a');
     element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
     element.setAttribute('download', filename);
     element.style.display = 'none';
-    document.body.appendChild(element);
     element.click();
-    document.body.removeChild(element);
 }
 function popupNotification(id) {
     new bootstrap.Toast(document.getElementById(id)).show();
@@ -1029,8 +1029,9 @@ function loadSettingsDefault() {
     document.getElementById('seek-width').value = plot.peakConfig.seekWidth.toString();
     const formatSelector = document.getElementById('download-format');
     const len = formatSelector.options.length;
+    const format = plot.downloadFormat;
     for (let i = 0; i < len; i++) {
-        if (formatSelector.options[i].value === plot.downloadFormat)
+        if (formatSelector.options[i].value === format)
             formatSelector.selectedIndex = i;
     }
 }
@@ -1433,18 +1434,19 @@ async function readSerial() {
         onlyConsole = false;
     }
 }
-document.getElementById('send-command').onclick = () => sendSerial(document.getElementById('ser-command').value);
-async function sendSerial(command) {
+document.getElementById('send-command').onclick = () => sendSerial();
+async function sendSerial() {
+    const element = document.getElementById('ser-command');
     try {
         if (!ser.port)
             throw 'Port is undefined! This should not be happening.';
         const textEncoder = new TextEncoderStream();
         const writer = textEncoder.writable.getWriter();
         const writableStreamClosed = textEncoder.readable.pipeTo(ser.port.writable);
-        writer.write(command.trim() + '\n');
+        writer.write(element.value.trim() + '\n');
         await writer.close();
         await writableStreamClosed;
-        document.getElementById('ser-command').value = '';
+        element.value = '';
     }
     catch (err) {
         console.error('Connection Error:', err);

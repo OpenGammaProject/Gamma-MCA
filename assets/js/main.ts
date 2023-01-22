@@ -15,9 +15,11 @@
 
     - Sorting isotope list
     - Calibration n-polynomial regression
+    - Improve the settings code structure
     - Decrease DOM Size
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
 
+    - (!) enterPress() events into object -> for loop for events
     - (!) Single file export button in "file import" (-> file control) tab (highlight JSON NPES)
     - (!) Improve updatePlot performance
     - (!) Toolbar Mobile Layout (Hstack?)
@@ -218,13 +220,15 @@ document.body.onload = async function(): Promise<void> {
     const rVal = loadJSON('fileDataMode'); // ids: r1, r2
 
     if (sVal) {
-      (<HTMLInputElement>document.getElementById(sVal)).checked = true;
-      selectSerialType(<HTMLInputElement>document.getElementById(sVal));
+      const element = <HTMLInputElement>document.getElementById(sVal);
+      element.checked = true;
+      selectSerialType(element);
     }
 
     if (rVal) {
-      (<HTMLInputElement>document.getElementById(rVal)).checked = true;
-      selectFileType(<HTMLInputElement>document.getElementById(rVal));
+      const element = <HTMLInputElement>document.getElementById(rVal);
+      element.checked = true;
+      selectFileType(element);
     }
 
     const settingsNotSaveAlert = document.getElementById('ls-unavailable')!; // Remove saving alert
@@ -457,8 +461,7 @@ function getFileData(file: File, background = false): void { // Gets called when
 
             const calSettings = document.getElementsByClassName('cal-setting');
             for (const element of calSettings) {
-              const changeType = <HTMLInputElement>element;
-              changeType.disabled = true;
+              (<HTMLInputElement>element).disabled = true;
             }
             addImportLabel();
           }
@@ -775,9 +778,10 @@ function toggleCalClick(point: calType, value: boolean): void {
 }
 
 
-document.getElementById('plotType')!.onclick = () => changeType(<HTMLButtonElement>document.getElementById('plotType'));
+document.getElementById('plotType')!.onclick = () => changeType();
 
-function changeType(button: HTMLButtonElement): void {
+function changeType(): void {
+  const button = <HTMLButtonElement>document.getElementById('plotType');
   if (plot.plotType === 'scatter') {
     button.innerHTML = '<i class="fas fa-chart-bar"></i> Bar';
     plot.plotType = 'bar';
@@ -1190,17 +1194,13 @@ function downloadData(filename: string, data: dataType): void {
 
 
 function download(filename: string, text: string): void {
-    let element = document.createElement('a');
+    const element = document.createElement('a');
     element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
 
     element.setAttribute('download', filename);
 
     element.style.display = 'none';
-    document.body.appendChild(element);
-
     element.click();
-
-    document.body.removeChild(element);
 }
 
 
@@ -1459,8 +1459,9 @@ function loadSettingsDefault(): void {
 
   const formatSelector = <HTMLSelectElement>document.getElementById('download-format');
   const len = formatSelector.options.length;
+  const format = plot.downloadFormat;
   for (let i = 0; i < len; i++) {
-    if (formatSelector.options[i].value === plot.downloadFormat) formatSelector.selectedIndex = i;
+    if (formatSelector.options[i].value === format) formatSelector.selectedIndex = i;
   }
 }
 
@@ -1966,9 +1967,10 @@ async function readSerial(): Promise<void> {
 }
 
 
-document.getElementById('send-command')!.onclick = () => sendSerial((<HTMLInputElement>document.getElementById('ser-command')).value);
+document.getElementById('send-command')!.onclick = () => sendSerial();
 
-async function sendSerial(command: string): Promise<void> {
+async function sendSerial(): Promise<void> {
+  const element = <HTMLInputElement>document.getElementById('ser-command');
   try {
     if (!ser.port) throw 'Port is undefined! This should not be happening.';
 
@@ -1976,14 +1978,14 @@ async function sendSerial(command: string): Promise<void> {
     const writer = textEncoder.writable.getWriter();
     const writableStreamClosed = textEncoder.readable.pipeTo(ser.port.writable);
 
-    writer.write(command.trim() + '\n');
+    writer.write(element.value.trim() + '\n');
     //writer.write('\x03\n');
 
     //writer.releaseLock();
     await writer.close();
     await writableStreamClosed;
 
-    (<HTMLInputElement>document.getElementById('ser-command')).value = '';
+    element.value = '';
 
   } catch (err) {
     console.error('Connection Error:', err);
