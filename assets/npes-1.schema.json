@@ -31,12 +31,14 @@
 			"properties": {
 				"deviceName": {
 					"type": "string",
-					"description": "The name of the recording device."
+					"description": "The name of the recording device.",
+					"examples": ["RadiaCode-101"]
 				},
 				"softwareName": {
 					"type": "string",
-					"description": "The name of the software that is used for recording.",
-					"minLength": 1
+					"description": "The name of the software that is used for recording with some additional version information",
+					"minLength": 1,
+					"examples": ["Gamma MCA 2023-01-22"]
 				}
 			},
 			"required": [
@@ -52,13 +54,13 @@
 				"startTime": {
 					"type": "string",
 					"format": "date-time",
-					"description": "Date and time of the recording start. Depends on 'endTime'!",
+					"description": "Date and time of the recording start, ISO-formatted. Depends on 'endTime'!",
 					"examples": ["2018-11-13T20:20:39+00:00"]
 				},
 				"endTime": {
 					"type": "string",
 					"format": "date-time",
-					"description": "Date and time of the recording end. Depends on 'startTime'!",
+					"description": "Date and time of the recording end, ISO-formatted. Depends on 'startTime'!",
 					"examples": ["2018-11-13T20:20:39+00:00"]
 				},
 				"energySpectrum": {
@@ -95,13 +97,15 @@
 				"validPulseCount": {
 					"type": "integer",
 					"minimum": 1,
-					"description": "The number of total valid pulses in the spectrum, i.e. total counts - invalid counts."
+					"description": "The number of total valid pulses in the spectrum, i.e. (total counts - invalid counts).",
+					"examples": [1000]
 				},
 				"measurementTime": {
 					"type": "integer",
 					"minimum": 1,
-					"description": "Total measurement time in seconds.",
-					"default": 1
+					"description": "Total measurement time (duration) in seconds.",
+					"default": 1,
+					"examples": [60]
 				},
 				"spectrum": {
 					"type": "array",
@@ -127,8 +131,9 @@
 			"properties": {
 				"polynomialOrder": {
 					"type": "integer",
-					"description": "Order of the polynomial used for calibration, e.g. order 2 for a + bx +cx^2.",
-					"minimum": 1
+					"description": "Order of the polynomial used for calibration, e.g. order 2 for a + bx +cx^2., i.e. number of coefficients minus 1.",
+					"minimum": 1,
+					"examples": [2]
 				},
 				"coefficients": {
 					"type": "array",
@@ -137,7 +142,8 @@
 						"description": "An individual calibration coefficient; can be any float."
 					},
 					"minItems": 1,
-					"description": "All the coefficients needed for the n-poly calibration, sorted from lowest to highest order."
+					"description": "All the coefficients needed for the n-poly calibration, sorted from lowest to highest order.",
+					"examples": [[-239, 0.6, 0.004]]
 				}
 			},
 			"required": [
@@ -162,18 +168,20 @@
 				"time": {
 					"type": "string",
 					"format": "date-time",
-					"description": "Date and time when the sample was collected.",
+					"description": "Date and time when the sample was collected, ISO-formatted.",
 					"examples": ["2018-11-13T20:20:39+00:00"]
 				},
 				"weight": {
 					"type": "number",
 					"minimum": 0,
-					"description": "Weight of the sample in grams."
+					"description": "Weight of the sample in grams; can be any float.",
+					"examples": [25.1]
 				},
 				"volume": {
 					"type": "number",
 					"minimum": 0,
-					"description": "Volume of the sample in cubic centimeters."
+					"description": "Volume of the sample in cubic centimeters; can be any float.",
+					"examples": [9.9]
 				},
 				"note": {
 					"type": "string",
