@@ -19,6 +19,7 @@
     - Decrease DOM Size
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
 
+    - (!) Clean stuff up and move related things into the same classes (File stuff, serial, plot)
     - (!) "IMPORTED XML" Tag for non-XML imports
     - (!) JSON check file validity on export
     - (!) enterPress() events into object -> for loop for events
@@ -523,6 +524,7 @@ document.getElementById('clear-bg')!.onclick = () => removeFile('background');
 
 function removeFile(id: dataType): void {
   spectrumData[id] = [];
+  spectrumData[`${id}Time`] = 0;
   (<HTMLInputElement>document.getElementById(id)).value = '';
   plot.resetPlot(spectrumData);
 
@@ -1090,14 +1092,14 @@ function downloadXML(serial = false): void {
   note.textContent = (<HTMLInputElement>document.getElementById('add-notes')).value.trim();
   si.appendChild(note);
 
+  if (spectrumData['data'].length) rd.appendChild(makeXMLSpectrum('data', spectrumName));
   if (spectrumData['background'].length) {
     const bsf = document.createElementNS(null, 'BackgroundSpectrumFile');
     bsf.textContent = backgroundName;
     rd.appendChild(bsf);
-  }
 
-  if (spectrumData['data'].length) rd.appendChild(makeXMLSpectrum('data', spectrumName));
-  if (spectrumData['background'].length) rd.appendChild(makeXMLSpectrum('background', backgroundName));
+    rd.appendChild(makeXMLSpectrum('background', backgroundName));
+  }
 
   const vis = document.createElementNS(null, 'Visible');
   vis.textContent = true.toString();
@@ -1830,7 +1832,7 @@ let keepReading = false;
 let reader: ReadableStreamDefaultReader | undefined;
 let recordingType: dataType;
 let startTime = 0;
-//let timeDone = 0;
+let timeDone = 0;
 
 async function readUntilClosed(): Promise<void> {
   while (ser.port?.readable && keepReading) {
@@ -1884,8 +1886,7 @@ async function startRecord(pause = false, type = <dataType>recordingType): Promi
     if (!pause) {
       removeFile(recordingType); // Remove old spectrum
       firstLoad = true;
-      spectrumData[`${type}Time`] = 0;
-      //timeDone = 0;
+      timeDone = 0;
       startDate = new Date();
     }
 
@@ -1998,8 +1999,7 @@ document.getElementById('pause-button')!.onclick = () => disconnectPort();
 document.getElementById('stop-button')!.onclick = () => disconnectPort(true);
 
 async function disconnectPort(stop = false): Promise<void> {
-  //timeDone += performance.now() - startTime; //Date.now() - startTime;
-  spectrumData[`${recordingType}Time`] += performance.now() - startTime; // Maybe using recordingType here creates a bug...
+  timeDone += performance.now() - startTime; //Date.now() - startTime;
 
   document.getElementById('pause-button')!.classList.add('d-none');
   const spinnerElements = document.getElementsByClassName('recording-spinner');
@@ -2076,7 +2076,9 @@ function refreshMeta(type: dataType): void {
 
     const totalTimeElement = document.getElementById('total-record-time')!;
 
-    const delta = new Date(nowTime - startTime + spectrumData[`${type}Time`]);
+    const totalMeasTime = nowTime - startTime + timeDone;
+    spectrumData[`${type}Time`] = totalMeasTime; // Update measurementTime in spectrum data
+    const delta = new Date(totalMeasTime);
 
     document.getElementById('record-time')!.innerText = addLeadingZero(delta.getUTCHours().toString()) + ':' + addLeadingZero(delta.getUTCMinutes().toString()) + ':' + addLeadingZero(delta.getUTCSeconds().toString());
 
@@ -2118,7 +2120,7 @@ function refreshRender(type: dataType): void {
     const newData = ser.getData(); // Get all the new data
     const endDelay = performance.now(); //Date.now();
 
-    const delta = new Date(spectrumData[`${type}Time`] - startTime + startDelay);
+    const delta = new Date(timeDone - startTime + startDelay);
 
     spectrumData[type] = ser.updateData(spectrumData[type], newData); // Depends on Background/Spectrum Aufnahme
     spectrumData[`${type}Cps`] = spectrumData[type].map(val => val / delta.getTime() * 1000);

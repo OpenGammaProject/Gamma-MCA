@@ -8,6 +8,9 @@
 
   TODO: Rewrite CSV stuff, it's ugly af and also pretty confusing.
 
+  TODO: Split this into two classes XML, JSON with constructor
+  accepting the files and static class variables.
+
 */
 
 import {coeffObj} from './plot.js';

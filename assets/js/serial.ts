@@ -6,6 +6,8 @@
   2022, NuclearPhoenix.- Phoenix1747
   https://nuclearphoenix.xyz
 
+  TODO: Complete serial class with blackbox usability
+
 */
 
 import {dataOrder} from './main.js';

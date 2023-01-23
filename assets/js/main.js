@@ -316,6 +316,7 @@ document.getElementById('clear-data').onclick = () => removeFile('data');
 document.getElementById('clear-bg').onclick = () => removeFile('background');
 function removeFile(id) {
     spectrumData[id] = [];
+    spectrumData[`${id}Time`] = 0;
     document.getElementById(id).value = '';
     plot.resetPlot(spectrumData);
     document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts('data').toString();
@@ -745,15 +746,14 @@ function downloadXML(serial = false) {
     const note = document.createElementNS(null, 'Note');
     note.textContent = document.getElementById('add-notes').value.trim();
     si.appendChild(note);
+    if (spectrumData['data'].length)
+        rd.appendChild(makeXMLSpectrum('data', spectrumName));
     if (spectrumData['background'].length) {
         const bsf = document.createElementNS(null, 'BackgroundSpectrumFile');
         bsf.textContent = backgroundName;
         rd.appendChild(bsf);
-    }
-    if (spectrumData['data'].length)
-        rd.appendChild(makeXMLSpectrum('data', spectrumName));
-    if (spectrumData['background'].length)
         rd.appendChild(makeXMLSpectrum('background', backgroundName));
+    }
     const vis = document.createElementNS(null, 'Visible');
     vis.textContent = true.toString();
     rd.appendChild(vis);
@@ -1324,6 +1324,7 @@ let keepReading = false;
 let reader;
 let recordingType;
 let startTime = 0;
+let timeDone = 0;
 async function readUntilClosed() {
     while (ser.port?.readable && keepReading) {
         try {
@@ -1367,7 +1368,7 @@ async function startRecord(pause = false, type = recordingType) {
         if (!pause) {
             removeFile(recordingType);
             firstLoad = true;
-            spectrumData[`${type}Time`] = 0;
+            timeDone = 0;
             startDate = new Date();
         }
         document.getElementById('export-button').disabled = false;
@@ -1456,7 +1457,7 @@ async function sendSerial() {
 document.getElementById('pause-button').onclick = () => disconnectPort();
 document.getElementById('stop-button').onclick = () => disconnectPort(true);
 async function disconnectPort(stop = false) {
-    spectrumData[`${recordingType}Time`] += performance.now() - startTime;
+    timeDone += performance.now() - startTime;
     document.getElementById('pause-button').classList.add('d-none');
     const spinnerElements = document.getElementsByClassName('recording-spinner');
     for (const ele of spinnerElements) {
@@ -1513,7 +1514,9 @@ function refreshMeta(type) {
     if (ser.port?.readable) {
         const nowTime = performance.now();
         const totalTimeElement = document.getElementById('total-record-time');
-        const delta = new Date(nowTime - startTime + spectrumData[`${type}Time`]);
+        const totalMeasTime = nowTime - startTime + timeDone;
+        spectrumData[`${type}Time`] = totalMeasTime;
+        const delta = new Date(totalMeasTime);
         document.getElementById('record-time').innerText = addLeadingZero(delta.getUTCHours().toString()) + ':' + addLeadingZero(delta.getUTCMinutes().toString()) + ':' + addLeadingZero(delta.getUTCSeconds().toString());
         if (maxRecTimeEnabled) {
             const progressElement = document.getElementById('ser-time-progress');
@@ -1550,7 +1553,7 @@ function refreshRender(type) {
         const startDelay = performance.now();
         const newData = ser.getData();
         const endDelay = performance.now();
-        const delta = new Date(spectrumData[`${type}Time`] - startTime + startDelay);
+        const delta = new Date(timeDone - startTime + startDelay);
         spectrumData[type] = ser.updateData(spectrumData[type], newData);
         spectrumData[`${type}Cps`] = spectrumData[type].map(val => val / delta.getTime() * 1000);
         if (firstLoad) {
