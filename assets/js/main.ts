@@ -21,6 +21,7 @@
 
     - (!) Clean stuff up and move related things into the same classes (File stuff, serial, plot)
     - (!) JSON check file validity on export
+    - (!) Serial Reconnect while paused stops recording
     - (!) enterPress() events into object -> for loop for events
     - (!) Single file export button in "file import" (-> file control) tab (highlight JSON NPES)
     - (!) Improve updatePlot performance

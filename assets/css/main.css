@@ -27,6 +27,10 @@ body {
 
 }
 
+.file-import-success {
+  --fa-animation-duration: 5s;
+}
+
 .logo {
   width: 27%;
   height: auto;
