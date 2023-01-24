@@ -20,7 +20,6 @@
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
 
     - (!) Clean stuff up and move related things into the same classes (File stuff, serial, plot)
-    - (!) "IMPORTED XML" Tag for non-XML imports
     - (!) JSON check file validity on export
     - (!) enterPress() events into object -> for loop for events
     - (!) Single file export button in "file import" (-> file control) tab (highlight JSON NPES)
