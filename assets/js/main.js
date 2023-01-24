@@ -225,8 +225,12 @@ function getFileData(file, background = false) {
                     popupNotification('file-error');
                 spectrumData.data = espectrum;
                 spectrumData.background = bgspectrum;
-                spectrumData.dataTime = meta.dataMt;
-                spectrumData.backgroundTime = meta.backgroundMt;
+                spectrumData.dataTime = meta.dataMt * 1000;
+                spectrumData.backgroundTime = meta.backgroundMt * 1000;
+                if (meta.dataMt)
+                    spectrumData.dataCps = spectrumData.data.map(val => val / meta.dataMt);
+                if (meta.backgroundMt)
+                    spectrumData.backgroundCps = spectrumData.background.map(val => val / meta.backgroundMt);
                 const importedCount = Object.values(coeff).filter(value => value !== 0).length;
                 if (importedCount >= 2) {
                     plot.calibration.coeff = coeff;
@@ -270,8 +274,10 @@ function getFileData(file, background = false) {
                 const newKey = importKeys[i];
                 if (newKey in importData.resultData) {
                     spectrumData[localKeys[i]] = importData.resultData[newKey].spectrum;
-                    if ('measurementTime' in importData.resultData[newKey])
-                        spectrumData.dataTime = importData.resultData[newKey].measurementTime * 1000;
+                    if ('measurementTime' in importData.resultData[newKey] && importData.resultData[newKey].measurementTime > 0) {
+                        spectrumData[`${localKeys[i]}Time`] = importData.resultData[newKey].measurementTime * 1000;
+                        spectrumData[`${localKeys[i]}Cps`] = spectrumData[localKeys[i]].map(val => val / importData.resultData[newKey].measurementTime);
+                    }
                     if ('energyCalibration' in importData.resultData[newKey]) {
                         const coeffArray = importData.resultData[newKey].energyCalibration.coefficients;
                         const numCoeff = importData.resultData[newKey].energyCalibration.polynomialOrder;
@@ -305,9 +311,9 @@ function getFileData(file, background = false) {
             document.getElementById('data-icon').classList.remove('d-none');
         if (bgCounts)
             document.getElementById('background-icon').classList.remove('d-none');
-        if (!(spectrumData.background.length === spectrumData.data.length || spectrumData.data.length === 0 || spectrumData.background.length === 0)) {
+        if (!(spectrumData.background.length === spectrumData.data.length || !spectrumData.data.length || !spectrumData.background.length)) {
             popupNotification('data-error');
-            background ? removeFile('background') : removeFile('data');
+            removeFile(background ? 'background' : 'data');
         }
         plot.plotData(spectrumData, false);
         bindPlotEvents();
@@ -1291,19 +1297,9 @@ async function requestSerial() {
     }
 }
 document.getElementById('plot-cps').onclick = event => toggleCps(event.target);
-function toggleCps(button, off = false) {
-    if (off) {
-        plot.cps = false;
-    }
-    else {
-        plot.cps = !plot.cps;
-    }
-    if (plot.cps) {
-        button.innerText = 'CPS';
-    }
-    else {
-        button.innerText = 'Total';
-    }
+function toggleCps(button) {
+    plot.cps = !plot.cps;
+    button.innerText = plot.cps ? 'CPS' : 'Total';
     plot.updatePlot(spectrumData);
 }
 async function selectPort() {
@@ -1454,7 +1450,6 @@ async function disconnectPort(stop = false) {
         document.getElementById('stop-button').disabled = true;
         document.getElementById('record-button').classList.remove('d-none');
         cpsValues = [];
-        toggleCps(document.getElementById('plot-cps'), true);
         ser.clearBaseHist();
         endDate = new Date();
     }

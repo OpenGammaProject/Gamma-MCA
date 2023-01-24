@@ -120,7 +120,7 @@ export class RawData {
 
         espectrum = Array.from(espec).map(item => parseFloat(item.textContent ?? '-1'));
 
-        meta.dataMt = parseFloat(especTop[0].getElementsByTagName('MeasurementTime')[0]?.textContent?.trim() ?? '1')*1000; // Convert from s to ms
+        meta.dataMt = parseFloat(especTop[0].getElementsByTagName('MeasurementTime')[0]?.textContent?.trim() ?? '1');
       }
 
       const bgspecTop = xmlDoc.getElementsByTagName('BackgroundEnergySpectrum');
@@ -130,7 +130,7 @@ export class RawData {
 
         bgspectrum = Array.from(bgspec).map(item => parseFloat(item.textContent ?? '-1'));
 
-        meta.backgroundMt = parseFloat(bgspecTop[0].getElementsByTagName('MeasurementTime')[0]?.textContent?.trim() ?? '1')*1000; // Convert from s to ms
+        meta.backgroundMt = parseFloat(bgspecTop[0].getElementsByTagName('MeasurementTime')[0]?.textContent?.trim() ?? '1');
       }
 
       const calCoeffsTop = xmlDoc.getElementsByTagName('EnergySpectrum')[0];

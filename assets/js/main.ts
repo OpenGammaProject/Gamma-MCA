@@ -25,7 +25,6 @@
     - (!) Clean stuff up and move related things into the same classes (File stuff, serial, plot)
     - (!) Improve updatePlot performance
     - (!) Toolbar Mobile Layout (Hstack?)
-    - (!) Calculate CPS from JSON/XML-imported measurementTime + unblock cps button
 
 
   Known Performance Issues:
@@ -410,8 +409,11 @@ function getFileData(file: File, background = false): void { // Gets called when
 
         spectrumData.data = espectrum;
         spectrumData.background = bgspectrum;
-        spectrumData.dataTime = meta.dataMt;
-        spectrumData.backgroundTime = meta.backgroundMt;
+        spectrumData.dataTime = meta.dataMt*1000;
+        spectrumData.backgroundTime = meta.backgroundMt*1000;
+
+        if (meta.dataMt) spectrumData.dataCps = spectrumData.data.map(val => val / meta.dataMt);
+        if (meta.backgroundMt) spectrumData.backgroundCps = spectrumData.background.map(val => val / meta.backgroundMt);
 
         const importedCount = Object.values(coeff).filter(value => value !== 0).length;
 
@@ -467,7 +469,10 @@ function getFileData(file: File, background = false): void { // Gets called when
         const newKey = <'energySpectrum' | 'backgroundEnergySpectrum'>importKeys[i];
         if (newKey in importData.resultData) {
           spectrumData[localKeys[i]] = importData.resultData[newKey]!.spectrum; // Always present if startTime is present --> validated NPESv1
-          if ('measurementTime' in importData.resultData[newKey]!) spectrumData.dataTime = importData.resultData[newKey]!.measurementTime!*1000;
+          if ('measurementTime' in importData.resultData[newKey]! && importData.resultData[newKey]!.measurementTime! > 0) { // Check if time and greater than zero
+            spectrumData[`${localKeys[i]}Time`] = importData.resultData[newKey]!.measurementTime!*1000;
+            spectrumData[`${localKeys[i]}Cps`] = spectrumData[localKeys[i]].map(val => val / importData.resultData[newKey]!.measurementTime!);
+          }
           if ('energyCalibration' in importData.resultData[newKey]!) {
             const coeffArray: number[] = importData.resultData[newKey]!.energyCalibration!.coefficients;
             const numCoeff: number = importData.resultData[newKey]!.energyCalibration!.polynomialOrder;
@@ -506,9 +511,9 @@ function getFileData(file: File, background = false): void { // Gets called when
     /*
       Error Msg Problem with RAW Stream selection?
     */
-    if (!(spectrumData.background.length === spectrumData.data.length || spectrumData.data.length === 0 || spectrumData.background.length === 0)) {
+    if (!(spectrumData.background.length === spectrumData.data.length || !spectrumData.data.length || !spectrumData.background.length)) {
       popupNotification('data-error');
-      background ? removeFile('background') : removeFile('data'); // Remove file again
+      removeFile(background ? 'background' : 'data'); // Remove file again
     }
 
     plot.plotData(spectrumData, false);
@@ -1796,18 +1801,10 @@ async function requestSerial(): Promise<void> {
 
 document.getElementById('plot-cps')!.onclick = event => toggleCps(<HTMLButtonElement>event.target);
 
-function toggleCps(button: HTMLButtonElement, off = false): void {
-  if (off) { // Override
-    plot.cps = false;
-  } else {
-    plot.cps = !plot.cps;
-  }
+function toggleCps(button: HTMLButtonElement): void {
+  plot.cps = !plot.cps;
 
-  if (plot.cps) {
-    button.innerText = 'CPS';
-  } else {
-    button.innerText = 'Total';
-  }
+  button.innerText = plot.cps ? 'CPS' : 'Total';
   plot.updatePlot(spectrumData);
 }
 
@@ -2004,7 +2001,6 @@ async function disconnectPort(stop = false): Promise<void> {
     //recordingType = '';
     cpsValues = [];
 
-    toggleCps(<HTMLButtonElement>document.getElementById('plot-cps'), true); // Disable CPS again
     ser.clearBaseHist(); // Clear base histogram for data processing
     endDate = new Date();
   }

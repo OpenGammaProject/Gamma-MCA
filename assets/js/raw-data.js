@@ -67,13 +67,13 @@ export class RawData {
             if (especTop[0]) {
                 const espec = especTop[0].getElementsByTagName('DataPoint');
                 espectrum = Array.from(espec).map(item => parseFloat(item.textContent ?? '-1'));
-                meta.dataMt = parseFloat(especTop[0].getElementsByTagName('MeasurementTime')[0]?.textContent?.trim() ?? '1') * 1000;
+                meta.dataMt = parseFloat(especTop[0].getElementsByTagName('MeasurementTime')[0]?.textContent?.trim() ?? '1');
             }
             const bgspecTop = xmlDoc.getElementsByTagName('BackgroundEnergySpectrum');
             if (bgspecTop[0]) {
                 const bgspec = bgspecTop[0].getElementsByTagName('DataPoint');
                 bgspectrum = Array.from(bgspec).map(item => parseFloat(item.textContent ?? '-1'));
-                meta.backgroundMt = parseFloat(bgspecTop[0].getElementsByTagName('MeasurementTime')[0]?.textContent?.trim() ?? '1') * 1000;
+                meta.backgroundMt = parseFloat(bgspecTop[0].getElementsByTagName('MeasurementTime')[0]?.textContent?.trim() ?? '1');
             }
             const calCoeffsTop = xmlDoc.getElementsByTagName('EnergySpectrum')[0];
             if (calCoeffsTop) {
