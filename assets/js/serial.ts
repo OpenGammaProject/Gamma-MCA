@@ -108,11 +108,7 @@ export class SerialData {
 
           let numHist = stringHist.map(x => parseInt(x));
           numHist = numHist.map(function(item) {
-            if (isNaN(item)) {
-              return 0;
-            } else {
-              return item;
-            }
+            return (isNaN(item) ? 0 : item);
           });
 
           if (!this.baseHist.length) {

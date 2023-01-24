@@ -85,9 +85,8 @@ document.body.onload = async function () {
             const file = await launchParams.files[0].getFile();
             const fileEnding = file.name.split('.')[1].toLowerCase();
             const spectrumEndings = ['csv', 'tka', 'xml', 'txt', 'json'];
-            if (spectrumEndings.includes(fileEnding)) {
+            if (spectrumEndings.includes(fileEnding))
                 getFileData(file);
-            }
             console.warn('File could not be imported!');
         });
     }
@@ -443,12 +442,7 @@ function clickEvent(data) {
 document.getElementById('apply-cal').onclick = event => toggleCal(event.target.checked);
 function toggleCal(enabled) {
     const button = document.getElementById('calibration-label');
-    if (enabled) {
-        button.innerHTML = '<i class="fa-solid fa-rotate-left"></i> Reset';
-    }
-    else {
-        button.innerHTML = '<i class="fa-solid fa-check"></i> Calibrate';
-    }
+    button.innerHTML = enabled ? '<i class="fa-solid fa-rotate-left"></i> Reset' : '<i class="fa-solid fa-check"></i> Calibrate';
     if (enabled) {
         if (!plot.calibration.imported) {
             let readoutArray = [
@@ -608,12 +602,7 @@ function toLocalIsoString(date) {
         + addLeadingZero(date.getHours().toString()) + ':'
         + addLeadingZero(date.getMinutes().toString()) + ':'
         + addLeadingZero(date.getSeconds().toString());
-    if (-date.getTimezoneOffset() < 0) {
-        localIsoString += '-';
-    }
-    else {
-        localIsoString += '+';
-    }
+    localIsoString += (-date.getTimezoneOffset() < 0) ? '-' : '+';
     const tzDate = new Date(Math.abs(date.getTimezoneOffset()));
     localIsoString += addLeadingZero(tzDate.getHours().toString()) + ':' + addLeadingZero(tzDate.getMinutes().toString());
     return localIsoString;
@@ -623,14 +612,8 @@ function downloadCal() {
     download(`calibration_${getDateString()}.json`, JSON.stringify(plot.calibration));
 }
 function makeXMLSpectrum(type, name) {
-    let root;
+    const root = document.createElementNS(null, (type === 'data') ? 'EnergySpectrum' : 'BackgroundEnergySpectrum');
     let noc = document.createElementNS(null, 'NumberOfChannels');
-    if (type === 'data') {
-        root = document.createElementNS(null, 'EnergySpectrum');
-    }
-    else {
-        root = document.createElementNS(null, 'BackgroundEnergySpectrum');
-    }
     noc.textContent = spectrumData[type].length.toString();
     root.appendChild(noc);
     let sn = document.createElementNS(null, 'SpectrumName');
@@ -919,9 +902,7 @@ function reloadIsotopes() {
 }
 function seekClosest(value) {
     const closeVals = Object.keys(isoList).filter(energy => {
-        if (energy)
-            return Math.abs(parseFloat(energy) - value) <= maxDist;
-        return false;
+        return (energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
     });
     const closeValsNum = closeVals.map(energy => parseFloat(energy));
     if (closeValsNum.length) {
@@ -1519,12 +1500,7 @@ function refreshMeta(type) {
         }
         else {
             const finishDelta = performance.now() - nowTime;
-            if (REFRESH_META_TIME - finishDelta > 0) {
-                metaTimeout = setTimeout(refreshMeta, REFRESH_META_TIME - finishDelta, type);
-            }
-            else {
-                metaTimeout = setTimeout(refreshMeta, 1, type);
-            }
+            metaTimeout = setTimeout(refreshMeta, (REFRESH_META_TIME - finishDelta > 0) ? (REFRESH_META_TIME - finishDelta) : 1, type);
         }
     }
 }
@@ -1563,11 +1539,6 @@ function refreshRender(type) {
         document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts('data').toString();
         document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts('background').toString();
         const finishDelta = performance.now() - startDelay;
-        if (refreshRate - finishDelta > 0) {
-            refreshTimeout = setTimeout(refreshRender, refreshRate - finishDelta, type);
-        }
-        else {
-            refreshTimeout = setTimeout(refreshRender, 1, type);
-        }
+        refreshTimeout = setTimeout(refreshRender, (refreshRate - finishDelta > 0) ? (refreshRate - finishDelta) : 1, type);
     }
 }

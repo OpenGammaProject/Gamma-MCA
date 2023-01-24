@@ -290,8 +290,7 @@ export class SpectrumPlot {
   */
   private seekClosest(value: number, maxDist = 100): {energy: number, name: string} | {energy: undefined, name: undefined} {
     const closeVals = Object.keys(this.isoList).filter(energy => { // Only allow closest values and disregard undefined
-      if (energy) return Math.abs(parseFloat(energy) - value) <= maxDist;
-      return false;
+      return (energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
     });
     const closeValsNum = closeVals.map(energy => parseFloat(energy)) // After this step there are 100% only numbers left
 
@@ -676,6 +675,6 @@ export class SpectrumPlot {
     config.modeBarButtonsToAdd = [this.customModeBarButtons];
 
     //layout.uirevision = true; // For React
-    update ? (<any>window).Plotly.react(this.divId, data, layout, config) : (<any>window).Plotly.newPlot(this.divId, data, layout, config);
+    (<any>window).Plotly[update ? 'react' : 'newPlot'](this.divId, data, layout, config);
   }
 }

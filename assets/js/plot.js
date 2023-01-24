@@ -182,9 +182,7 @@ export class SpectrumPlot {
     }
     seekClosest(value, maxDist = 100) {
         const closeVals = Object.keys(this.isoList).filter(energy => {
-            if (energy)
-                return Math.abs(parseFloat(energy) - value) <= maxDist;
-            return false;
+            return (energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
         });
         const closeValsNum = closeVals.map(energy => parseFloat(energy));
         if (closeValsNum.length) {
@@ -492,6 +490,6 @@ export class SpectrumPlot {
             }
         }
         config.modeBarButtonsToAdd = [this.customModeBarButtons];
-        update ? window.Plotly.react(this.divId, data, layout, config) : window.Plotly.newPlot(this.divId, data, layout, config);
+        window.Plotly[update ? 'react' : 'newPlot'](this.divId, data, layout, config);
     }
 }

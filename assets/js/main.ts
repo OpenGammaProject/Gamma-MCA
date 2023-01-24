@@ -187,9 +187,7 @@ document.body.onload = async function(): Promise<void> {
 
         const fileEnding = file.name.split('.')[1].toLowerCase();
         const spectrumEndings = ['csv', 'tka', 'xml', 'txt', 'json'];
-        if (spectrumEndings.includes(fileEnding)) {
-          getFileData(file);
-        }
+        if (spectrumEndings.includes(fileEnding)) getFileData(file);
         /* else if (fileEnding === 'json') {
           importCal(file);
         } */
@@ -684,11 +682,7 @@ document.getElementById('apply-cal')!.onclick = event => toggleCal((<HTMLInputEl
 function toggleCal(enabled: boolean): void {
   const button = document.getElementById('calibration-label')!;
 
-  if (enabled) {
-    button.innerHTML = '<i class="fa-solid fa-rotate-left"></i> Reset';
-  } else {
-    button.innerHTML = '<i class="fa-solid fa-check"></i> Calibrate';
-  }
+  button.innerHTML = enabled ? '<i class="fa-solid fa-rotate-left"></i> Reset' : '<i class="fa-solid fa-check"></i> Calibrate';
   /*
     Reset Plot beforehand, to prevent x-range from dying when zoomed?
   */
@@ -895,11 +889,7 @@ function toLocalIsoString(date: Date) {
     + addLeadingZero(date.getMinutes().toString()) + ':'
     + addLeadingZero(date.getSeconds().toString());
 
-  if (-date.getTimezoneOffset() < 0) {
-    localIsoString += '-';
-  } else {
-    localIsoString += '+';
-  }
+  localIsoString += (-date.getTimezoneOffset() < 0) ? '-' : '+';
   const tzDate = new Date(Math.abs(date.getTimezoneOffset()));
 
   localIsoString += addLeadingZero(tzDate.getHours().toString()) + ':' + addLeadingZero(tzDate.getMinutes().toString());
@@ -915,14 +905,8 @@ function downloadCal(): void {
 
 
 function makeXMLSpectrum(type: dataType, name: string): Element {
-  let root: Element;
+  const root = document.createElementNS(null, (type === 'data') ? 'EnergySpectrum' : 'BackgroundEnergySpectrum');
   let noc = document.createElementNS(null, 'NumberOfChannels');
-
-  if (type === 'data') {
-    root = document.createElementNS(null, 'EnergySpectrum');
-  } else {
-    root = document.createElementNS(null, 'BackgroundEnergySpectrum');
-  }
 
   noc.textContent = spectrumData[type].length.toString();
   root.appendChild(noc);
@@ -1317,8 +1301,7 @@ function reloadIsotopes(): void {
 
 function seekClosest(value: number): {energy: number, name: string} | {energy: undefined, name: undefined} {
   const closeVals = Object.keys(isoList).filter(energy => { // Only allow closest values and disregard undefined
-    if (energy) return Math.abs(parseFloat(energy) - value) <= maxDist;
-    return false;
+    return (energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
   });
   const closeValsNum = closeVals.map(energy => parseFloat(energy)) // After this step there are 100% only numbers left
 
@@ -2087,11 +2070,7 @@ function refreshMeta(type: dataType): void {
       popupNotification('auto-stop');
     } else {
       const finishDelta = performance.now() - nowTime; //Date.now() - nowTime;
-      if (REFRESH_META_TIME - finishDelta > 0) { // Only re-schedule if still available
-        metaTimeout = setTimeout(refreshMeta, REFRESH_META_TIME - finishDelta, type);
-      } else {
-        metaTimeout = setTimeout(refreshMeta, 1, type);
-      }
+      metaTimeout = setTimeout(refreshMeta, (REFRESH_META_TIME - finishDelta > 0) ? (REFRESH_META_TIME - finishDelta) : 1, type); // Only re-schedule if still available
     }
   }
 }
@@ -2144,10 +2123,6 @@ function refreshRender(type: dataType): void {
     document.getElementById('total-bg-cts')!.innerText = spectrumData.getTotalCounts('background').toString();
 
     const finishDelta = performance.now() - startDelay; //Date.now() - startDelay;
-    if (refreshRate - finishDelta > 0) { // Only re-schedule if still available
-      refreshTimeout = setTimeout(refreshRender, refreshRate - finishDelta, type);
-    } else {
-      refreshTimeout = setTimeout(refreshRender, 1, type);
-    }
+    refreshTimeout = setTimeout(refreshRender, (refreshRate - finishDelta > 0) ? (refreshRate - finishDelta) : 1, type);
   }
 }
