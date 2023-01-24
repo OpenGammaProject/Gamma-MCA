@@ -183,7 +183,7 @@
 
                   <p>
                     <input id="r1" class="form-check-input" type="radio" value="2" name="filetype">
-                    <label class="form-check-label align-middle" for="r1">Chronological Stream (e.g. OGD, Serial)</label>
+                    <label class="form-check-label align-middle" for="r1">Chronological Stream (e.g. Serial)</label>
                   </p>
 
                   <p>
@@ -441,27 +441,27 @@
                   <div class="vstack gap-2">
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="sample-name">Name</label>
-                      <input type="text" class="form-control" id="sample-name" aria-label="Sample name" placeholder="Name of sample">
+                      <input type="text" class="form-control sample-info" id="sample-name" aria-label="Sample name" placeholder="Name of sample">
                     </div>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="sample-loc">Location</label>
-                      <input type="text" class="form-control" id="sample-loc" aria-label="Sample location" placeholder="Location of sample">
+                      <input type="text" class="form-control sample-info" id="sample-loc" aria-label="Sample location" placeholder="Location of sample">
                     </div>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="sample-time">Time</label>
-                      <input type="datetime-local" class="form-control" id="sample-time" aria-label="Sample time">
+                      <input type="datetime-local" class="form-control sample-info" id="sample-time" aria-label="Sample time">
                     </div>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="sample-weight">Weight</label>
-                      <input type="number" min="0" step="0.1" class="form-control" id="sample-weight" aria-label="Sample weight" placeholder="Sample weight [g]">
+                      <input type="number" min="0" step="0.1" class="form-control sample-info" id="sample-weight" aria-label="Sample weight" placeholder="Sample weight [g]">
                     </div>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="sample-vol">Volume</label>
-                      <input type="number" min="0" step="0.1" class="form-control" id="sample-vol" aria-label="Sample volume" placeholder="Sample volume [cm^3]">
+                      <input type="number" min="0" step="0.1" class="form-control sample-info" id="sample-vol" aria-label="Sample volume" placeholder="Sample volume [cm^3]">
                     </div>
                   </div>
 
@@ -482,13 +482,15 @@
 
                   <div class="input-group input-group-sm mb-2">
                     <label class="input-group-text" for="device-name">Device Name</label>
-                    <input type="text" class="form-control" id="device-name" aria-label="Recording device name" placeholder="Recording device name">
+                    <input type="text" class="form-control sample-info" id="device-name" aria-label="Recording device name" placeholder="Recording device name">
                   </div>
 
                   <div class="form-floating mb-2">
-                    <textarea class="form-control" placeholder="Leave additional notes here" id="add-notes"></textarea>
+                    <textarea class="form-control sample-info" placeholder="Leave additional notes here" id="add-notes"></textarea>
                     <label for="add-notes">Additional notes</label>
                   </div>
+
+                  <button class="btn btn-primary btn-sm float-end" type="reset" id="reset-meta-values" title="Clear all sample tags"> <i class="fas fa-trash"></i> Clear All</button>
 
                 </div>
               </div>

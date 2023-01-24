@@ -840,6 +840,13 @@ function download(filename, text) {
     element.style.display = 'none';
     element.click();
 }
+document.getElementById('reset-meta-values').onclick = () => resetSampleInfo();
+function resetSampleInfo() {
+    const toBeReset = document.getElementsByClassName('sample-info');
+    for (const element of toBeReset) {
+        element.value = '';
+    }
+}
 function popupNotification(id) {
     new window.bootstrap.Toast(document.getElementById(id)).show();
 }

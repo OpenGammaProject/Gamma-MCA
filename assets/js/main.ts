@@ -27,7 +27,6 @@
     - (!) Improve updatePlot performance
     - (!) Toolbar Mobile Layout (Hstack?)
     - (!) JS load only when/if used, improve (loading) performance
-    - (!) "Clear All" Sample Info Button
     - (!) Calculate CPS from JSON/XML-imported measurementTime + unblock cps button
 
 
@@ -1205,6 +1204,16 @@ function download(filename: string, text: string): void {
 
     element.style.display = 'none';
     element.click();
+}
+
+
+document.getElementById('reset-meta-values')!.onclick = () => resetSampleInfo();
+
+function resetSampleInfo(): void {
+  const toBeReset = <HTMLCollectionOf<HTMLInputElement>>document.getElementsByClassName('sample-info');
+  for (const element of toBeReset) {
+    element.value = '';
+  }
 }
 
 
