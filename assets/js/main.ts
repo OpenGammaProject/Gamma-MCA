@@ -12,7 +12,9 @@
     - (?) Add dead time correction for cps
     - (?) Manual update button
     - (?) plot.isoList copied from here, so twice the same dict
+    - (?) Loading screen while waiting for ZSchema to load
 
+    - Check network requests on plot refresh
     - Sorting isotope list
     - Calibration n-polynomial regression
     - Improve the settings code structure
@@ -23,7 +25,6 @@
     - (!) Clean stuff up and move related things into the same classes (File stuff, serial, plot)
     - (!) Improve updatePlot performance
     - (!) Toolbar Mobile Layout (Hstack?)
-    - (!) JS load only when/if used, improve (loading) performance
     - (!) Calculate CPS from JSON/XML-imported measurementTime + unblock cps button
 
 

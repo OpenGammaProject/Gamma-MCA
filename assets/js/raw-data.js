@@ -118,6 +118,7 @@ export class RawData {
             if (response.ok) {
                 const schema = await response.json();
                 delete schema['$schema'];
+                await import('./external/ZSchema-browser-min.js');
                 const validator = new window.ZSchema();
                 validator.validate(json, schema);
                 const errors = validator.getLastErrors();

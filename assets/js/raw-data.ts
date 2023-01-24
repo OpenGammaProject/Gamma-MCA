@@ -187,11 +187,23 @@ export class RawData {
         const schema = await response.json();
         delete schema['$schema']; // Remove, otherwise it will crash because it cannot resolve the schema URI, wow...
 
+        /*
+        const scripts = Array.from(document.querySelectorAll('script')).map(scr => scr.src);
+        if (!scripts.includes('/assets/js/external/ZSchema-browser-min.js')) {
+          const tag = document.createElement('script');
+          tag.src = '/assets/js/external/ZSchema-browser-min.js';
+          tag.async = true;
+          tag.onload =
+          document.getElementsByTagName('head')[0].appendChild(tag);
+        }
+        */
+        await import('./external/ZSchema-browser-min.js'); // Import ZSchema only when it's needed
+
         const validator: any = new (<any>window).ZSchema();
         validator.validate(json, schema);
         const errors = validator.getLastErrors();
 
-        if (errors) throw errors; // Catch validation errors, but ignore the $schema URL
+        if (errors) throw errors; // Catch validation errors
 
         return json;
       } else {
