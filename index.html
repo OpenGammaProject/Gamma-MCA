@@ -157,12 +157,8 @@
                   <hr>
 
                   <p>
-                    <button class="btn btn-primary btn-sm" id="npes-export-button-file" type="button" title="Export all data as JSON (NPES), recommended">
-                      <i class="fas fa-file-export"></i> Export JSON
-                    </button>
-
-                    <button class="btn btn-primary btn-sm" id="xml-export-button-file" type="button" title="Export all data as XML, deprecated">
-                      <i class="fas fa-file-export"></i> Export XML
+                    <button class="btn btn-primary btn-sm" id="export-button" type="button" data-bs-toggle="modal" data-bs-target="#exportModal" title="Export data files">
+                      <i class="fas fa-file-export"></i> Export Files
                     </button>
                   </p>
 
@@ -259,10 +255,6 @@
                     <hr>
 
                     <div class="clearfix pe-3">
-
-                      <button class="btn btn-primary btn-sm" id="export-button" type="button" data-bs-toggle="modal" data-bs-target="#exportModal" title="Export spectrum" disabled>
-                        <i class="fas fa-file-export"></i> Export
-                      </button>
 
                       <div class="float-end align-middle">
                         <div class="vstack align-middle text-end">
@@ -629,7 +621,7 @@
 
     -->
     <!-- Record Modal -->
-    <div class="modal fade" id="recordModal" tabindex="-1" aria-labelledby="exportModal" aria-hidden="true">
+    <div class="modal fade" id="recordModal" tabindex="-1" aria-labelledby="recordModal" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -662,8 +654,8 @@
           <div class="modal-footer">
             <button type="button" class="btn btn-primary" id="download-spectrum-btn" title="Export spectrum as CSV"> Spectrum </button>
             <button type="button" class="btn btn-primary" id="download-bg-btn" title="Export background as CSV"> Background </button>
-            <button type="button" class="btn btn-primary" id="xml-export-button-serial" title="Export all data as XML, deprecated"> XML </button>
-            <button type="button" class="btn btn-primary" id="npes-export-button-serial"  title="Export all data as JSON (NPES), recommended"> JSON </button>
+            <button type="button" class="btn btn-primary" id="xml-export-btn" title="Export all data as XML, deprecated"> XML </button>
+            <button type="button" class="btn btn-primary" id="npes-export-btn"  title="Export all data as JSON (NPES), recommended"> JSON </button>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Cancel </button>
           </div>
         </div>

@@ -18,12 +18,11 @@
     - Improve the settings code structure
     - Decrease DOM Size
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
+    - Serial Reconnect while paused stops recording
 
     - (!) Clean stuff up and move related things into the same classes (File stuff, serial, plot)
     - (!) JSON check file validity on export
-    - (!) Serial Reconnect while paused stops recording
     - (!) enterPress() events into object -> for loop for events
-    - (!) Single file export button in "file import" (-> file control) tab (highlight JSON NPES)
     - (!) Improve updatePlot performance
     - (!) Toolbar Mobile Layout (Hstack?)
     - (!) JS load only when/if used, improve (loading) performance
@@ -981,26 +980,14 @@ function makeXMLSpectrum(type: dataType, name: string): Element {
 }
 
 
-document.getElementById('xml-export-button-file')!.onclick = () => downloadXML();
-document.getElementById('xml-export-button-serial')!.onclick = () => downloadXML(true);
+document.getElementById('xml-export-btn')!.onclick = () => downloadXML();
 
-function downloadXML(serial = false): void {
-  let filename: string;
-  if (serial) {
-    filename = `spectrum_${getDateString()}_serial.xml`;
-  } else {
-    filename = `spectrum_${getDateString()}.xml`;
-  }
+function downloadXML(): void {
+  const filename = `spectrum_${getDateString()}.xml`;
+  const formatVersion = 230124;
 
-  const formatVersion = 230119;
-
-  let spectrumName = 'Energy Spectrum';
-  let backgroundName = 'Background Energy Spectrum';
-
-  if (serial) {
-    spectrumName = getDateStringMin() + ' ' + spectrumName;
-    backgroundName = getDateStringMin() + ' ' + backgroundName;
-  }
+  const spectrumName = getDateStringMin() + ' Energy Spectrum';
+  const backgroundName = getDateStringMin() + ' Background Energy Spectrum';
 
   let doc = document.implementation.createDocument(null, "ResultDataFile");
 
@@ -1123,16 +1110,10 @@ function makeJSONSpectrum(type: dataType): NPESv1Spectrum {
 }
 
 
-document.getElementById('npes-export-button-file')!.onclick = () => downloadNPES();
-document.getElementById('npes-export-button-serial')!.onclick = () => downloadNPES(true);
+document.getElementById('npes-export-btn')!.onclick = () => downloadNPES();
 
-function downloadNPES(serial = false): void {
-  let filename: string;
-  if (serial) {
-    filename = `spectrum_${getDateString()}_serial.json`;
-  } else {
-    filename = `spectrum_${getDateString()}.json`;
-  }
+function downloadNPES(): void {
+  const filename = `spectrum_${getDateString()}.json`;
 
   let data: NPESv1 = {
     'schemaVersion': 'NPESv1',
@@ -1889,7 +1870,6 @@ async function startRecord(pause = false, type = <dataType>recordingType): Promi
       startDate = new Date();
     }
 
-    (<HTMLButtonElement>document.getElementById('export-button')).disabled = false;
     (<HTMLButtonElement>document.getElementById('stop-button')).disabled = false;
     document.getElementById('pause-button')!.classList.remove('d-none');
     document.getElementById('record-button')!.classList.add('d-none');

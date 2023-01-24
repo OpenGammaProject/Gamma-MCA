@@ -663,23 +663,12 @@ function makeXMLSpectrum(type, name) {
     }
     return root;
 }
-document.getElementById('xml-export-button-file').onclick = () => downloadXML();
-document.getElementById('xml-export-button-serial').onclick = () => downloadXML(true);
-function downloadXML(serial = false) {
-    let filename;
-    if (serial) {
-        filename = `spectrum_${getDateString()}_serial.xml`;
-    }
-    else {
-        filename = `spectrum_${getDateString()}.xml`;
-    }
-    const formatVersion = 230119;
-    let spectrumName = 'Energy Spectrum';
-    let backgroundName = 'Background Energy Spectrum';
-    if (serial) {
-        spectrumName = getDateStringMin() + ' ' + spectrumName;
-        backgroundName = getDateStringMin() + ' ' + backgroundName;
-    }
+document.getElementById('xml-export-btn').onclick = () => downloadXML();
+function downloadXML() {
+    const filename = `spectrum_${getDateString()}.xml`;
+    const formatVersion = 230124;
+    const spectrumName = getDateStringMin() + ' Energy Spectrum';
+    const backgroundName = getDateStringMin() + ' Background Energy Spectrum';
     let doc = document.implementation.createDocument(null, "ResultDataFile");
     const pi = doc.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"');
     doc.insertBefore(pi, doc.firstChild);
@@ -770,16 +759,9 @@ function makeJSONSpectrum(type) {
     }
     return spec;
 }
-document.getElementById('npes-export-button-file').onclick = () => downloadNPES();
-document.getElementById('npes-export-button-serial').onclick = () => downloadNPES(true);
-function downloadNPES(serial = false) {
-    let filename;
-    if (serial) {
-        filename = `spectrum_${getDateString()}_serial.json`;
-    }
-    else {
-        filename = `spectrum_${getDateString()}.json`;
-    }
+document.getElementById('npes-export-btn').onclick = () => downloadNPES();
+function downloadNPES() {
+    const filename = `spectrum_${getDateString()}.json`;
     let data = {
         'schemaVersion': 'NPESv1',
         'deviceData': {
@@ -1369,7 +1351,6 @@ async function startRecord(pause = false, type = recordingType) {
             timeDone = 0;
             startDate = new Date();
         }
-        document.getElementById('export-button').disabled = false;
         document.getElementById('stop-button').disabled = false;
         document.getElementById('pause-button').classList.remove('d-none');
         document.getElementById('record-button').classList.add('d-none');
