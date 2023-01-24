@@ -22,7 +22,6 @@
 
     - (!) Clean stuff up and move related things into the same classes (File stuff, serial, plot)
     - (!) JSON check file validity on export
-    - (!) enterPress() events into object -> for loop for events
     - (!) Improve updatePlot performance
     - (!) Toolbar Mobile Layout (Hstack?)
     - (!) JS load only when/if used, improve (loading) performance
@@ -238,6 +237,29 @@ document.body.onload = async function(): Promise<void> {
 
   loadSettingsDefault();
   sizeCheck();
+
+  // Enable Settings Enter Press Func
+  const enterPressObj = {
+    'smaVal': 'sma',
+    'ser-command': 'send-command',
+    'iso-hover-prox': 'setting1',
+    'custom-url': 'setting2',
+    'custom-delimiter': 'setting3',
+    'custom-file-adc': 'setting4',
+    'custom-baud': 'setting5',
+    'eol-char': 'setting5-1',
+    'ser-limit': 'ser-limit-btn',
+    'custom-ser-refresh': 'setting6',
+    'custom-ser-buffer': 'setting7',
+    'custom-ser-adc': 'setting8',
+    'peak-thres': 'setting9',
+    'peak-lag': 'setting10',
+    'peak-width': 'setting11',
+    'seek-width': 'setting12'
+  }
+  for (const [key, value] of Object.entries(enterPressObj)) {
+    document.getElementById(key)!.onkeydown = event => enterPress(event, value);
+  }
 
   const loadingSpinner = document.getElementById('loading')!;
   loadingSpinner.parentNode!.removeChild(loadingSpinner); // Delete Loading Thingymajig
@@ -580,24 +602,6 @@ function changeAxis(button: HTMLButtonElement): void {
   plot.updatePlot(spectrumData);
 }
 
-
-// Do this by classes? Way more efficient, v e r y ugly!
-document.getElementById('smaVal')!.onkeydown = event => enterPress(event, 'sma');
-document.getElementById('ser-command')!.onkeydown = event => enterPress(event, 'send-command');
-document.getElementById('iso-hover-prox')!.onkeydown = event => enterPress(event, 'setting1');
-document.getElementById('custom-url')!.onkeydown = event => enterPress(event, 'setting2');
-document.getElementById('custom-delimiter')!.onkeydown = event => enterPress(event, 'setting3');
-document.getElementById('custom-file-adc')!.onkeydown = event => enterPress(event, 'setting4');
-document.getElementById('custom-baud')!.onkeydown = event => enterPress(event, 'setting5');
-document.getElementById('eol-char')!.onkeydown = event => enterPress(event, 'setting5-1');
-document.getElementById('ser-limit')!.onkeydown = event => enterPress(event, 'ser-limit-btn');
-document.getElementById('custom-ser-refresh')!.onkeydown = event => enterPress(event, 'setting6');
-document.getElementById('custom-ser-buffer')!.onkeydown = event => enterPress(event, 'setting7');
-document.getElementById('custom-ser-adc')!.onkeydown = event => enterPress(event, 'setting8');
-document.getElementById('peak-thres')!.onkeydown = event => enterPress(event, 'setting9');
-document.getElementById('peak-lag')!.onkeydown = event => enterPress(event, 'setting10');
-document.getElementById('peak-width')!.onkeydown = event => enterPress(event, 'setting11');
-document.getElementById('seek-width')!.onkeydown = event => enterPress(event, 'setting12');
 
 function enterPress(event: KeyboardEvent, id: string): void {
   if (event.key === 'Enter') document.getElementById(id)?.click(); // ENTER key
