@@ -649,13 +649,14 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <p>What do you want to export?</p>
+            <p><strong>What do you want to export?</strong></p>
+            <p>You can either choose to use one of the combined file types (JSON, XML) or just plain CSVs for the spectrum or background spectrum.</p>
           </div>
           <div class="modal-footer">
+            <button type="button" class="btn btn-success" id="npes-export-btn"  title="Export all data as combined JSON (NPES), recommended"> JSON </button>
+            <button type="button" class="btn btn-primary" id="xml-export-btn" title="Export all data as combined XML, deprecated"> XML </button>
             <button type="button" class="btn btn-primary" id="download-spectrum-btn" title="Export spectrum as CSV"> Spectrum </button>
             <button type="button" class="btn btn-primary" id="download-bg-btn" title="Export background as CSV"> Background </button>
-            <button type="button" class="btn btn-primary" id="xml-export-btn" title="Export all data as XML, deprecated"> XML </button>
-            <button type="button" class="btn btn-primary" id="npes-export-btn"  title="Export all data as JSON (NPES), recommended"> JSON </button>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Cancel </button>
           </div>
         </div>
