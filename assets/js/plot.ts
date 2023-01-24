@@ -315,9 +315,7 @@ export class SpectrumPlot {
       this.peakConfig.lines = [];
     }
 
-    if (!doFind) {
-      return;
-    }
+    if (!doFind) return;
 
     const shortData: number[] = this.peakConfig.lastDataY;
     const longData = this.computeMovingAverage(this.peakConfig.lastDataY, this.peakConfig.lag);
@@ -677,11 +675,7 @@ export class SpectrumPlot {
     */
     config.modeBarButtonsToAdd = [this.customModeBarButtons];
 
-    if (update) {
-      //layout.uirevision = true;
-      (<any>window).Plotly.react(this.divId, data, layout, config);
-    } else {
-      (<any>window).Plotly.newPlot(this.divId, data, layout, config);
-    }
+    //layout.uirevision = true; // For React
+    update ? (<any>window).Plotly.react(this.divId, data, layout, config) : (<any>window).Plotly.newPlot(this.divId, data, layout, config);
   }
 }

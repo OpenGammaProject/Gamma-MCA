@@ -40,16 +40,14 @@ let localStorageAvailable = false;
 let firstInstall = false;
 document.body.onload = async function () {
     localStorageAvailable = 'localStorage' in self;
-    if (localStorageAvailable) {
+    if (localStorageAvailable)
         loadSettingsStorage();
-    }
     if ('serviceWorker' in navigator) {
         const reg = await navigator.serviceWorker.register('/service-worker.js');
         if (localStorageAvailable) {
             reg.addEventListener('updatefound', () => {
-                if (firstInstall) {
+                if (firstInstall)
                     return;
-                }
                 popupNotification('update-installed');
             });
         }
@@ -82,9 +80,8 @@ document.body.onload = async function () {
     }
     if ('launchQueue' in window && 'LaunchParams' in window) {
         window.launchQueue.setConsumer(async (launchParams) => {
-            if (!launchParams.files.length) {
+            if (!launchParams.files.length)
                 return;
-            }
             const file = await launchParams.files[0].getFile();
             const fileEnding = file.name.split('.')[1].toLowerCase();
             const spectrumEndings = ['csv', 'tka', 'xml', 'txt', 'json'];
@@ -289,12 +286,7 @@ function getFileData(file, background = false) {
             document.getElementById('background-icon').classList.remove('d-none');
         if (!(spectrumData.background.length === spectrumData.data.length || spectrumData.data.length === 0 || spectrumData.background.length === 0)) {
             popupNotification('data-error');
-            if (background) {
-                removeFile('background');
-            }
-            else {
-                removeFile('data');
-            }
+            background ? removeFile('background') : removeFile('data');
         }
         plot.plotData(spectrumData, false);
         bindPlotEvents();
@@ -955,9 +947,8 @@ async function closestIso(value) {
     if (energy && name) {
         let newIso = {};
         newIso[energy] = name;
-        if (prevIso !== newIso) {
+        if (prevIso !== newIso)
             prevIso = newIso;
-        }
         plot.toggleLine(energy, name);
     }
     plot.updatePlot(spectrumData);
@@ -1390,12 +1381,7 @@ async function startRecord(pause = false, type = recordingType) {
         startTime = performance.now();
         refreshRender(recordingType);
         refreshMeta(recordingType);
-        if (pause) {
-            cpsValues.pop();
-        }
-        else {
-            cpsValues.shift();
-        }
+        pause ? cpsValues.pop() : cpsValues.shift();
         closed = readUntilClosed();
         plot.updatePlot(spectrumData);
     }

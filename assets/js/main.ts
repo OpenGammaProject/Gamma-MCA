@@ -138,18 +138,15 @@ let firstInstall = false;
 document.body.onload = async function(): Promise<void> {
   localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 
-  if (localStorageAvailable) {
-    loadSettingsStorage();
-  }
+  if (localStorageAvailable) loadSettingsStorage();
 
   if ('serviceWorker' in navigator) { // Add service worker for PWA
     const reg = await navigator.serviceWorker.register('/service-worker.js'); // Onload async because of this... good? hmmm.
 
     if (localStorageAvailable) {
       reg.addEventListener('updatefound', () => {
-          if (firstInstall) { // "Update" will always be installed on first load (service worker installation)
-            return;
-          }
+        if (firstInstall) return; // "Update" will always be installed on first load (service worker installation)
+
         popupNotification('update-installed');
       });
     }
@@ -186,9 +183,8 @@ document.body.onload = async function(): Promise<void> {
   if ('launchQueue' in window && 'LaunchParams' in window) { // File Handling API
     (<any>window).launchQueue.setConsumer(
       async (launchParams: { files: any[] }) => {
-        if (!launchParams.files.length) {
-          return;
-        }
+        if (!launchParams.files.length) return;
+
         const file: File = await launchParams.files[0].getFile();
 
         const fileEnding = file.name.split('.')[1].toLowerCase();
@@ -490,11 +486,7 @@ function getFileData(file: File, background = false): void { // Gets called when
     */
     if (!(spectrumData.background.length === spectrumData.data.length || spectrumData.data.length === 0 || spectrumData.background.length === 0)) {
       popupNotification('data-error');
-      if (background) { // Remove file again
-        removeFile('background');
-      } else {
-        removeFile('data');
-      }
+      background ? removeFile('background') : removeFile('data'); // Remove file again
     }
 
     plot.plotData(spectrumData, false);
@@ -1363,9 +1355,7 @@ async function closestIso(value: number): Promise<void> {
     let newIso: isotopeList = {};
     newIso[energy] = name;
 
-    if (prevIso !== newIso) {
-      prevIso = newIso;
-    }
+    if (prevIso !== newIso) prevIso = newIso;
 
     plot.toggleLine(energy, name);
   }
@@ -1915,11 +1905,8 @@ async function startRecord(pause = false, type = <dataType>recordingType): Promi
     refreshRender(recordingType); // Start updating the plot
     refreshMeta(recordingType); // Start updating the meta data
 
-    if (pause) {
-      cpsValues.pop(); // Last cps value after pausing is always 0, remove.
-    } else {
-      cpsValues.shift(); // First cps value is always a zero, so remove that.
-    }
+    // Check if pause ? Last cps value after pausing is always 0, remove! : First cps value is always a zero, so remove that!
+    pause ? cpsValues.pop() : cpsValues.shift();
 
     closed = readUntilClosed();
     plot.updatePlot(spectrumData); // Prevent the plot from moving all over the screen due to other things popping-up

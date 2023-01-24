@@ -203,9 +203,8 @@ export class SpectrumPlot {
             }
             this.peakConfig.lines = [];
         }
-        if (!doFind) {
+        if (!doFind)
             return;
-        }
         const shortData = this.peakConfig.lastDataY;
         const longData = this.computeMovingAverage(this.peakConfig.lastDataY, this.peakConfig.lag);
         const maxVal = Math.max(...shortData);
@@ -493,11 +492,6 @@ export class SpectrumPlot {
             }
         }
         config.modeBarButtonsToAdd = [this.customModeBarButtons];
-        if (update) {
-            window.Plotly.react(this.divId, data, layout, config);
-        }
-        else {
-            window.Plotly.newPlot(this.divId, data, layout, config);
-        }
+        update ? window.Plotly.react(this.divId, data, layout, config) : window.Plotly.newPlot(this.divId, data, layout, config);
     }
 }
