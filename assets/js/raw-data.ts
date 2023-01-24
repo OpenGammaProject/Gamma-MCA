@@ -171,7 +171,6 @@ export class RawData {
   }
 
   async jsonToObject(data: string): Promise<any | false> {
-    const validator: any = new (<any>window).ZSchema();
     let json: any;
 
     try {
@@ -188,6 +187,7 @@ export class RawData {
         const schema = await response.json();
         delete schema['$schema']; // Remove, otherwise it will crash because it cannot resolve the schema URI, wow...
 
+        const validator: any = new (<any>window).ZSchema();
         validator.validate(json, schema);
         const errors = validator.getLastErrors();
 

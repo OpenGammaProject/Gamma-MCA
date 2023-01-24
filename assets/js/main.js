@@ -802,6 +802,10 @@ function downloadNPES() {
         data.resultData.energySpectrum = makeJSONSpectrum('data');
     if (spectrumData.background.length && spectrumData.getTotalCounts('background'))
         data.resultData.backgroundEnergySpectrum = makeJSONSpectrum('background');
+    if (!data.resultData.energySpectrum && !data.resultData.backgroundEnergySpectrum) {
+        popupNotification('file-empty-error');
+        return;
+    }
     download(filename, JSON.stringify(data));
 }
 document.getElementById('download-spectrum-btn').onclick = () => downloadData('spectrum', 'data');
@@ -813,6 +817,10 @@ function downloadData(filename, data) {
     download(filename, text);
 }
 function download(filename, text) {
+    if (!text.trim()) {
+        popupNotification('file-empty-error');
+        return;
+    }
     const element = document.createElement('a');
     element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
     element.setAttribute('download', filename);

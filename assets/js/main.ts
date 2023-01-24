@@ -21,7 +21,6 @@
     - Serial Reconnect while paused stops recording
 
     - (!) Clean stuff up and move related things into the same classes (File stuff, serial, plot)
-    - (!) JSON check file validity on export
     - (!) Improve updatePlot performance
     - (!) Toolbar Mobile Layout (Hstack?)
     - (!) JS load only when/if used, improve (loading) performance
@@ -1155,7 +1154,12 @@ function downloadNPES(): void {
   if (spectrumData.data.length && spectrumData.getTotalCounts('data')) data.resultData.energySpectrum = makeJSONSpectrum('data');
   if (spectrumData.background.length && spectrumData.getTotalCounts('background')) data.resultData.backgroundEnergySpectrum = makeJSONSpectrum('background');
 
-  // Validate the JSON Schema?
+  // Additionally validate the JSON Schema?
+  if (!data.resultData.energySpectrum && !data.resultData.backgroundEnergySpectrum) {
+    popupNotification('file-empty-error');
+    return;
+  }
+
   download(filename, JSON.stringify(data));
 }
 
@@ -1174,13 +1178,18 @@ function downloadData(filename: string, data: dataType): void {
 
 
 function download(filename: string, text: string): void {
-    const element = document.createElement('a');
-    element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
+  if (!text.trim()) { // Check empty string
+    popupNotification('file-empty-error');
+    return;
+  }
 
-    element.setAttribute('download', filename);
+  const element = document.createElement('a');
+  element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
 
-    element.style.display = 'none';
-    element.click();
+  element.setAttribute('download', filename);
+
+  element.style.display = 'none';
+  element.click();
 }
 
 

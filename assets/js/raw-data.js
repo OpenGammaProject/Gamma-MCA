@@ -105,7 +105,6 @@ export class RawData {
         }
     }
     async jsonToObject(data) {
-        const validator = new window.ZSchema();
         let json;
         try {
             json = JSON.parse(data);
@@ -119,6 +118,7 @@ export class RawData {
             if (response.ok) {
                 const schema = await response.json();
                 delete schema['$schema'];
+                const validator = new window.ZSchema();
                 validator.validate(json, schema);
                 const errors = validator.getLastErrors();
                 if (errors)
