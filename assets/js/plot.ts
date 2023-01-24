@@ -11,8 +11,6 @@
   TODO:
   - Remove all any types
 
-  - Improve updatePlot performance!
-
 */
 
 
@@ -112,8 +110,7 @@ export class SpectrumPlot {
   };
   private customModeBarButtons = {
     name: 'Download plot as HTML',
-    // @ts-ignore // Works just fine without TS complaining
-    icon: Plotly.Icons['disk'],
+    icon: (<any>window).Plotly.Icons['disk'],
     direction: 'up',
     click: (plotElement: any) => {
       let newLayout = JSON.parse(JSON.stringify(plotElement.layout));
@@ -173,6 +170,7 @@ export class SpectrumPlot {
   */
   constructor(divId: string) {
     this.divId = divId;
+    console.info('Plotly.js version: ' + (<any>window).Plotly.version);
   }
   /*
     Get An Array with Length == Data.length containing ascending numbers
@@ -681,11 +679,9 @@ export class SpectrumPlot {
 
     if (update) {
       //layout.uirevision = true;
-      // @ts-ignore // Works just fine without TS complaining
-      Plotly.react(this.divId, data, layout, config);
+      (<any>window).Plotly.react(this.divId, data, layout, config);
     } else {
-      // @ts-ignore // Works just fine without TS complaining
-      Plotly.newPlot(this.divId, data, layout, config);
+      (<any>window).Plotly.newPlot(this.divId, data, layout, config);
     }
   }
 }

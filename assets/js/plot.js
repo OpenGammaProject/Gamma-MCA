@@ -41,7 +41,7 @@ export class SpectrumPlot {
     };
     customModeBarButtons = {
         name: 'Download plot as HTML',
-        icon: Plotly.Icons['disk'],
+        icon: window.Plotly.Icons['disk'],
         direction: 'up',
         click: (plotElement) => {
             let newLayout = JSON.parse(JSON.stringify(plotElement.layout));
@@ -92,6 +92,7 @@ export class SpectrumPlot {
     };
     constructor(divId) {
         this.divId = divId;
+        console.info('Plotly.js version: ' + window.Plotly.version);
     }
     getXAxis(len) {
         let xArray = [];
@@ -493,10 +494,10 @@ export class SpectrumPlot {
         }
         config.modeBarButtonsToAdd = [this.customModeBarButtons];
         if (update) {
-            Plotly.react(this.divId, data, layout, config);
+            window.Plotly.react(this.divId, data, layout, config);
         }
         else {
-            Plotly.newPlot(this.divId, data, layout, config);
+            window.Plotly.newPlot(this.divId, data, layout, config);
         }
     }
 }
