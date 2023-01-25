@@ -435,7 +435,8 @@ export class SpectrumPlot {
                     xref: 'paper',
                     yanchor: 'top',
                     yref: 'paper',
-                }]
+                }],
+            annotations: []
         };
         const config = {
             responsive: true,

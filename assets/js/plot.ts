@@ -582,7 +582,8 @@ export class SpectrumPlot {
         xref: 'paper',
         yanchor: 'top',
         yref: 'paper',
-      }]
+      }],
+      annotations: <anno[]>[]
     };
 
     const config = {
