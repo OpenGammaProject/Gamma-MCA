@@ -316,7 +316,7 @@ function getFileData(file, background = false) {
             popupNotification('data-error');
             removeFile(background ? 'background' : 'data');
         }
-        plot.plotData(spectrumData, false);
+        plot.resetPlot(spectrumData);
         bindPlotEvents();
     };
     reader.onerror = () => {
@@ -338,10 +338,10 @@ function removeFile(id) {
     spectrumData[id] = [];
     spectrumData[`${id}Time`] = 0;
     document.getElementById(id).value = '';
-    plot.resetPlot(spectrumData);
     document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts('data').toString();
     document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts('background').toString();
     document.getElementById(id + '-icon').classList.add('d-none');
+    plot.resetPlot(spectrumData);
     bindPlotEvents();
 }
 function addImportLabel() {
@@ -1524,7 +1524,7 @@ function refreshRender(type) {
         spectrumData[type] = ser.updateData(spectrumData[type], newData);
         spectrumData[`${type}Cps`] = spectrumData[type].map(val => val / delta.getTime() * 1000);
         if (firstLoad) {
-            plot.plotData(spectrumData, false);
+            plot.resetPlot(spectrumData);
             bindPlotEvents();
             firstLoad = false;
         }

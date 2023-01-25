@@ -27,15 +27,7 @@
     - (!) Clean stuff up and move related things into the same classes (File stuff, serial, plot)
     - (!) Improve updatePlot performance
     - (!) Toolbar Mobile Layout (Hstack?)
-
-    !!! Memory Leak:
-      MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 plotly_click listeners added. Use emitter.setMaxListeners() to increase limit
-      at c (http://127.0.0.1:8080/assets/js/external/plotly-basic.min.js:8:852343)
-      at i.addListener (http://127.0.0.1:8080/assets/js/external/plotly-basic.min.js:8:854927)
-      at bindPlotEvents (http://127.0.0.1:8080/assets/js/main.js:352:12)
-      at toggleCal (http://127.0.0.1:8080/assets/js/main.js:486:5)
-      at document.getElementById.onclick (http://127.0.0.1:8080/assets/js/main.js:442:57)
-
+    
 
   Known Performance Issues:
     - (Un)Selecting all isotopes from gamma-ray energies list (Plotly)
@@ -527,7 +519,7 @@ function getFileData(file: File, background = false): void { // Gets called when
       removeFile(background ? 'background' : 'data'); // Remove file again
     }
 
-    plot.plotData(spectrumData, false);
+    plot.resetPlot(spectrumData);
     bindPlotEvents(); // needed, because of "false" above
   };
 
@@ -554,13 +546,13 @@ function removeFile(id: dataType): void {
   spectrumData[id] = [];
   spectrumData[`${id}Time`] = 0;
   (<HTMLInputElement>document.getElementById(id)).value = '';
-  plot.resetPlot(spectrumData);
 
   document.getElementById('total-spec-cts')!.innerText = spectrumData.getTotalCounts('data').toString();
   document.getElementById('total-bg-cts')!.innerText = spectrumData.getTotalCounts('background').toString();
 
   document.getElementById(id + '-icon')!.classList.add('d-none');
 
+  plot.resetPlot(spectrumData);
   bindPlotEvents(); // Re-Bind Events for new plot
 }
 
@@ -2115,7 +2107,7 @@ function refreshRender(type: dataType): void {
     spectrumData[`${type}Cps`] = spectrumData[type].map(val => val / delta.getTime() * 1000);
 
     if (firstLoad) {
-      plot.plotData(spectrumData, false);
+      plot.resetPlot(spectrumData);
       bindPlotEvents(); // needed, because of "false" above
       firstLoad = false;
     } else {
