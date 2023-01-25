@@ -50,6 +50,10 @@ body {
   height: 12px;
 }
 
+#add-notes {
+  resize: none;
+}
+
 .toast-container {
   z-index: 1111;
 }
