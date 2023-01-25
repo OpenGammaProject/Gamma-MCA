@@ -1,5 +1,5 @@
 export class SpectrumPlot {
-    divId;
+    plotDiv;
     showCalChart = false;
     xAxis = 'linear';
     yAxis = 'linear';
@@ -92,7 +92,7 @@ export class SpectrumPlot {
         }
     };
     constructor(divId) {
-        this.divId = divId;
+        this.plotDiv = document.getElementById(divId);
         console.info('Plotly.js version: ' + window.Plotly.version);
     }
     getXAxis(len) {
@@ -372,6 +372,7 @@ export class SpectrumPlot {
         const maxXValue = Math.max(...trace.x);
         const maxYValue = Math.max(...trace.y);
         const layout = {
+            uirevision: 1,
             autosize: true,
             title: 'Calibration Chart',
             hovermode: 'x',
@@ -398,6 +399,7 @@ export class SpectrumPlot {
                 spikemode: 'across',
                 ticksuffix: '',
                 exponentformat: 'SI',
+                automargin: true
             },
             yaxis: {
                 title: 'Energy [keV]',
@@ -415,6 +417,7 @@ export class SpectrumPlot {
                 ticksuffix: ' keV',
                 showexponent: 'last',
                 exponentformat: 'SI',
+                automargin: true
             },
             plot_bgcolor: 'white',
             paper_bgcolor: '#f8f9fa',
@@ -451,7 +454,7 @@ export class SpectrumPlot {
             modeBarButtonsToAdd: [],
         };
         config.modeBarButtonsToAdd = [this.customModeBarButtons];
-        window.Plotly[update ? 'react' : 'newPlot'](this.divId, [trace, markersTrace], layout, config);
+        window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, markersTrace], layout, config);
     }
     plotData(dataObj, update = true) {
         if (this.showCalChart)
@@ -515,7 +518,7 @@ export class SpectrumPlot {
             }
         }
         let layout = {
-            uirevision: true,
+            uirevision: 1,
             autosize: true,
             title: 'Energy Spectrum',
             hovermode: 'x',
@@ -544,6 +547,7 @@ export class SpectrumPlot {
                 spikemode: 'across',
                 ticksuffix: '',
                 exponentformat: 'SI',
+                automargin: true
             },
             yaxis: {
                 title: 'Counts [1]',
@@ -561,6 +565,7 @@ export class SpectrumPlot {
                 ticksuffix: ' cts',
                 showexponent: 'last',
                 exponentformat: 'SI',
+                automargin: true
             },
             plot_bgcolor: 'white',
             paper_bgcolor: '#f8f9fa',
@@ -612,14 +617,8 @@ export class SpectrumPlot {
             modeBarButtonsToAdd: [],
         };
         if (this.peakConfig.enabled) {
-            if (data.length === 1) {
-                this.peakConfig.lastDataX = data[0].x;
-                this.peakConfig.lastDataY = data[0].y;
-            }
-            else {
-                this.peakConfig.lastDataX = data[1].x;
-                this.peakConfig.lastDataY = data[1].y;
-            }
+            this.peakConfig.lastDataX = data[(data.length === 1) ? 0 : 1].x;
+            this.peakConfig.lastDataY = data[(data.length === 1) ? 0 : 1].y;
             this.peakFinder();
         }
         layout.shapes = this.shapes;
@@ -630,6 +629,6 @@ export class SpectrumPlot {
             }
         }
         config.modeBarButtonsToAdd = [this.customModeBarButtons];
-        window.Plotly[update ? 'react' : 'newPlot'](this.divId, data, layout, config);
+        window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, data, layout, config);
     }
 }

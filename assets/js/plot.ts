@@ -68,7 +68,7 @@ export interface coeffObj {
 }
 
 export class SpectrumPlot {
-  readonly divId: string;
+  readonly plotDiv: HTMLElement | null;
   private showCalChart = false;
   xAxis = 'linear';
   yAxis = 'linear';
@@ -170,7 +170,7 @@ export class SpectrumPlot {
     Constructor
   */
   constructor(divId: string) {
-    this.divId = divId;
+    this.plotDiv = document.getElementById(divId);
     console.info('Plotly.js version: ' + (<any>window).Plotly.version);
   }
   /*
@@ -518,6 +518,7 @@ export class SpectrumPlot {
     const maxYValue = Math.max(...trace.y);
 
     const layout = {
+      uirevision: 1,
       autosize: true, // Needed for resizing on update
       title: 'Calibration Chart',
       hovermode: 'x',
@@ -544,6 +545,7 @@ export class SpectrumPlot {
         spikemode: 'across',
         ticksuffix: '',
         exponentformat: 'SI',
+        automargin: true
       },
       yaxis: {
         title: 'Energy [keV]',
@@ -561,6 +563,7 @@ export class SpectrumPlot {
         ticksuffix: ' keV',
         showexponent: 'last',
         exponentformat: 'SI',
+        automargin: true
       },
       plot_bgcolor: 'white',
       paper_bgcolor: '#f8f9fa', // Bootstrap bg-light
@@ -601,15 +604,22 @@ export class SpectrumPlot {
 
     config.modeBarButtonsToAdd = [this.customModeBarButtons]; // HTML EXPORT FUNCTIONALITY
 
-    (<any>window).Plotly[update ? 'react' : 'newPlot'](this.divId, [trace, markersTrace], layout, config);
+    /*
+    if (!update) {
+      layout.uirevision = Math.random();
+      Object.assign(layout, {selectionrevision: Math.random()});
+      Object.assign(layout, {editrevision: Math.random()});
+    }
+    (<any>window).Plotly[(update === 'nuke') ? 'newPlot' : 'react'](this.plotDiv, [trace, markersTrace], layout, config);
+    */
+    (<any>window).Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, markersTrace], layout, config);
   }
   /*
     Plot All The Data
   */
-  plotData(dataObj: SpectrumData, update = true): void {
+  private plotData(dataObj: SpectrumData, update = true): void {
     if (this.showCalChart) return; // Ignore this if the calibration chart is currently shown
 
-    //const time1 = performance.now();
     let trace = {
       name: 'Clean Spectrum',
       stackgroup: 'data', // Stack line charts on top of each other
@@ -690,7 +700,7 @@ export class SpectrumPlot {
       All The Layout Stuff
     */
     let layout = {
-      uirevision: true,
+      uirevision: 1,
       autosize: true, // Needed for resizing on update
       title: 'Energy Spectrum',
       hovermode: 'x',
@@ -722,6 +732,7 @@ export class SpectrumPlot {
         //tickformat: '.02f',
         ticksuffix: '',
         exponentformat: 'SI',
+        automargin: true
       },
       yaxis: {
         title: 'Counts [1]',
@@ -740,6 +751,7 @@ export class SpectrumPlot {
         //tickformat: '.02f',
         showexponent: 'last',
         exponentformat: 'SI',
+        automargin: true
       },
       plot_bgcolor: 'white',
       paper_bgcolor: '#f8f9fa', // Bootstrap bg-light
@@ -806,13 +818,8 @@ export class SpectrumPlot {
       Peak Detection Stuff
     */
     if (this.peakConfig.enabled) {
-      if (data.length === 1) {
-        this.peakConfig.lastDataX = data[0].x;
-        this.peakConfig.lastDataY = data[0].y;
-      } else {
-        this.peakConfig.lastDataX = data[1].x;
-        this.peakConfig.lastDataY = data[1].y;
-      }
+      this.peakConfig.lastDataX = data[(data.length === 1) ? 0 : 1].x;
+      this.peakConfig.lastDataY = data[(data.length === 1) ? 0 : 1].y;
       this.peakFinder();
     }
 
@@ -830,9 +837,14 @@ export class SpectrumPlot {
     */
     config.modeBarButtonsToAdd = [this.customModeBarButtons];
 
-    //console.log(performance.now() - time1);
-
-    //layout.uirevision = true; // For React
-    (<any>window).Plotly[update ? 'react' : 'newPlot'](this.divId, data, layout, config);
+    /*
+    if (!update) {
+      layout.uirevision = Math.random();
+      Object.assign(layout, {selectionrevision: Math.random()});
+      Object.assign(layout, {editrevision: Math.random()});
+    }
+    (<any>window).Plotly[(update === 'nuke') ? 'newPlot' : 'react'](this.plotDiv, data, layout, config);
+    */
+    (<any>window).Plotly[update ? 'react' : 'newPlot'](this.plotDiv, data, layout, config);
   }
 }

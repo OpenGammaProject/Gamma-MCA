@@ -26,7 +26,6 @@
     - (!) Improve the settings code structure
     - (!) Toolbar Mobile Layout (Hstack?)
     - (!) Check network requests on plot refresh
-    - (!) Improve updatePlot performance
 
 
   Known Performance Issues:
@@ -197,8 +196,7 @@ document.body.onload = async function(): Promise<void> {
     });
   }
 
-  plot.resetPlot(spectrumData);
-  bindPlotEvents(); // Bind click and hover events provided by plotly
+  resetPlot(); // Set up plot window
 
   document.getElementById('version-tag')!.innerText += ` ${APP_VERSION}.`;
 
@@ -525,7 +523,7 @@ function getFileData(file: File, background = false): void { // Gets called when
     }
 
     plot.resetPlot(spectrumData);
-    bindPlotEvents(); // needed, because of "false" above
+    bindPlotEvents();
   };
 
   reader.onerror = () => {
@@ -558,7 +556,7 @@ function removeFile(id: dataType): void {
   document.getElementById(id + '-icon')!.classList.add('d-none');
 
   plot.resetPlot(spectrumData);
-  bindPlotEvents(); // Re-Bind Events for new plot
+  bindPlotEvents();
 }
 
 
@@ -568,7 +566,9 @@ function addImportLabel(): void {
 
 
 function bindPlotEvents(): void {
-  const myPlot = <any>document.getElementById(plot.divId); // Using Plotly on functions
+  if (!plot.plotDiv) return;
+
+  const myPlot = <any>plot.plotDiv;
   myPlot.on('plotly_hover', hoverEvent);
   myPlot.on('plotly_unhover', unHover);
   myPlot.on('plotly_click', clickEvent);
@@ -745,7 +745,7 @@ function toggleCal(enabled: boolean): void {
 
   plot.calibration.enabled = enabled;
   plot.resetPlot(spectrumData);
-  bindPlotEvents(); // needed, because of "false" above
+  bindPlotEvents();
 }
 
 
@@ -2113,7 +2113,7 @@ function refreshRender(type: dataType): void {
 
     if (firstLoad) {
       plot.resetPlot(spectrumData);
-      bindPlotEvents(); // needed, because of "false" above
+      bindPlotEvents();
       firstLoad = false;
     } else {
       plot.updatePlot(spectrumData);

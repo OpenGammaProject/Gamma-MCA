@@ -90,8 +90,7 @@ document.body.onload = async function () {
             console.warn('File could not be imported!');
         });
     }
-    plot.resetPlot(spectrumData);
-    bindPlotEvents();
+    resetPlot();
     document.getElementById('version-tag').innerText += ` ${APP_VERSION}.`;
     if (localStorageAvailable) {
         if (loadJSON('lastVisit') <= 0) {
@@ -352,7 +351,9 @@ function addImportLabel() {
     document.getElementById('calibration-title').classList.remove('d-none');
 }
 function bindPlotEvents() {
-    const myPlot = document.getElementById(plot.divId);
+    if (!plot.plotDiv)
+        return;
+    const myPlot = plot.plotDiv;
     myPlot.on('plotly_hover', hoverEvent);
     myPlot.on('plotly_unhover', unHover);
     myPlot.on('plotly_click', clickEvent);
