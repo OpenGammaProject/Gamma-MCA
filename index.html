@@ -205,7 +205,7 @@
                 <p>Reload this page after you enabled the Web Serial API or have a look at the browser compatability on the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API#browser_compatibility" target="_blank" title="Web Serial API MDN">MDN Web Docs</a>.</p>
               </div>
 
-              <div id="serial-div" class="invisible h-100 d-none">
+              <div id="serial-div" class="invisible d-none h-100">
 
                <div class="row h-100">
                  <div class="col">
@@ -230,7 +230,7 @@
 
                     <hr>
 
-                    <div class="clearfix pe-3 align-middle">
+                    <div class="clearfix">
 
                       <button class="btn btn-primary btn-sm ser-settings" id="record-button" type="button" data-bs-toggle="modal" data-bs-target="#recordModal" title="Start recording"> <i class="fas fa-play"></i> Record </button>
                       <button class="btn btn-primary btn-sm ser-settings d-none" id="pause-button" type="button" title="Pause recording"> <i class="fas fa-pause"></i> Pause </button>
@@ -241,7 +241,7 @@
                         <span class="visually-hidden">Recording...</span>
                       </div>
 
-                      <div class="float-end align-middle">
+                      <div class="float-end">
 
                         <div class="vstack align-middle">
                           <span class="align-middle fw-bold"><span id="record-time"></span><span id="total-record-time"></span></span>
@@ -257,9 +257,13 @@
 
                     <hr>
 
-                    <div class="clearfix pe-3">
+                    <div class="clearfix">
 
-                      <div class="float-end align-middle">
+                      <button class="btn btn-primary btn-sm ser-settings" type="button" data-bs-toggle="modal" data-bs-target="#serialConsoleModal" title="Serial Console" id="open-console" disabled>
+                        <i class="fa-solid fa-terminal"></i> Console
+                      </button>
+
+                      <div class="float-end">
                         <div class="vstack align-middle text-end">
 
                           <span class="align-middle fw-bold" id="cps"></span>
@@ -269,12 +273,6 @@
                       </div>
 
                     </div>
-
-                    <p class="mt-1">
-                      <button class="btn btn-primary btn-sm ser-settings" type="button" data-bs-toggle="modal" data-bs-target="#serialConsoleModal" title="Serial Console" id="open-console" disabled>
-                        <i class="fa-solid fa-terminal"></i> Console
-                      </button>
-                    </p>
 
                   </div>
 

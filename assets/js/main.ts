@@ -163,7 +163,7 @@ document.body.onload = async function(): Promise<void> {
   isoListURL = new URL(isoListURL, window.location.origin).href;
 
   if ('serial' in navigator) { // Web Serial API
-    document.getElementById('serial-div')!.className = ''; // Remove d-none and invisible
+    document.getElementById('serial-div')!.classList.remove('invisible', 'd-none'); // Remove d-none and invisible
     navigator.serial.addEventListener('connect', serialConnect);
     navigator.serial.addEventListener('disconnect', serialDisconnect);
     listSerial(); // List Available Serial Ports

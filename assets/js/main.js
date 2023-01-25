@@ -62,7 +62,7 @@ document.body.onload = async function () {
     }
     isoListURL = new URL(isoListURL, window.location.origin).href;
     if ('serial' in navigator) {
-        document.getElementById('serial-div').className = '';
+        document.getElementById('serial-div').classList.remove('invisible', 'd-none');
         navigator.serial.addEventListener('connect', serialConnect);
         navigator.serial.addEventListener('disconnect', serialDisconnect);
         listSerial();
