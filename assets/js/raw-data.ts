@@ -199,7 +199,7 @@ export class RawData {
         */
         await import('./external/ZSchema-browser-min.js'); // Import ZSchema only when it's needed
 
-        const validator: any = new (<any>window).ZSchema();
+        const validator = new (<any>window).ZSchema();
         validator.validate(json, schema);
         const errors = validator.getLastErrors();
 

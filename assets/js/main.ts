@@ -10,24 +10,24 @@
     - (?) Hotkeys
     - (?) Add desktop notifications
     - (?) Add dead time correction for cps
-    - (?) Manual update button
+    - (?) Manual serviceWorker update button
     - (?) plot.isoList copied from here, so twice the same dict
     - (?) Loading screen while waiting for ZSchema to load
-    - (?) Drag-and-droppable points for calibration chart with
+    - (?) Drag-and-droppable points for calibration chart
 
-    - Check network requests on plot refresh
     - Sorting isotope list
     - Calibration n-polynomial regression
-    - Improve the settings code structure
     - Decrease DOM Size
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
     - Serial Reconnect while paused stops recording
     - Fix log-x axis scale
 
     - (!) Clean stuff up and move related things into the same classes (File stuff, serial, plot)
-    - (!) Improve updatePlot performance
+    - (!) Improve the settings code structure
     - (!) Toolbar Mobile Layout (Hstack?)
-    
+    - (!) Check network requests on plot refresh
+    - (!) Improve updatePlot performance
+
 
   Known Performance Issues:
     - (Un)Selecting all isotopes from gamma-ray energies list (Plotly)
@@ -343,9 +343,14 @@ window.addEventListener('onappinstalled', (): void => {
 
 
 window.addEventListener('shown.bs.tab', (event: Event): void => { // Adjust Plot Size For Main Tab Menu Content Size
-  if ((<HTMLButtonElement>event.target).getAttribute('data-bs-toggle') === 'pill') {
+  const target = <HTMLButtonElement>event.target;
+  if (target.getAttribute('data-bs-toggle') === 'pill') {
     plot.updatePlot(spectrumData);
-    plot.updatePlot(spectrumData);
+
+    if (target.id !== 'calibration-tab') {
+      (<HTMLInputElement>document.getElementById('toggle-calibration-chart')).checked = false;
+      toggleCalChart(false);
+    }
   }
 });
 /*
@@ -875,7 +880,7 @@ function toggleCalChart(enabled: boolean): void {
   const buttonLabel = document.getElementById('toggle-cal-chart-label')!;
   buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Chart' : '<i class="fa-solid fa-eye"></i> Show Chart';
 
-  plot.toggleCalibrationChart(spectrumData);
+  plot.toggleCalibrationChart(spectrumData, enabled);
 }
 
 

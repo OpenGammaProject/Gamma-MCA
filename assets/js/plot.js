@@ -316,8 +316,8 @@ export class SpectrumPlot {
         this.shapes = [];
         this.annotations = [];
     }
-    toggleCalibrationChart(dataObj) {
-        this.showCalChart = !this.showCalChart;
+    toggleCalibrationChart(dataObj, override) {
+        this.showCalChart = (typeof override === 'boolean') ? override : !this.showCalChart;
         this.showCalChart ? this.plotCalibration(dataObj) : this.plotData(dataObj);
     }
     plotCalibration(dataObj, update = true) {

@@ -454,9 +454,8 @@ export class SpectrumPlot {
   /*
     Toggle the calibration chart on or off
   */
-  toggleCalibrationChart(dataObj: SpectrumData): void {
-    this.showCalChart = !this.showCalChart;
-
+  toggleCalibrationChart(dataObj: SpectrumData, override: boolean): void {
+    this.showCalChart = (typeof override === 'boolean') ? override : !this.showCalChart;
     this.showCalChart ? this.plotCalibration(dataObj) : this.plotData(dataObj);
   }
   /*

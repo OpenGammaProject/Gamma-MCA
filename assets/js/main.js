@@ -184,9 +184,13 @@ window.addEventListener('onappinstalled', () => {
     document.getElementById('manual-install').classList.add('d-none');
 });
 window.addEventListener('shown.bs.tab', (event) => {
-    if (event.target.getAttribute('data-bs-toggle') === 'pill') {
+    const target = event.target;
+    if (target.getAttribute('data-bs-toggle') === 'pill') {
         plot.updatePlot(spectrumData);
-        plot.updatePlot(spectrumData);
+        if (target.id !== 'calibration-tab') {
+            document.getElementById('toggle-calibration-chart').checked = false;
+            toggleCalChart(false);
+        }
     }
 });
 document.getElementById('data').onclick = event => { event.target.value = ''; };
@@ -589,7 +593,7 @@ document.getElementById('toggle-calibration-chart').onclick = event => toggleCal
 function toggleCalChart(enabled) {
     const buttonLabel = document.getElementById('toggle-cal-chart-label');
     buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Chart' : '<i class="fa-solid fa-eye"></i> Show Chart';
-    plot.toggleCalibrationChart(spectrumData);
+    plot.toggleCalibrationChart(spectrumData, enabled);
 }
 function addLeadingZero(number) {
     if (parseFloat(number) < 10)
