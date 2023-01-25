@@ -69,6 +69,7 @@ export interface coeffObj {
 
 export class SpectrumPlot {
   readonly divId: string;
+  private showCalChart = false;
   xAxis = 'linear';
   yAxis = 'linear';
   plotType = 'scatter'; //"scatter", "bar"
@@ -371,13 +372,13 @@ export class SpectrumPlot {
     Convenient Wrapper, could do more in the future
   */
   resetPlot(spectrumData: SpectrumData): void {
-    this.plotData(spectrumData, false); // Not Updating
+    this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData, false); // Not Updating
   }
   /*
     Convenient Wrapper, could do more in the future
   */
   updatePlot(spectrumData: SpectrumData): void {
-    this.plotData(spectrumData); // Updating
+    this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData); // Update either spectrum plot or calibration chart
   }
   /*
     Clear all shapes and annotations
@@ -451,9 +452,164 @@ export class SpectrumPlot {
     this.annotations = [];
   }
   /*
+    Toggle the calibration chart on or off
+  */
+  toggleCalibrationChart(dataObj: SpectrumData): void {
+    this.showCalChart = !this.showCalChart;
+
+    this.showCalChart ? this.plotCalibration(dataObj) : this.plotData(dataObj);
+  }
+  /*
+    Plot Calibration Chart
+  */
+  private plotCalibration(dataObj: SpectrumData, update = true): void {
+    const trace = {
+      name: 'Calibration',
+      x: this.getXAxis(dataObj.data.length),
+      y: this.getCalAxis(dataObj.data.length),
+      mode: 'lines', // Remove lines, "lines", "none"
+      fill: 'tozeroy',
+      //opacity: 0.8,
+      line: {
+        color: 'orangered',
+        width: .5,
+      },
+      marker: {
+        color: 'orangered',
+      },
+      width: 1,
+    };
+
+    const markersTrace = {
+      name: 'Calibration Points',
+      x: <number[]>[],
+      y: <number[]>[],
+      mode: 'markers+text',
+      type: 'scatter',
+      marker: {
+        symbol: 'cross-thin',
+        size: 10,
+        color: 'black',
+        line: {
+          color: 'black',
+          width: 2
+        }
+      },
+      text: <String[]>[],
+      textposition: 'top',
+    };
+
+    if (this.calibration.points) {
+      for (const char of ['a', 'b', 'c']) {
+        const fromVar = `${char}From`;
+        const toVar = `${char}To`;
+        if (fromVar in this.calibration.points && toVar in this.calibration.points) {
+          const fromVal = this.calibration.points[fromVar];
+          const toVal = this.calibration.points[toVar];
+          if (fromVal && toVal) {
+            markersTrace.x.push(fromVal);
+            markersTrace.y.push(toVal);
+            markersTrace.text.push('Point ' + char.toUpperCase());
+          }
+        }
+      }
+    }
+
+    const maxXValue = Math.max(...trace.x);
+    const maxYValue = Math.max(...trace.y);
+
+    const layout = {
+      autosize: true, // Needed for resizing on update
+      title: 'Calibration Chart',
+      hovermode: 'x',
+      legend: {
+        orientation: 'h',
+        y: -0.35,
+      },
+      xaxis: {
+        title: 'Bin [1]',
+        mirror: true,
+        linewidth: 2,
+        autorange: false,
+        fixedrange: false,
+        range: [0,maxXValue],
+        rangeslider: {
+          borderwidth: 1,
+          autorange: false,
+          range: [0,maxXValue],
+        },
+        showspikes: true, //Show spike line for X-axis
+        spikethickness: 1,
+        spikedash: 'solid',
+        spikecolor: 'black',
+        spikemode: 'across',
+        ticksuffix: '',
+        exponentformat: 'SI',
+      },
+      yaxis: {
+        title: 'Energy [keV]',
+        mirror: true,
+        linewidth: 2,
+        autorange: true,
+        fixedrange: false,
+        range: [0,maxYValue],
+        showspikes: true, //Show spike line for Y-axis
+        spikethickness: 1,
+        spikedash: 'solid',
+        spikecolor: 'black',
+        spikemode: 'across',
+        showticksuffix: 'last',
+        ticksuffix: ' keV',
+        showexponent: 'last',
+        exponentformat: 'SI',
+      },
+      plot_bgcolor: 'white',
+      paper_bgcolor: '#f8f9fa', // Bootstrap bg-light
+      margin: {
+        l: 80,
+        r: 40,
+        b: 60,
+        t: 60,
+        //pad: 4,
+      },
+      images: [{
+        x: 0.99,
+        y: 0.99,
+        opacity: 0.4,
+        sizex: 0.15,
+        sizey: 0.15,
+        source: '/assets/logo.svg',
+        xanchor: 'right',
+        xref: 'paper',
+        yanchor: 'top',
+        yref: 'paper',
+      }]
+    };
+
+    const config = {
+      responsive: true,
+      scrollZoom: false,
+      displayModeBar: true,
+      displaylogo: false,
+      toImageButtonOptions: {
+        format: this.downloadFormat,
+        filename: 'gamma_mca_calibration',
+      },
+      editable: this.editableMode,
+      modeBarButtonsToAdd: <any[]>[],
+    };
+
+    config.modeBarButtonsToAdd = [this.customModeBarButtons]; // HTML EXPORT FUNCTIONALITY
+
+    (<any>window).Plotly[update ? 'react' : 'newPlot'](this.divId, [trace, markersTrace], layout, config);
+  }
+  /*
     Plot All The Data
   */
   plotData(dataObj: SpectrumData, update = true): void {
+    if (this.showCalChart) return; // Ignore this if the calibration chart is currently shown
+
+    //const time1 = performance.now();
     let trace = {
       name: 'Clean Spectrum',
       stackgroup: 'data', // Stack line charts on top of each other
@@ -545,7 +701,7 @@ export class SpectrumPlot {
       barmode: 'stack',
 
       xaxis: {
-        title: 'ADC Channel [1]',
+        title: 'Bin [1]',
         mirror: true,
         linewidth: 2,
         autorange: false,
@@ -640,7 +796,7 @@ export class SpectrumPlot {
       displaylogo: false,
       toImageButtonOptions: {
         format: this.downloadFormat,
-        filename: 'gamma_mca_export',
+        filename: 'gamma_mca_spectrum',
       },
       editable: this.editableMode,
       modeBarButtonsToAdd: <any[]>[],
@@ -673,6 +829,8 @@ export class SpectrumPlot {
       HTML EXPORT FUNCTIONALITY
     */
     config.modeBarButtonsToAdd = [this.customModeBarButtons];
+
+    //console.log(performance.now() - time1);
 
     //layout.uirevision = true; // For React
     (<any>window).Plotly[update ? 'react' : 'newPlot'](this.divId, data, layout, config);

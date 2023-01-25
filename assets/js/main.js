@@ -232,6 +232,7 @@ function getFileData(file, background = false) {
                     spectrumData.backgroundCps = spectrumData.background.map(val => val / meta.backgroundMt);
                 const importedCount = Object.values(coeff).filter(value => value !== 0).length;
                 if (importedCount >= 2) {
+                    resetCal();
                     plot.calibration.coeff = coeff;
                     plot.calibration.imported = true;
                     displayCoeffs();
@@ -280,6 +281,7 @@ function getFileData(file, background = false) {
                     if ('energyCalibration' in importData.resultData[newKey]) {
                         const coeffArray = importData.resultData[newKey].energyCalibration.coefficients;
                         const numCoeff = importData.resultData[newKey].energyCalibration.polynomialOrder;
+                        resetCal();
                         for (const index in coeffArray) {
                             plot.calibration.coeff[`c${numCoeff - parseInt(index) + 1}`] = coeffArray[index];
                         }
@@ -482,7 +484,7 @@ function toggleCal(enabled) {
     }
     displayCoeffs();
     plot.calibration.enabled = enabled;
-    plot.plotData(spectrumData, false);
+    plot.resetPlot(spectrumData);
     bindPlotEvents();
 }
 function displayCoeffs() {
@@ -498,6 +500,7 @@ function resetCal() {
     const calSettings = document.getElementsByClassName('cal-setting');
     for (const element of calSettings) {
         element.disabled = false;
+        element.value = '';
     }
     document.getElementById('calibration-title').classList.add('d-none');
     plot.clearCalibration();
@@ -581,6 +584,12 @@ function importCal(file) {
         popupNotification('file-error');
         return;
     };
+}
+document.getElementById('toggle-calibration-chart').onclick = event => toggleCalChart(event.target.checked);
+function toggleCalChart(enabled) {
+    const buttonLabel = document.getElementById('toggle-cal-chart-label');
+    buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Chart' : '<i class="fa-solid fa-eye"></i> Show Chart';
+    plot.toggleCalibrationChart(spectrumData);
 }
 function addLeadingZero(number) {
     if (parseFloat(number) < 10)

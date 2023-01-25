@@ -13,6 +13,7 @@
     - (?) Manual update button
     - (?) plot.isoList copied from here, so twice the same dict
     - (?) Loading screen while waiting for ZSchema to load
+    - (?) Drag-and-droppable points for calibration chart with
 
     - Check network requests on plot refresh
     - Sorting isotope list
@@ -21,10 +22,19 @@
     - Decrease DOM Size
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
     - Serial Reconnect while paused stops recording
+    - Fix log-x axis scale
 
     - (!) Clean stuff up and move related things into the same classes (File stuff, serial, plot)
     - (!) Improve updatePlot performance
     - (!) Toolbar Mobile Layout (Hstack?)
+
+    !!! Memory Leak:
+      MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 plotly_click listeners added. Use emitter.setMaxListeners() to increase limit
+      at c (http://127.0.0.1:8080/assets/js/external/plotly-basic.min.js:8:852343)
+      at i.addListener (http://127.0.0.1:8080/assets/js/external/plotly-basic.min.js:8:854927)
+      at bindPlotEvents (http://127.0.0.1:8080/assets/js/main.js:352:12)
+      at toggleCal (http://127.0.0.1:8080/assets/js/main.js:486:5)
+      at document.getElementById.onclick (http://127.0.0.1:8080/assets/js/main.js:442:57)
 
 
   Known Performance Issues:
@@ -416,6 +426,7 @@ function getFileData(file: File, background = false): void { // Gets called when
         const importedCount = Object.values(coeff).filter(value => value !== 0).length;
 
         if (importedCount >= 2) {
+          resetCal(); // Reset in case of old calibration
           plot.calibration.coeff = coeff;
           plot.calibration.imported = true;
           displayCoeffs();
@@ -474,6 +485,8 @@ function getFileData(file: File, background = false): void { // Gets called when
           if ('energyCalibration' in importData.resultData[newKey]!) {
             const coeffArray: number[] = importData.resultData[newKey]!.energyCalibration!.coefficients;
             const numCoeff: number = importData.resultData[newKey]!.energyCalibration!.polynomialOrder;
+
+            resetCal(); // Reset in case of old calibration
 
             for (const index in coeffArray) {
               plot.calibration.coeff[`c${numCoeff-parseInt(index)+1}`] = coeffArray[index];
@@ -734,7 +747,7 @@ function toggleCal(enabled: boolean): void {
   displayCoeffs();
 
   plot.calibration.enabled = enabled;
-  plot.plotData(spectrumData, false);
+  plot.resetPlot(spectrumData);
   bindPlotEvents(); // needed, because of "false" above
 }
 
@@ -754,8 +767,9 @@ function resetCal(): void {
   }
 
   const calSettings = document.getElementsByClassName('cal-setting');
-  for (const element of calSettings) {
-    (<HTMLInputElement>element).disabled = false;
+  for (const element of <HTMLCollectionOf<HTMLInputElement>>calSettings) {
+    element.disabled = false;
+    element.value = '';
   }
 
   document.getElementById('calibration-title')!.classList.add('d-none');
@@ -860,6 +874,16 @@ function importCal(file: File): void {
     popupNotification('file-error');
     return;
   };
+}
+
+
+document.getElementById('toggle-calibration-chart')!.onclick = event => toggleCalChart((<HTMLInputElement>event.target).checked);
+
+function toggleCalChart(enabled: boolean): void {
+  const buttonLabel = document.getElementById('toggle-cal-chart-label')!;
+  buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Chart' : '<i class="fa-solid fa-eye"></i> Show Chart';
+
+  plot.toggleCalibrationChart(spectrumData);
 }
 
 

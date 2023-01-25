@@ -1,5 +1,6 @@
 export class SpectrumPlot {
     divId;
+    showCalChart = false;
     xAxis = 'linear';
     yAxis = 'linear';
     plotType = 'scatter';
@@ -248,10 +249,10 @@ export class SpectrumPlot {
         }
     }
     resetPlot(spectrumData) {
-        this.plotData(spectrumData, false);
+        this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData, false);
     }
     updatePlot(spectrumData) {
-        this.plotData(spectrumData);
+        this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData);
     }
     clearShapeAnno() {
         this.shapes = [];
@@ -315,7 +316,145 @@ export class SpectrumPlot {
         this.shapes = [];
         this.annotations = [];
     }
+    toggleCalibrationChart(dataObj) {
+        this.showCalChart = !this.showCalChart;
+        this.showCalChart ? this.plotCalibration(dataObj) : this.plotData(dataObj);
+    }
+    plotCalibration(dataObj, update = true) {
+        const trace = {
+            name: 'Calibration',
+            x: this.getXAxis(dataObj.data.length),
+            y: this.getCalAxis(dataObj.data.length),
+            mode: 'lines',
+            fill: 'tozeroy',
+            line: {
+                color: 'orangered',
+                width: .5,
+            },
+            marker: {
+                color: 'orangered',
+            },
+            width: 1,
+        };
+        const markersTrace = {
+            name: 'Calibration Points',
+            x: [],
+            y: [],
+            mode: 'markers+text',
+            type: 'scatter',
+            marker: {
+                symbol: 'cross-thin',
+                size: 10,
+                color: 'black',
+                line: {
+                    color: 'black',
+                    width: 2
+                }
+            },
+            text: [],
+            textposition: 'top',
+        };
+        if (this.calibration.points) {
+            for (const char of ['a', 'b', 'c']) {
+                const fromVar = `${char}From`;
+                const toVar = `${char}To`;
+                if (fromVar in this.calibration.points && toVar in this.calibration.points) {
+                    const fromVal = this.calibration.points[fromVar];
+                    const toVal = this.calibration.points[toVar];
+                    if (fromVal && toVal) {
+                        markersTrace.x.push(fromVal);
+                        markersTrace.y.push(toVal);
+                        markersTrace.text.push('Point ' + char.toUpperCase());
+                    }
+                }
+            }
+        }
+        const maxXValue = Math.max(...trace.x);
+        const maxYValue = Math.max(...trace.y);
+        const layout = {
+            autosize: true,
+            title: 'Calibration Chart',
+            hovermode: 'x',
+            legend: {
+                orientation: 'h',
+                y: -0.35,
+            },
+            xaxis: {
+                title: 'Bin [1]',
+                mirror: true,
+                linewidth: 2,
+                autorange: false,
+                fixedrange: false,
+                range: [0, maxXValue],
+                rangeslider: {
+                    borderwidth: 1,
+                    autorange: false,
+                    range: [0, maxXValue],
+                },
+                showspikes: true,
+                spikethickness: 1,
+                spikedash: 'solid',
+                spikecolor: 'black',
+                spikemode: 'across',
+                ticksuffix: '',
+                exponentformat: 'SI',
+            },
+            yaxis: {
+                title: 'Energy [keV]',
+                mirror: true,
+                linewidth: 2,
+                autorange: true,
+                fixedrange: false,
+                range: [0, maxYValue],
+                showspikes: true,
+                spikethickness: 1,
+                spikedash: 'solid',
+                spikecolor: 'black',
+                spikemode: 'across',
+                showticksuffix: 'last',
+                ticksuffix: ' keV',
+                showexponent: 'last',
+                exponentformat: 'SI',
+            },
+            plot_bgcolor: 'white',
+            paper_bgcolor: '#f8f9fa',
+            margin: {
+                l: 80,
+                r: 40,
+                b: 60,
+                t: 60,
+            },
+            images: [{
+                    x: 0.99,
+                    y: 0.99,
+                    opacity: 0.4,
+                    sizex: 0.15,
+                    sizey: 0.15,
+                    source: '/assets/logo.svg',
+                    xanchor: 'right',
+                    xref: 'paper',
+                    yanchor: 'top',
+                    yref: 'paper',
+                }]
+        };
+        const config = {
+            responsive: true,
+            scrollZoom: false,
+            displayModeBar: true,
+            displaylogo: false,
+            toImageButtonOptions: {
+                format: this.downloadFormat,
+                filename: 'gamma_mca_calibration',
+            },
+            editable: this.editableMode,
+            modeBarButtonsToAdd: [],
+        };
+        config.modeBarButtonsToAdd = [this.customModeBarButtons];
+        window.Plotly[update ? 'react' : 'newPlot'](this.divId, [trace, markersTrace], layout, config);
+    }
     plotData(dataObj, update = true) {
+        if (this.showCalChart)
+            return;
         let trace = {
             name: 'Clean Spectrum',
             stackgroup: 'data',
@@ -385,7 +524,7 @@ export class SpectrumPlot {
             },
             barmode: 'stack',
             xaxis: {
-                title: 'ADC Channel [1]',
+                title: 'Bin [1]',
                 mirror: true,
                 linewidth: 2,
                 autorange: false,
@@ -466,7 +605,7 @@ export class SpectrumPlot {
             displaylogo: false,
             toImageButtonOptions: {
                 format: this.downloadFormat,
-                filename: 'gamma_mca_export',
+                filename: 'gamma_mca_spectrum',
             },
             editable: this.editableMode,
             modeBarButtonsToAdd: [],

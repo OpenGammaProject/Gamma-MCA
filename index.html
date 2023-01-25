@@ -377,17 +377,24 @@
 
                     <hr>
 
-                    <p>
-                      <input type="checkbox" class="btn-check" id="apply-cal">
-                      <label class="btn btn-outline-primary btn-sm" title="Toggle plot calibration" id="calibration-label" for="apply-cal"> <i class="fa-solid fa-check"></i> Calibrate </label>
+                    <div class="vstack gap-2">
+                      <div class="hstack gap-1">
+                        <input type="checkbox" class="btn-check" id="apply-cal">
+                        <label class="btn btn-outline-primary btn-sm" title="Toggle plot calibration" id="calibration-label" for="apply-cal"> <i class="fa-solid fa-check"></i> Calibrate </label>
 
-                      <button class="btn btn-primary btn-sm" type="reset" id="calibration-reset" title="Clear calibration"> <i class="fas fa-trash"></i> Delete</button>
+                        <button class="btn btn-primary btn-sm" type="reset" id="calibration-reset" title="Clear calibration"> <i class="fas fa-trash"></i> Delete</button>
 
-                      <label for="cal-input" class="btn btn-primary btn-sm" title="Import a calibration.json"> <i class="fas fa-file-import"></i> Import </label>
-                      <input id="cal-input" class="visually-hidden" type="file" accept=".json" name="name">
+                        <input type="checkbox" class="btn-check" id="toggle-calibration-chart">
+                        <label class="btn btn-outline-primary btn-sm" title="Show Calibration Chart" id="toggle-cal-chart-label" for="toggle-calibration-chart"> <i class="fa-solid fa-eye"></i> Show Chart </label>
+                      </div>
 
-                      <button class="btn btn-primary btn-sm" type="button" id="calibration-download" title="Export the calibration.json"> <i class="fas fa-file-export"></i> Export </button>
-                    </p>
+                      <div class="hstack gap-1">
+                        <label for="cal-input" class="btn btn-primary btn-sm" title="Import a calibration.json"> <i class="fas fa-file-import"></i> Import </label>
+                        <input id="cal-input" class="visually-hidden" type="file" accept=".json" name="name">
+
+                        <button class="btn btn-primary btn-sm" type="button" id="calibration-download" title="Export the calibration.json"> <i class="fas fa-file-export"></i> Export </button>
+                      </div>
+                    </div>
 
                   </form>
                 </div>
