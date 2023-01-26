@@ -15,12 +15,14 @@
     - (?) Loading screen while waiting for ZSchema to load
     - (?) Drag-and-droppable points for calibration chart
 
+    - Improve peak finder
     - Sorting isotope list
     - Calibration n-polynomial regression
     - Decrease DOM Size
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
     - Serial Reconnect while paused stops recording
     - Fix log-x axis scale
+    - Delete DOM nodes instead of making invis
 
     - (!) Clean stuff up and move related things into the same classes (File stuff, serial, plot)
     - (!) Improve the settings code structure
