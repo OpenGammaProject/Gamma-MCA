@@ -5,6 +5,7 @@ export class RawData {
     fileType;
     tempValIndex;
     schemaURL = '/assets/npes-1.schema.json';
+    jsonSchema;
     constructor(valueIndex, delimiter = ',') {
         this.valueIndex = valueIndex;
         this.delimiter = delimiter;
@@ -114,21 +115,24 @@ export class RawData {
             return false;
         }
         try {
-            const response = await fetch(this.schemaURL);
-            if (response.ok) {
-                const schema = await response.json();
-                delete schema['$schema'];
-                await import('./external/ZSchema-browser-min.js');
-                const validator = new window.ZSchema();
-                validator.validate(json, schema);
-                const errors = validator.getLastErrors();
-                if (errors)
-                    throw errors;
-                return json;
+            if (!this.jsonSchema) {
+                const response = await fetch(this.schemaURL);
+                if (response.ok) {
+                    const schema = await response.json();
+                    delete schema['$schema'];
+                    this.jsonSchema = schema;
+                }
+                else {
+                    throw 'Could not load the schema file!';
+                }
             }
-            else {
-                throw 'Could not load the schema file!';
-            }
+            await import('./external/ZSchema-browser-min.js');
+            const validator = new window.ZSchema();
+            validator.validate(json, this.jsonSchema);
+            const errors = validator.getLastErrors();
+            if (errors)
+                throw errors;
+            return json;
         }
         catch (e) {
             console.error(e);

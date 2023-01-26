@@ -844,6 +844,7 @@ function hideNotification(id) {
     new window.bootstrap.Toast(document.getElementById(id)).hide();
 }
 document.getElementById('toggle-menu').onclick = () => loadIsotopes();
+document.getElementById('reload-isos-btn').onclick = () => loadIsotopes(true);
 let loadedIsos = false;
 async function loadIsotopes(reload = false) {
     if (loadedIsos && !reload)
@@ -909,10 +910,6 @@ async function loadIsotopes(reload = false) {
     }
     loadingElement.classList.add('d-none');
     return successFlag;
-}
-document.getElementById('reload-isos-btn').onclick = () => reloadIsotopes();
-function reloadIsotopes() {
-    loadIsotopes(true);
 }
 function seekClosest(value) {
     const closeVals = Object.keys(isoList).filter(energy => {
@@ -1122,7 +1119,7 @@ function changeSettings(name, element) {
         case 'customURL':
             try {
                 isoListURL = new URL(value).href;
-                reloadIsotopes();
+                loadIsotopes(true);
                 saveJSON(name, isoListURL);
             }
             catch (e) {

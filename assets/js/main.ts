@@ -27,7 +27,6 @@
     - (!) Clean stuff up and move related things into the same classes (File stuff, serial, plot)
     - (!) Improve the settings code structure
     - (!) Toolbar Mobile Layout (Hstack?)
-    - (!) resetPlot network request + store json schema once downloaded
 
 
   Known Performance Issues:
@@ -596,7 +595,7 @@ function resetPlot(): void {
 
   plot.clearAnnos();
   (<HTMLInputElement>document.getElementById('check-all-isos')).checked = false; // reset "select all" checkbox
-  loadIsotopes(true);
+  loadIsotopes(true); // Plot resets all isotope lines, but they stay checked if not force reloaded
   plot.resetPlot(spectrumData);
   bindPlotEvents(); // Fix Reset Bug: Hovering and Clicking not working.
 }
@@ -1227,6 +1226,7 @@ function hideNotification(id: string): void {
 
 
 document.getElementById('toggle-menu')!.onclick = () => loadIsotopes();
+document.getElementById('reload-isos-btn')!.onclick = () => loadIsotopes(true);
 
 let loadedIsos = false;
 
@@ -1311,14 +1311,6 @@ async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope 
 
   loadingElement.classList.add('d-none');
   return successFlag;
-}
-
-
-document.getElementById('reload-isos-btn')!.onclick = () => reloadIsotopes();
-
-function reloadIsotopes(): void {
-  //loadedIsos = false;
-  loadIsotopes(true);
 }
 
 
@@ -1575,7 +1567,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       try {
         isoListURL = new URL(value).href;
 
-        reloadIsotopes();
+        loadIsotopes(true);
 
         saveJSON(name, isoListURL);
 
