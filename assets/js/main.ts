@@ -26,7 +26,6 @@
 
     - (!) Clean stuff up and move related things into the same classes (File stuff, serial, plot)
     - (!) Improve the settings code structure
-    - (!) Toolbar Mobile Layout (Hstack?)
 
 
   Known Performance Issues:
