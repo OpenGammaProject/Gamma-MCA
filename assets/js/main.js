@@ -1508,7 +1508,7 @@ function refreshMeta(type) {
             totalTimeElement.innerText = '';
         }
         document.getElementById('ser-time-progress-bar').classList.toggle('d-none', !maxRecTimeEnabled);
-        if (delta.getTime() > maxRecTime && maxRecTimeEnabled) {
+        if (delta.getTime() >= maxRecTime && maxRecTimeEnabled) {
             disconnectPort(true);
             popupNotification('auto-stop');
         }

@@ -27,7 +27,7 @@
     - (!) Clean stuff up and move related things into the same classes (File stuff, serial, plot)
     - (!) Improve the settings code structure
     - (!) Toolbar Mobile Layout (Hstack?)
-    - (!) Check network requests on plot refresh
+    - (!) resetPlot network request + store json schema once downloaded
 
 
   Known Performance Issues:
@@ -2088,7 +2088,7 @@ function refreshMeta(type: dataType): void {
     }
     document.getElementById('ser-time-progress-bar')!.classList.toggle('d-none', !maxRecTimeEnabled);
 
-    if (delta.getTime() > maxRecTime && maxRecTimeEnabled) {
+    if (delta.getTime() >= maxRecTime && maxRecTimeEnabled) {
       disconnectPort(true);
       popupNotification('auto-stop');
     } else {
