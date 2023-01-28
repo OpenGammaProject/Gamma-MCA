@@ -8,21 +8,18 @@
 
   Possible Future Improvements:
     - (?) Hotkeys
-    - (?) Add desktop notifications
-    - (?) Add dead time correction for cps
-    - (?) Manual serviceWorker update button
-    - (?) Loading screen while waiting for ZSchema to load
-    - (?) Drag-and-droppable points for calibration chart
     - (?) Dark Mode
+    - (?) Add desktop notifications
+    - (?) File System Access
+    - (?) Add dead time correction for cps
+    - (?) Drag-and-droppable points for calibration chart
 
     - Put all toasts notifications into classes
     - Improve peak finder
     - Sorting isotope list
     - Calibration n-polynomial regression
     - Improve the settings code structure
-    - Decrease DOM Size
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
-    - Serial Reconnect while paused stops recording
     - Fix log-x axis scale
     - Delete DOM nodes instead of making invis
     - Show measurement time for both files

@@ -201,7 +201,7 @@ export class SerialManager {
 
       let stringArr = this.rawData.split('\r\n');
 
-      //stringArr.pop(); // Delete last entry to avoid counting unfinished transmissions
+      stringArr.pop(); // Delete last entry to avoid counting unfinished transmissions
       //stringArr.shift(); // Delete first entry. !FIX SERIAL COMMUNICATION ERRORS!
 
       if (!stringArr.length) {

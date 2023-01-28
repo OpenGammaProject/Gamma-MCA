@@ -141,6 +141,7 @@ export class SerialManager {
         }
         else if (SerialManager.orderType === 'hist') {
             let stringArr = this.rawData.split('\r\n');
+            stringArr.pop();
             if (!stringArr.length) {
                 if (this.rawData.length > this.maxHistLength)
                     this.rawData = '';
