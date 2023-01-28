@@ -493,14 +493,18 @@ function toggleCal(enabled) {
                     return;
                 }
             }
-            if (validArray.length === 2)
-                validArray.push([-1, -1]);
             plot.calibration.points.aFrom = validArray[0][0];
-            plot.calibration.points.bFrom = validArray[1][0];
-            plot.calibration.points.cFrom = validArray[2][0];
             plot.calibration.points.aTo = validArray[0][1];
+            plot.calibration.points.bFrom = validArray[1][0];
             plot.calibration.points.bTo = validArray[1][1];
-            plot.calibration.points.cTo = validArray[2][1];
+            if (validArray.length === 3) {
+                plot.calibration.points.cTo = validArray[2][1];
+                plot.calibration.points.cFrom = validArray[2][0];
+            }
+            else {
+                delete plot.calibration.points.cTo;
+                delete plot.calibration.points.cFrom;
+            }
             plot.computeCoefficients();
         }
     }
@@ -589,12 +593,7 @@ function importCal(file) {
                         readoutArray[index].value = obj[inputArr[index]];
                     }
                     else {
-                        if (obj.points[inputArr[index]] === -1) {
-                            readoutArray[index].value = '';
-                        }
-                        else {
-                            readoutArray[index].value = obj.points[inputArr[index]];
-                        }
+                        readoutArray[index].value = obj.points[inputArr[index]];
                     }
                 }
                 oldCalVals.a = readoutArray[0].value;
@@ -645,7 +644,12 @@ function toLocalIsoString(date) {
 }
 document.getElementById('calibration-download').onclick = () => downloadCal();
 function downloadCal() {
-    download(`calibration_${getDateString()}.json`, JSON.stringify(plot.calibration));
+    const calObj = plot.calibration;
+    if (!calObj.points.cFrom)
+        delete calObj.points.cFrom;
+    if (!calObj.points.cTo)
+        delete calObj.points.cTo;
+    download(`calibration_${getDateString()}.json`, JSON.stringify(calObj));
 }
 function makeXMLSpectrum(type, name) {
     const root = document.createElementNS(null, (type === 'data') ? 'EnergySpectrum' : 'BackgroundEnergySpectrum');

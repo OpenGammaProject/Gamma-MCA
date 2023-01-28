@@ -121,10 +121,10 @@ export class SpectrumPlot {
     computeCoefficients() {
         const aF = this.calibration.points.aFrom;
         const bF = this.calibration.points.bFrom;
-        const cF = this.calibration.points.cFrom;
+        const cF = this.calibration.points.cFrom ?? -1;
         const aT = this.calibration.points.aTo;
         const bT = this.calibration.points.bTo;
-        const cT = this.calibration.points.cTo;
+        const cT = this.calibration.points.cTo ?? -1;
         if (cT >= 0 && cF >= 0) {
             const denom = (aF - bF) * (aF - cF) * (bF - cF);
             this.calibration.coeff.c1 = (cF * (bT - aT) + bF * (aT - cT) + aF * (cT - bT)) / denom;
@@ -355,7 +355,9 @@ export class SpectrumPlot {
             textposition: 'top',
         };
         if (this.calibration.points) {
-            for (const char of ['a', 'b', 'c']) {
+            const charArr = ['a', 'b', 'c'];
+            for (const index in charArr) {
+                const char = charArr[index];
                 const fromVar = `${char}From`;
                 const toVar = `${char}To`;
                 if (fromVar in this.calibration.points && toVar in this.calibration.points) {
@@ -364,7 +366,7 @@ export class SpectrumPlot {
                     if (fromVal && toVal) {
                         markersTrace.x.push(fromVal);
                         markersTrace.y.push(toVal);
-                        markersTrace.text.push('Point ' + char.toUpperCase());
+                        markersTrace.text.push('Point ' + (parseInt(index) + 1).toString());
                     }
                 }
             }
