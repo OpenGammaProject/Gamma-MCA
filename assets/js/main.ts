@@ -11,21 +11,24 @@
     - (?) Add desktop notifications
     - (?) Add dead time correction for cps
     - (?) Manual serviceWorker update button
-    - (?) plot.isoList copied from here, so twice the same dict
     - (?) Loading screen while waiting for ZSchema to load
     - (?) Drag-and-droppable points for calibration chart
+    - (?) Dark Mode
 
+    - Put all toasts notifications into classes
     - Improve peak finder
     - Sorting isotope list
     - Calibration n-polynomial regression
+    - Improve the settings code structure
     - Decrease DOM Size
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
     - Serial Reconnect while paused stops recording
     - Fix log-x axis scale
     - Delete DOM nodes instead of making invis
+    - Show measurement time for both files
+    - plot.isoList copied from here, so twice the same dict
 
-    - (!) Clean stuff up and move related things into the same classes (File stuff, serial, plot)
-    - (!) Improve the settings code structure
+    - (!) Sometimes only half the actual cps are shown in histogram serial mode?!?!
 
 
   Known Performance Issues:
@@ -37,7 +40,7 @@
 
 import {SpectrumPlot} from './plot.js';
 import {RawData} from './raw-data.js';
-import {SerialData} from './serial.js';
+import {SerialManager} from './serial.js';
 
 export interface isotopeList {
   [key: number]: string | undefined;
@@ -92,33 +95,45 @@ export class SpectrumData { // Will hold the measurement data globally.
   dataTime = 1000; // Measurement time in ms
   backgroundTime = 1000; // Measurement time in ms
 
-  getTotalCounts = (type: dataType): number => {
+  getTotalCounts(type: dataType): number {
     let sum = 0;
     this[type].forEach(item => {
       sum += item;
     });
     return sum;
-  };
+  }
+
+  addPulseData(type: dataType, newDataArr: number[], adcChannels: number): void {
+    if(!this[type].length) this[type] = Array(adcChannels).fill(0);
+
+    for (const value of newDataArr) {
+      this[type][value] += 1;
+    }
+  }
+
+  addHist(type: dataType, newHistArr: number[]): void {
+    if(!this[type].length) this[type] = newHistArr;
+
+    for (const index in newHistArr) {
+      this[type][index] += newHistArr[index];
+    }
+  }
 };
 
 // Holds all the classes
 let spectrumData = new SpectrumData();
 let plot = new SpectrumPlot('plot');
 let raw = new RawData(1); // 2=raw, 1=hist
-let ser = new SerialData();
 
 let calClick = { a: false, b: false, c: false };
 let oldCalVals = { a: '', b: '', c: ''};
 
-/* Put these 2 into serial.ts?! */
 let portsAvail: portList = {};
-let serOptions = { baudRate: 9600 }; // Standard baud-rate of 9600 bps
-
 let refreshRate = 1000; // Delay in ms between serial plot updates
 let maxRecTimeEnabled = false;
-let maxRecTime = 1800000; // 30 mins
-const REFRESH_META_TIME = 200; // 100 ms
-const CONSOLE_REFRESH = 500; // 500 ms
+let maxRecTime = 1800000; // 30 minutes
+const REFRESH_META_TIME = 200; // Milliseconds
+const CONSOLE_REFRESH = 200; // Milliseconds
 
 let cpsValues: number[] = [];
 
@@ -226,6 +241,12 @@ document.body.onload = async function(): Promise<void> {
 
     const settingsNotSaveAlert = document.getElementById('ls-unavailable')!; // Remove saving alert
     settingsNotSaveAlert.parentNode!.removeChild(settingsNotSaveAlert);
+
+    const getAutoScrollValue = loadJSON('consoleAutoscrollEnabled');
+    if (getAutoScrollValue) {
+      autoscrollEnabled = getAutoScrollValue;
+      (<HTMLInputElement>document.getElementById('autoscroll-console')).checked = getAutoScrollValue;
+    }
   } else {
     const settingsSaveAlert = document.getElementById('ls-available')!; // Remove saving alert
     settingsSaveAlert.parentNode!.removeChild(settingsSaveAlert);
@@ -256,6 +277,18 @@ document.body.onload = async function(): Promise<void> {
   }
   for (const [key, value] of Object.entries(enterPressObj)) {
     document.getElementById(key)!.onkeydown = event => enterPress(event, value);
+  }
+
+  const menuElements = document.getElementById('main-tabs')!.getElementsByTagName('button');
+  for (const button of menuElements) {
+    button.addEventListener('shown.bs.tab', (event: Event): void => {
+      plot.updatePlot(spectrumData); // Adjust Plot Size For Main Tab Menu Content Size
+
+      if ((<HTMLButtonElement>event.target).id !== 'calibration-tab') { // Leave cal chart when leaving cal tab
+        (<HTMLInputElement>document.getElementById('toggle-calibration-chart')).checked = false;
+        toggleCalChart(false);
+      }
+    });
   }
 
   const loadingSpinner = document.getElementById('loading')!;
@@ -339,18 +372,6 @@ window.addEventListener('onappinstalled', (): void => {
   document.getElementById('manual-install')!.classList.add('d-none');
 });
 
-
-window.addEventListener('shown.bs.tab', (event: Event): void => { // Adjust Plot Size For Main Tab Menu Content Size
-  const target = <HTMLButtonElement>event.target;
-  if (target.getAttribute('data-bs-toggle') === 'pill') {
-    plot.updatePlot(spectrumData);
-
-    if (target.id !== 'calibration-tab') {
-      (<HTMLInputElement>document.getElementById('toggle-calibration-chart')).checked = false;
-      toggleCalChart(false);
-    }
-  }
-});
 /*
 document.onkeydown = async function(event) {
   console.log(event.keyCode);
@@ -364,6 +385,7 @@ document.onkeydown = async function(event) {
   }
 };
 */
+
 document.getElementById('data')!.onclick = event => {(<HTMLInputElement>event.target).value = ''};
 document.getElementById('background')!.onclick = event => {(<HTMLInputElement>event.target).value = ''};
 
@@ -744,8 +766,9 @@ function toggleCal(enabled: boolean): void {
   displayCoeffs();
 
   plot.calibration.enabled = enabled;
-  plot.resetPlot(spectrumData);
-  bindPlotEvents();
+  //plot.resetPlot(spectrumData); // UNCOMMENT IF SOMETHING BREAKS, THIS MIGHT BE RISKY
+  //bindPlotEvents();
+  plot.updatePlot(spectrumData);
 }
 
 
@@ -797,6 +820,16 @@ function changeType(): void {
     button.innerHTML = '<i class="fas fa-chart-line"></i> Line';
     plot.plotType = 'scatter';
   }
+  plot.updatePlot(spectrumData);
+}
+
+
+document.getElementById('plot-cps')!.onclick = event => toggleCps(<HTMLButtonElement>event.target);
+
+function toggleCps(button: HTMLButtonElement): void {
+  plot.cps = !plot.cps;
+
+  button.innerText = plot.cps ? 'CPS' : 'Total';
   plot.updatePlot(spectrumData);
 }
 
@@ -1437,16 +1470,16 @@ function loadSettingsDefault(): void {
   (<HTMLInputElement>document.getElementById('custom-delimiter')).value = raw.delimiter;
   (<HTMLInputElement>document.getElementById('custom-file-adc')).value = raw.adcChannels.toString();
   (<HTMLInputElement>document.getElementById('custom-ser-refresh')).value = (refreshRate / 1000).toString(); // convert ms to s
-  (<HTMLInputElement>document.getElementById('custom-ser-buffer')).value = ser.maxSize.toString();
-  (<HTMLInputElement>document.getElementById('custom-ser-adc')).value = ser.adcChannels.toString();
+  (<HTMLInputElement>document.getElementById('custom-ser-buffer')).value = SerialManager.maxSize.toString();
+  (<HTMLInputElement>document.getElementById('custom-ser-adc')).value = SerialManager.adcChannels.toString();
   const autoStop = <HTMLInputElement>document.getElementById('ser-limit');
   autoStop.value = (maxRecTime / 1000).toString(); // convert ms to s
   autoStop.disabled = !maxRecTimeEnabled;
   (<HTMLInputElement>document.getElementById('ser-limit-btn')).disabled = !maxRecTimeEnabled;
   (<HTMLInputElement>document.getElementById('toggle-time-limit')).checked = maxRecTimeEnabled;
   (<HTMLInputElement>document.getElementById('iso-hover-prox')).value = maxDist.toString();
-  (<HTMLInputElement>document.getElementById('custom-baud')).value = serOptions.baudRate.toString();
-  (<HTMLInputElement>document.getElementById('eol-char')).value = ser.eolChar;
+  (<HTMLInputElement>document.getElementById('custom-baud')).value = SerialManager.serOptions.baudRate.toString();
+  (<HTMLInputElement>document.getElementById('eol-char')).value = SerialManager.eolChar;
 
   (<HTMLInputElement>document.getElementById('smaVal')).value = plot.smaLength.toString();
 
@@ -1484,10 +1517,10 @@ function loadSettingsStorage(): void {
   if (setting) refreshRate = setting;
 
   setting = loadJSON('serBufferSize');
-  if (setting) ser.maxSize = setting;
+  if (setting) SerialManager.maxSize = setting;
 
   setting = loadJSON('serADC');
-  if (setting) ser.adcChannels = setting;
+  if (setting) SerialManager.adcChannels = setting;
 
   setting = loadJSON('timeLimitBool');
   if (setting) maxRecTimeEnabled = setting;
@@ -1499,10 +1532,10 @@ function loadSettingsStorage(): void {
   if (setting) maxDist = setting;
 
   setting = loadJSON('baudRate');
-  if (setting) serOptions.baudRate = setting;
+  if (setting) SerialManager.serOptions.baudRate = setting;
 
   setting = loadJSON('eolChar');
-  if (setting) ser.eolChar = setting;
+  if (setting) SerialManager.eolChar = setting;
 
   setting = loadJSON('smaLength');
   if (setting) plot.smaLength = setting;
@@ -1622,27 +1655,27 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
 
     case 'serBufferSize':
       numVal = parseInt(value);
-      ser.maxSize = numVal;
+      SerialManager.maxSize = numVal;
 
-      saveJSON(name, ser.maxSize);
+      saveJSON(name, SerialManager.maxSize);
       break;
 
     case 'baudRate':
       numVal = parseInt(value);
-      serOptions.baudRate = numVal;
+      SerialManager.serOptions.baudRate = numVal;
 
-      saveJSON(name, serOptions.baudRate);
+      saveJSON(name, SerialManager.serOptions.baudRate);
       break;
 
     case 'eolChar':
-      ser.eolChar = value;
+      SerialManager.eolChar = value;
 
       saveJSON(name, value);
       break;
 
     case 'serChannels':
       numVal = parseInt(value);
-      ser.adcChannels = numVal;
+      SerialManager.adcChannels = numVal;
 
       saveJSON(name, numVal);
       break;
@@ -1708,11 +1741,14 @@ function resetMCA(): void {
 =========================================
 */
 
+let serRecorder: SerialManager | undefined;
+
+
 document.getElementById('s1')!.onchange = event => selectSerialType(<HTMLInputElement>event.target);
 document.getElementById('s2')!.onchange = event => selectSerialType(<HTMLInputElement>event.target);
 
 function selectSerialType(button: HTMLInputElement): void {
-  ser.orderType = <dataOrder>button.value;
+  SerialManager.orderType = <dataOrder>button.value;
   saveJSON('serialDataMode', button.id);
 }
 
@@ -1730,7 +1766,7 @@ function serialDisconnect(event: Event): void {
       break;
     }
   }
-  if (event.target === ser.port) disconnectPort(true);
+  if (event.target === serRecorder?.port) disconnectPort(true);
 
   listSerial();
 
@@ -1755,7 +1791,6 @@ async function listSerial(): Promise<void> {
     const option = document.createElement('option');
 
     option.text = `Port ${index} (Id: 0x${ports[index].getInfo().usbProductId?.toString(16)})`;
-
     portSelector.add(option, parseInt(index));
   }
 
@@ -1796,159 +1831,133 @@ async function requestSerial(): Promise<void> {
 }
 
 
-document.getElementById('plot-cps')!.onclick = event => toggleCps(<HTMLButtonElement>event.target);
+function selectPort(): number {
+  const selectedPort = (<HTMLSelectElement>document.getElementById('port-selector')).selectedIndex;
+  const newport = portsAvail[selectedPort];
 
-function toggleCps(button: HTMLButtonElement): void {
-  plot.cps = !plot.cps;
-
-  button.innerText = plot.cps ? 'CPS' : 'Total';
-  plot.updatePlot(spectrumData);
-}
-
-
-async function selectPort(): Promise<void> {
-  const newport = portsAvail[(<HTMLSelectElement>document.getElementById('port-selector')).selectedIndex];
-
-  if (ser.port !== newport) {
-    ser.port = newport; // Changed
+  if (newport && serRecorder?.port !== newport) {
+    serRecorder = new SerialManager(newport);
     clearConsoleLog(); // Clear serial console history
   }
+
+  return selectedPort;
 }
 
 
-let keepReading = false;
-let reader: ReadableStreamDefaultReader | undefined;
-let recordingType: dataType;
-let startTime = 0;
-let timeDone = 0;
-
-async function readUntilClosed(): Promise<void> {
-  while (ser.port?.readable && keepReading) {
-    try {
-      reader = ser.port.readable.getReader();
-
-      while (true) {
-        const {value, done} = await reader.read();
-        if (value) ser.addRaw(value, onlyConsole); // value is a Uint8Array.
-        if (done) {
-          // reader.cancel() has been called.
-          break;
-        }
-      }
-    } catch (err) {
-      // Sudden device disconnect can cause this
-      console.error('Misc Serial Read Error:', err);
-      popupNotification('misc-ser-error');
-    } finally {
-      // Allow the serial port to be closed later.
-      reader?.releaseLock();
-      reader = undefined;
-    }
-  }
-  await ser.port?.close();
-}
-
-
-document.getElementById('resume-button')!.onclick = () => startRecord(true);
+document.getElementById('resume-button')!.onclick = () => startRecord(true, recordingType);
 document.getElementById('record-spectrum-btn')!.onclick = () => startRecord(false, 'data');
 document.getElementById('record-bg-btn')!.onclick = () => startRecord(false, 'background');
 
-let closed: Promise<void>;
-let firstLoad = false;
+let recordingType: dataType;
 let startDate: Date;
 let endDate: Date;
 
-async function startRecord(pause = false, type = <dataType>recordingType): Promise<void> {
+async function startRecord(pause = false, type: dataType): Promise<void> {
   try {
     selectPort();
-
-    if (!ser.port) throw 'Port is undefined! This should not be happening.';
-
-    await ser.port.open(serOptions); // Baud-Rate optional
-
-    keepReading = true; // Reset keepReading
-    recordingType = type;
-
-    ser.flushData(); // Remove all old data if the serial console has been used
-
-    if (!pause) {
-      removeFile(recordingType); // Remove old spectrum
-      firstLoad = true;
-      timeDone = 0;
-      startDate = new Date();
-    }
-
-    (<HTMLButtonElement>document.getElementById('stop-button')).disabled = false;
-    document.getElementById('pause-button')!.classList.remove('d-none');
-    document.getElementById('record-button')!.classList.add('d-none');
-    document.getElementById('resume-button')!.classList.add('d-none');
-
-    const spinnerElements = document.getElementsByClassName('recording-spinner');
-
-    for (const ele of spinnerElements) {
-      ele.classList.remove('d-none');
-    }
-
-    startTime = performance.now(); //Date.now();
-
-    refreshRender(recordingType); // Start updating the plot
-    refreshMeta(recordingType); // Start updating the meta data
-
-    // Check if pause ? Last cps value after pausing is always 0, remove! : First cps value is always a zero, so remove that!
-    pause ? cpsValues.pop() : cpsValues.shift();
-
-    closed = readUntilClosed();
-    plot.updatePlot(spectrumData); // Prevent the plot from moving all over the screen due to other things popping-up
+    await serRecorder?.startRecord(pause);
   } catch(err) {
     console.error('Connection Error:', err);
     popupNotification('serial-connect-error');
+    return;
+  }
+
+  recordingType = type;
+
+  if (!pause) {
+    removeFile(type); // Remove old spectrum
+    startDate = new Date();
+  }
+
+  (<HTMLButtonElement>document.getElementById('stop-button')).disabled = false;
+  document.getElementById('pause-button')!.classList.remove('d-none');
+  document.getElementById('record-button')!.classList.add('d-none');
+  document.getElementById('resume-button')!.classList.add('d-none');
+
+  const spinnerElements = document.getElementsByClassName('recording-spinner');
+
+  for (const ele of spinnerElements) {
+    ele.classList.remove('d-none');
+  }
+
+  refreshRender(type, !pause); // Start updating the plot
+  refreshMeta(type); // Start updating the meta data
+
+  // Check if pause ? Last cps value after pausing is always 0, remove! : Empty if just started to record
+  pause ? cpsValues.pop() : cpsValues = [];
+
+  //plot.updatePlot(spectrumData); // Prevent the plot from moving all over the screen due to other things popping-up
+}
+
+
+document.getElementById('pause-button')!.onclick = () => disconnectPort();
+document.getElementById('stop-button')!.onclick = () => disconnectPort(true);
+
+async function disconnectPort(stop = false): Promise<void> {
+  document.getElementById('pause-button')!.classList.add('d-none');
+  const spinnerElements = document.getElementsByClassName('recording-spinner');
+
+  for (const ele of spinnerElements) {
+    ele.classList.add('d-none');
+  }
+
+  document.getElementById('resume-button')!.classList.toggle('d-none', stop);
+
+  if (stop) {
+    (<HTMLButtonElement>document.getElementById('stop-button')).disabled = true;
+    document.getElementById('record-button')!.classList.remove('d-none');
+
+    endDate = new Date();
+  }
+
+  try {
+    clearTimeout(refreshTimeout);
+    clearTimeout(metaTimeout);
+    clearTimeout(consoleTimeout);
+  } catch (err) {
+    console.warn('No timeout to clear. Something might be wrong...', err);
+  }
+
+  try {
+    await serRecorder?.stopRecord();
+  } catch(error) {
+    // Sudden device disconnect can cause this
+    console.error('Misc Serial Read Error:', error);
+    popupNotification('misc-ser-error');
   }
 }
 
 
-window.addEventListener('show.bs.modal', (event: Event): void => { // Adjust Plot Size For Main Tab Menu Content Size
-  if ((<HTMLButtonElement>event.target).getAttribute('id') === 'serialConsoleModal') readSerial();
+document.getElementById('clear-console-log')!.onclick = () => clearConsoleLog();
+
+function clearConsoleLog(): void {
+  document.getElementById('ser-output')!.innerText = '';
+  serRecorder?.flushRawData();
+}
+
+
+document.getElementById('serialConsoleModal')!.addEventListener('show.bs.modal', (/*event: Event*/): void => { // Adjust Plot Size For Main Tab Menu Content Size
+  readSerial();
 });
 
-window.addEventListener('hide.bs.modal', (event: Event): void => { // Adjust Plot Size For Main Tab Menu Content Size
-  if ((<HTMLButtonElement>event.target).getAttribute('id') === 'serialConsoleModal') {
-    if (onlyConsole) {
-      disconnectPort(true);
-      onlyConsole = false;
-    }
-    clearTimeout(consoleTimeout);
-  }
+document.getElementById('serialConsoleModal')!.addEventListener('hide.bs.modal', async (/*event: Event*/): Promise<void> => { // Adjust Plot Size For Main Tab Menu Content Size
+  await serRecorder?.hideConsole();
+  clearTimeout(consoleTimeout);
 });
 
-let onlyConsole = false;
 
 async function readSerial(): Promise<void> {
   try {
-    selectPort();
-
-    if (!ser.port) throw 'Port is undefined! This should not be happening.';
-
-    if (keepReading) { // Check if already reading
-      refreshConsole();
-      onlyConsole = false;
-      return;
-    } else {
-      onlyConsole = true;
-    }
-
-    await ser.port.open(serOptions); // Baud-Rate optional
-
-    keepReading = true; // Reset keepReading
-
-    refreshConsole(); // Start console update timer
-
-    closed = readUntilClosed();
+    const portNumber = selectPort();
+    await serRecorder?.showConsole();
+    document.getElementById('serial-console-title')!.innerText = 'Serial Console (Port ' + portNumber + ')';
   } catch(err) {
     console.error('Connection Error:', err);
     popupNotification('serial-connect-error');
-
-    onlyConsole = false;
+    return;
   }
+
+  refreshConsole();
 }
 
 
@@ -1957,96 +1966,44 @@ document.getElementById('send-command')!.onclick = () => sendSerial();
 async function sendSerial(): Promise<void> {
   const element = <HTMLInputElement>document.getElementById('ser-command');
   try {
-    if (!ser.port) throw 'Port is undefined! This should not be happening.';
-
-    const textEncoder = new TextEncoderStream();
-    const writer = textEncoder.writable.getWriter();
-    const writableStreamClosed = textEncoder.readable.pipeTo(ser.port.writable);
-
-    writer.write(element.value.trim() + '\n');
-    //writer.write('\x03\n');
-
-    //writer.releaseLock();
-    await writer.close();
-    await writableStreamClosed;
-
-    element.value = '';
-
+    await serRecorder?.sendString(element.value);
   } catch (err) {
     console.error('Connection Error:', err);
     popupNotification('serial-connect-error');
-  }
-}
-
-
-document.getElementById('pause-button')!.onclick = () => disconnectPort();
-document.getElementById('stop-button')!.onclick = () => disconnectPort(true);
-
-async function disconnectPort(stop = false): Promise<void> {
-  timeDone += performance.now() - startTime; //Date.now() - startTime;
-
-  document.getElementById('pause-button')!.classList.add('d-none');
-  const spinnerElements = document.getElementsByClassName('recording-spinner');
-
-  for (const ele of spinnerElements) {
-    ele.classList.add('d-none');
+    return;
   }
 
-  if (stop) {
-    (<HTMLButtonElement>document.getElementById('stop-button')).disabled = true;
-    document.getElementById('record-button')!.classList.remove('d-none');
-    //recordingType = '';
-    cpsValues = [];
-
-    ser.clearBaseHist(); // Clear base histogram for data processing
-    endDate = new Date();
-  }
-  document.getElementById('resume-button')!.classList.toggle('d-none', stop);
-
-  keepReading = false;
-  ser.flushData(); // Remove all old data
-
-  try {
-    clearTimeout(refreshTimeout);
-    clearTimeout(metaTimeout);
-    clearTimeout(consoleTimeout);
-  } catch (err) {
-    console.warn('No timeout to clear.', err);
-  }
-
-  try {
-    reader?.cancel();
-  } catch(err) {
-    console.warn('Nothing to disconnect.', err);
-  }
-  await closed;
+  element.value = '';
 }
 
 
 document.getElementById('reconnect-console-log')!.onclick = () => reconnectConsole();
 
 async function reconnectConsole(): Promise<void> {
-  // This is just a copy of the hide and show modal events back to back ;)
-  if (onlyConsole) await disconnectPort(true);
+  await serRecorder?.hideConsole(); // Same code as closing and re-opening of the console modal
   clearTimeout(consoleTimeout);
   readSerial();
 }
 
 
-document.getElementById('clear-console-log')!.onclick = () => clearConsoleLog();
+let autoscrollEnabled = false;
 
-function clearConsoleLog(): void {
-  document.getElementById('ser-output')!.innerText = '';
-  ser.flushRawData();
+document.getElementById('autoscroll-console')!.onclick = event => toggleAutoscroll((<HTMLInputElement>event.target).checked);
+
+function toggleAutoscroll(enabled: boolean) {
+  autoscrollEnabled = enabled;
+  saveJSON('consoleAutoscrollEnabled', autoscrollEnabled);
 }
 
 
 let consoleTimeout: NodeJS.Timeout;
 
 function refreshConsole(): void {
-  if (ser.port?.readable) {
-    document.getElementById('ser-output')!.innerText = ser.getRawData();
+  if (serRecorder?.port?.readable) {
+    document.getElementById('ser-output')!.innerText = serRecorder.getRawData();
     consoleTimeout = setTimeout(refreshConsole, CONSOLE_REFRESH);
+
+    if (autoscrollEnabled) document.getElementById('ser-output')!.scrollIntoView({behavior: "smooth", block: "end"});
   }
 }
 
@@ -2054,12 +2011,13 @@ function refreshConsole(): void {
 let metaTimeout: NodeJS.Timeout;
 
 function refreshMeta(type: dataType): void {
-  if (ser.port?.readable) {
-    const nowTime = performance.now(); //Date.now();
+  if (serRecorder?.port?.readable) {
+    const nowTime = performance.now();
 
     const totalTimeElement = document.getElementById('total-record-time')!;
 
-    const totalMeasTime = nowTime - startTime + timeDone;
+    const totalMeasTime = serRecorder.getTime();
+
     spectrumData[`${type}Time`] = totalMeasTime; // Update measurementTime in spectrum data
     const delta = new Date(totalMeasTime);
 
@@ -2083,60 +2041,58 @@ function refreshMeta(type: dataType): void {
       disconnectPort(true);
       popupNotification('auto-stop');
     } else {
-      const finishDelta = performance.now() - nowTime; //Date.now() - nowTime;
+      const finishDelta = performance.now() - nowTime;
       metaTimeout = setTimeout(refreshMeta, (REFRESH_META_TIME - finishDelta > 0) ? (REFRESH_META_TIME - finishDelta) : 1, type); // Only re-schedule if still available
     }
   }
 }
 
 
-let lastUpdate = performance.now(); //Date.now();
+let lastUpdate = performance.now();
 let refreshTimeout: NodeJS.Timeout;
 
-function refreshRender(type: dataType): void {
-  if (ser.port?.readable) {
-    const startDelay = performance.now(); //Date.now();
-    const newData = ser.getData(); // Get all the new data
-    const endDelay = performance.now(); //Date.now();
+function refreshRender(type: dataType, firstLoad = false): void {
+  if (serRecorder?.port?.readable) {
+    const startDelay = performance.now();
 
-    const delta = new Date(timeDone - startTime + startDelay);
+    //await serRecorder.stopRecord(); // Maybe?!
+    const newData = serRecorder.getData(); // Get all the new data
+    const measTime = serRecorder.getTime() ?? 1000;
+    //await serRecorder.startRecord(true); // Maybe?!
 
-    spectrumData[type] = ser.updateData(spectrumData[type], newData); // Depends on Background/Spectrum Aufnahme
-    spectrumData[`${type}Cps`] = spectrumData[type].map(val => val / delta.getTime() * 1000);
+    if (SerialManager.orderType === 'hist') {
+      spectrumData.addHist(type, newData);
+    } else if (SerialManager.orderType === 'chron') {
+      spectrumData.addPulseData(type, newData, SerialManager.adcChannels);
+    }
+
+    spectrumData[`${type}Cps`] = spectrumData[type].map(val => val / measTime * 1000);
 
     if (firstLoad) {
       plot.resetPlot(spectrumData);
       bindPlotEvents();
-      firstLoad = false;
     } else {
       plot.updatePlot(spectrumData);
     }
 
-    const deltaLastRefresh = endDelay - lastUpdate;
-    lastUpdate = endDelay;
+    const deltaLastRefresh = measTime - lastUpdate;
+    lastUpdate = measTime;
 
-    const cpsValue = newData.length / deltaLastRefresh * 1000;
-    document.getElementById('cps')!.innerText = cpsValue.toFixed(1) + ' cps';
-
+    const cpsValue = ((SerialManager.orderType === 'chron') ? newData.length : newData.reduce((acc, curr) => acc+curr, 0)) / deltaLastRefresh * 1000;
     cpsValues.push(cpsValue);
 
-    let mean = 0;
-    cpsValues.forEach(item => mean += item);
-    mean /= cpsValues.length;
+    document.getElementById('cps')!.innerText = cpsValue.toFixed(1) + ' cps';
+
+    const mean = cpsValues.reduce((acc, curr) => acc+curr, 0) / cpsValues.length;
+    const std = Math.sqrt(cpsValues.reduce((acc, curr) => acc + (curr - mean)**2, 0) / (cpsValues.length - 1));
 
     document.getElementById('avg-cps')!.innerHTML = 'Avg: ' + mean.toFixed(1);
-
-    let std = 0;
-    cpsValues.forEach(item => std += Math.pow(item - mean, 2));
-    std /= (cpsValues.length - 1);
-    std = Math.sqrt(std);
-
     document.getElementById('avg-cps-std')!.innerHTML = ` &plusmn; ${std.toFixed(1)} cps (&#916; ${Math.round(std/mean*100)}%)`;
 
     document.getElementById('total-spec-cts')!.innerText = spectrumData.getTotalCounts('data').toString();
     document.getElementById('total-bg-cts')!.innerText = spectrumData.getTotalCounts('background').toString();
 
-    const finishDelta = performance.now() - startDelay; //Date.now() - startDelay;
+    const finishDelta = performance.now() - startDelay;
     refreshTimeout = setTimeout(refreshRender, (refreshRate - finishDelta > 0) ? (refreshRate - finishDelta) : 1, type);
   }
 }

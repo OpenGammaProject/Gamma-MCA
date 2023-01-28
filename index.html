@@ -675,10 +675,12 @@
       <div class="modal-dialog modal-dialog-scrollable modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h3 class="modal-title h4 flex-fill">Serial Console</h3>
+            <h3 id="serial-console-title" class="modal-title h4 flex-fill">Serial Console</h3>
 
-            <div class="g-1">
-              <button type="button" class="btn btn-sm btn-outline-primary" id="reconnect-console-log" title="Reconnect Console"><i class="fa-solid fa-rotate"></i></button>
+            <div class="g-1 pe-2">
+              <input type="checkbox" class="btn-check" id="autoscroll-console" autocomplete="off">
+              <label class="btn btn-sm btn-primary" for="autoscroll-console" title="Toggle Autoscroll"><i class="fa-solid fa-angles-down"></i></label>
+              <button type="button" class="btn btn-sm btn-outline-primary" id="reconnect-console-log" title="Reconnect Console (stops all recordings!)"><i class="fa-solid fa-rotate"></i></button>
               <button type="button" class="btn btn-sm btn-outline-primary" id="clear-console-log" title="Clear Console History"><i class="fa-solid fa-trash"></i></button>
             </div>
 
@@ -697,7 +699,7 @@
 
           <div class="modal-body">
 
-            <p class="font-monospace text-nowrap" id="ser-output"></p> <!-- text-break -->
+            <p class="font-monospace text-nowrap ps-1 pe-1" id="ser-output"></p> <!-- text-break -->
 
           </div>
           <div class="modal-footer">

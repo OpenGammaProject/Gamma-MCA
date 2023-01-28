@@ -1,42 +1,119 @@
-export class SerialData {
-    maxSize;
+export class SerialManager {
     port;
-    adcChannels;
-    maxHistLength;
-    maxLength;
-    eolChar;
-    orderType;
-    consoleMemory;
-    serInput;
-    rawData;
-    serData;
-    baseHist;
-    constructor() {
-        this.maxSize = 100000;
-        this.port = undefined;
-        this.adcChannels = 4096;
-        this.maxLength = 20;
-        this.maxHistLength = 2 ** 16 * 2 * 10;
-        this.eolChar = ';';
-        this.orderType = 'chron';
-        this.consoleMemory = 100000;
-        this.rawData = '';
-        this.serInput = '';
-        this.serData = [];
-        this.baseHist = [];
+    reader;
+    closed;
+    recording = false;
+    onlyConsole = true;
+    startTime = 0;
+    timeDone = 0;
+    static orderType = 'chron';
+    static serOptions = { baudRate: 9600 };
+    consoleMemory = 1000000;
+    rawConsoleData = '';
+    rawData = '';
+    maxHistLength = 2 ** 18 * 2 * 10;
+    maxLength = 20;
+    bufferPulseData = [];
+    baseHist = [];
+    static maxSize = 200000;
+    static adcChannels = 4096;
+    static eolChar = ';';
+    constructor(port) {
+        this.port = port;
     }
-    addRaw(uintArray, onlyConsole) {
-        if (this.serData.length > this.maxSize) {
+    async sendString(value) {
+        if (!this.port?.writable)
+            throw 'Port is not writable!';
+        const textEncoder = new TextEncoderStream();
+        const writer = textEncoder.writable.getWriter();
+        const writableStreamClosed = textEncoder.readable.pipeTo(this.port.writable);
+        writer.write(value.trim() + '\n');
+        await writer.close();
+        await writableStreamClosed;
+    }
+    async showConsole() {
+        if (this.recording)
+            return;
+        await this.port.open(SerialManager.serOptions);
+        this.recording = true;
+        this.onlyConsole = true;
+        this.closed = this.readUntilClosed();
+    }
+    async hideConsole() {
+        if (!this.recording || !this.onlyConsole)
+            return;
+        this.onlyConsole = false;
+        this.recording = false;
+        try {
+            this.reader?.cancel();
+        }
+        catch (err) {
+            console.warn('Nothing to disconnect.', err);
+        }
+        await this.closed;
+    }
+    async stopRecord() {
+        if (!this.recording)
+            return;
+        this.recording = false;
+        this.timeDone += performance.now() - this.startTime;
+        try {
+            this.reader?.cancel();
+        }
+        catch (err) {
+            console.warn('Nothing to disconnect.', err);
+        }
+        await this.closed;
+    }
+    async startRecord(resume = false) {
+        if (this.recording)
+            return;
+        await this.port.open(SerialManager.serOptions);
+        if (!resume) {
+            this.flushData();
+            this.clearBaseHist();
+            this.timeDone = 0;
+        }
+        this.startTime = performance.now();
+        this.recording = true;
+        this.onlyConsole = false;
+        this.closed = this.readUntilClosed();
+    }
+    async readUntilClosed() {
+        while (this.port?.readable && this.recording) {
+            try {
+                this.reader = this.port.readable.getReader();
+                while (true) {
+                    const { value, done } = await this.reader.read();
+                    if (value)
+                        this.addRaw(value);
+                    if (done) {
+                        break;
+                    }
+                }
+            }
+            finally {
+                this.reader?.releaseLock();
+                this.reader = undefined;
+            }
+        }
+        await this.port?.close();
+    }
+    addRaw(uintArray) {
+        const string = new TextDecoder("utf-8").decode(uintArray);
+        this.rawConsoleData += string;
+        if (this.rawConsoleData.length > this.consoleMemory) {
+            this.rawConsoleData = this.rawConsoleData.slice(this.rawConsoleData.length - this.consoleMemory);
+        }
+        if (this.onlyConsole)
+            return;
+        if (this.bufferPulseData.length > SerialManager.maxSize) {
             console.warn('Warning: Serial buffer is saturating!');
             return;
         }
-        const string = new TextDecoder("utf-8").decode(uintArray);
-        this.addRawData(string);
-        if (onlyConsole)
-            return;
         this.rawData += string;
-        if (this.orderType === 'chron') {
-            let stringArr = this.rawData.split(this.eolChar);
+        if (SerialManager.orderType === 'chron') {
+            let stringArr = this.rawData.split(SerialManager.eolChar);
             stringArr.pop();
             stringArr.shift();
             if (stringArr.length <= 1) {
@@ -46,7 +123,7 @@ export class SerialData {
             }
             else {
                 for (const element of stringArr) {
-                    this.rawData = this.rawData.replace(element + this.eolChar, '');
+                    this.rawData = this.rawData.replace(element + SerialManager.eolChar, '');
                     const trimString = element.trim();
                     if (!trimString.length || trimString.length >= this.maxLength)
                         continue;
@@ -55,17 +132,15 @@ export class SerialData {
                         continue;
                     }
                     else {
-                        if (parsedInt < 0 || parsedInt > this.adcChannels)
+                        if (parsedInt < 0 || parsedInt > SerialManager.adcChannels)
                             continue;
-                        this.serData.push(parsedInt);
+                        this.bufferPulseData.push(parsedInt);
                     }
                 }
             }
         }
-        else if (this.orderType === 'hist') {
+        else if (SerialManager.orderType === 'hist') {
             let stringArr = this.rawData.split('\r\n');
-            stringArr.pop();
-            stringArr.shift();
             if (!stringArr.length) {
                 if (this.rawData.length > this.maxHistLength)
                     this.rawData = '';
@@ -73,65 +148,51 @@ export class SerialData {
             }
             else {
                 for (const element of stringArr) {
-                    this.rawData = this.rawData.replaceAll(element + '\r\n', '');
+                    this.rawData = this.rawData.replace(element + '\r\n', '');
                     const trimString = element.trim();
                     if (!trimString.length || trimString.length >= this.maxHistLength)
                         continue;
-                    const stringHist = trimString.split(this.eolChar);
+                    const stringHist = trimString.split(SerialManager.eolChar);
                     stringHist.pop();
-                    if (stringHist.length !== this.adcChannels)
+                    if (stringHist.length !== SerialManager.adcChannels)
                         continue;
                     let numHist = stringHist.map(x => parseInt(x));
-                    numHist = numHist.map(function (item) {
-                        return (isNaN(item) ? 0 : item);
-                    });
+                    numHist = numHist.map(item => isNaN(item) ? 0 : item);
                     if (!this.baseHist.length) {
                         this.baseHist = numHist;
+                        this.startTime = performance.now();
                         return;
                     }
                     const diffHist = numHist.map((item, index) => item - this.baseHist[index]);
-                    const adcChannels = this.adcChannels;
-                    for (let ch = 0; ch < adcChannels; ch++) {
-                        const val = diffHist[ch];
-                        for (let num = 0; num < val; num++) {
-                            this.serData.push(ch);
-                        }
+                    if (!this.bufferPulseData.length)
+                        this.bufferPulseData = Array(SerialManager.adcChannels).fill(0);
+                    for (const index in this.bufferPulseData) {
+                        this.bufferPulseData[index] += diffHist[index];
                     }
                     this.baseHist = numHist;
                 }
             }
         }
     }
-    addRawData(string) {
-        this.serInput += string;
-        if (this.serInput.length > this.consoleMemory) {
-            this.serInput = this.serInput.slice(this.serInput.length - this.consoleMemory);
-        }
-    }
-    getRawData() {
-        return this.serInput;
-    }
-    flushRawData() {
-        this.serInput = '';
-    }
-    getData() {
-        const copyArr = [...this.serData];
-        this.serData = [];
-        return copyArr;
-    }
     flushData() {
         this.rawData = '';
-        this.serData = [];
+        this.bufferPulseData = [];
     }
     clearBaseHist() {
         this.baseHist = [];
     }
-    updateData(oldDataArr, newDataArr) {
-        if (!oldDataArr.length)
-            oldDataArr = Array(this.adcChannels).fill(0);
-        for (const value of newDataArr) {
-            oldDataArr[value] += 1;
-        }
-        return oldDataArr;
+    flushRawData() {
+        this.rawConsoleData = '';
+    }
+    getRawData() {
+        return this.rawConsoleData;
+    }
+    getData() {
+        const copyArr = [...this.bufferPulseData];
+        this.bufferPulseData = [];
+        return copyArr;
+    }
+    getTime() {
+        return (this.recording ? (performance.now() - this.startTime + this.timeDone) : this.timeDone);
     }
 }

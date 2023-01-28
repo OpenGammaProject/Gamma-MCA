@@ -128,7 +128,7 @@ export class SpectrumPlot {
         if (cT >= 0 && cF >= 0) {
             const denom = (aF - bF) * (aF - cF) * (bF - cF);
             this.calibration.coeff.c1 = (cF * (bT - aT) + bF * (aT - cT) + aF * (cT - bT)) / denom;
-            this.calibration.coeff.c2 = (Math.pow(cF, 2) * (aT - bT) + Math.pow(aF, 2) * (bT - cT) + Math.pow(bF, 2) * (cT - aT)) / denom;
+            this.calibration.coeff.c2 = (cF ** 2 * (aT - bT) + aF ** 2 * (bT - cT) + bF ** 2 * (cT - aT)) / denom;
             this.calibration.coeff.c3 = (bF * (bF - cF) * cF * aT + aF * cF * (cF - aF) * bT + aF * (aF - bF) * bF * cT) / denom;
         }
         else {
@@ -145,7 +145,7 @@ export class SpectrumPlot {
         const k = this.calibration.coeff.c2;
         const d = this.calibration.coeff.c3;
         for (let i = 0; i < len; i++) {
-            calArray.push(parseFloat((a * Math.pow(i, 2) + k * i + d).toFixed(2)));
+            calArray.push(parseFloat((a * i ** 2 + k * i + d).toFixed(2)));
         }
         return calArray;
     }

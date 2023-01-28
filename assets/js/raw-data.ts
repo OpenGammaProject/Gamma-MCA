@@ -193,7 +193,7 @@ export class RawData {
           throw 'Could not load the schema file!';
         }
       }
-      
+
       /*
       const scripts = Array.from(document.querySelectorAll('script')).map(scr => scr.src);
       if (!scripts.includes('/assets/js/external/ZSchema-browser-min.js')) {
