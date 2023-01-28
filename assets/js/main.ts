@@ -139,7 +139,7 @@ let isoList: isotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2023-01-21';
+const APP_VERSION = '2023-01-28';
 let localStorageAvailable = false;
 let firstInstall = false;
 
