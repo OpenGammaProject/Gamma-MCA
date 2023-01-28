@@ -14,11 +14,12 @@
     - (?) Add dead time correction for cps
     - (?) Drag-and-droppable points for calibration chart
 
-    - Put all toasts notifications into classes
     - Improve peak finder
     - Sorting isotope list
-    - Calibration n-polynomial regression
     - Improve the settings code structure
+    - Put all toasts notifications into classes
+    - Investigate table <span>s spam; necessary?
+    - Calibration n-polynomial regression
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
     - Fix log-x axis scale
     - Delete DOM nodes instead of making invis
