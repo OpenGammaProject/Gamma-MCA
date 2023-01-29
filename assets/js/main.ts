@@ -2071,8 +2071,14 @@ function refreshRender(type: dataType, firstLoad = false): void {
     document.getElementById('avg-cps')!.innerHTML = 'Avg: ' + mean.toFixed(1);
     document.getElementById('avg-cps-std')!.innerHTML = ` &plusmn; ${std.toFixed(1)} cps (&#916; ${Math.round(std/mean*100)}%)`;
 
-    document.getElementById('total-spec-cts')!.innerText = spectrumData.getTotalCounts('data').toString();
-    document.getElementById('total-bg-cts')!.innerText = spectrumData.getTotalCounts('background').toString();
+    const sCounts = spectrumData.getTotalCounts('data');
+    const bgCounts = spectrumData.getTotalCounts('background');
+
+    document.getElementById('total-spec-cts')!.innerText = sCounts.toString();
+    document.getElementById('total-bg-cts')!.innerText = bgCounts.toString();
+
+    if (sCounts) document.getElementById('data-icon')!.classList.remove('d-none');
+    if (bgCounts) document.getElementById('background-icon')!.classList.remove('d-none');
 
     const finishDelta = performance.now() - startDelay;
     refreshTimeout = setTimeout(refreshRender, (refreshRate - finishDelta > 0) ? (refreshRate - finishDelta) : 1, type);
