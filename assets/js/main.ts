@@ -18,7 +18,6 @@
     - Sorting isotope list
     - Improve the settings code structure
     - Put all toasts notifications into classes
-    - Investigate table <span>s spam; necessary?
     - Calibration n-polynomial regression
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
     - Fix log-x axis scale
@@ -1318,14 +1317,14 @@ async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope 
         const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1) + '-' + index; // Capitalize Name and append index number
 
         cell1.innerHTML = `<input class="form-check-input iso-table-label" id="${name}" type="checkbox" value="${energy}">`;
-        cell3.innerHTML = `<span class="iso-table-label">${energy.toFixed(2)}</span>`; //`<label for="${name}">${energy.toFixed(2)}</label>`;
+        cell3.innerText = energy.toFixed(2); //`<label for="${name}">${energy.toFixed(2)}</label>`;
 
         const clickBox = <HTMLInputElement>document.getElementById(name);
         clickBox.onclick = () => plotIsotope(clickBox);
 
         const strArr = name.split('-');
 
-        cell2.innerHTML = `<span class="iso-table-label"><sup>${strArr[1]}</sup>${strArr[0]}</span>`; //`<label for="${name}"><sup>${strArr[1]}</sup>${strArr[0]}</label>`;
+        cell2.innerHTML = `<sup>${strArr[1]}</sup>${strArr[0]}`; //`<label for="${name}"><sup>${strArr[1]}</sup>${strArr[0]}</label>`;
       }
       plot.isoList = isoList; // Copy list to plot object
     } else {

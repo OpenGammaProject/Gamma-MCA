@@ -911,11 +911,11 @@ async function loadIsotopes(reload = false) {
                 const lowercaseName = json[key].toLowerCase().replace(/[^a-z0-9 -]/gi, '').trim();
                 const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1) + '-' + index;
                 cell1.innerHTML = `<input class="form-check-input iso-table-label" id="${name}" type="checkbox" value="${energy}">`;
-                cell3.innerHTML = `<span class="iso-table-label">${energy.toFixed(2)}</span>`;
+                cell3.innerText = energy.toFixed(2);
                 const clickBox = document.getElementById(name);
                 clickBox.onclick = () => plotIsotope(clickBox);
                 const strArr = name.split('-');
-                cell2.innerHTML = `<span class="iso-table-label"><sup>${strArr[1]}</sup>${strArr[0]}</span>`;
+                cell2.innerHTML = `<sup>${strArr[1]}</sup>${strArr[0]}`;
             }
             plot.isoList = isoList;
         }
