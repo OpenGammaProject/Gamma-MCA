@@ -20,7 +20,6 @@
     - Put all toasts notifications into classes
     - Calibration n-polynomial regression
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
-    - Fix log-x axis scale
     - Show measurement time for both files
 
     - (!) Sometimes only half the actual cps are shown in histogram serial mode?!?!
@@ -624,11 +623,13 @@ function changeAxis(button: HTMLButtonElement): void {
   if (plot[id] === 'linear') {
     plot[id] = 'log';
     button.innerText = 'Log';
+    plot.resetPlot(spectrumData); // Fix because of autorange bug in Plotly
+    bindPlotEvents();
   } else {
     plot[id] = 'linear';
     button.innerText = 'Linear';
+    plot.updatePlot(spectrumData);
   }
-  plot.updatePlot(spectrumData);
 }
 
 
@@ -764,9 +765,8 @@ function toggleCal(enabled: boolean): void {
   displayCoeffs();
 
   plot.calibration.enabled = enabled;
-  //plot.resetPlot(spectrumData); // UNCOMMENT IF SOMETHING BREAKS, THIS MIGHT BE RISKY
-  //bindPlotEvents();
-  plot.updatePlot(spectrumData);
+  plot.resetPlot(spectrumData); // Fix because of autorange bug in Plotly
+  bindPlotEvents();
 }
 
 

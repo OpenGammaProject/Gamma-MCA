@@ -377,8 +377,8 @@ export class SpectrumPlot {
                 }
             }
         }
-        const maxXValue = Math.max(...trace.x);
-        const maxYValue = Math.max(...trace.y);
+        const maxXValue = trace.x.at(-1) ?? 1;
+        const maxYValue = trace.y.at(-1) ?? 1;
         const layout = {
             uirevision: 1,
             autosize: true,
@@ -485,7 +485,7 @@ export class SpectrumPlot {
             },
             width: 1,
         };
-        let maxXValue = Math.max(...trace.x);
+        let maxXValue = trace.x.at(-1) ?? 1;
         let data = [trace];
         if (this.cps)
             data[0].y = dataObj.dataCps;
@@ -509,7 +509,7 @@ export class SpectrumPlot {
                 width: 1,
             };
             if (bgTrace.x.length > maxXValue)
-                maxXValue = Math.max(...bgTrace.x);
+                maxXValue = bgTrace.x.at(-1) ?? 1;
             if (this.cps)
                 bgTrace.y = dataObj.backgroundCps;
             const newData = [];
@@ -527,6 +527,8 @@ export class SpectrumPlot {
                 element.y = this.computeMovingAverage(element.y);
             }
         }
+        if (this.xAxis === 'log')
+            maxXValue = Math.log10(maxXValue);
         let layout = {
             uirevision: 1,
             autosize: true,
@@ -606,7 +608,9 @@ export class SpectrumPlot {
             }
             layout.xaxis.title = 'Energy [keV]';
             layout.xaxis.ticksuffix = ' keV';
-            const newMax = Math.max(...data[0].x);
+            let newMax = Math.max(data[0]?.x.at(-1) ?? 1, data[1]?.x.at(-1) ?? 1);
+            if (this.xAxis === 'log')
+                newMax = Math.log10(newMax);
             layout.xaxis.range = [0, newMax];
             layout.xaxis.rangeslider.range = [0, newMax];
         }

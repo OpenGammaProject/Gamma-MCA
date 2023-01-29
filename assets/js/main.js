@@ -400,12 +400,14 @@ function changeAxis(button) {
     if (plot[id] === 'linear') {
         plot[id] = 'log';
         button.innerText = 'Log';
+        plot.resetPlot(spectrumData);
+        bindPlotEvents();
     }
     else {
         plot[id] = 'linear';
         button.innerText = 'Linear';
+        plot.updatePlot(spectrumData);
     }
-    plot.updatePlot(spectrumData);
 }
 function enterPress(event, id) {
     if (event.key === 'Enter')
@@ -507,7 +509,8 @@ function toggleCal(enabled) {
     }
     displayCoeffs();
     plot.calibration.enabled = enabled;
-    plot.updatePlot(spectrumData);
+    plot.resetPlot(spectrumData);
+    bindPlotEvents();
 }
 function displayCoeffs() {
     for (const elem of ['c1', 'c2', 'c3']) {
