@@ -24,7 +24,7 @@
     // "noLib": true,                                    /* Disable including any library files, including the default lib.d.ts. */
     // "useDefineForClassFields": true,                  /* Emit ECMAScript-standard-compliant class fields. */
     // "moduleDetection": "auto",                        /* Control what method is used to detect module-format JS files. */
-    // "watch": true,                                    /* Watch for VS Code*/
+    "watch": true,                                       /* Watch for VS Code*/
 
     /* Modules */
     "module": "ES2022",                                  /* Specify what module code is generated. */
