@@ -22,7 +22,6 @@
     - Calibration n-polynomial regression
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
     - Fix log-x axis scale
-    - Delete DOM nodes instead of making invis
     - Show measurement time for both files
     - plot.isoList copied from here, so twice the same dict
 
@@ -171,12 +170,14 @@ document.body.onload = async function(): Promise<void> {
   isoListURL = new URL(isoListURL, window.location.origin).href;
 
   if ('serial' in navigator) { // Web Serial API
-    document.getElementById('serial-div')!.classList.remove('invisible', 'd-none'); // Remove d-none and invisible
+    const serErrDiv = document.getElementById('serial-error')!;
+    serErrDiv.parentNode!.removeChild(serErrDiv); // Delete Serial Not Supported Warning
     navigator.serial.addEventListener('connect', serialConnect);
     navigator.serial.addEventListener('disconnect', serialDisconnect);
     listSerial(); // List Available Serial Ports
   } else {
-    document.getElementById('serial-error')!.classList.remove('d-none');
+    const serDiv = document.getElementById('serial-div')!;
+    serDiv.parentNode!.removeChild(serDiv); // Delete Serial Control Div
 
     const serSettingsElements = document.getElementsByClassName('ser-settings');
     for (const element of serSettingsElements) { // Disable serial settings

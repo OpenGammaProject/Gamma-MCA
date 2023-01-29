@@ -70,13 +70,15 @@ document.body.onload = async function () {
     }
     isoListURL = new URL(isoListURL, window.location.origin).href;
     if ('serial' in navigator) {
-        document.getElementById('serial-div').classList.remove('invisible', 'd-none');
+        const serErrDiv = document.getElementById('serial-error');
+        serErrDiv.parentNode.removeChild(serErrDiv);
         navigator.serial.addEventListener('connect', serialConnect);
         navigator.serial.addEventListener('disconnect', serialDisconnect);
         listSerial();
     }
     else {
-        document.getElementById('serial-error').classList.remove('d-none');
+        const serDiv = document.getElementById('serial-div');
+        serDiv.parentNode.removeChild(serDiv);
         const serSettingsElements = document.getElementsByClassName('ser-settings');
         for (const element of serSettingsElements) {
             element.disabled = true;
