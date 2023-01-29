@@ -20,7 +20,6 @@
     - Put all toasts notifications into classes
     - Calibration n-polynomial regression
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
-    - Show measurement time for both files
 
     - (!) Sometimes only half the actual cps are shown in histogram serial mode?!?!
 
@@ -521,13 +520,8 @@ function getFileData(file: File, background = false): void { // Gets called when
       spectrumData.data = raw.csvToArray(result);
     }
 
-    const sCounts = spectrumData.getTotalCounts('data');
-    const bgCounts = spectrumData.getTotalCounts('background');
-    document.getElementById('total-spec-cts')!.innerText = sCounts.toString();
-    document.getElementById('total-bg-cts')!.innerText = bgCounts.toString();
-
-    if (sCounts) document.getElementById('data-icon')!.classList.remove('d-none');
-    if (bgCounts) document.getElementById('background-icon')!.classList.remove('d-none');
+    updateSpectrumCounts();
+    updateSpectrumTime();
 
     /*
       Error Msg Problem with RAW Stream selection?
@@ -577,6 +571,24 @@ function removeFile(id: dataType): void {
 
 function addImportLabel(): void {
   document.getElementById('calibration-title')!.classList.remove('d-none');
+}
+
+
+function updateSpectrumCounts() {
+  const sCounts = spectrumData.getTotalCounts('data');
+  const bgCounts = spectrumData.getTotalCounts('background');
+
+  document.getElementById('total-spec-cts')!.innerText = sCounts.toString() + ' cts';
+  document.getElementById('total-bg-cts')!.innerText = bgCounts.toString() + ' cts';
+
+  if (sCounts) document.getElementById('data-icon')!.classList.remove('d-none');
+  if (bgCounts) document.getElementById('background-icon')!.classList.remove('d-none');
+}
+
+
+function updateSpectrumTime() {
+  document.getElementById('spec-time')!.innerText = getRecordTimeStamp(spectrumData.dataTime);
+  document.getElementById('bg-time')!.innerText = getRecordTimeStamp(spectrumData.backgroundTime);
 }
 
 
@@ -662,8 +674,6 @@ function changeSma(input: HTMLInputElement): void {
 
 
 function hoverEvent(data: any): void {
-  document.getElementById('hover-data')!.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
-
   for (const key in calClick) {
     const castKey = <calType>key;
     if (calClick[castKey]) (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = data.points[0].x.toFixed(2);
@@ -674,8 +684,6 @@ function hoverEvent(data: any): void {
 
 
 function unHover(/*data: any*/): void {
-  document.getElementById('hover-data')!.innerText = 'None';
-
   for (const key in calClick) {
     const castKey = <calType>key;
     if (calClick[castKey]) (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = oldCalVals[castKey];
@@ -1989,6 +1997,12 @@ function refreshConsole(): void {
 }
 
 
+function getRecordTimeStamp(time: number): string {
+  const dateTime = new Date(time);
+  return addLeadingZero(dateTime.getUTCHours().toString()) + ':' + addLeadingZero(dateTime.getUTCMinutes().toString()) + ':' + addLeadingZero(dateTime.getUTCSeconds().toString());
+}
+
+
 let metaTimeout: NodeJS.Timeout;
 
 function refreshMeta(type: dataType): void {
@@ -2000,9 +2014,9 @@ function refreshMeta(type: dataType): void {
     const totalMeasTime = serRecorder.getTime();
 
     spectrumData[`${type}Time`] = totalMeasTime; // Update measurementTime in spectrum data
+    
+    document.getElementById('record-time')!.innerText = getRecordTimeStamp(totalMeasTime);
     const delta = new Date(totalMeasTime);
-
-    document.getElementById('record-time')!.innerText = addLeadingZero(delta.getUTCHours().toString()) + ':' + addLeadingZero(delta.getUTCMinutes().toString()) + ':' + addLeadingZero(delta.getUTCSeconds().toString());
 
     if (maxRecTimeEnabled) {
       const progressElement = document.getElementById('ser-time-progress')!;
@@ -2011,12 +2025,13 @@ function refreshMeta(type: dataType): void {
       progressElement.innerText = progress + '%';
       progressElement.setAttribute('aria-valuenow', progress.toString())
 
-      const totalTime = new Date(maxRecTime);
-      totalTimeElement.innerText = ' / ' +  addLeadingZero(totalTime.getUTCHours().toString()) + ':' + addLeadingZero(totalTime.getUTCMinutes().toString()) + ':' + addLeadingZero(totalTime.getUTCSeconds().toString());
+      totalTimeElement.innerText = ' / ' +  getRecordTimeStamp(maxRecTime);
     } else {
       totalTimeElement.innerText = '';
     }
     document.getElementById('ser-time-progress-bar')!.classList.toggle('d-none', !maxRecTimeEnabled);
+
+    updateSpectrumTime();
 
     if (delta.getTime() >= maxRecTime && maxRecTimeEnabled) {
       disconnectPort(true);
@@ -2070,14 +2085,7 @@ function refreshRender(type: dataType, firstLoad = false): void {
     document.getElementById('avg-cps')!.innerHTML = 'Avg: ' + mean.toFixed(1);
     document.getElementById('avg-cps-std')!.innerHTML = ` &plusmn; ${std.toFixed(1)} cps (&#916; ${Math.round(std/mean*100)}%)`;
 
-    const sCounts = spectrumData.getTotalCounts('data');
-    const bgCounts = spectrumData.getTotalCounts('background');
-
-    document.getElementById('total-spec-cts')!.innerText = sCounts.toString();
-    document.getElementById('total-bg-cts')!.innerText = bgCounts.toString();
-
-    if (sCounts) document.getElementById('data-icon')!.classList.remove('d-none');
-    if (bgCounts) document.getElementById('background-icon')!.classList.remove('d-none');
+    updateSpectrumCounts();
 
     const finishDelta = performance.now() - startDelay;
     refreshTimeout = setTimeout(refreshRender, (refreshRate - finishDelta > 0) ? (refreshRate - finishDelta) : 1, type);

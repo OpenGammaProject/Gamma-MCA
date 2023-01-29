@@ -321,14 +321,8 @@ function getFileData(file, background = false) {
             spectrumData.dataTime = 1000;
             spectrumData.data = raw.csvToArray(result);
         }
-        const sCounts = spectrumData.getTotalCounts('data');
-        const bgCounts = spectrumData.getTotalCounts('background');
-        document.getElementById('total-spec-cts').innerText = sCounts.toString();
-        document.getElementById('total-bg-cts').innerText = bgCounts.toString();
-        if (sCounts)
-            document.getElementById('data-icon').classList.remove('d-none');
-        if (bgCounts)
-            document.getElementById('background-icon').classList.remove('d-none');
+        updateSpectrumCounts();
+        updateSpectrumTime();
         if (!(spectrumData.background.length === spectrumData.data.length || !spectrumData.data.length || !spectrumData.background.length)) {
             popupNotification('data-error');
             removeFile(background ? 'background' : 'data');
@@ -363,6 +357,20 @@ function removeFile(id) {
 }
 function addImportLabel() {
     document.getElementById('calibration-title').classList.remove('d-none');
+}
+function updateSpectrumCounts() {
+    const sCounts = spectrumData.getTotalCounts('data');
+    const bgCounts = spectrumData.getTotalCounts('background');
+    document.getElementById('total-spec-cts').innerText = sCounts.toString() + ' cts';
+    document.getElementById('total-bg-cts').innerText = bgCounts.toString() + ' cts';
+    if (sCounts)
+        document.getElementById('data-icon').classList.remove('d-none');
+    if (bgCounts)
+        document.getElementById('background-icon').classList.remove('d-none');
+}
+function updateSpectrumTime() {
+    document.getElementById('spec-time').innerText = getRecordTimeStamp(spectrumData.dataTime);
+    document.getElementById('bg-time').innerText = getRecordTimeStamp(spectrumData.backgroundTime);
 }
 function bindPlotEvents() {
     if (!plot.plotDiv)
@@ -433,7 +441,6 @@ function changeSma(input) {
     }
 }
 function hoverEvent(data) {
-    document.getElementById('hover-data').innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
     for (const key in calClick) {
         const castKey = key;
         if (calClick[castKey])
@@ -443,7 +450,6 @@ function hoverEvent(data) {
         closestIso(data.points[0].x);
 }
 function unHover() {
-    document.getElementById('hover-data').innerText = 'None';
     for (const key in calClick) {
         const castKey = key;
         if (calClick[castKey])
@@ -1432,6 +1438,10 @@ function refreshConsole() {
             document.getElementById('ser-output').scrollIntoView({ behavior: "smooth", block: "end" });
     }
 }
+function getRecordTimeStamp(time) {
+    const dateTime = new Date(time);
+    return addLeadingZero(dateTime.getUTCHours().toString()) + ':' + addLeadingZero(dateTime.getUTCMinutes().toString()) + ':' + addLeadingZero(dateTime.getUTCSeconds().toString());
+}
 let metaTimeout;
 function refreshMeta(type) {
     if (serRecorder?.port?.readable) {
@@ -1439,21 +1449,21 @@ function refreshMeta(type) {
         const totalTimeElement = document.getElementById('total-record-time');
         const totalMeasTime = serRecorder.getTime();
         spectrumData[`${type}Time`] = totalMeasTime;
+        document.getElementById('record-time').innerText = getRecordTimeStamp(totalMeasTime);
         const delta = new Date(totalMeasTime);
-        document.getElementById('record-time').innerText = addLeadingZero(delta.getUTCHours().toString()) + ':' + addLeadingZero(delta.getUTCMinutes().toString()) + ':' + addLeadingZero(delta.getUTCSeconds().toString());
         if (maxRecTimeEnabled) {
             const progressElement = document.getElementById('ser-time-progress');
             const progress = Math.round(delta.getTime() / maxRecTime * 100);
             progressElement.style.width = progress + '%';
             progressElement.innerText = progress + '%';
             progressElement.setAttribute('aria-valuenow', progress.toString());
-            const totalTime = new Date(maxRecTime);
-            totalTimeElement.innerText = ' / ' + addLeadingZero(totalTime.getUTCHours().toString()) + ':' + addLeadingZero(totalTime.getUTCMinutes().toString()) + ':' + addLeadingZero(totalTime.getUTCSeconds().toString());
+            totalTimeElement.innerText = ' / ' + getRecordTimeStamp(maxRecTime);
         }
         else {
             totalTimeElement.innerText = '';
         }
         document.getElementById('ser-time-progress-bar').classList.toggle('d-none', !maxRecTimeEnabled);
+        updateSpectrumTime();
         if (delta.getTime() >= maxRecTime && maxRecTimeEnabled) {
             disconnectPort(true);
             popupNotification('auto-stop');
@@ -1494,14 +1504,7 @@ function refreshRender(type, firstLoad = false) {
         const std = Math.sqrt(cpsValues.reduce((acc, curr) => acc + (curr - mean) ** 2, 0) / (cpsValues.length - 1));
         document.getElementById('avg-cps').innerHTML = 'Avg: ' + mean.toFixed(1);
         document.getElementById('avg-cps-std').innerHTML = ` &plusmn; ${std.toFixed(1)} cps (&#916; ${Math.round(std / mean * 100)}%)`;
-        const sCounts = spectrumData.getTotalCounts('data');
-        const bgCounts = spectrumData.getTotalCounts('background');
-        document.getElementById('total-spec-cts').innerText = sCounts.toString();
-        document.getElementById('total-bg-cts').innerText = bgCounts.toString();
-        if (sCounts)
-            document.getElementById('data-icon').classList.remove('d-none');
-        if (bgCounts)
-            document.getElementById('background-icon').classList.remove('d-none');
+        updateSpectrumCounts();
         const finishDelta = performance.now() - startDelay;
         refreshTimeout = setTimeout(refreshRender, (refreshRate - finishDelta > 0) ? (refreshRate - finishDelta) : 1, type);
     }
