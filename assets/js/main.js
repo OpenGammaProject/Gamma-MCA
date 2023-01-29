@@ -9,11 +9,7 @@ export class SpectrumData {
     dataTime = 1000;
     backgroundTime = 1000;
     getTotalCounts(type) {
-        let sum = 0;
-        this[type].forEach(item => {
-            sum += item;
-        });
-        return sum;
+        return this[type].reduce((acc, curr) => acc + curr, 0);
     }
     addPulseData(type, newDataArr, adcChannels) {
         if (!this[type].length)

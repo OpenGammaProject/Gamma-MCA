@@ -204,6 +204,8 @@ export class RawData {
         document.getElementsByTagName('head')[0].appendChild(tag);
       }
       */
+      // Unfortunately needed for Typescript to not compile the js file :/
+      // @ts-ignore
       await import('./external/ZSchema-browser-min.js'); // Import ZSchema only when it's needed
 
       const validator = new (<any>window).ZSchema();

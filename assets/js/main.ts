@@ -94,11 +94,7 @@ export class SpectrumData { // Will hold the measurement data globally.
   backgroundTime = 1000; // Measurement time in ms
 
   getTotalCounts(type: dataType): number {
-    let sum = 0;
-    this[type].forEach(item => {
-      sum += item;
-    });
-    return sum;
+    return this[type].reduce((acc,curr) => acc + curr, 0);
   }
 
   addPulseData(type: dataType, newDataArr: number[], adcChannels: number): void {
