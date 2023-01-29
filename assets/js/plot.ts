@@ -15,7 +15,7 @@
 
 //import './external/plotly-basic.min.js';
 
-import {SpectrumData, isotopeList} from './main.js';
+import { SpectrumData, isotopeList } from './main.js';
 
 interface shape {
   type: string;
@@ -66,6 +66,35 @@ export interface coeffObj {
   [index: string]: number
 }
 
+/*
+  Seek the closest matching isotope by energy from an isotope list
+*/
+export class SeekClosest {
+  isoList: isotopeList;
+
+  constructor(list: isotopeList) {
+    this.isoList = list;
+  }
+  
+  seek(value: number, maxDist = 100): {energy: number, name: string} | {energy: undefined, name: undefined} {
+    const closeVals = Object.keys(this.isoList).filter(energy => { // Only allow closest values and disregard undefined
+      return (energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
+    });
+    const closeValsNum = closeVals.map(energy => parseFloat(energy)) // After this step there are 100% only numbers left
+  
+    if (closeValsNum.length) {
+      const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
+      const endResult = this.isoList[closest];
+  
+      if (endResult) return {energy: closest, name: endResult};
+    }
+    return {energy: undefined, name: undefined};
+  }
+}
+
+/*
+  Plotly.js plot control everything
+*/
 export class SpectrumPlot {
   readonly plotDiv: HTMLElement | null;
   private showCalChart = false;
@@ -286,23 +315,6 @@ export class SpectrumPlot {
     return newData;
   }
   /*
-    Seek the closest matching isotope by energy from an isotope list
-  */
-  private seekClosest(value: number, maxDist = 100): {energy: number, name: string} | {energy: undefined, name: undefined} {
-    const closeVals = Object.keys(this.isoList).filter(energy => { // Only allow closest values and disregard undefined
-      return (energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
-    });
-    const closeValsNum = closeVals.map(energy => parseFloat(energy)) // After this step there are 100% only numbers left
-
-    if (closeValsNum.length) {
-      const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
-      const endResult = this.isoList[closest];
-
-      if (endResult) return {energy: closest, name: endResult};
-    }
-    return {energy: undefined, name: undefined};
-  }
-  /*
     Find and mark energy peaks by using two different moving averages
   */
   peakFinder(doFind = true): void {
@@ -356,7 +368,7 @@ export class SpectrumPlot {
           this.toggleLine(result, result.toFixed(2));
           this.peakConfig.lines.push(result);
         } else { // Isotope Mode
-          const { energy, name } = this.seekClosest(result, size);
+          const { energy, name } = new SeekClosest(this.isoList).seek(result, size);
           if (energy && name) {
             this.toggleLine(energy, name);
             this.peakConfig.lines.push(energy);

@@ -1,3 +1,22 @@
+export class SeekClosest {
+    isoList;
+    constructor(list) {
+        this.isoList = list;
+    }
+    seek(value, maxDist = 100) {
+        const closeVals = Object.keys(this.isoList).filter(energy => {
+            return (energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
+        });
+        const closeValsNum = closeVals.map(energy => parseFloat(energy));
+        if (closeValsNum.length) {
+            const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
+            const endResult = this.isoList[closest];
+            if (endResult)
+                return { energy: closest, name: endResult };
+        }
+        return { energy: undefined, name: undefined };
+    }
+}
 export class SpectrumPlot {
     plotDiv;
     showCalChart = false;
@@ -181,19 +200,6 @@ export class SpectrumPlot {
         }
         return newData;
     }
-    seekClosest(value, maxDist = 100) {
-        const closeVals = Object.keys(this.isoList).filter(energy => {
-            return (energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
-        });
-        const closeValsNum = closeVals.map(energy => parseFloat(energy));
-        if (closeValsNum.length) {
-            const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
-            const endResult = this.isoList[closest];
-            if (endResult)
-                return { energy: closest, name: endResult };
-        }
-        return { energy: undefined, name: undefined };
-    }
     peakFinder(doFind = true) {
         if (this.peakConfig.lines.length) {
             const lines = this.peakConfig.lines;
@@ -238,7 +244,7 @@ export class SpectrumPlot {
                     this.peakConfig.lines.push(result);
                 }
                 else {
-                    const { energy, name } = this.seekClosest(result, size);
+                    const { energy, name } = new SeekClosest(this.isoList).seek(result, size);
                     if (energy && name) {
                         this.toggleLine(energy, name);
                         this.peakConfig.lines.push(energy);

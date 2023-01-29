@@ -1,4 +1,4 @@
-import { SpectrumPlot } from './plot.js';
+import { SpectrumPlot, SeekClosest } from './plot.js';
 import { RawData } from './raw-data.js';
 import { SerialManager } from './serial.js';
 export class SpectrumData {
@@ -26,7 +26,6 @@ export class SpectrumData {
         }
     }
 }
-;
 let spectrumData = new SpectrumData();
 let plot = new SpectrumPlot('plot');
 let raw = new RawData(1);
@@ -934,19 +933,6 @@ async function loadIsotopes(reload = false) {
     loadingElement.classList.add('d-none');
     return successFlag;
 }
-function seekClosest(value) {
-    const closeVals = Object.keys(isoList).filter(energy => {
-        return (energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
-    });
-    const closeValsNum = closeVals.map(energy => parseFloat(energy));
-    if (closeValsNum.length) {
-        const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
-        const endResult = isoList[closest];
-        if (endResult)
-            return { energy: closest, name: endResult };
-    }
-    return { energy: undefined, name: undefined };
-}
 document.getElementById('iso-hover').onclick = () => toggleIsoHover();
 let prevIso = {};
 function toggleIsoHover() {
@@ -956,7 +942,7 @@ function toggleIsoHover() {
 async function closestIso(value) {
     if (!await loadIsotopes())
         return;
-    const { energy, name } = seekClosest(value);
+    const { energy, name } = new SeekClosest(isoList).seek(value, maxDist);
     const energyVal = parseFloat(Object.keys(prevIso)[0]);
     if (!isNaN(energyVal))
         plot.toggleLine(energyVal, Object.keys(prevIso)[0], false);

@@ -10,7 +10,7 @@
 
 */
 
-import {dataOrder} from './main.js';
+import { dataOrder } from './main.js';
 
 export class SerialManager {
   // SECTION: Serial Manager

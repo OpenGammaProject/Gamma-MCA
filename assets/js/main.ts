@@ -23,7 +23,6 @@
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
     - Fix log-x axis scale
     - Show measurement time for both files
-    - plot.isoList copied from here, so twice the same dict
 
     - (!) Sometimes only half the actual cps are shown in histogram serial mode?!?!
 
@@ -35,9 +34,9 @@
 
 //import './external/bootstrap.min.js';
 
-import {SpectrumPlot} from './plot.js';
-import {RawData} from './raw-data.js';
-import {SerialManager} from './serial.js';
+import { SpectrumPlot, SeekClosest } from './plot.js';
+import { RawData } from './raw-data.js';
+import { SerialManager } from './serial.js';
 
 export interface isotopeList {
   [key: number]: string | undefined;
@@ -80,9 +79,9 @@ interface NPESv1Spectrum {
   'spectrum': number[]
 }
 
+export type dataOrder = 'hist' | 'chron';
 type calType = 'a' | 'b' | 'c';
 type dataType = 'data' | 'background';
-export type dataOrder = 'hist' | 'chron';
 
 export class SpectrumData { // Will hold the measurement data globally.
   data: number[] = [];
@@ -111,13 +110,14 @@ export class SpectrumData { // Will hold the measurement data globally.
       this[type][index] += newHistArr[index];
     }
   }
-};
+}
 
 // Holds all the classes
 let spectrumData = new SpectrumData();
 let plot = new SpectrumPlot('plot');
 let raw = new RawData(1); // 2=raw, 1=hist
 
+// Other "global" vars
 let calClick = { a: false, b: false, c: false };
 let oldCalVals = { a: '', b: '', c: ''};
 
@@ -1344,22 +1344,6 @@ async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope 
 }
 
 
-function seekClosest(value: number): {energy: number, name: string} | {energy: undefined, name: undefined} {
-  const closeVals = Object.keys(isoList).filter(energy => { // Only allow closest values and disregard undefined
-    return (energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
-  });
-  const closeValsNum = closeVals.map(energy => parseFloat(energy)) // After this step there are 100% only numbers left
-
-  if (closeValsNum.length) {
-    const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
-    const endResult = isoList[closest];
-
-    if (endResult) return {energy: closest, name: endResult};
-  }
-  return {energy: undefined, name: undefined};
-}
-
-
 document.getElementById('iso-hover')!.onclick = () => toggleIsoHover();
 
 let prevIso: isotopeList = {};
@@ -1373,7 +1357,7 @@ function toggleIsoHover(): void {
 async function closestIso(value: number): Promise<void> {
   if(!await loadIsotopes()) return; // User has not yet opened the settings panel
 
-  const { energy, name } = seekClosest(value);
+  const { energy, name } = new SeekClosest(isoList).seek(value, maxDist);
 
   //if (Object.keys(prevIso).length >= 0) { // Always true???
   const energyVal = parseFloat(Object.keys(prevIso)[0]);
