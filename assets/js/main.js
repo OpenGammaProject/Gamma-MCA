@@ -536,14 +536,13 @@ function toggleCalClick(point, value) {
 document.getElementById('plotType').onclick = () => changeType();
 function changeType() {
     const button = document.getElementById('plotType');
-    if (plot.plotType === 'scatter') {
+    if (plot.linePlot) {
         button.innerHTML = '<i class="fas fa-chart-bar"></i> Bar';
-        plot.plotType = 'bar';
     }
     else {
         button.innerHTML = '<i class="fas fa-chart-line"></i> Line';
-        plot.plotType = 'scatter';
     }
+    plot.linePlot = !plot.linePlot;
     plot.updatePlot(spectrumData);
 }
 document.getElementById('plot-cps').onclick = event => toggleCps(event.target);

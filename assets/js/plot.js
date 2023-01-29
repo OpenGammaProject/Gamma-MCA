@@ -3,7 +3,7 @@ export class SpectrumPlot {
     showCalChart = false;
     xAxis = 'linear';
     yAxis = 'linear';
-    plotType = 'scatter';
+    linePlot = false;
     downloadFormat = 'png';
     sma = false;
     smaLength = 8;
@@ -466,12 +466,13 @@ export class SpectrumPlot {
             stackgroup: 'data',
             x: this.getXAxis(dataObj.data.length),
             y: dataObj.data,
-            type: this.plotType,
+            type: 'scatter',
             mode: 'lines',
             fill: 'tozeroy',
             line: {
                 color: 'orangered',
                 width: .5,
+                shape: this.linePlot ? 'linear' : 'hvh',
             },
             marker: {
                 color: 'orangered',
@@ -488,12 +489,13 @@ export class SpectrumPlot {
                 stackgroup: 'data',
                 x: this.getXAxis(dataObj.background.length),
                 y: dataObj.background,
-                type: this.plotType,
+                type: 'scatter',
                 mode: 'ono',
                 fill: 'tozeroy',
                 line: {
                     color: 'slategrey',
                     width: .5,
+                    shape: this.linePlot ? 'linear' : 'hvh',
                 },
                 marker: {
                     color: 'slategrey',

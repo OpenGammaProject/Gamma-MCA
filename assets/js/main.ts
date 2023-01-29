@@ -811,13 +811,12 @@ document.getElementById('plotType')!.onclick = () => changeType();
 
 function changeType(): void {
   const button = <HTMLButtonElement>document.getElementById('plotType');
-  if (plot.plotType === 'scatter') {
+  if (plot.linePlot) {
     button.innerHTML = '<i class="fas fa-chart-bar"></i> Bar';
-    plot.plotType = 'bar';
   } else {
     button.innerHTML = '<i class="fas fa-chart-line"></i> Line';
-    plot.plotType = 'scatter';
   }
+  plot.linePlot = !plot.linePlot;
   plot.updatePlot(spectrumData);
 }
 

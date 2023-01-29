@@ -71,7 +71,7 @@ export class SpectrumPlot {
   private showCalChart = false;
   xAxis = 'linear';
   yAxis = 'linear';
-  plotType = 'scatter'; //"scatter", "bar"
+  linePlot = false; // 'linear', 'hvh' for 'lines' or 'bar
   downloadFormat = 'png'; // one of png, svg, jpeg, webp
   sma = false; // Simple Moving Average
   smaLength = 8;
@@ -627,13 +627,14 @@ export class SpectrumPlot {
 
       x: this.getXAxis(dataObj.data.length),
       y: dataObj.data,
-      type: this.plotType,
+      type: 'scatter',
       mode: 'lines', // Remove lines, "lines", "none"
       fill: 'tozeroy',
       //opacity: 0.8,
       line: {
         color: 'orangered',
         width: .5,
+        shape: this.linePlot ? 'linear' : 'hvh',
       },
       marker: {
         color: 'orangered',
@@ -659,13 +660,14 @@ export class SpectrumPlot {
 
         x: this.getXAxis(dataObj.background.length),
         y: dataObj.background,
-        type: this.plotType,
+        type: 'scatter',
         mode: 'ono', // Remove lines, "lines", "none"
         fill: 'tozeroy',
         //opacity: 1,
         line: {
           color: 'slategrey',
           width: .5,
+          shape: this.linePlot ? 'linear' : 'hvh',
         },
         marker: {
           color: 'slategrey',
