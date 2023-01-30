@@ -10,7 +10,7 @@
 
 */
 
-import { dataOrder } from './main.js';
+import { DataOrder } from './main.js';
 
 export class SerialManager {
   // SECTION: Serial Manager
@@ -23,7 +23,7 @@ export class SerialManager {
   private startTime = 0;
   private timeDone = 0;
 
-  static orderType: dataOrder = 'chron'; // Chronological data order;
+  static orderType: DataOrder = 'chron'; // Chronological data order;
   static serOptions: SerialOptions = { baudRate: 9600 } // Default 9600 baud rate
 
   // SECTION: Serial Data

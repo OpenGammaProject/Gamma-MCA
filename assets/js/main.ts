@@ -16,10 +16,10 @@
 
     - Improve peak finder
     - Sorting isotope list
-    - Improve the settings code structure
-    - Put all toasts notifications into classes
     - Calibration n-polynomial regression
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
+    - Put all toasts notifications into classes
+    - Improve the settings code structure
 
     - (!) Sometimes only half the actual cps are shown in histogram serial mode?!?!
 
@@ -35,11 +35,11 @@ import { SpectrumPlot, SeekClosest } from './plot.js';
 import { RawData } from './raw-data.js';
 import { SerialManager } from './serial.js';
 
-export interface isotopeList {
+export interface IsotopeList {
   [key: number]: string | undefined;
 }
 
-interface portList {
+interface PortList {
   [key: number]: SerialPort | undefined;
 }
 
@@ -76,9 +76,9 @@ interface NPESv1Spectrum {
   'spectrum': number[]
 }
 
-export type dataOrder = 'hist' | 'chron';
-type calType = 'a' | 'b' | 'c';
-type dataType = 'data' | 'background';
+export type DataOrder = 'hist' | 'chron';
+type CalType = 'a' | 'b' | 'c';
+type DataType = 'data' | 'background';
 
 export class SpectrumData { // Will hold the measurement data globally.
   data: number[] = [];
@@ -88,11 +88,11 @@ export class SpectrumData { // Will hold the measurement data globally.
   dataTime = 1000; // Measurement time in ms
   backgroundTime = 1000; // Measurement time in ms
 
-  getTotalCounts(type: dataType): number {
+  getTotalCounts(type: DataType): number {
     return this[type].reduce((acc,curr) => acc + curr, 0);
   }
 
-  addPulseData(type: dataType, newDataArr: number[], adcChannels: number): void {
+  addPulseData(type: DataType, newDataArr: number[], adcChannels: number): void {
     if(!this[type].length) this[type] = Array(adcChannels).fill(0);
 
     for (const value of newDataArr) {
@@ -100,7 +100,7 @@ export class SpectrumData { // Will hold the measurement data globally.
     }
   }
 
-  addHist(type: dataType, newHistArr: number[]): void {
+  addHist(type: DataType, newHistArr: number[]): void {
     if(!this[type].length) this[type] = newHistArr;
 
     for (const index in newHistArr) {
@@ -118,7 +118,7 @@ let raw = new RawData(1); // 2=raw, 1=hist
 let calClick = { a: false, b: false, c: false };
 let oldCalVals = { a: '', b: '', c: ''};
 
-let portsAvail: portList = {};
+let portsAvail: PortList = {};
 let refreshRate = 1000; // Delay in ms between serial plot updates
 let maxRecTimeEnabled = false;
 let maxRecTime = 1800000; // 30 minutes
@@ -128,7 +128,7 @@ const CONSOLE_REFRESH = 200; // Milliseconds
 let cpsValues: number[] = [];
 
 let isoListURL = 'assets/isotopes_energies_min.json';
-let isoList: isotopeList = {};
+let isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
@@ -480,7 +480,7 @@ function getFileData(file: File, background = false): void { // Gets called when
         endDate = new Date(importData.resultData.endTime!); // Always present if startTime is present --> validated NPESv1
       }
 
-      const localKeys = <dataType[]>['data', 'background'];
+      const localKeys = <DataType[]>['data', 'background'];
       const importKeys = ['energySpectrum', 'backgroundEnergySpectrum'];
 
       for (const i in localKeys) {
@@ -554,7 +554,7 @@ function sizeCheck(): void {
 document.getElementById('clear-data')!.onclick = () => removeFile('data');
 document.getElementById('clear-bg')!.onclick = () => removeFile('background');
 
-function removeFile(id: dataType): void {
+function removeFile(id: DataType): void {
   spectrumData[id] = [];
   spectrumData[`${id}Time`] = 0;
   (<HTMLInputElement>document.getElementById(id)).value = '';
@@ -675,7 +675,7 @@ function changeSma(input: HTMLInputElement): void {
 
 function hoverEvent(data: any): void {
   for (const key in calClick) {
-    const castKey = <calType>key;
+    const castKey = <CalType>key;
     if (calClick[castKey]) (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = data.points[0].x.toFixed(2);
   }
 
@@ -685,7 +685,7 @@ function hoverEvent(data: any): void {
 
 function unHover(/*data: any*/): void {
   for (const key in calClick) {
-    const castKey = <calType>key;
+    const castKey = <CalType>key;
     if (calClick[castKey]) (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = oldCalVals[castKey];
   }
 
@@ -701,12 +701,12 @@ function clickEvent(data: any): void {
   document.getElementById('click-data')!.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
 
   for (const key in calClick) {
-    const castKey = <calType>key;
+    const castKey = <CalType>key;
     if (calClick[castKey]) {
       (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = data.points[0].x.toFixed(2);
       oldCalVals[castKey] = data.points[0].x.toFixed(2);
       calClick[castKey] = false;
-      (<HTMLInputElement>document.getElementById(`select-${castKey}`)).checked = calClick[<calType>key];
+      (<HTMLInputElement>document.getElementById(`select-${castKey}`)).checked = calClick[<CalType>key];
     }
   }
 }
@@ -789,7 +789,7 @@ document.getElementById('calibration-reset')!.onclick = () => resetCal();
 
 function resetCal(): void {
   for (const point in calClick) {
-    calClick[<calType>point] = false;
+    calClick[<CalType>point] = false;
   }
 
   const calSettings = document.getElementsByClassName('cal-setting');
@@ -810,7 +810,7 @@ document.getElementById('select-a')!.onclick = event => toggleCalClick('a', (<HT
 document.getElementById('select-b')!.onclick = event => toggleCalClick('b', (<HTMLInputElement>event.target).checked);
 document.getElementById('select-c')!.onclick = event => toggleCalClick('c', (<HTMLInputElement>event.target).checked);
 
-function toggleCalClick(point: calType, value: boolean): void {
+function toggleCalClick(point: CalType, value: boolean): void {
   calClick[point] = value;
 }
 
@@ -963,7 +963,7 @@ function downloadCal(): void {
 }
 
 
-function makeXMLSpectrum(type: dataType, name: string): Element {
+function makeXMLSpectrum(type: DataType, name: string): Element {
   const root = document.createElementNS(null, (type === 'data') ? 'EnergySpectrum' : 'BackgroundEnergySpectrum');
   let noc = document.createElementNS(null, 'NumberOfChannels');
 
@@ -1139,7 +1139,7 @@ function downloadXML(): void {
 }
 
 
-function makeJSONSpectrum(type: dataType): NPESv1Spectrum {
+function makeJSONSpectrum(type: DataType): NPESv1Spectrum {
   let spec: NPESv1Spectrum = {
     'numberOfChannels': spectrumData[type].length,
     'validPulseCount': spectrumData.getTotalCounts(type),
@@ -1216,7 +1216,7 @@ function downloadNPES(): void {
 document.getElementById('download-spectrum-btn')!.onclick = () => downloadData('spectrum', 'data');
 document.getElementById('download-bg-btn')!.onclick = () => downloadData('background', 'background');
 
-function downloadData(filename: string, data: dataType): void {
+function downloadData(filename: string, data: DataType): void {
   filename += `_${getDateString()}.csv`;
 
   let text = '';
@@ -1353,7 +1353,7 @@ async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope 
 
 document.getElementById('iso-hover')!.onclick = () => toggleIsoHover();
 
-let prevIso: isotopeList = {};
+let prevIso: IsotopeList = {};
 
 function toggleIsoHover(): void {
   checkNearIso = !checkNearIso;
@@ -1372,7 +1372,7 @@ async function closestIso(value: number): Promise<void> {
   //}
 
   if (energy && name) {
-    let newIso: isotopeList = {};
+    let newIso: IsotopeList = {};
     newIso[energy] = name;
 
     if (prevIso !== newIso) prevIso = newIso;
@@ -1737,7 +1737,7 @@ document.getElementById('s1')!.onchange = event => selectSerialType(<HTMLInputEl
 document.getElementById('s2')!.onchange = event => selectSerialType(<HTMLInputElement>event.target);
 
 function selectSerialType(button: HTMLInputElement): void {
-  SerialManager.orderType = <dataOrder>button.value;
+  SerialManager.orderType = <DataOrder>button.value;
   saveJSON('serialDataMode', button.id);
 }
 
@@ -1837,11 +1837,11 @@ document.getElementById('resume-button')!.onclick = () => startRecord(true, reco
 document.getElementById('record-spectrum-btn')!.onclick = () => startRecord(false, 'data');
 document.getElementById('record-bg-btn')!.onclick = () => startRecord(false, 'background');
 
-let recordingType: dataType;
+let recordingType: DataType;
 let startDate: Date;
 let endDate: Date;
 
-async function startRecord(pause = false, type: dataType): Promise<void> {
+async function startRecord(pause = false, type: DataType): Promise<void> {
   try {
     selectPort();
     await serRecorder?.startRecord(pause);
@@ -2005,7 +2005,7 @@ function getRecordTimeStamp(time: number): string {
 
 let metaTimeout: NodeJS.Timeout;
 
-function refreshMeta(type: dataType): void {
+function refreshMeta(type: DataType): void {
   if (serRecorder?.port?.readable) {
     const nowTime = performance.now();
 
@@ -2047,7 +2047,7 @@ function refreshMeta(type: dataType): void {
 let lastUpdate = performance.now();
 let refreshTimeout: NodeJS.Timeout;
 
-function refreshRender(type: dataType, firstLoad = false): void {
+function refreshRender(type: DataType, firstLoad = false): void {
   if (serRecorder?.port?.readable) {
     const startDelay = performance.now();
 

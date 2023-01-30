@@ -13,10 +13,10 @@
 
 */
 
-import { coeffObj } from './plot.js';
+import { CoeffObj } from './plot.js';
 //import './external/ZSchema-browser-min.js';
 
-interface importDataMeta {
+interface ImportDataMeta {
   name: string,
   location: string,
   time: string,
@@ -30,11 +30,11 @@ interface importDataMeta {
   backgroundMt: number // Measurement time for the background energy spectrum
 }
 
-interface xmlImportData {
+interface XMLImportData {
   espectrum: number[],
   bgspectrum: number[],
-  coeff: coeffObj,
-  meta: importDataMeta
+  coeff: CoeffObj,
+  meta: ImportDataMeta
 }
 
 export class RawData {
@@ -92,13 +92,13 @@ export class RawData {
     }
   }
 
-  xmlToArray(data: string): xmlImportData {
-    let coeff: coeffObj = {
+  xmlToArray(data: string): XMLImportData {
+    let coeff: CoeffObj = {
       c1: 0,
       c2: 0,
       c3: 0
     };
-    let meta: importDataMeta = {
+    let meta: ImportDataMeta = {
       name: '',
       location: '',
       time: '',

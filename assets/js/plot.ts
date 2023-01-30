@@ -15,9 +15,9 @@
 
 //import './external/plotly-basic.min.js';
 
-import { SpectrumData, isotopeList } from './main.js';
+import { SpectrumData, IsotopeList } from './main.js';
 
-interface shape {
+interface Shape {
   type: string;
   xref: string;
   yref: string;
@@ -33,7 +33,7 @@ interface shape {
   };
 }
 
-interface anno {
+interface Anno {
   x: number;
   y: number;
   xref: string;
@@ -49,7 +49,7 @@ interface anno {
   };
 }
 
-interface coeffPoints {
+interface CoeffPoints {
   aFrom: number,
   aTo: number,
   bFrom: number,
@@ -59,7 +59,7 @@ interface coeffPoints {
   [index: string]: number | undefined
 }
 
-export interface coeffObj {
+export interface CoeffObj {
   c1: number,
   c2: number,
   c3: number,
@@ -70,9 +70,9 @@ export interface coeffObj {
   Seek the closest matching isotope by energy from an isotope list
 */
 export class SeekClosest {
-  isoList: isotopeList;
+  isoList: IsotopeList;
 
-  constructor(list: isotopeList) {
+  constructor(list: IsotopeList) {
     this.isoList = list;
   }
   
@@ -107,7 +107,7 @@ export class SpectrumPlot {
   calibration = {
     enabled: false,
     imported: false,
-    points: <coeffPoints>{
+    points: <CoeffPoints>{
       aFrom: 0,
       aTo: 0,
       bFrom: 0,
@@ -115,17 +115,17 @@ export class SpectrumPlot {
       cFrom: 0,
       cTo: 0,
     },
-    coeff: <coeffObj>{
+    coeff: <CoeffObj>{
       c1: 0,
       c2: 0,
       c3: 0,
     },
   };
   cps = false;
-  private shapes: shape[] = [];
-  private annotations: anno[] = [];
+  private shapes: Shape[] = [];
+  private annotations: Anno[] = [];
   editableMode = false;
-  isoList: isotopeList = {};
+  isoList: IsotopeList = {};
   peakConfig = {
     enabled: false,
     mode: 0, // Energy: 0 and Isotope: 1 modes
@@ -215,7 +215,7 @@ export class SpectrumPlot {
     Delete calibration points and calibration coefficients
   */
   clearCalibration(): void {
-    this.calibration.points = <coeffPoints>{
+    this.calibration.points = <CoeffPoints>{
       aFrom: 0,
       aTo: 0,
       bFrom: 0,
@@ -223,7 +223,7 @@ export class SpectrumPlot {
       cFrom: 0,
       cTo: 0,
     };
-    this.calibration.coeff = <coeffObj>{
+    this.calibration.coeff = <CoeffObj>{
       c1: 0,
       c2: 0,
       c3: 0,
@@ -404,7 +404,7 @@ export class SpectrumPlot {
   toggleLine(energy: number, name: string, enabled = true): void {
     name = name.replaceAll('-',''); // Remove - to save space
     if (enabled) {
-      const newLine: shape = {
+      const newLine: Shape = {
         type: 'line',
         xref: 'x',
         yref: 'paper',
@@ -419,7 +419,7 @@ export class SpectrumPlot {
             dash: 'solid'
           },
       };
-      const newAnno: anno = {
+      const newAnno: Anno = {
         x: parseFloat(energy.toFixed(2)),
         y: 1,
         xref: 'x',
@@ -599,7 +599,7 @@ export class SpectrumPlot {
         yanchor: 'top',
         yref: 'paper',
       }],
-      annotations: <anno[]>[]
+      annotations: <Anno[]>[]
     };
 
     const config = {
@@ -791,8 +791,8 @@ export class SpectrumPlot {
         yanchor: 'top',
         yref: 'paper',
       }],
-      shapes: <shape[]>[],
-      annotations: <anno[]>[],
+      shapes: <Shape[]>[],
+      annotations: <Anno[]>[],
       //shapes: this.shapes,
       //annotations: JSON.parse(JSON.stringify(this.annotations)), // Copy array but do not reference
     };
