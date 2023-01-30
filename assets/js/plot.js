@@ -646,3 +646,4 @@ export class SpectrumPlot {
         window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, data, layout, config);
     }
 }
+//# sourceMappingURL=plot.js.map

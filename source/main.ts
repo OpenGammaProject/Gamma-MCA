@@ -143,7 +143,9 @@ document.body.onload = async function(): Promise<void> {
   if (localStorageAvailable) loadSettingsStorage();
 
   if ('serviceWorker' in navigator) { // Add service worker for PWA
-    const reg = await navigator.serviceWorker.register('/service-worker.js'); // Onload async because of this... good? hmmm.
+    const reg = await navigator.serviceWorker.register('/service-worker.js', {
+      type: 'module',
+    }); // Onload async because of this... good? hmmm.
 
     if (localStorageAvailable) {
       reg.addEventListener('updatefound', () => {
@@ -1986,7 +1988,7 @@ function toggleAutoscroll(enabled: boolean) {
 }
 
 
-let consoleTimeout: NodeJS.Timeout;
+let consoleTimeout: number;
 
 function refreshConsole(): void {
   if (serRecorder?.port?.readable) {
@@ -2004,7 +2006,7 @@ function getRecordTimeStamp(time: number): string {
 }
 
 
-let metaTimeout: NodeJS.Timeout;
+let metaTimeout: number;
 
 function refreshMeta(type: DataType): void {
   if (serRecorder?.port?.readable) {
@@ -2046,7 +2048,7 @@ function refreshMeta(type: DataType): void {
 
 
 let lastUpdate = performance.now();
-let refreshTimeout: NodeJS.Timeout;
+let refreshTimeout: number;
 
 function refreshRender(type: DataType, firstLoad = false): void {
   if (serRecorder?.port?.readable) {

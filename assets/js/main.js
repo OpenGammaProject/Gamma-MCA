@@ -50,7 +50,9 @@ document.body.onload = async function () {
     if (localStorageAvailable)
         loadSettingsStorage();
     if ('serviceWorker' in navigator) {
-        const reg = await navigator.serviceWorker.register('/service-worker.js');
+        const reg = await navigator.serviceWorker.register('/service-worker.js', {
+            type: 'module',
+        });
         if (localStorageAvailable) {
             reg.addEventListener('updatefound', () => {
                 if (firstInstall)
@@ -1514,3 +1516,4 @@ function refreshRender(type, firstLoad = false) {
         refreshTimeout = setTimeout(refreshRender, (refreshRate - finishDelta > 0) ? (refreshRate - finishDelta) : 1, type);
     }
 }
+//# sourceMappingURL=main.js.map
