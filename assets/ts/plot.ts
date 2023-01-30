@@ -17,6 +17,13 @@
 
 import { SpectrumData, IsotopeList } from './main.js';
 
+export interface CoeffObj {
+  c1: number,
+  c2: number,
+  c3: number,
+  [index: string]: number
+}
+
 interface Shape {
   type: string;
   xref: string;
@@ -57,13 +64,6 @@ interface CoeffPoints {
   cFrom: number | undefined,
   cTo: number | undefined,
   [index: string]: number | undefined
-}
-
-export interface CoeffObj {
-  c1: number,
-  c2: number,
-  c3: number,
-  [index: string]: number
 }
 
 /*

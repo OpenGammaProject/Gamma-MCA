@@ -22,6 +22,7 @@
     - (!) Notification for Gamma MCA GitHub poll
     - (!) Put all toasts notifications into classes
     - (!) Improve the settings code structure
+    
     - (!) Sometimes only half the actual cps are shown in histogram serial mode?!?!
 
 
