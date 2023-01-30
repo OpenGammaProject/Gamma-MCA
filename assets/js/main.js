@@ -869,10 +869,14 @@ function resetSampleInfo() {
     }
 }
 function popupNotification(id) {
-    new window.bootstrap.Toast(document.getElementById(id)).show();
+    const toast = new window.bootstrap.Toast(document.getElementById(id));
+    if (!toast.isShown())
+        toast.show();
 }
 function hideNotification(id) {
-    new window.bootstrap.Toast(document.getElementById(id)).hide();
+    const toast = new window.bootstrap.Toast(document.getElementById(id));
+    if (toast.isShown())
+        toast.hide();
 }
 document.getElementById('toggle-menu').onclick = () => loadIsotopes();
 document.getElementById('reload-isos-btn').onclick = () => loadIsotopes(true);

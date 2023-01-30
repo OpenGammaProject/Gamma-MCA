@@ -20,9 +20,8 @@
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
 
     - (!) Notification for Gamma MCA GitHub poll
-    - (!) Put all toasts notifications into classes
     - (!) Improve the settings code structure
-    
+
     - (!) Sometimes only half the actual cps are shown in histogram serial mode?!?!
 
 
@@ -1255,12 +1254,14 @@ function resetSampleInfo(): void {
 
 
 function popupNotification(id: string): void { // Uses Bootstrap Toasts already defined in HTML
-  new (<any>window).bootstrap.Toast(document.getElementById(id)).show();
+  const toast = new (<any>window).bootstrap.Toast(document.getElementById(id));
+  if (!toast.isShown()) toast.show();
 }
 
 
 function hideNotification(id: string): void {
-  new (<any>window).bootstrap.Toast(document.getElementById(id)).hide();
+  const toast = new (<any>window).bootstrap.Toast(document.getElementById(id));
+  if (toast.isShown()) toast.hide();
 }
 
 
