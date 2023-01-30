@@ -18,9 +18,10 @@
     - Sorting isotope list
     - Calibration n-polynomial regression
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
-    - Put all toasts notifications into classes
-    - Improve the settings code structure
 
+    - (!) Notification for Gamma MCA GitHub poll
+    - (!) Put all toasts notifications into classes
+    - (!) Improve the settings code structure
     - (!) Sometimes only half the actual cps are shown in histogram serial mode?!?!
 
 

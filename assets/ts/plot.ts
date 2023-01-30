@@ -495,7 +495,7 @@ export class SpectrumPlot {
       x: <number[]>[],
       y: <number[]>[],
       mode: 'markers+text',
-      type: 'scatter',
+      type: 'scattergl', // 'scatter' for SVG, 'scattergl' for WebGL
       marker: {
         symbol: 'cross-thin',
         size: 10,
@@ -639,7 +639,7 @@ export class SpectrumPlot {
 
       x: this.getXAxis(dataObj.data.length),
       y: dataObj.data,
-      type: 'scatter',
+      type: 'scattergl', // 'scatter' for SVG, 'scattergl' for WebGL
       mode: 'lines', // Remove lines, "lines", "none"
       fill: 'tozeroy',
       //opacity: 0.8,
@@ -671,7 +671,7 @@ export class SpectrumPlot {
 
         x: this.getXAxis(dataObj.background.length),
         y: dataObj.background,
-        type: 'scatter',
+        type: 'scattergl', // 'scatter' for SVG, 'scattergl' for WebGL
         mode: 'ono', // Remove lines, "lines", "none"
         fill: 'tozeroy',
         //opacity: 1,

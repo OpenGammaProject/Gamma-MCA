@@ -347,7 +347,7 @@ export class SpectrumPlot {
             x: [],
             y: [],
             mode: 'markers+text',
-            type: 'scatter',
+            type: 'scattergl',
             marker: {
                 symbol: 'cross-thin',
                 size: 10,
@@ -472,7 +472,7 @@ export class SpectrumPlot {
             stackgroup: 'data',
             x: this.getXAxis(dataObj.data.length),
             y: dataObj.data,
-            type: 'scatter',
+            type: 'scattergl',
             mode: 'lines',
             fill: 'tozeroy',
             line: {
@@ -495,7 +495,7 @@ export class SpectrumPlot {
                 stackgroup: 'data',
                 x: this.getXAxis(dataObj.background.length),
                 y: dataObj.background,
-                type: 'scatter',
+                type: 'scattergl',
                 mode: 'ono',
                 fill: 'tozeroy',
                 line: {
