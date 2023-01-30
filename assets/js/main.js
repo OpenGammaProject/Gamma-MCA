@@ -103,7 +103,7 @@ document.body.onload = async function () {
     document.getElementById('version-tag').innerText += ` ${APP_VERSION}.`;
     if (localStorageAvailable) {
         if (loadJSON('lastVisit') <= 0) {
-            popupNotification('welcomeMsg');
+            popupNotification('welcome-msg');
             firstInstall = true;
         }
         saveJSON('lastVisit', Date.now());
@@ -131,7 +131,7 @@ document.body.onload = async function () {
     else {
         const settingsSaveAlert = document.getElementById('ls-available');
         settingsSaveAlert.parentNode.removeChild(settingsSaveAlert);
-        popupNotification('welcomeMsg');
+        popupNotification('welcome-msg');
     }
     loadSettingsDefault();
     sizeCheck();
@@ -166,6 +166,7 @@ document.body.onload = async function () {
             }
         });
     }
+    popupNotification('poll-msg');
     const loadingSpinner = document.getElementById('loading');
     loadingSpinner.parentNode.removeChild(loadingSpinner);
 };

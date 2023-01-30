@@ -19,9 +19,6 @@
     - Calibration n-polynomial regression
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
 
-    - (!) Notification for Gamma MCA GitHub poll
-    - (!) Improve the settings code structure
-
     - (!) Sometimes only half the actual cps are shown in histogram serial mode?!?!
 
 
@@ -210,7 +207,7 @@ document.body.onload = async function(): Promise<void> {
 
   if (localStorageAvailable) {
     if (loadJSON('lastVisit') <= 0) {
-      popupNotification('welcomeMsg');
+      popupNotification('welcome-msg');
       firstInstall = true;
     }
 
@@ -243,7 +240,7 @@ document.body.onload = async function(): Promise<void> {
   } else {
     const settingsSaveAlert = document.getElementById('ls-available')!; // Remove saving alert
     settingsSaveAlert.parentNode!.removeChild(settingsSaveAlert);
-    popupNotification('welcomeMsg');
+    popupNotification('welcome-msg');
   }
 
   loadSettingsDefault();
@@ -283,6 +280,8 @@ document.body.onload = async function(): Promise<void> {
       }
     });
   }
+
+  popupNotification('poll-msg'); // Remove this after some time...
 
   const loadingSpinner = document.getElementById('loading')!;
   loadingSpinner.parentNode!.removeChild(loadingSpinner); // Delete Loading Thingymajig
@@ -1549,7 +1548,6 @@ function loadSettingsStorage(): void {
 }
 
 
-// Do this by classes? Way more efficient, v e r y ugly!
 document.getElementById('edit-plot')!.onclick = event => changeSettings('editMode', <HTMLInputElement>event.target);
 document.getElementById('setting1')!.onclick = () => changeSettings('maxIsoDist', <HTMLInputElement>document.getElementById('iso-hover-prox'));
 document.getElementById('setting2')!.onclick = () => changeSettings('customURL', <HTMLInputElement>document.getElementById('custom-url'));
