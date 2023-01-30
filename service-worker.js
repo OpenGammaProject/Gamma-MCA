@@ -1,5 +1,5 @@
 const APP_VERSION = '2023-01-28';
-const CACHE_NAME = "gamma-static";
+const CACHE_NAME = 'gamma-static';
 const OFFLINE_RESOURCES = ['/',
     '/index.html',
     '/404.html',
@@ -28,14 +28,14 @@ const OFFLINE_RESOURCES = ['/',
     '/assets/npes-1.schema.json'];
 self.addEventListener("install", event => {
     console.info('Installing service worker...');
-    event.waitUntil(caches.open(CACHE_NAME).then(cache => {
-        cache.keys().then(keys => {
-            keys.forEach(async function (request, index, array) {
-                await cache.delete(request);
-            });
+    event.waitUntil(async function () {
+        const cache = await caches.open(CACHE_NAME);
+        const keys = await cache.keys();
+        keys.forEach(async function (request, index, array) {
+            await cache.delete(request);
         });
-        return cache.addAll(OFFLINE_RESOURCES);
-    }));
+        await cache.addAll(OFFLINE_RESOURCES);
+    }());
     self.skipWaiting();
 });
 self.addEventListener("activate", event => {
@@ -76,7 +76,9 @@ async function updateCache(request) {
 function checkResponse(target, response) {
     if (!response.ok) {
         console.warn(`Fetching URL "${target.url}" failed, response code: ${response.status}.`);
+        return false;
     }
+    return true;
 }
 export {};
 //# sourceMappingURL=service-worker.js.map

@@ -17,7 +17,8 @@ declare let self: ServiceWorkerGlobalScope;
 export {};
 
 const APP_VERSION = '2023-01-28';
-const CACHE_NAME = "gamma-static"; // A random name for the cache
+
+const CACHE_NAME = 'gamma-static'; // Cache name with app version number
 const OFFLINE_RESOURCES = ['/',
                           '/index.html',
                           '/404.html',
@@ -49,22 +50,20 @@ const OFFLINE_RESOURCES = ['/',
 self.addEventListener("install", event => { // First time install of a worker
   console.info('Installing service worker...');
 
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      /*
-      for (const URL of OFFLINE_RESOURCES) { // Remove old cached files
-        cache.delete(URL, {ignoreSearch: true, ignoreMethod: true});
-      }
-      */
-      cache.keys().then(keys => { // Delete the whole cache
-        keys.forEach(async function(request, index, array) {
-          //console.info('Clearing cache!', request);
-          await cache.delete(request);
-        });
-      })
-      return cache.addAll(OFFLINE_RESOURCES); // Cache all important files
-    })
-  );
+  event.waitUntil(async function() {
+    const cache = await caches.open(CACHE_NAME);
+    /*
+    for (const URL of OFFLINE_RESOURCES) { // Remove old cached files
+      cache.delete(URL, {ignoreSearch: true, ignoreMethod: true});
+    }
+    */
+    const keys = await cache.keys();
+    keys.forEach(async function(request, index, array) { // Delete the whole cache
+      //console.info('Clearing cache!', request);
+      await cache.delete(request);
+    });
+    await cache.addAll(OFFLINE_RESOURCES); // Cache all important files
+  }());
 
   self.skipWaiting(); // Forces the waiting service worker to become the active service worker
 });
@@ -79,6 +78,7 @@ self.addEventListener("activate", event => { // New worker takes over
 self.addEventListener("fetch", event => {
   //console.info('mode', event.request);
 
+  // Ignore that the service worker might not return anything. Highly illegal, but it makes everything work better LOL
   // @ts-ignore
   event.respondWith(async function() {
     const cache = await caches.open(CACHE_NAME);
@@ -105,7 +105,7 @@ self.addEventListener("fetch", event => {
 });
 
 
-async function updateCache(request: Request) {
+async function updateCache(request: Request): Promise<void> {
   try {
     const networkResponse = await fetch(request);
     checkResponse(request, networkResponse);
@@ -120,8 +120,10 @@ async function updateCache(request: Request) {
 }
 
 
-function checkResponse(target: Request, response: Response) {
+function checkResponse(target: Request, response: Response): boolean {
   if (!response.ok) {
     console.warn(`Fetching URL "${target.url}" failed, response code: ${response.status}.`);
+    return false;
   }
+  return true;
 }
