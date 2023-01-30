@@ -143,9 +143,7 @@ document.body.onload = async function(): Promise<void> {
   if (localStorageAvailable) loadSettingsStorage();
 
   if ('serviceWorker' in navigator) { // Add service worker for PWA
-    const reg = await navigator.serviceWorker.register('/service-worker.js', {
-      type: 'module',
-    }); // Onload async because of this... good? hmmm.
+    const reg = await navigator.serviceWorker.register('/service-worker.js', { type: 'module' }); // Onload async because of this... good? hmmm.
 
     if (localStorageAvailable) {
       reg.addEventListener('updatefound', () => {
