@@ -19,11 +19,16 @@
     - Calibration n-polynomial regression
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
 
-    - (!) Sometimes only half the actual cps are shown in histogram serial mode?!?!
+    - (!) Update README
+    - (!) Optimize select/unselect isotope list via web worker
+    - (!) Optimize serial addData speed via web worker
 
 
   Known Performance Issues:
     - (Un)Selecting all isotopes from gamma-ray energies list (Plotly)
+  
+  Known Issue:
+    - Sometimes only half the actual cps are shown in histogram serial mode?!?!
 
 */
 
