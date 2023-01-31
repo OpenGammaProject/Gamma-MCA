@@ -18,9 +18,7 @@
     - Calibration n-polynomial regression
     - Custom Line when left-clicking into plot. Rightclick to delete.
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
-
-    - (!) Improve peak finder documentation
-    - (!) Optimize serial addData speed via web worker
+    
   
   Known Issue:
     - Sometimes only half the actual cps are shown in histogram serial mode?!?!

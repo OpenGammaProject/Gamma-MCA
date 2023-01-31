@@ -917,21 +917,21 @@
                   <div class="accordion-body">
 
                     <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="peak-lag">Smoothing</label>
+                      <input type="number" class="form-control" id="peak-lag" min="1">
+                      <button class="btn btn-primary" type="button" id="setting10" title="Apply"> <i class="fas fa-check"></i> </button>
+                    </div>
+                    <p><small>Decrease this if your data already looks pretty smooth, increase otherwise. Too high values can hide smaller peaks, too low values might generate false-positives. Any positive integer is valid.</small></p>
+
+                    <div class="input-group input-group-sm">
                       <label class="input-group-text" for="peak-thres">Threshold</label>
                       <input type="number" class="form-control" id="peak-thres" min="0" step="0.001">
                       <button class="btn btn-primary" type="button" id="setting9" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
-                    <p><small>Sensitivity of the vertical step size in relation to the highest value. Any positive float is valid.</small></p>
+                    <p><small>Change this after adapting the <code>Smoothing</code> setting. Decreasing this will make the peak finder trigger on lower-amplitude peaks and vice versa. Any positive float is valid.</small></p>
 
                     <div class="input-group input-group-sm">
-                      <label class="input-group-text" for="peak-lag">Smooth</label>
-                      <input type="number" class="form-control" id="peak-lag" min="1">
-                      <button class="btn btn-primary" type="button" id="setting10" title="Apply"> <i class="fas fa-check"></i> </button>
-                    </div>
-                    <p><small>Width of the overall moving average applied to the plot data that is used as a general reference. Any positive integer is valid.</small></p>
-
-                    <div class="input-group input-group-sm">
-                      <label class="input-group-text" for="peak-width">Width</label>
+                      <label class="input-group-text" for="peak-width">Peak Width</label>
                       <input type="number" class="form-control" id="peak-width" min="1">
                       <button class="btn btn-primary" type="button" id="setting11" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
