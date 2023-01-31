@@ -50,9 +50,7 @@ document.body.onload = async function () {
     if (localStorageAvailable)
         loadSettingsStorage();
     if ('serviceWorker' in navigator) {
-        const reg = await navigator.serviceWorker.register('/service-worker.js', {
-            type: 'module',
-        });
+        const reg = await navigator.serviceWorker.register('/service-worker.js');
         if (localStorageAvailable) {
             reg.addEventListener('updatefound', () => {
                 if (firstInstall)
