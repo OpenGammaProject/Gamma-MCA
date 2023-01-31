@@ -14,14 +14,12 @@
     - (?) Add dead time correction for cps
     - (?) Drag-and-droppable points for calibration chart
 
-    - Improve peak finder
     - Sorting isotope list
     - Calibration n-polynomial regression
-    - User-selectable ROI with Gaussian fit and pulse FWHM + stats
     - Custom Line when left-clicking into plot. Rightclick to delete.
+    - User-selectable ROI with Gaussian fit and pulse FWHM + stats
 
-    - (!) Update README
-    - (!) Optimize select/unselect isotope list via web worker
+    - (!) Improve peak finder documentation
     - (!) Optimize serial addData speed via web worker
   
   Known Issue:
@@ -144,7 +142,7 @@ document.body.onload = async function(): Promise<void> {
 
   if (localStorageAvailable) loadSettingsStorage();
 
-  if ('serviceWorker' in navigator) { // Add service worker for PWA
+  if (navigator.serviceWorker) { // Add service worker for PWA
     const reg = await navigator.serviceWorker.register('/service-worker.js'); // Onload async because of this... good? hmmm.
 
     if (localStorageAvailable) {
@@ -166,7 +164,7 @@ document.body.onload = async function(): Promise<void> {
 
   isoListURL = new URL(isoListURL, window.location.origin).href;
 
-  if ('serial' in navigator) { // Web Serial API
+  if (navigator.serial) { // Web Serial API
     const serErrDiv = document.getElementById('serial-error')!;
     serErrDiv.parentNode!.removeChild(serErrDiv); // Delete Serial Not Supported Warning
     navigator.serial.addEventListener('connect', serialConnect);

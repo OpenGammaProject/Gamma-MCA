@@ -345,7 +345,7 @@ export class SpectrumPlot {
     let values: number[] = [];
     peakLines.push(0);
 
-    const peakLen = peakLines.length
+    const peakLen = peakLines.length;
 
     for (let i = 0; i < peakLen; i++) {
       values.push(peakLines[i]);

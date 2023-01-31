@@ -49,7 +49,7 @@ document.body.onload = async function () {
     localStorageAvailable = 'localStorage' in self;
     if (localStorageAvailable)
         loadSettingsStorage();
-    if ('serviceWorker' in navigator) {
+    if (navigator.serviceWorker) {
         const reg = await navigator.serviceWorker.register('/service-worker.js');
         if (localStorageAvailable) {
             reg.addEventListener('updatefound', () => {
@@ -68,7 +68,7 @@ document.body.onload = async function () {
         document.title += ' web application';
     }
     isoListURL = new URL(isoListURL, window.location.origin).href;
-    if ('serial' in navigator) {
+    if (navigator.serial) {
         const serErrDiv = document.getElementById('serial-error');
         serErrDiv.parentNode.removeChild(serErrDiv);
         navigator.serial.addEventListener('connect', serialConnect);
