@@ -464,6 +464,44 @@ export class SpectrumPlot {
     this.showCalChart ? this.plotCalibration(dataObj) : this.plotData(dataObj);
   }
   /*
+    Gaussian correlation filter using the PRA algorithm
+  */
+  private gaussianCorrel(xAxis: number[], data: number[]): number[] {
+    let newGVals: number[] = [];
+    
+    for (const midIndex of xAxis) {
+      const sd = Math.sqrt(midIndex);
+      const xMin = - Math.round(2*sd);
+      const xMax = + Math.round(2*sd);
+      
+      let kVals: number[] = [];
+      for(let i = xMin; i < xMax; i++) {
+        kVals.push(i);
+      }
+      
+      let gVals: number[] = [];
+
+      for (const k of kVals) {
+        gVals.push(Math.exp(- (k**2) / (2*sd**2)))
+      }
+      
+      const mw = gVals.reduce((acc, curr) => acc + curr, 0) / gVals.length;
+      gVals = gVals.map(value => value - mw);
+      
+      const qs = gVals.reduce((acc, curr) => acc + curr**2, 0);
+      gVals = gVals.map(value => value/qs);
+
+      let resultVal = 0;
+
+      for(let k = xMin; k < xMax; k++) {
+        resultVal += data[midIndex + k] * gVals[k - xMin];
+      }
+
+      newGVals.push((!resultVal || resultVal < 0 ) ? 0 : resultVal);
+    }
+    return newGVals;
+  }
+  /*
     Plot Calibration Chart
   */
   private plotCalibration(dataObj: SpectrumData, update = true): void {
@@ -628,7 +666,7 @@ export class SpectrumPlot {
     if (this.showCalChart) return; // Ignore this if the calibration chart is currently shown
 
     let trace = {
-      name: 'Clean Spectrum',
+      name: 'Net Spectrum',
       stackgroup: 'data', // Stack line charts on top of each other
 
       x: this.getXAxis(dataObj.data.length),
@@ -649,7 +687,7 @@ export class SpectrumPlot {
     };
 
     let maxXValue = trace.x.at(-1) ?? 1;
-    let data = [trace];
+    let data: any = [trace]; // ANY ANY ANY!!!!!!!!!!!!!!!
 
     /*
       Total number of pulses divided by seconds running. Counts Per Second
@@ -693,7 +731,7 @@ export class SpectrumPlot {
       trace.y = newData;
       trace.fill = 'tonexty'; //'tonextx'
 
-      data = data.concat(bgTrace);
+      data.push(bgTrace)
       data.reverse();
     }
     /*
@@ -845,9 +883,40 @@ export class SpectrumPlot {
     }
 
     /*
-      HTML EXPORT FUNCTIONALITY
+      HTML export functionality
     */
     config.modeBarButtonsToAdd = [this.customModeBarButtons];
+
+    /*
+      Gaussian Correlation Filter
+    */
+    const startTime = performance.now();
+
+    const filterData = data[0].y;
+    const filterXAxis = (this.calibration.enabled) ? this.getCalAxis(filterData.length) : this.getXAxis(filterData.length);
+    
+    let eTrace = {
+      name: 'Gauss Correlation',
+      //stackgroup: 'data', // Stack line charts on top of each other
+      x: filterXAxis,
+      y: this.gaussianCorrel(this.getXAxis(filterData.length), filterData),
+      type: this.fallbackGL ? 'scatter' : 'scattergl', // 'scatter' for SVG, 'scattergl' for WebGL
+      mode: 'lines', // Remove lines, "lines", "none"
+      //fill: 'tozeroy',
+      //opacity: 0.8,
+      line: {
+        color: 'black',
+        width: 0.5,
+        shape: this.linePlot ? 'linear' : 'hvh',
+      },
+      marker: {
+        color: 'black',
+      },
+      width: 1,
+    };
+    data.push(eTrace);
+
+    console.log(performance.now() - startTime);
 
     /*
     if (!update) {

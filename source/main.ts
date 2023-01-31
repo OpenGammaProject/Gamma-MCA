@@ -17,8 +17,10 @@
     - Sorting isotope list
     - Calibration n-polynomial regression
     - Custom Line when left-clicking into plot. Rightclick to delete.
-    - User-selectable ROI with Gaussian fit and pulse FWHM + stats
-    
+
+    - (!) FWHM + stats for Gaussian (ROI?)
+    - (!) Optimize Gaussian correlation (Performance -> Web Worker?)
+    - (!) Plot is updated twice on menu click except if you click on "calibration"
   
   Known Issue:
     - Sometimes only half the actual cps are shown in histogram serial mode?!?!

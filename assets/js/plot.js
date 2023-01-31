@@ -323,6 +323,32 @@ export class SpectrumPlot {
         this.showCalChart = (typeof override === 'boolean') ? override : !this.showCalChart;
         this.showCalChart ? this.plotCalibration(dataObj) : this.plotData(dataObj);
     }
+    gaussianCorrel(xAxis, data) {
+        let newGVals = [];
+        for (const midIndex of xAxis) {
+            const sd = Math.sqrt(midIndex);
+            const xMin = -Math.round(2 * sd);
+            const xMax = +Math.round(2 * sd);
+            let kVals = [];
+            for (let i = xMin; i < xMax; i++) {
+                kVals.push(i);
+            }
+            let gVals = [];
+            for (const k of kVals) {
+                gVals.push(Math.exp(-(k ** 2) / (2 * sd ** 2)));
+            }
+            const mw = gVals.reduce((acc, curr) => acc + curr, 0) / gVals.length;
+            gVals = gVals.map(value => value - mw);
+            const qs = gVals.reduce((acc, curr) => acc + curr ** 2, 0);
+            gVals = gVals.map(value => value / qs);
+            let resultVal = 0;
+            for (let k = xMin; k < xMax; k++) {
+                resultVal += data[midIndex + k] * gVals[k - xMin];
+            }
+            newGVals.push((!resultVal || resultVal < 0) ? 0 : resultVal);
+        }
+        return newGVals;
+    }
     plotCalibration(dataObj, update = true) {
         const trace = {
             name: 'Calibration',
@@ -465,7 +491,7 @@ export class SpectrumPlot {
         if (this.showCalChart)
             return;
         let trace = {
-            name: 'Clean Spectrum',
+            name: 'Net Spectrum',
             stackgroup: 'data',
             x: this.getXAxis(dataObj.data.length),
             y: dataObj.data,
@@ -516,7 +542,7 @@ export class SpectrumPlot {
             }
             trace.y = newData;
             trace.fill = 'tonexty';
-            data = data.concat(bgTrace);
+            data.push(bgTrace);
             data.reverse();
         }
         if (this.sma) {
@@ -640,6 +666,27 @@ export class SpectrumPlot {
             }
         }
         config.modeBarButtonsToAdd = [this.customModeBarButtons];
+        const startTime = performance.now();
+        const filterData = data[0].y;
+        const filterXAxis = (this.calibration.enabled) ? this.getCalAxis(filterData.length) : this.getXAxis(filterData.length);
+        let eTrace = {
+            name: 'Gauss Correlation',
+            x: filterXAxis,
+            y: this.gaussianCorrel(this.getXAxis(filterData.length), filterData),
+            type: this.fallbackGL ? 'scatter' : 'scattergl',
+            mode: 'lines',
+            line: {
+                color: 'black',
+                width: 0.5,
+                shape: this.linePlot ? 'linear' : 'hvh',
+            },
+            marker: {
+                color: 'black',
+            },
+            width: 1,
+        };
+        data.push(eTrace);
+        console.log(performance.now() - startTime);
         window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, data, layout, config);
     }
 }
