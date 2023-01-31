@@ -45,7 +45,7 @@ Both modes are currently supported by our [Open Gamma Detector](https://github.c
 
 ## Contributing
 
-The PWA is written with TypeScript. The files can be found in `assets/js/`. Please only modify the Typescript `.ts` files -- all `.js` files are auto-generated!
+The PWA is written with TypeScript. To make changes to the code, please only commit to and make pull requests for the `dev` branch! `main` will only pull changes from `dev` once I approve it.
 
 ---
 
