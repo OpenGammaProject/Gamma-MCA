@@ -20,6 +20,7 @@ export class SeekClosest {
 export class SpectrumPlot {
     plotDiv;
     showCalChart = false;
+    fallbackGL = false;
     xAxis = 'linear';
     yAxis = 'linear';
     linePlot = false;
@@ -347,7 +348,7 @@ export class SpectrumPlot {
             x: [],
             y: [],
             mode: 'markers+text',
-            type: 'scattergl',
+            type: this.fallbackGL ? 'scatter' : 'scattergl',
             marker: {
                 symbol: 'cross-thin',
                 size: 10,
@@ -472,7 +473,7 @@ export class SpectrumPlot {
             stackgroup: 'data',
             x: this.getXAxis(dataObj.data.length),
             y: dataObj.data,
-            type: 'scattergl',
+            type: this.fallbackGL ? 'scatter' : 'scattergl',
             mode: 'lines',
             fill: 'tozeroy',
             line: {
@@ -495,7 +496,7 @@ export class SpectrumPlot {
                 stackgroup: 'data',
                 x: this.getXAxis(dataObj.background.length),
                 y: dataObj.background,
-                type: 'scattergl',
+                type: this.fallbackGL ? 'scatter' : 'scattergl',
                 mode: 'ono',
                 fill: 'tozeroy',
                 line: {

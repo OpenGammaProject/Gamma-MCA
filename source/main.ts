@@ -605,6 +605,13 @@ function bindPlotEvents(): void {
   myPlot.on('plotly_hover', hoverEvent);
   myPlot.on('plotly_unhover', unHover);
   myPlot.on('plotly_click', clickEvent);
+  myPlot.on('plotly_webglcontextlost', webGLcontextLoss);
+  /* // Rightclick menu thingy
+  myPlot.addEventListener('contextmenu', function(e) {
+    console.log("You've tried to open context menu"); //here you draw your own menu
+    e.preventDefault();
+  });
+  */
 }
 
 
@@ -704,6 +711,8 @@ function unHover(/*data: any*/): void {
 
 
 function clickEvent(data: any): void {
+  //console.log(data.event);
+  
   document.getElementById('click-data')!.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
 
   for (const key in calClick) {
@@ -715,6 +724,14 @@ function clickEvent(data: any): void {
       (<HTMLInputElement>document.getElementById(`select-${castKey}`)).checked = calClick[<CalType>key];
     }
   }
+}
+
+
+function webGLcontextLoss(): void {
+  console.error('Lost WebGL context for Plotly.js! Falling back to default SVG render mode...');
+  plot.fallbackGL = true;
+  plot.resetPlot(spectrumData);
+  bindPlotEvents();
 }
 
 

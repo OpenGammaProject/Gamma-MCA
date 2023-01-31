@@ -380,6 +380,7 @@ function bindPlotEvents() {
     myPlot.on('plotly_hover', hoverEvent);
     myPlot.on('plotly_unhover', unHover);
     myPlot.on('plotly_click', clickEvent);
+    myPlot.on('plotly_webglcontextlost', webGLcontextLoss);
 }
 document.getElementById('r1').onchange = event => selectFileType(event.target);
 document.getElementById('r2').onchange = event => selectFileType(event.target);
@@ -468,6 +469,12 @@ function clickEvent(data) {
             document.getElementById(`select-${castKey}`).checked = calClick[key];
         }
     }
+}
+function webGLcontextLoss() {
+    console.error('Lost WebGL context for Plotly.js! Falling back to default SVG render mode...');
+    plot.fallbackGL = true;
+    plot.resetPlot(spectrumData);
+    bindPlotEvents();
 }
 document.getElementById('apply-cal').onclick = event => toggleCal(event.target.checked);
 function toggleCal(enabled) {
