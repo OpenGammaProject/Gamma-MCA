@@ -261,10 +261,6 @@ export class SpectrumPlot {
     updatePlot(spectrumData) {
         this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData);
     }
-    clearShapeAnno() {
-        this.shapes = [];
-        this.annotations = [];
-    }
     toggleLine(energy, name, enabled = true) {
         name = name.replaceAll('-', '');
         if (enabled) {
@@ -298,11 +294,11 @@ export class SpectrumPlot {
                 },
             };
             for (const shape of this.shapes) {
-                if (JSON.stringify(shape) === JSON.stringify(newLine))
+                if (shape.x0 === newLine.x0)
                     return;
             }
             for (const anno of this.annotations) {
-                if (JSON.stringify(anno) === JSON.stringify(newAnno))
+                if (anno.x === newAnno.x)
                     return;
             }
             this.shapes.push(newLine);

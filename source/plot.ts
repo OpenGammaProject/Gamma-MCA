@@ -393,13 +393,6 @@ export class SpectrumPlot {
     this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData); // Update either spectrum plot or calibration chart
   }
   /*
-    Clear all shapes and annotations
-  */
-  clearShapeAnno(): void {
-    this.shapes = [];
-    this.annotations = [];
-  }
-  /*
     Add a line
   */
   toggleLine(energy: number, name: string, enabled = true): void {
@@ -436,12 +429,12 @@ export class SpectrumPlot {
         },
       };
 
-      // Check for duplicates!
       for (const shape of this.shapes) {
-        if (JSON.stringify(shape) === JSON.stringify(newLine)) return;
+        if (shape.x0 === newLine.x0) return;
       }
+
       for (const anno of this.annotations) {
-        if (JSON.stringify(anno) === JSON.stringify(newAnno)) return;
+        if (anno.x === newAnno.x) return;
       }
 
       // Not a duplicate

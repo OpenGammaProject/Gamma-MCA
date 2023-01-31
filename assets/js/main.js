@@ -993,7 +993,7 @@ function selectAll(selectBox) {
         }
     }
     if (!selectBox.checked)
-        plot.clearShapeAnno();
+        plot.clearAnnos();
     plot.updatePlot(spectrumData);
 }
 document.getElementById('peak-finder-btn').onclick = event => findPeaks(event.target);

@@ -23,10 +23,6 @@
     - (!) Update README
     - (!) Optimize select/unselect isotope list via web worker
     - (!) Optimize serial addData speed via web worker
-
-
-  Known Performance Issues:
-    - (Un)Selecting all isotopes from gamma-ray energies list (Plotly)
   
   Known Issue:
     - Sometimes only half the actual cps are shown in histogram serial mode?!?!
@@ -1418,8 +1414,7 @@ function plotIsotope(checkbox: HTMLInputElement): void {
 document.getElementById('check-all-isos')!.onclick = (event) => selectAll(<HTMLInputElement>event.target);
 
 function selectAll(selectBox: HTMLInputElement): void {
-  // Bad performance mostly because of the updatePlot with that many lines!
-  const tableRows = (<HTMLTableElement>document.getElementById('table')).tBodies[0].rows;
+  const tableRows = (<HTMLTableElement>document.getElementById('table')).tBodies[0].rows; 
 
   for (const row of tableRows) {
     const checkBox = <HTMLInputElement>row.cells[0].firstChild;
@@ -1429,8 +1424,9 @@ function selectAll(selectBox: HTMLInputElement): void {
       plot.toggleLine(parseFloat(checkBox.value), wordArray[0] + '-' + wordArray[1], checkBox.checked);
     }
   }
-  if (!selectBox.checked) plot.clearShapeAnno();
+  if (!selectBox.checked) plot.clearAnnos();
 
+  // Bad performance because of Plotly with too many lines!
   plot.updatePlot(spectrumData);
 }
 
