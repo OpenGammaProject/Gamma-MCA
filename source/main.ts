@@ -18,6 +18,7 @@
     - Sorting isotope list
     - Calibration n-polynomial regression
     - User-selectable ROI with Gaussian fit and pulse FWHM + stats
+    - Custom Line when left-clicking into plot. Rightclick to delete.
 
     - (!) Update README
     - (!) Optimize select/unselect isotope list via web worker

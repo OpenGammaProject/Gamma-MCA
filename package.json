@@ -1,8 +1,6 @@
 {
-  "name": "Gamma MCA",
-  "version": "2023-01-30",
   "devDependencies": {
     "@types/w3c-web-serial": "^1.0.3",
-    "typescript": "^4.9.4"
+    "typescript": "^4.9.5"
   }
 }
