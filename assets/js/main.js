@@ -49,7 +49,7 @@ document.body.onload = async function () {
     localStorageAvailable = 'localStorage' in self;
     if (localStorageAvailable)
         loadSettingsStorage();
-    if ('serviceWorker' in navigator) {
+    if (navigator.serviceWorker) {
         const reg = await navigator.serviceWorker.register('/service-worker.js');
         if (localStorageAvailable) {
             reg.addEventListener('updatefound', () => {
@@ -68,7 +68,7 @@ document.body.onload = async function () {
         document.title += ' web application';
     }
     isoListURL = new URL(isoListURL, window.location.origin).href;
-    if ('serial' in navigator) {
+    if (navigator.serial) {
         const serErrDiv = document.getElementById('serial-error');
         serErrDiv.parentNode.removeChild(serErrDiv);
         navigator.serial.addEventListener('connect', serialConnect);
@@ -103,7 +103,7 @@ document.body.onload = async function () {
     document.getElementById('version-tag').innerText += ` ${APP_VERSION}.`;
     if (localStorageAvailable) {
         if (loadJSON('lastVisit') <= 0) {
-            popupNotification('welcomeMsg');
+            popupNotification('welcome-msg');
             firstInstall = true;
         }
         saveJSON('lastVisit', Date.now());
@@ -131,7 +131,7 @@ document.body.onload = async function () {
     else {
         const settingsSaveAlert = document.getElementById('ls-available');
         settingsSaveAlert.parentNode.removeChild(settingsSaveAlert);
-        popupNotification('welcomeMsg');
+        popupNotification('welcome-msg');
     }
     loadSettingsDefault();
     sizeCheck();
@@ -159,13 +159,17 @@ document.body.onload = async function () {
     const menuElements = document.getElementById('main-tabs').getElementsByTagName('button');
     for (const button of menuElements) {
         button.addEventListener('shown.bs.tab', (event) => {
-            plot.updatePlot(spectrumData);
-            if (event.target.id !== 'calibration-tab') {
-                document.getElementById('toggle-calibration-chart').checked = false;
+            const toggleCalChartElement = document.getElementById('toggle-calibration-chart');
+            if (event.target.id !== 'calibration-tab' && toggleCalChartElement.checked) {
+                toggleCalChartElement.checked = false;
                 toggleCalChart(false);
+            }
+            else {
+                plot.updatePlot(spectrumData);
             }
         });
     }
+    popupNotification('poll-msg');
     const loadingSpinner = document.getElementById('loading');
     loadingSpinner.parentNode.removeChild(loadingSpinner);
 };
@@ -379,6 +383,7 @@ function bindPlotEvents() {
     myPlot.on('plotly_hover', hoverEvent);
     myPlot.on('plotly_unhover', unHover);
     myPlot.on('plotly_click', clickEvent);
+    myPlot.on('plotly_webglcontextlost', webGLcontextLoss);
 }
 document.getElementById('r1').onchange = event => selectFileType(event.target);
 document.getElementById('r2').onchange = event => selectFileType(event.target);
@@ -467,6 +472,12 @@ function clickEvent(data) {
             document.getElementById(`select-${castKey}`).checked = calClick[key];
         }
     }
+}
+function webGLcontextLoss() {
+    console.error('Lost WebGL context for Plotly.js! Falling back to default SVG render mode...');
+    plot.fallbackGL = true;
+    plot.resetPlot(spectrumData);
+    bindPlotEvents();
 }
 document.getElementById('apply-cal').onclick = event => toggleCal(event.target.checked);
 function toggleCal(enabled) {
@@ -869,10 +880,14 @@ function resetSampleInfo() {
     }
 }
 function popupNotification(id) {
-    new window.bootstrap.Toast(document.getElementById(id)).show();
+    const toast = new window.bootstrap.Toast(document.getElementById(id));
+    if (!toast.isShown())
+        toast.show();
 }
 function hideNotification(id) {
-    new window.bootstrap.Toast(document.getElementById(id)).hide();
+    const toast = new window.bootstrap.Toast(document.getElementById(id));
+    if (toast.isShown())
+        toast.hide();
 }
 document.getElementById('toggle-menu').onclick = () => loadIsotopes();
 document.getElementById('reload-isos-btn').onclick = () => loadIsotopes(true);
@@ -981,27 +996,33 @@ function selectAll(selectBox) {
         }
     }
     if (!selectBox.checked)
-        plot.clearShapeAnno();
+        plot.clearAnnos();
     plot.updatePlot(spectrumData);
 }
 document.getElementById('peak-finder-btn').onclick = event => findPeaks(event.target);
 async function findPeaks(button) {
     if (plot.peakConfig.enabled) {
-        if (plot.peakConfig.mode === 0) {
-            await loadIsotopes();
-            plot.peakConfig.mode++;
-            button.innerText = 'Isotope';
-        }
-        else {
-            plot.peakFinder(false);
-            plot.peakConfig.enabled = false;
-            button.innerText = 'None';
+        switch (plot.peakConfig.mode) {
+            case 'gaussian':
+                plot.peakConfig.mode = 'energy';
+                button.innerText = 'Energy';
+                break;
+            case 'energy':
+                await loadIsotopes();
+                plot.peakConfig.mode = 'isotopes';
+                button.innerText = 'Isotopes';
+                break;
+            case 'isotopes':
+                plot.peakFinder(false);
+                plot.peakConfig.enabled = false;
+                button.innerText = 'None';
+                break;
         }
     }
     else {
         plot.peakConfig.enabled = true;
-        plot.peakConfig.mode = 0;
-        button.innerText = 'Energy';
+        plot.peakConfig.mode = 'gaussian';
+        button.innerText = 'Gaussian';
     }
     plot.updatePlot(spectrumData);
 }
@@ -1132,6 +1153,7 @@ function changeSettings(name, element) {
             boolVal = element.checked;
             plot.editableMode = boolVal;
             plot.resetPlot(spectrumData);
+            bindPlotEvents();
             saveJSON(name, boolVal);
             break;
         case 'customURL':
@@ -1509,3 +1531,4 @@ function refreshRender(type, firstLoad = false) {
         refreshTimeout = setTimeout(refreshRender, (refreshRate - finishDelta > 0) ? (refreshRate - finishDelta) : 1, type);
     }
 }
+//# sourceMappingURL=main.js.map

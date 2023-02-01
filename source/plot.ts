@@ -13,11 +13,18 @@
 
 */
 
-//import './external/plotly-basic.min.js';
+import { SpectrumData, IsotopeList } from './main.js';
 
-import { SpectrumData, isotopeList } from './main.js';
+export interface CoeffObj {
+  c1: number,
+  c2: number,
+  c3: number,
+  [index: string]: number
+}
 
-interface shape {
+export type PeakModes = 'gaussian' | 'energy' | 'isotopes' | undefined;
+
+interface Shape {
   type: string;
   xref: string;
   yref: string;
@@ -33,7 +40,7 @@ interface shape {
   };
 }
 
-interface anno {
+interface Anno {
   x: number;
   y: number;
   xref: string;
@@ -49,7 +56,7 @@ interface anno {
   };
 }
 
-interface coeffPoints {
+interface CoeffPoints {
   aFrom: number,
   aTo: number,
   bFrom: number,
@@ -59,33 +66,46 @@ interface coeffPoints {
   [index: string]: number | undefined
 }
 
-export interface coeffObj {
-  c1: number,
-  c2: number,
-  c3: number,
-  [index: string]: number
+interface Trace {
+  name: string,
+  stackgroup?: string,
+  x: number[],
+  y: number[],
+  type: 'scatter' | 'scattergl',
+  yaxis?: string,
+  mode: 'lines' | 'markers' | 'lines+markers',
+  fill?: string,
+  opacity?: number,
+  line?: {
+    color?: string,
+    width?: number,
+    shape?: 'linear' | 'hvh',
+  },
+  marker?: {
+    color?: string,
+  },
+  width?: number
 }
 
 /*
   Seek the closest matching isotope by energy from an isotope list
 */
 export class SeekClosest {
-  isoList: isotopeList;
+  isoList: IsotopeList;
 
-  constructor(list: isotopeList) {
+  constructor(list: IsotopeList) {
     this.isoList = list;
   }
   
   seek(value: number, maxDist = 100): {energy: number, name: string} | {energy: undefined, name: undefined} {
-    const closeVals = Object.keys(this.isoList).filter(energy => { // Only allow closest values and disregard undefined
-      return (energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
-    });
+    // Only allow closest values and disregard undefined
+    const closeVals = Object.keys(this.isoList).filter(energy => energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
     const closeValsNum = closeVals.map(energy => parseFloat(energy)) // After this step there are 100% only numbers left
   
     if (closeValsNum.length) {
       const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
       const endResult = this.isoList[closest];
-  
+
       if (endResult) return {energy: closest, name: endResult};
     }
     return {energy: undefined, name: undefined};
@@ -98,6 +118,7 @@ export class SeekClosest {
 export class SpectrumPlot {
   readonly plotDiv: HTMLElement | null;
   private showCalChart = false;
+  fallbackGL = false;
   xAxis: 'linear' | 'log' = 'linear';
   yAxis: 'linear' | 'log' = 'linear';
   linePlot = false; // 'linear', 'hvh' for 'lines' or 'bar
@@ -107,7 +128,7 @@ export class SpectrumPlot {
   calibration = {
     enabled: false,
     imported: false,
-    points: <coeffPoints>{
+    points: <CoeffPoints>{
       aFrom: 0,
       aTo: 0,
       bFrom: 0,
@@ -115,23 +136,23 @@ export class SpectrumPlot {
       cFrom: 0,
       cTo: 0,
     },
-    coeff: <coeffObj>{
+    coeff: <CoeffObj>{
       c1: 0,
       c2: 0,
       c3: 0,
     },
   };
   cps = false;
-  private shapes: shape[] = [];
-  private annotations: anno[] = [];
+  private shapes: Shape[] = [];
+  private annotations: Anno[] = [];
   editableMode = false;
-  isoList: isotopeList = {};
+  isoList: IsotopeList = {};
   peakConfig = {
     enabled: false,
-    mode: 0, // Energy: 0 and Isotope: 1 modes
-    thres: 0.025,
-    lag: 150,
-    width: 2,
+    mode: <PeakModes>undefined, // Gaussian Correlation: 0, Energy: 1 and Isotope: 2 modes
+    thres: 0.005,
+    lag: 50,
+    width: 5,
     seekWidth: 2,
     lines: <number[]>[],
     lastDataX: <number[]>[],
@@ -215,7 +236,7 @@ export class SpectrumPlot {
     Delete calibration points and calibration coefficients
   */
   clearCalibration(): void {
-    this.calibration.points = <coeffPoints>{
+    this.calibration.points = <CoeffPoints>{
       aFrom: 0,
       aTo: 0,
       bFrom: 0,
@@ -223,7 +244,7 @@ export class SpectrumPlot {
       cFrom: 0,
       cTo: 0,
     };
-    this.calibration.coeff = <coeffObj>{
+    this.calibration.coeff = <CoeffObj>{
       c1: 0,
       c2: 0,
       c3: 0,
@@ -278,19 +299,17 @@ export class SpectrumPlot {
     Get The Moving Average
   */
   private computeMovingAverage(target: number[], length = this.smaLength): number[] {
-    let newData: number[] = Array(target.length).fill(0);
+    let newData: number[] = Array(target.length);
     const half = Math.round(length/2);
 
-    for(const i in newData) { // Compute the central moving average
-      const intIndex = parseInt(i); // Gotcha, I wasted sooo much time on this -_-
-
-      if (intIndex >= half && intIndex <= target.length - half - 1) { // Shortcut
+    for(let i = 0; i < newData.length; i++) { // Compute the central moving average
+      if (i >= half && i <= target.length - half - 1) { // Shortcut
         const remainderIndexFactor = length % 2;
 
-        const addVal = target[intIndex+half-remainderIndexFactor];
-        const removeVal = target[intIndex-half];
+        const addVal = target[i+half-remainderIndexFactor];
+        const removeVal = target[i-half];
 
-        newData[intIndex] = newData[intIndex - 1] + (addVal - removeVal) / length;
+        newData[i] = newData[i - 1] + (addVal - removeVal) / length;
         continue; // Skip other computation.
       }
 
@@ -299,13 +318,13 @@ export class SpectrumPlot {
 
       for(let j = 0; j < length; j++) { // Slightly asymetrical to the right with even numbers of smaLength
         if (j < half) {
-          if ((intIndex - j) >= 0) {
-            val += target[intIndex - j];
+          if ((i - j) >= 0) {
+            val += target[i - j];
             divider++;
           }
         } else {
-          if ((intIndex - half+1 + j) < newData.length) {
-            val += target[intIndex - half+1 + j];
+          if ((i - half+1 + j) < newData.length) {
+            val += target[i - half+1 + j];
             divider++;
           }
         }
@@ -344,7 +363,7 @@ export class SpectrumPlot {
     let values: number[] = [];
     peakLines.push(0);
 
-    const peakLen = peakLines.length
+    const peakLen = peakLines.length;
 
     for (let i = 0; i < peakLen; i++) {
       values.push(peakLines[i]);
@@ -364,10 +383,10 @@ export class SpectrumPlot {
           size = this.peakConfig.seekWidth * (Math.max(...values) - Math.min(...values));
         }
 
-        if (this.peakConfig.mode === 0) {
+        if (this.peakConfig.mode === 'energy') {
           this.toggleLine(result, result.toFixed(2));
           this.peakConfig.lines.push(result);
-        } else { // Isotope Mode
+        } else if (this.peakConfig.mode === 'isotopes') { // Isotope Mode
           const { energy, name } = new SeekClosest(this.isoList).seek(result, size);
           if (energy && name) {
             this.toggleLine(energy, name);
@@ -389,14 +408,7 @@ export class SpectrumPlot {
     Convenient Wrapper, could do more in the future
   */
   updatePlot(spectrumData: SpectrumData): void {
-    this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData); // Update either spectrum plot or calibration chart
-  }
-  /*
-    Clear all shapes and annotations
-  */
-  clearShapeAnno(): void {
-    this.shapes = [];
-    this.annotations = [];
+    this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData, true); // Update either spectrum plot or calibration chart
   }
   /*
     Add a line
@@ -404,7 +416,7 @@ export class SpectrumPlot {
   toggleLine(energy: number, name: string, enabled = true): void {
     name = name.replaceAll('-',''); // Remove - to save space
     if (enabled) {
-      const newLine: shape = {
+      const newLine: Shape = {
         type: 'line',
         xref: 'x',
         yref: 'paper',
@@ -419,7 +431,7 @@ export class SpectrumPlot {
             dash: 'solid'
           },
       };
-      const newAnno: anno = {
+      const newAnno: Anno = {
         x: parseFloat(energy.toFixed(2)),
         y: 1,
         xref: 'x',
@@ -435,12 +447,12 @@ export class SpectrumPlot {
         },
       };
 
-      // Check for duplicates!
       for (const shape of this.shapes) {
-        if (JSON.stringify(shape) === JSON.stringify(newLine)) return;
+        if (shape.x0 === newLine.x0) return;
       }
+
       for (const anno of this.annotations) {
-        if (JSON.stringify(anno) === JSON.stringify(newAnno)) return;
+        if (anno.x === newAnno.x) return;
       }
 
       // Not a duplicate
@@ -467,12 +479,49 @@ export class SpectrumPlot {
   */
   toggleCalibrationChart(dataObj: SpectrumData, override: boolean): void {
     this.showCalChart = (typeof override === 'boolean') ? override : !this.showCalChart;
-    this.showCalChart ? this.plotCalibration(dataObj) : this.plotData(dataObj);
+    this.showCalChart ? this.plotCalibration(dataObj, true) : this.plotData(dataObj, true);
+  }
+  /*
+    Gaussian correlation filter using the PRA algorithm
+  */
+  private gaussianCorrel(data: number[], sigma = 2): number[] {
+    let correlValues: number[] = [];
+
+    for (let index = 0; index < data.length; index++) {
+      const std = Math.sqrt(index);
+      const xMin = - Math.round(sigma * std);
+      const xMax = Math.round(sigma * std);
+
+      let gaussValues: number[] = [];
+      for (let k = xMin; k < xMax; k++) {
+        gaussValues.push(Math.exp(-(k**2) / (2 * index)));
+      }
+
+      let avg = 0;
+      for (const value of gaussValues) {
+        avg += value;
+      }
+      avg /= xMax - xMin;
+
+      let squaredSum = 0;
+      for (const value of gaussValues) {
+        squaredSum += (value - avg)**2;
+      }
+
+      let resultVal = 0;
+
+      for(let k = xMin; k < xMax; k++) {
+        resultVal += data[index + k] * (gaussValues[k - xMin] - avg) / squaredSum;
+      }
+
+      correlValues.push((resultVal && resultVal > 0 ) ? resultVal : 0);
+    }
+    return correlValues;
   }
   /*
     Plot Calibration Chart
   */
-  private plotCalibration(dataObj: SpectrumData, update = true): void {
+  private plotCalibration(dataObj: SpectrumData, update: boolean): void {
     const trace = {
       name: 'Calibration',
       x: this.getXAxis(dataObj.data.length),
@@ -482,12 +531,8 @@ export class SpectrumPlot {
       //opacity: 0.8,
       line: {
         color: 'orangered',
-        width: .5,
-      },
-      marker: {
-        color: 'orangered',
-      },
-      width: 1,
+        width: 1,
+      }
     };
 
     const markersTrace = {
@@ -495,7 +540,7 @@ export class SpectrumPlot {
       x: <number[]>[],
       y: <number[]>[],
       mode: 'markers+text',
-      type: 'scatter',
+      type: this.fallbackGL ? 'scatter' : 'scattergl', // 'scatter' for SVG, 'scattergl' for WebGL
       marker: {
         symbol: 'cross-thin',
         size: 10,
@@ -599,7 +644,7 @@ export class SpectrumPlot {
         yanchor: 'top',
         yref: 'paper',
       }],
-      annotations: <anno[]>[]
+      annotations: <Anno[]>[]
     };
 
     const config = {
@@ -630,32 +675,33 @@ export class SpectrumPlot {
   /*
     Plot All The Data
   */
-  private plotData(dataObj: SpectrumData, update = true): void {
+  private plotData(dataObj: SpectrumData, update: boolean): void {
     if (this.showCalChart) return; // Ignore this if the calibration chart is currently shown
 
-    let trace = {
-      name: 'Clean Spectrum',
-      stackgroup: 'data', // Stack line charts on top of each other
+    let data: Trace[] = [];
+    let maxXValue = 0;
 
-      x: this.getXAxis(dataObj.data.length),
-      y: dataObj.data,
-      type: 'scatter',
-      mode: 'lines', // Remove lines, "lines", "none"
-      fill: 'tozeroy',
-      //opacity: 0.8,
-      line: {
-        color: 'orangered',
-        width: .5,
-        shape: this.linePlot ? 'linear' : 'hvh',
-      },
-      marker: {
-        color: 'orangered',
-      },
-      width: 1,
-    };
+    if (dataObj.data.length) {
+      let trace: Trace = {
+        name: 'Net Spectrum',
+        stackgroup: 'data', // Stack line charts on top of each other
 
-    let maxXValue = trace.x.at(-1) ?? 1;
-    let data = [trace];
+        x: this.getXAxis(dataObj.data.length),
+        y: dataObj.data,
+        type: this.fallbackGL ? 'scatter' : 'scattergl', // 'scatter' for SVG, 'scattergl' for WebGL
+        mode: 'lines', // Remove lines, "lines", "none"
+        fill: 'tozeroy',
+        //opacity: 0.8,
+        line: {
+          color: 'orangered',
+          width: .5,
+          shape: this.linePlot ? 'linear' : 'hvh',
+        }
+      };
+
+      maxXValue = trace.x.at(-1) ?? 1;
+      data.push(trace);
+    }
 
     /*
       Total number of pulses divided by seconds running. Counts Per Second
@@ -665,42 +711,41 @@ export class SpectrumPlot {
       Compute Background and Corrected Spectrum
     */
     if (dataObj.background.length) { //== dataObj.data.length)
-      let bgTrace = {
+      const bgTrace: Trace = {
         name: 'Background',
         stackgroup: 'data', // Stack line charts on top of each other
 
         x: this.getXAxis(dataObj.background.length),
         y: dataObj.background,
-        type: 'scatter',
-        mode: 'ono', // Remove lines, "lines", "none"
+        type: this.fallbackGL ? 'scatter' : 'scattergl', // 'scatter' for SVG, 'scattergl' for WebGL
+        mode: 'lines', // Remove lines, "lines", "none"
         fill: 'tozeroy',
         //opacity: 1,
         line: {
           color: 'slategrey',
           width: .5,
           shape: this.linePlot ? 'linear' : 'hvh',
-        },
-        marker: {
-          color: 'slategrey',
-        },
-        width: 1,
+        }
       };
 
       if (bgTrace.x.length > maxXValue) maxXValue = bgTrace.x.at(-1) ?? 1;
 
       if (this.cps) bgTrace.y = dataObj.backgroundCps;
 
-      const newData: number[] = []; // Compute the corrected data, i.e. data - background
-      const dataLen = data[0].y.length;
-      for (let i = 0; i < dataLen; i++) {
-        newData.push(data[0].y[i] - bgTrace.y[i]);
+      if (data.length) {
+        const newData: number[] = []; // Compute the corrected data, i.e. data - background
+
+        const dataLen = data[0].y.length;
+        for (let i = 0; i < dataLen; i++) {
+          newData.push(data[0].y[i] - bgTrace.y[i]);
+        }
+
+        data[0].y = newData;
+        data[0].fill = 'tonexty'; //'tonextx'
       }
 
-      trace.y = newData;
-      trace.fill = 'tonexty'; //'tonextx'
-
-      data = data.concat(bgTrace);
-      data.reverse();
+      //data.unshift(bgTrace);
+      data.push(bgTrace);
     }
     /*
       Set Simple Moving Average
@@ -770,6 +815,12 @@ export class SpectrumPlot {
         exponentformat: 'SI',
         automargin: true
       },
+      /*
+      yaxis2: {
+        overlaying: 'y',
+        side: 'right'
+      },
+      */
       plot_bgcolor: 'white',
       paper_bgcolor: '#f8f9fa', // Bootstrap bg-light
       margin: {
@@ -791,8 +842,8 @@ export class SpectrumPlot {
         yanchor: 'top',
         yref: 'paper',
       }],
-      shapes: <shape[]>[],
-      annotations: <anno[]>[],
+      shapes: <Shape[]>[],
+      annotations: <Anno[]>[],
       //shapes: this.shapes,
       //annotations: JSON.parse(JSON.stringify(this.annotations)), // Copy array but do not reference
     };
@@ -835,11 +886,38 @@ export class SpectrumPlot {
     /*
       Peak Detection Stuff
     */
-    if (this.peakConfig.enabled) {
-      this.peakConfig.lastDataX = data[(data.length === 1) ? 0 : 1].x;
-      this.peakConfig.lastDataY = data[(data.length === 1) ? 0 : 1].y;
+    if (this.peakConfig.enabled && data.length) {
+      // Gaussian Correlation Filter
+      const gaussData = this.gaussianCorrel(data[0].y);
+
+      const eTrace: Trace = {
+        name: 'Gaussian Correlation',
+        //stackgroup: 'data', // Stack line charts on top of each other
+        x: data[0].x,
+        y: gaussData,
+        //yaxis: 'y2',
+        type: this.fallbackGL ? 'scatter' : 'scattergl', // 'scatter' for SVG, 'scattergl' for WebGL
+        mode: 'lines', // Remove lines, "lines", "none"
+        //fill: 'tozeroy',
+        //opacity: 0.8,
+        line: {
+          color: 'black',
+          width: 0.5,
+          shape: this.linePlot ? 'linear' : 'hvh',
+        },
+        marker: {
+          color: 'black',
+        }
+      };
+
+      this.peakConfig.lastDataX = data[0].x;
+      this.peakConfig.lastDataY = gaussData; //data[0].y;
       this.peakFinder();
+
+      data.unshift(eTrace);
     }
+
+    if (!this.peakConfig.enabled || !data.length || data.length >= 3) data.reverse(); // Change/Fix data order
 
     layout.shapes = this.shapes;
     layout.annotations = JSON.parse(JSON.stringify(this.annotations)); //layout.annotations.concat(JSON.parse(JSON.stringify(this.annotations))); // Copy array but do not reference
@@ -851,18 +929,10 @@ export class SpectrumPlot {
     }
 
     /*
-      HTML EXPORT FUNCTIONALITY
+      HTML export functionality
     */
     config.modeBarButtonsToAdd = [this.customModeBarButtons];
 
-    /*
-    if (!update) {
-      layout.uirevision = Math.random();
-      Object.assign(layout, {selectionrevision: Math.random()});
-      Object.assign(layout, {editrevision: Math.random()});
-    }
-    (<any>window).Plotly[(update === 'nuke') ? 'newPlot' : 'react'](this.plotDiv, data, layout, config);
-    */
     (<any>window).Plotly[update ? 'react' : 'newPlot'](this.plotDiv, data, layout, config);
   }
 }

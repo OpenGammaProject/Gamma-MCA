@@ -197,3 +197,4 @@ export class SerialManager {
         return (this.recording ? (performance.now() - this.startTime + this.timeDone) : this.timeDone);
     }
 }
+//# sourceMappingURL=serial.js.map

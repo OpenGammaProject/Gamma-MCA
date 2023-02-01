@@ -605,7 +605,7 @@
         <div class="col-auto p-1">
           <div class="input-group input-group-sm">
             <span class="input-group-text">Peaks</span>
-            <button class="btn btn-primary btn-sm" type="button" id="peak-finder-btn" title="Find energy peaks or isotopes (experimental)">None</button>
+            <button class="btn btn-primary btn-sm" type="button" id="peak-finder-btn" title="Toggle between Gaussian Correlation Filter, energy and isotope peak finder.">None</button>
           </div>
         </div>
 
@@ -789,8 +789,9 @@
 
                     <div class="form-check form-switch">
                       <input class="form-check-input" type="checkbox" role="switch" id="edit-plot">
-                      <label class="form-check-label" for="edit-plot">Editable Plot Labels (Axes Labels and Headline)</label>
+                      <label class="form-check-label" for="edit-plot">Editable Plot Labels</label>
                     </div>
+                    <p><small>Modify the axes labels, plot title and data names by clicking on them.</small></p>
 
                     <br>
 
@@ -917,21 +918,21 @@
                   <div class="accordion-body">
 
                     <div class="input-group input-group-sm">
-                      <label class="input-group-text" for="peak-thres">Threshold</label>
-                      <input type="number" class="form-control" id="peak-thres" min="0" step="0.001">
-                      <button class="btn btn-primary" type="button" id="setting9" title="Apply"> <i class="fas fa-check"></i> </button>
-                    </div>
-                    <p><small>Sensitivity of the vertical step size in relation to the highest value. Any positive float is valid.</small></p>
-
-                    <div class="input-group input-group-sm">
-                      <label class="input-group-text" for="peak-lag">Smooth</label>
+                      <label class="input-group-text" for="peak-lag">Smoothing</label>
                       <input type="number" class="form-control" id="peak-lag" min="1">
                       <button class="btn btn-primary" type="button" id="setting10" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
-                    <p><small>Width of the overall moving average applied to the plot data that is used as a general reference. Any positive integer is valid.</small></p>
+                    <p><small>Decrease this if your data already looks pretty smooth, increase otherwise. Too high values can hide smaller peaks, too low values might generate false-positives. Any positive integer is valid.</small></p>
 
                     <div class="input-group input-group-sm">
-                      <label class="input-group-text" for="peak-width">Width</label>
+                      <label class="input-group-text" for="peak-thres">Threshold</label>
+                      <input type="number" class="form-control" id="peak-thres" min="0" step="0.0005">
+                      <button class="btn btn-primary" type="button" id="setting9" title="Apply"> <i class="fas fa-check"></i> </button>
+                    </div>
+                    <p><small>Change this after adapting the <code>Smoothing</code> setting. Decreasing this will make the peak finder trigger on lower-amplitude peaks and vice versa. Any positive float is valid.</small></p>
+
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="peak-width">Peak Width</label>
                       <input type="number" class="form-control" id="peak-width" min="1">
                       <button class="btn btn-primary" type="button" id="setting11" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
@@ -998,7 +999,18 @@
 
     -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
-      <div id="welcomeMsg" class="toast text-bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+      <div id="poll-msg" class="toast text-bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+        <div class="toast-header">
+          <i class="fa-solid fa-bullhorn me-2"></i>
+          <strong class="me-auto">Feature Poll</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          <p>There is currently an ongoing poll about new features on GitHub. If you want to take part and vote, head to the GitHub <a title="GitHub/Discussions" class="link-light" href="https://github.com/OpenGammaProject/Gamma-MCA/discussions" target="_blank"><small><i class="fa-solid fa-link"></i></small> Discussions thread</a>.</p>
+        </div>
+      </div>
+
+      <div id="welcome-msg" class="toast text-bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
         <div class="toast-header">
           <i class="fas fa-radiation me-2"></i>
           <strong class="me-auto">Welcome!</strong>

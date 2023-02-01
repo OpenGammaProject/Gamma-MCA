@@ -13,10 +13,42 @@
 
 */
 
-import { coeffObj } from './plot.js';
-//import './external/ZSchema-browser-min.js';
+import { CoeffObj } from './plot.js';
 
-interface importDataMeta {
+export interface NPESv1Spectrum {
+  'numberOfChannels': number,
+  'validPulseCount'?: number,
+  'measurementTime'?: number,
+  'energyCalibration'?: {
+    'polynomialOrder': number,
+    'coefficients': number[]
+  },
+  'spectrum': number[]
+}
+
+export interface NPESv1 {
+  'schemaVersion': 'NPESv1',
+  'deviceData'?: {
+    'deviceName'?: string,
+    'softwareName': string
+  },
+  'sampleInfo'?: {
+    'name'?: string,
+    'location'?: string,
+    'time'?: string,
+    'weight'?: number,
+    'volume'?: number,
+    'note'?: string
+  },
+  'resultData': {
+    'startTime'?: string,
+    'endTime'?: string,
+    'energySpectrum'?: NPESv1Spectrum,
+    'backgroundEnergySpectrum'?: NPESv1Spectrum
+  }
+}
+
+interface ImportDataMeta {
   name: string,
   location: string,
   time: string,
@@ -30,11 +62,11 @@ interface importDataMeta {
   backgroundMt: number // Measurement time for the background energy spectrum
 }
 
-interface xmlImportData {
+interface XMLImportData {
   espectrum: number[],
   bgspectrum: number[],
-  coeff: coeffObj,
-  meta: importDataMeta
+  coeff: CoeffObj,
+  meta: ImportDataMeta
 }
 
 export class RawData {
@@ -92,13 +124,13 @@ export class RawData {
     }
   }
 
-  xmlToArray(data: string): xmlImportData {
-    let coeff: coeffObj = {
+  xmlToArray(data: string): XMLImportData {
+    let coeff: CoeffObj = {
       c1: 0,
       c2: 0,
       c3: 0
     };
-    let meta: importDataMeta = {
+    let meta: ImportDataMeta = {
       name: '',
       location: '',
       time: '',
@@ -171,8 +203,8 @@ export class RawData {
     }
   }
 
-  async jsonToObject(data: string): Promise<any | false> {
-    let json: any;
+  async jsonToObject(data: string): Promise<NPESv1 | false> {
+    let json: NPESv1;
 
     try {
       json = JSON.parse(data);
@@ -194,7 +226,7 @@ export class RawData {
         }
       }
 
-      /*
+      /* // OLD METHOD
       const scripts = Array.from(document.querySelectorAll('script')).map(scr => scr.src);
       if (!scripts.includes('/assets/js/external/ZSchema-browser-min.js')) {
         const tag = document.createElement('script');

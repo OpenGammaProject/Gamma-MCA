@@ -4,9 +4,7 @@ export class SeekClosest {
         this.isoList = list;
     }
     seek(value, maxDist = 100) {
-        const closeVals = Object.keys(this.isoList).filter(energy => {
-            return (energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
-        });
+        const closeVals = Object.keys(this.isoList).filter(energy => energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
         const closeValsNum = closeVals.map(energy => parseFloat(energy));
         if (closeValsNum.length) {
             const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
@@ -20,6 +18,7 @@ export class SeekClosest {
 export class SpectrumPlot {
     plotDiv;
     showCalChart = false;
+    fallbackGL = false;
     xAxis = 'linear';
     yAxis = 'linear';
     linePlot = false;
@@ -50,10 +49,10 @@ export class SpectrumPlot {
     isoList = {};
     peakConfig = {
         enabled: false,
-        mode: 0,
-        thres: 0.025,
-        lag: 150,
-        width: 2,
+        mode: undefined,
+        thres: 0.005,
+        lag: 50,
+        width: 5,
         seekWidth: 2,
         lines: [],
         lastDataX: [],
@@ -169,29 +168,28 @@ export class SpectrumPlot {
         return calArray;
     }
     computeMovingAverage(target, length = this.smaLength) {
-        let newData = Array(target.length).fill(0);
+        let newData = Array(target.length);
         const half = Math.round(length / 2);
-        for (const i in newData) {
-            const intIndex = parseInt(i);
-            if (intIndex >= half && intIndex <= target.length - half - 1) {
+        for (let i = 0; i < newData.length; i++) {
+            if (i >= half && i <= target.length - half - 1) {
                 const remainderIndexFactor = length % 2;
-                const addVal = target[intIndex + half - remainderIndexFactor];
-                const removeVal = target[intIndex - half];
-                newData[intIndex] = newData[intIndex - 1] + (addVal - removeVal) / length;
+                const addVal = target[i + half - remainderIndexFactor];
+                const removeVal = target[i - half];
+                newData[i] = newData[i - 1] + (addVal - removeVal) / length;
                 continue;
             }
             let val = 0;
             let divider = 0;
             for (let j = 0; j < length; j++) {
                 if (j < half) {
-                    if ((intIndex - j) >= 0) {
-                        val += target[intIndex - j];
+                    if ((i - j) >= 0) {
+                        val += target[i - j];
                         divider++;
                     }
                 }
                 else {
-                    if ((intIndex - half + 1 + j) < newData.length) {
-                        val += target[intIndex - half + 1 + j];
+                    if ((i - half + 1 + j) < newData.length) {
+                        val += target[i - half + 1 + j];
                         divider++;
                     }
                 }
@@ -239,11 +237,11 @@ export class SpectrumPlot {
                     result /= values.length;
                     size = this.peakConfig.seekWidth * (Math.max(...values) - Math.min(...values));
                 }
-                if (this.peakConfig.mode === 0) {
+                if (this.peakConfig.mode === 'energy') {
                     this.toggleLine(result, result.toFixed(2));
                     this.peakConfig.lines.push(result);
                 }
-                else {
+                else if (this.peakConfig.mode === 'isotopes') {
                     const { energy, name } = new SeekClosest(this.isoList).seek(result, size);
                     if (energy && name) {
                         this.toggleLine(energy, name);
@@ -258,11 +256,7 @@ export class SpectrumPlot {
         this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData, false);
     }
     updatePlot(spectrumData) {
-        this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData);
-    }
-    clearShapeAnno() {
-        this.shapes = [];
-        this.annotations = [];
+        this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData, true);
     }
     toggleLine(energy, name, enabled = true) {
         name = name.replaceAll('-', '');
@@ -297,11 +291,11 @@ export class SpectrumPlot {
                 },
             };
             for (const shape of this.shapes) {
-                if (JSON.stringify(shape) === JSON.stringify(newLine))
+                if (shape.x0 === newLine.x0)
                     return;
             }
             for (const anno of this.annotations) {
-                if (JSON.stringify(anno) === JSON.stringify(newAnno))
+                if (anno.x === newAnno.x)
                     return;
             }
             this.shapes.push(newLine);
@@ -324,9 +318,36 @@ export class SpectrumPlot {
     }
     toggleCalibrationChart(dataObj, override) {
         this.showCalChart = (typeof override === 'boolean') ? override : !this.showCalChart;
-        this.showCalChart ? this.plotCalibration(dataObj) : this.plotData(dataObj);
+        this.showCalChart ? this.plotCalibration(dataObj, true) : this.plotData(dataObj, true);
     }
-    plotCalibration(dataObj, update = true) {
+    gaussianCorrel(data, sigma = 2) {
+        let correlValues = [];
+        for (let index = 0; index < data.length; index++) {
+            const std = Math.sqrt(index);
+            const xMin = -Math.round(sigma * std);
+            const xMax = Math.round(sigma * std);
+            let gaussValues = [];
+            for (let k = xMin; k < xMax; k++) {
+                gaussValues.push(Math.exp(-(k ** 2) / (2 * index)));
+            }
+            let avg = 0;
+            for (const value of gaussValues) {
+                avg += value;
+            }
+            avg /= xMax - xMin;
+            let squaredSum = 0;
+            for (const value of gaussValues) {
+                squaredSum += (value - avg) ** 2;
+            }
+            let resultVal = 0;
+            for (let k = xMin; k < xMax; k++) {
+                resultVal += data[index + k] * (gaussValues[k - xMin] - avg) / squaredSum;
+            }
+            correlValues.push((resultVal && resultVal > 0) ? resultVal : 0);
+        }
+        return correlValues;
+    }
+    plotCalibration(dataObj, update) {
         const trace = {
             name: 'Calibration',
             x: this.getXAxis(dataObj.data.length),
@@ -335,19 +356,15 @@ export class SpectrumPlot {
             fill: 'tozeroy',
             line: {
                 color: 'orangered',
-                width: .5,
-            },
-            marker: {
-                color: 'orangered',
-            },
-            width: 1,
+                width: 1,
+            }
         };
         const markersTrace = {
             name: 'Calibration Points',
             x: [],
             y: [],
             mode: 'markers+text',
-            type: 'scatter',
+            type: this.fallbackGL ? 'scatter' : 'scattergl',
             marker: {
                 symbol: 'cross-thin',
                 size: 10,
@@ -464,63 +481,60 @@ export class SpectrumPlot {
         config.modeBarButtonsToAdd = [this.customModeBarButtons];
         window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, markersTrace], layout, config);
     }
-    plotData(dataObj, update = true) {
+    plotData(dataObj, update) {
         if (this.showCalChart)
             return;
-        let trace = {
-            name: 'Clean Spectrum',
-            stackgroup: 'data',
-            x: this.getXAxis(dataObj.data.length),
-            y: dataObj.data,
-            type: 'scatter',
-            mode: 'lines',
-            fill: 'tozeroy',
-            line: {
-                color: 'orangered',
-                width: .5,
-                shape: this.linePlot ? 'linear' : 'hvh',
-            },
-            marker: {
-                color: 'orangered',
-            },
-            width: 1,
-        };
-        let maxXValue = trace.x.at(-1) ?? 1;
-        let data = [trace];
+        let data = [];
+        let maxXValue = 0;
+        if (dataObj.data.length) {
+            let trace = {
+                name: 'Net Spectrum',
+                stackgroup: 'data',
+                x: this.getXAxis(dataObj.data.length),
+                y: dataObj.data,
+                type: this.fallbackGL ? 'scatter' : 'scattergl',
+                mode: 'lines',
+                fill: 'tozeroy',
+                line: {
+                    color: 'orangered',
+                    width: .5,
+                    shape: this.linePlot ? 'linear' : 'hvh',
+                }
+            };
+            maxXValue = trace.x.at(-1) ?? 1;
+            data.push(trace);
+        }
         if (this.cps)
             data[0].y = dataObj.dataCps;
         if (dataObj.background.length) {
-            let bgTrace = {
+            const bgTrace = {
                 name: 'Background',
                 stackgroup: 'data',
                 x: this.getXAxis(dataObj.background.length),
                 y: dataObj.background,
-                type: 'scatter',
-                mode: 'ono',
+                type: this.fallbackGL ? 'scatter' : 'scattergl',
+                mode: 'lines',
                 fill: 'tozeroy',
                 line: {
                     color: 'slategrey',
                     width: .5,
                     shape: this.linePlot ? 'linear' : 'hvh',
-                },
-                marker: {
-                    color: 'slategrey',
-                },
-                width: 1,
+                }
             };
             if (bgTrace.x.length > maxXValue)
                 maxXValue = bgTrace.x.at(-1) ?? 1;
             if (this.cps)
                 bgTrace.y = dataObj.backgroundCps;
-            const newData = [];
-            const dataLen = data[0].y.length;
-            for (let i = 0; i < dataLen; i++) {
-                newData.push(data[0].y[i] - bgTrace.y[i]);
+            if (data.length) {
+                const newData = [];
+                const dataLen = data[0].y.length;
+                for (let i = 0; i < dataLen; i++) {
+                    newData.push(data[0].y[i] - bgTrace.y[i]);
+                }
+                data[0].y = newData;
+                data[0].fill = 'tonexty';
             }
-            trace.y = newData;
-            trace.fill = 'tonexty';
-            data = data.concat(bgTrace);
-            data.reverse();
+            data.push(bgTrace);
         }
         if (this.sma) {
             for (const element of data) {
@@ -630,11 +644,30 @@ export class SpectrumPlot {
             editable: this.editableMode,
             modeBarButtonsToAdd: [],
         };
-        if (this.peakConfig.enabled) {
-            this.peakConfig.lastDataX = data[(data.length === 1) ? 0 : 1].x;
-            this.peakConfig.lastDataY = data[(data.length === 1) ? 0 : 1].y;
+        if (this.peakConfig.enabled && data.length) {
+            const gaussData = this.gaussianCorrel(data[0].y);
+            const eTrace = {
+                name: 'Gaussian Correlation',
+                x: data[0].x,
+                y: gaussData,
+                type: this.fallbackGL ? 'scatter' : 'scattergl',
+                mode: 'lines',
+                line: {
+                    color: 'black',
+                    width: 0.5,
+                    shape: this.linePlot ? 'linear' : 'hvh',
+                },
+                marker: {
+                    color: 'black',
+                }
+            };
+            this.peakConfig.lastDataX = data[0].x;
+            this.peakConfig.lastDataY = gaussData;
             this.peakFinder();
+            data.unshift(eTrace);
         }
+        if (!this.peakConfig.enabled || !data.length || data.length >= 3)
+            data.reverse();
         layout.shapes = this.shapes;
         layout.annotations = JSON.parse(JSON.stringify(this.annotations));
         if (this.calibration.enabled) {
@@ -646,3 +679,4 @@ export class SpectrumPlot {
         window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, data, layout, config);
     }
 }
+//# sourceMappingURL=plot.js.map

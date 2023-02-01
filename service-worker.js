@@ -13,8 +13,9 @@
       URL = https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fspectrum.nuclearphoenix.xyz&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=true
 
 */
-const APP_VERSION = '2023-01-28';
-const CACHE_NAME = "gamma-static"; // A random name for the cache
+const APP_VERSION = '2023-02-01';
+const CACHE_NAME = 'gamma-static'; // A random name for the cache
+
 const OFFLINE_RESOURCES = ['/',
                           '/index.html',
                           '/404.html',
@@ -47,7 +48,7 @@ self.addEventListener("install", event => { // First time install of a worker
   console.info('Installing service worker...');
 
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
+    caches.open(CACHE_NAME).then(cache => async function() {
       /*
       for (const URL of OFFLINE_RESOURCES) { // Remove old cached files
         cache.delete(URL, {ignoreSearch: true, ignoreMethod: true});
@@ -59,7 +60,7 @@ self.addEventListener("install", event => { // First time install of a worker
           await cache.delete(request);
         });
       })
-      return cache.addAll(OFFLINE_RESOURCES); // Cache all important files
+      await cache.addAll(OFFLINE_RESOURCES); // Cache all important files
     })
   );
 
@@ -84,7 +85,7 @@ self.addEventListener("fetch", event => {
       //console.info('Cache Response!', cachedResponse);
       updateCache(event.request); // Always also try to update the cache, dont wait for it though
       return cachedResponse;
-    };
+    }
 
     try {  // Not found in cache -- request from network
       const networkResponse = await fetch(event.request);
@@ -117,7 +118,6 @@ async function updateCache(request) {
 
 
 function checkResponse(target, response) {
-  if (!response.ok) {
-    console.warn(`Fetching URL "${target.url}" failed, response code: ${response.status}.`);
-  }
+  if (!response.ok) console.warn(`Fetching URL "${target.url}" failed, response code: ${response.status}.`);
+  return response.ok;
 }

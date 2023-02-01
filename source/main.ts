@@ -14,71 +14,33 @@
     - (?) Add dead time correction for cps
     - (?) Drag-and-droppable points for calibration chart
 
-    - Improve peak finder
     - Sorting isotope list
-    - Improve the settings code structure
-    - Put all toasts notifications into classes
     - Calibration n-polynomial regression
-    - User-selectable ROI with Gaussian fit and pulse FWHM + stats
+    - Custom Line when left-clicking into plot. Rightclick to delete.
 
-    - (!) Sometimes only half the actual cps are shown in histogram serial mode?!?!
-
-
-  Known Performance Issues:
-    - (Un)Selecting all isotopes from gamma-ray energies list (Plotly)
+    - (!) FWHM + stats for Gaussian (ROI?)
+  
+  Known Issue:
+    - Sometimes only half the actual cps are shown in histogram serial mode?!?!
+    - Gaussian Correlation Filtering still has pretty bad performance 
 
 */
 
-//import './external/bootstrap.min.js';
-
 import { SpectrumPlot, SeekClosest } from './plot.js';
-import { RawData } from './raw-data.js';
+import { RawData, NPESv1, NPESv1Spectrum } from './raw-data.js';
 import { SerialManager } from './serial.js';
 
-export interface isotopeList {
+export interface IsotopeList {
   [key: number]: string | undefined;
 }
 
-interface portList {
+interface PortList {
   [key: number]: SerialPort | undefined;
 }
 
-interface NPESv1 {
-  'schemaVersion': 'NPESv1',
-  'deviceData'?: {
-    'deviceName'?: string,
-    'softwareName': string
-  },
-  'sampleInfo'?: {
-    'name'?: string,
-    'location'?: string,
-    'time'?: string,
-    'weight'?: number,
-    'volume'?: number,
-    'note'?: string
-  },
-  'resultData': {
-    'startTime'?: string,
-    'endTime'?: string,
-    'energySpectrum'?: NPESv1Spectrum,
-    'backgroundEnergySpectrum'?: NPESv1Spectrum
-  }
-}
-
-interface NPESv1Spectrum {
-  'numberOfChannels': number,
-  'validPulseCount'?: number,
-  'measurementTime'?: number,
-  'energyCalibration'?: {
-    'polynomialOrder': number,
-    'coefficients': number[]
-  },
-  'spectrum': number[]
-}
-
-export type dataOrder = 'hist' | 'chron';
-type calType = 'a' | 'b' | 'c';
-type dataType = 'data' | 'background';
+export type DataOrder = 'hist' | 'chron';
+type CalType = 'a' | 'b' | 'c';
+type DataType = 'data' | 'background';
 
 export class SpectrumData { // Will hold the measurement data globally.
   data: number[] = [];
@@ -88,11 +50,11 @@ export class SpectrumData { // Will hold the measurement data globally.
   dataTime = 1000; // Measurement time in ms
   backgroundTime = 1000; // Measurement time in ms
 
-  getTotalCounts(type: dataType): number {
+  getTotalCounts(type: DataType): number {
     return this[type].reduce((acc,curr) => acc + curr, 0);
   }
 
-  addPulseData(type: dataType, newDataArr: number[], adcChannels: number): void {
+  addPulseData(type: DataType, newDataArr: number[], adcChannels: number): void {
     if(!this[type].length) this[type] = Array(adcChannels).fill(0);
 
     for (const value of newDataArr) {
@@ -100,7 +62,7 @@ export class SpectrumData { // Will hold the measurement data globally.
     }
   }
 
-  addHist(type: dataType, newHistArr: number[]): void {
+  addHist(type: DataType, newHistArr: number[]): void {
     if(!this[type].length) this[type] = newHistArr;
 
     for (const index in newHistArr) {
@@ -118,7 +80,7 @@ let raw = new RawData(1); // 2=raw, 1=hist
 let calClick = { a: false, b: false, c: false };
 let oldCalVals = { a: '', b: '', c: ''};
 
-let portsAvail: portList = {};
+let portsAvail: PortList = {};
 let refreshRate = 1000; // Delay in ms between serial plot updates
 let maxRecTimeEnabled = false;
 let maxRecTime = 1800000; // 30 minutes
@@ -128,11 +90,11 @@ const CONSOLE_REFRESH = 200; // Milliseconds
 let cpsValues: number[] = [];
 
 let isoListURL = 'assets/isotopes_energies_min.json';
-let isoList: isotopeList = {};
+let isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2023-01-28';
+const APP_VERSION = '2023-02-01';
 let localStorageAvailable = false;
 let firstInstall = false;
 
@@ -144,7 +106,7 @@ document.body.onload = async function(): Promise<void> {
 
   if (localStorageAvailable) loadSettingsStorage();
 
-  if ('serviceWorker' in navigator) { // Add service worker for PWA
+  if (navigator.serviceWorker) { // Add service worker for PWA
     const reg = await navigator.serviceWorker.register('/service-worker.js'); // Onload async because of this... good? hmmm.
 
     if (localStorageAvailable) {
@@ -166,7 +128,7 @@ document.body.onload = async function(): Promise<void> {
 
   isoListURL = new URL(isoListURL, window.location.origin).href;
 
-  if ('serial' in navigator) { // Web Serial API
+  if (navigator.serial) { // Web Serial API
     const serErrDiv = document.getElementById('serial-error')!;
     serErrDiv.parentNode!.removeChild(serErrDiv); // Delete Serial Not Supported Warning
     navigator.serial.addEventListener('connect', serialConnect);
@@ -209,7 +171,7 @@ document.body.onload = async function(): Promise<void> {
 
   if (localStorageAvailable) {
     if (loadJSON('lastVisit') <= 0) {
-      popupNotification('welcomeMsg');
+      popupNotification('welcome-msg');
       firstInstall = true;
     }
 
@@ -242,7 +204,7 @@ document.body.onload = async function(): Promise<void> {
   } else {
     const settingsSaveAlert = document.getElementById('ls-available')!; // Remove saving alert
     settingsSaveAlert.parentNode!.removeChild(settingsSaveAlert);
-    popupNotification('welcomeMsg');
+    popupNotification('welcome-msg');
   }
 
   loadSettingsDefault();
@@ -274,14 +236,18 @@ document.body.onload = async function(): Promise<void> {
   const menuElements = document.getElementById('main-tabs')!.getElementsByTagName('button');
   for (const button of menuElements) {
     button.addEventListener('shown.bs.tab', (event: Event): void => {
-      plot.updatePlot(spectrumData); // Adjust Plot Size For Main Tab Menu Content Size
+      const toggleCalChartElement = <HTMLInputElement>document.getElementById('toggle-calibration-chart');
 
-      if ((<HTMLButtonElement>event.target).id !== 'calibration-tab') { // Leave cal chart when leaving cal tab
-        (<HTMLInputElement>document.getElementById('toggle-calibration-chart')).checked = false;
+      if ((<HTMLButtonElement>event.target).id !== 'calibration-tab' && toggleCalChartElement.checked) { // Leave cal chart when leaving cal tab
+        toggleCalChartElement.checked = false;
         toggleCalChart(false);
+      } else {
+        plot.updatePlot(spectrumData); // Adjust Plot Size For Main Tab Menu Content Size
       }
     });
   }
+
+  popupNotification('poll-msg'); // Remove this after some time...
 
   const loadingSpinner = document.getElementById('loading')!;
   loadingSpinner.parentNode!.removeChild(loadingSpinner); // Delete Loading Thingymajig
@@ -453,7 +419,7 @@ function getFileData(file: File, background = false): void { // Gets called when
       //console.log(performance.now() - time1);
     } else if (fileEnding.toLowerCase() === 'json') { // THIS SECTION MAKES EVERYTHING ASYNC!!!
       //const time1 = performance.now();
-      const importData: NPESv1 = await raw.jsonToObject(result);
+      const importData = await raw.jsonToObject(result);
 
       if (!importData) { // Data does not validate the schema
         popupNotification('npes-error');
@@ -480,7 +446,7 @@ function getFileData(file: File, background = false): void { // Gets called when
         endDate = new Date(importData.resultData.endTime!); // Always present if startTime is present --> validated NPESv1
       }
 
-      const localKeys = <dataType[]>['data', 'background'];
+      const localKeys = <DataType[]>['data', 'background'];
       const importKeys = ['energySpectrum', 'backgroundEnergySpectrum'];
 
       for (const i in localKeys) {
@@ -554,7 +520,7 @@ function sizeCheck(): void {
 document.getElementById('clear-data')!.onclick = () => removeFile('data');
 document.getElementById('clear-bg')!.onclick = () => removeFile('background');
 
-function removeFile(id: dataType): void {
+function removeFile(id: DataType): void {
   spectrumData[id] = [];
   spectrumData[`${id}Time`] = 0;
   (<HTMLInputElement>document.getElementById(id)).value = '';
@@ -599,6 +565,13 @@ function bindPlotEvents(): void {
   myPlot.on('plotly_hover', hoverEvent);
   myPlot.on('plotly_unhover', unHover);
   myPlot.on('plotly_click', clickEvent);
+  myPlot.on('plotly_webglcontextlost', webGLcontextLoss);
+  /* // Rightclick menu thingy
+  myPlot.addEventListener('contextmenu', function(e) {
+    console.log("You've tried to open context menu"); //here you draw your own menu
+    e.preventDefault();
+  });
+  */
 }
 
 
@@ -675,7 +648,7 @@ function changeSma(input: HTMLInputElement): void {
 
 function hoverEvent(data: any): void {
   for (const key in calClick) {
-    const castKey = <calType>key;
+    const castKey = <CalType>key;
     if (calClick[castKey]) (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = data.points[0].x.toFixed(2);
   }
 
@@ -685,7 +658,7 @@ function hoverEvent(data: any): void {
 
 function unHover(/*data: any*/): void {
   for (const key in calClick) {
-    const castKey = <calType>key;
+    const castKey = <CalType>key;
     if (calClick[castKey]) (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = oldCalVals[castKey];
   }
 
@@ -698,17 +671,27 @@ function unHover(/*data: any*/): void {
 
 
 function clickEvent(data: any): void {
+  //console.log(data.event);
+  
   document.getElementById('click-data')!.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
 
   for (const key in calClick) {
-    const castKey = <calType>key;
+    const castKey = <CalType>key;
     if (calClick[castKey]) {
       (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = data.points[0].x.toFixed(2);
       oldCalVals[castKey] = data.points[0].x.toFixed(2);
       calClick[castKey] = false;
-      (<HTMLInputElement>document.getElementById(`select-${castKey}`)).checked = calClick[<calType>key];
+      (<HTMLInputElement>document.getElementById(`select-${castKey}`)).checked = calClick[<CalType>key];
     }
   }
+}
+
+
+function webGLcontextLoss(): void {
+  console.error('Lost WebGL context for Plotly.js! Falling back to default SVG render mode...');
+  plot.fallbackGL = true;
+  plot.resetPlot(spectrumData);
+  bindPlotEvents();
 }
 
 
@@ -789,7 +772,7 @@ document.getElementById('calibration-reset')!.onclick = () => resetCal();
 
 function resetCal(): void {
   for (const point in calClick) {
-    calClick[<calType>point] = false;
+    calClick[<CalType>point] = false;
   }
 
   const calSettings = document.getElementsByClassName('cal-setting');
@@ -810,7 +793,7 @@ document.getElementById('select-a')!.onclick = event => toggleCalClick('a', (<HT
 document.getElementById('select-b')!.onclick = event => toggleCalClick('b', (<HTMLInputElement>event.target).checked);
 document.getElementById('select-c')!.onclick = event => toggleCalClick('c', (<HTMLInputElement>event.target).checked);
 
-function toggleCalClick(point: calType, value: boolean): void {
+function toggleCalClick(point: CalType, value: boolean): void {
   calClick[point] = value;
 }
 
@@ -963,7 +946,7 @@ function downloadCal(): void {
 }
 
 
-function makeXMLSpectrum(type: dataType, name: string): Element {
+function makeXMLSpectrum(type: DataType, name: string): Element {
   const root = document.createElementNS(null, (type === 'data') ? 'EnergySpectrum' : 'BackgroundEnergySpectrum');
   let noc = document.createElementNS(null, 'NumberOfChannels');
 
@@ -1139,7 +1122,7 @@ function downloadXML(): void {
 }
 
 
-function makeJSONSpectrum(type: dataType): NPESv1Spectrum {
+function makeJSONSpectrum(type: DataType): NPESv1Spectrum {
   let spec: NPESv1Spectrum = {
     'numberOfChannels': spectrumData[type].length,
     'validPulseCount': spectrumData.getTotalCounts(type),
@@ -1216,7 +1199,7 @@ function downloadNPES(): void {
 document.getElementById('download-spectrum-btn')!.onclick = () => downloadData('spectrum', 'data');
 document.getElementById('download-bg-btn')!.onclick = () => downloadData('background', 'background');
 
-function downloadData(filename: string, data: dataType): void {
+function downloadData(filename: string, data: DataType): void {
   filename += `_${getDateString()}.csv`;
 
   let text = '';
@@ -1253,12 +1236,14 @@ function resetSampleInfo(): void {
 
 
 function popupNotification(id: string): void { // Uses Bootstrap Toasts already defined in HTML
-  new (<any>window).bootstrap.Toast(document.getElementById(id)).show();
+  const toast = new (<any>window).bootstrap.Toast(document.getElementById(id));
+  if (!toast.isShown()) toast.show();
 }
 
 
 function hideNotification(id: string): void {
-  new (<any>window).bootstrap.Toast(document.getElementById(id)).hide();
+  const toast = new (<any>window).bootstrap.Toast(document.getElementById(id));
+  if (toast.isShown()) toast.hide();
 }
 
 
@@ -1353,7 +1338,7 @@ async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope 
 
 document.getElementById('iso-hover')!.onclick = () => toggleIsoHover();
 
-let prevIso: isotopeList = {};
+let prevIso: IsotopeList = {};
 
 function toggleIsoHover(): void {
   checkNearIso = !checkNearIso;
@@ -1372,7 +1357,7 @@ async function closestIso(value: number): Promise<void> {
   //}
 
   if (energy && name) {
-    let newIso: isotopeList = {};
+    let newIso: IsotopeList = {};
     newIso[energy] = name;
 
     if (prevIso !== newIso) prevIso = newIso;
@@ -1393,8 +1378,7 @@ function plotIsotope(checkbox: HTMLInputElement): void {
 document.getElementById('check-all-isos')!.onclick = (event) => selectAll(<HTMLInputElement>event.target);
 
 function selectAll(selectBox: HTMLInputElement): void {
-  // Bad performance mostly because of the updatePlot with that many lines!
-  const tableRows = (<HTMLTableElement>document.getElementById('table')).tBodies[0].rows;
+  const tableRows = (<HTMLTableElement>document.getElementById('table')).tBodies[0].rows; 
 
   for (const row of tableRows) {
     const checkBox = <HTMLInputElement>row.cells[0].firstChild;
@@ -1404,8 +1388,9 @@ function selectAll(selectBox: HTMLInputElement): void {
       plot.toggleLine(parseFloat(checkBox.value), wordArray[0] + '-' + wordArray[1], checkBox.checked);
     }
   }
-  if (!selectBox.checked) plot.clearShapeAnno();
+  if (!selectBox.checked) plot.clearAnnos();
 
+  // Bad performance because of Plotly with too many lines!
   plot.updatePlot(spectrumData);
 }
 
@@ -1414,20 +1399,29 @@ document.getElementById('peak-finder-btn')!.onclick = event => findPeaks(<HTMLBu
 
 async function findPeaks(button: HTMLButtonElement): Promise<void> {
   if (plot.peakConfig.enabled) {
-    if (plot.peakConfig.mode === 0) {
-      //plot.peakFinder(false); // Delete all old lines
-      await loadIsotopes();
-      plot.peakConfig.mode++;
-      button.innerText = 'Isotope';
-    } else {
-      plot.peakFinder(false); // Delete all old lines
-      plot.peakConfig.enabled = false;
-      button.innerText = 'None';
+    switch(plot.peakConfig.mode) {
+      case 'gaussian': // Second Mode: Energy
+        plot.peakConfig.mode = 'energy';
+        button.innerText = 'Energy';
+        break;
+        
+      case 'energy': // Third Mode: Isotopes
+        //plot.peakFinder(false); // Delete all old lines
+        await loadIsotopes();
+        plot.peakConfig.mode = 'isotopes';
+        button.innerText = 'Isotopes';
+        break;
+
+      case 'isotopes':
+        plot.peakFinder(false); // Delete all old lines
+        plot.peakConfig.enabled = false;
+        button.innerText = 'None';
+        break;
     }
-  } else {
+  } else { // First Mode: Gauss
     plot.peakConfig.enabled = true;
-    plot.peakConfig.mode = 0;
-    button.innerText = 'Energy';
+    plot.peakConfig.mode = 'gaussian';
+    button.innerText = 'Gaussian';
   }
 
   plot.updatePlot(spectrumData);
@@ -1546,7 +1540,6 @@ function loadSettingsStorage(): void {
 }
 
 
-// Do this by classes? Way more efficient, v e r y ugly!
 document.getElementById('edit-plot')!.onclick = event => changeSettings('editMode', <HTMLInputElement>event.target);
 document.getElementById('setting1')!.onclick = () => changeSettings('maxIsoDist', <HTMLInputElement>document.getElementById('iso-hover-prox'));
 document.getElementById('setting2')!.onclick = () => changeSettings('customURL', <HTMLInputElement>document.getElementById('custom-url'));
@@ -1579,7 +1572,8 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
     case 'editMode':
       boolVal = (<HTMLInputElement>element).checked;
       plot.editableMode = boolVal;
-      plot.resetPlot(spectrumData);
+      plot.resetPlot(spectrumData); // Modify won't be disabled if you don't fully reset
+      bindPlotEvents();
 
       saveJSON(name, boolVal);
       break;
@@ -1737,7 +1731,7 @@ document.getElementById('s1')!.onchange = event => selectSerialType(<HTMLInputEl
 document.getElementById('s2')!.onchange = event => selectSerialType(<HTMLInputElement>event.target);
 
 function selectSerialType(button: HTMLInputElement): void {
-  SerialManager.orderType = <dataOrder>button.value;
+  SerialManager.orderType = <DataOrder>button.value;
   saveJSON('serialDataMode', button.id);
 }
 
@@ -1837,11 +1831,11 @@ document.getElementById('resume-button')!.onclick = () => startRecord(true, reco
 document.getElementById('record-spectrum-btn')!.onclick = () => startRecord(false, 'data');
 document.getElementById('record-bg-btn')!.onclick = () => startRecord(false, 'background');
 
-let recordingType: dataType;
+let recordingType: DataType;
 let startDate: Date;
 let endDate: Date;
 
-async function startRecord(pause = false, type: dataType): Promise<void> {
+async function startRecord(pause = false, type: DataType): Promise<void> {
   try {
     selectPort();
     await serRecorder?.startRecord(pause);
@@ -1985,7 +1979,7 @@ function toggleAutoscroll(enabled: boolean) {
 }
 
 
-let consoleTimeout: NodeJS.Timeout;
+let consoleTimeout: number;
 
 function refreshConsole(): void {
   if (serRecorder?.port?.readable) {
@@ -2003,9 +1997,9 @@ function getRecordTimeStamp(time: number): string {
 }
 
 
-let metaTimeout: NodeJS.Timeout;
+let metaTimeout: number;
 
-function refreshMeta(type: dataType): void {
+function refreshMeta(type: DataType): void {
   if (serRecorder?.port?.readable) {
     const nowTime = performance.now();
 
@@ -2045,9 +2039,9 @@ function refreshMeta(type: dataType): void {
 
 
 let lastUpdate = performance.now();
-let refreshTimeout: NodeJS.Timeout;
+let refreshTimeout: number;
 
-function refreshRender(type: dataType, firstLoad = false): void {
+function refreshRender(type: DataType, firstLoad = false): void {
   if (serRecorder?.port?.readable) {
     const startDelay = performance.now();
 
@@ -2065,7 +2059,7 @@ function refreshRender(type: dataType, firstLoad = false): void {
     spectrumData[`${type}Cps`] = spectrumData[type].map(val => val / measTime * 1000);
 
     if (firstLoad) {
-      plot.resetPlot(spectrumData);
+      plot.resetPlot(spectrumData); // Prevent the overlay going into the toolbar
       bindPlotEvents();
     } else {
       plot.updatePlot(spectrumData);

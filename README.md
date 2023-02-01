@@ -18,6 +18,7 @@ Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://
 * Live plotting via the serial interface, compatible with any serial device (e.g. Arduino)
 * Serial console to control your device
 * Linear and quadratic energy calibration
+* Gaussian correlation filtering for peak detection
 * Customizable list of common isotopes and their gamma-ray energies
 * Export interactive graphs of your spectrum to embed it into your website
 * Automatic peak detection (energy and isotope)
