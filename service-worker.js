@@ -118,9 +118,6 @@ async function updateCache(request) {
 
 
 function checkResponse(target, response) {
-  if (!response.ok) {
-    console.warn(`Fetching URL "${target.url}" failed, response code: ${response.status}.`);
-    return true;
-  }
-  return false;
+  if (!response.ok) console.warn(`Fetching URL "${target.url}" failed, response code: ${response.status}.`);
+  return response.ok;
 }
