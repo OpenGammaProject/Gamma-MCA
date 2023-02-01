@@ -323,12 +323,12 @@ export class SpectrumPlot {
         this.showCalChart = (typeof override === 'boolean') ? override : !this.showCalChart;
         this.showCalChart ? this.plotCalibration(dataObj) : this.plotData(dataObj);
     }
-    gaussianCorrel(xAxis, data) {
+    gaussianCorrel(xAxis, data, sigma = 2) {
         let newGVals = [];
         for (const midIndex of xAxis) {
             const sd = Math.sqrt(midIndex);
-            const xMin = -Math.round(2 * sd);
-            const xMax = +Math.round(2 * sd);
+            const xMin = -Math.round(sigma * sd);
+            const xMax = +Math.round(sigma * sd);
             let kVals = [];
             for (let i = xMin; i < xMax; i++) {
                 kVals.push(i);

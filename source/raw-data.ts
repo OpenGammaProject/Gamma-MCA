@@ -16,6 +16,39 @@
 import { CoeffObj } from './plot.js';
 //import './external/ZSchema-browser-min.js';
 
+export interface NPESv1Spectrum {
+  'numberOfChannels': number,
+  'validPulseCount'?: number,
+  'measurementTime'?: number,
+  'energyCalibration'?: {
+    'polynomialOrder': number,
+    'coefficients': number[]
+  },
+  'spectrum': number[]
+}
+
+export interface NPESv1 {
+  'schemaVersion': 'NPESv1',
+  'deviceData'?: {
+    'deviceName'?: string,
+    'softwareName': string
+  },
+  'sampleInfo'?: {
+    'name'?: string,
+    'location'?: string,
+    'time'?: string,
+    'weight'?: number,
+    'volume'?: number,
+    'note'?: string
+  },
+  'resultData': {
+    'startTime'?: string,
+    'endTime'?: string,
+    'energySpectrum'?: NPESv1Spectrum,
+    'backgroundEnergySpectrum'?: NPESv1Spectrum
+  }
+}
+
 interface ImportDataMeta {
   name: string,
   location: string,
@@ -171,8 +204,8 @@ export class RawData {
     }
   }
 
-  async jsonToObject(data: string): Promise<any | false> {
-    let json: any;
+  async jsonToObject(data: string): Promise<NPESv1 | false> {
+    let json: NPESv1;
 
     try {
       json = JSON.parse(data);

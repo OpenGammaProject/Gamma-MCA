@@ -466,13 +466,13 @@ export class SpectrumPlot {
   /*
     Gaussian correlation filter using the PRA algorithm
   */
-  private gaussianCorrel(xAxis: number[], data: number[]): number[] {
+  private gaussianCorrel(xAxis: number[], data: number[], sigma = 2): number[] {
     let newGVals: number[] = [];
     
     for (const midIndex of xAxis) {
       const sd = Math.sqrt(midIndex);
-      const xMin = - Math.round(2*sd);
-      const xMax = + Math.round(2*sd);
+      const xMin = - Math.round(sigma*sd);
+      const xMax = + Math.round(sigma*sd);
       
       let kVals: number[] = [];
       for(let i = xMin; i < xMax; i++) {
@@ -802,6 +802,12 @@ export class SpectrumPlot {
         exponentformat: 'SI',
         automargin: true
       },
+      /*
+      yaxis2: {
+        overlaying: 'y',
+        side: 'right'
+      },
+      */
       plot_bgcolor: 'white',
       paper_bgcolor: '#f8f9fa', // Bootstrap bg-light
       margin: {
@@ -900,6 +906,7 @@ export class SpectrumPlot {
       //stackgroup: 'data', // Stack line charts on top of each other
       x: filterXAxis,
       y: this.gaussianCorrel(this.getXAxis(filterData.length), filterData),
+      //yaxis: 'y2',
       type: this.fallbackGL ? 'scatter' : 'scattergl', // 'scatter' for SVG, 'scattergl' for WebGL
       mode: 'lines', // Remove lines, "lines", "none"
       //fill: 'tozeroy',

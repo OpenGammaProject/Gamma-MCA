@@ -20,6 +20,8 @@
 
     - (!) FWHM + stats for Gaussian (ROI?)
     - (!) Optimize Gaussian correlation (Performance -> Web Worker?)
+    - (!) Plot.ts function improvements
+    - (!) ClosestIso Performance
   
   Known Issue:
     - Sometimes only half the actual cps are shown in histogram serial mode?!?!
@@ -29,7 +31,7 @@
 //import './external/bootstrap.min.js';
 
 import { SpectrumPlot, SeekClosest } from './plot.js';
-import { RawData } from './raw-data.js';
+import { RawData, NPESv1, NPESv1Spectrum } from './raw-data.js';
 import { SerialManager } from './serial.js';
 
 export interface IsotopeList {
@@ -38,39 +40,6 @@ export interface IsotopeList {
 
 interface PortList {
   [key: number]: SerialPort | undefined;
-}
-
-interface NPESv1 {
-  'schemaVersion': 'NPESv1',
-  'deviceData'?: {
-    'deviceName'?: string,
-    'softwareName': string
-  },
-  'sampleInfo'?: {
-    'name'?: string,
-    'location'?: string,
-    'time'?: string,
-    'weight'?: number,
-    'volume'?: number,
-    'note'?: string
-  },
-  'resultData': {
-    'startTime'?: string,
-    'endTime'?: string,
-    'energySpectrum'?: NPESv1Spectrum,
-    'backgroundEnergySpectrum'?: NPESv1Spectrum
-  }
-}
-
-interface NPESv1Spectrum {
-  'numberOfChannels': number,
-  'validPulseCount'?: number,
-  'measurementTime'?: number,
-  'energyCalibration'?: {
-    'polynomialOrder': number,
-    'coefficients': number[]
-  },
-  'spectrum': number[]
 }
 
 export type DataOrder = 'hist' | 'chron';
@@ -454,7 +423,7 @@ function getFileData(file: File, background = false): void { // Gets called when
       //console.log(performance.now() - time1);
     } else if (fileEnding.toLowerCase() === 'json') { // THIS SECTION MAKES EVERYTHING ASYNC!!!
       //const time1 = performance.now();
-      const importData: NPESv1 = await raw.jsonToObject(result);
+      const importData = await raw.jsonToObject(result);
 
       if (!importData) { // Data does not validate the schema
         popupNotification('npes-error');
