@@ -159,10 +159,13 @@ document.body.onload = async function () {
     const menuElements = document.getElementById('main-tabs').getElementsByTagName('button');
     for (const button of menuElements) {
         button.addEventListener('shown.bs.tab', (event) => {
-            plot.updatePlot(spectrumData);
-            if (event.target.id !== 'calibration-tab') {
-                document.getElementById('toggle-calibration-chart').checked = false;
+            const toggleCalChartElement = document.getElementById('toggle-calibration-chart');
+            if (event.target.id !== 'calibration-tab' && toggleCalChartElement.checked) {
+                toggleCalChartElement.checked = false;
                 toggleCalChart(false);
+            }
+            else {
+                plot.updatePlot(spectrumData);
             }
         });
     }

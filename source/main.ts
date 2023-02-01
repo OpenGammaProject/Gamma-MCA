@@ -20,7 +20,6 @@
 
     - (!) FWHM + stats for Gaussian (ROI?)
     - (!) Optimize Gaussian correlation (Performance -> Web Worker?)
-    - (!) Plot is updated twice on menu click except if you click on "calibration"
   
   Known Issue:
     - Sometimes only half the actual cps are shown in histogram serial mode?!?!
@@ -272,11 +271,13 @@ document.body.onload = async function(): Promise<void> {
   const menuElements = document.getElementById('main-tabs')!.getElementsByTagName('button');
   for (const button of menuElements) {
     button.addEventListener('shown.bs.tab', (event: Event): void => {
-      plot.updatePlot(spectrumData); // Adjust Plot Size For Main Tab Menu Content Size
+      const toggleCalChartElement = <HTMLInputElement>document.getElementById('toggle-calibration-chart');
 
-      if ((<HTMLButtonElement>event.target).id !== 'calibration-tab') { // Leave cal chart when leaving cal tab
-        (<HTMLInputElement>document.getElementById('toggle-calibration-chart')).checked = false;
+      if ((<HTMLButtonElement>event.target).id !== 'calibration-tab' && toggleCalChartElement.checked) { // Leave cal chart when leaving cal tab
+        toggleCalChartElement.checked = false;
         toggleCalChart(false);
+      } else {
+        plot.updatePlot(spectrumData); // Adjust Plot Size For Main Tab Menu Content Size
       }
     });
   }
