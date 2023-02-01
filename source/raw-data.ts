@@ -14,7 +14,6 @@
 */
 
 import { CoeffObj } from './plot.js';
-//import './external/ZSchema-browser-min.js';
 
 export interface NPESv1Spectrum {
   'numberOfChannels': number,
@@ -227,7 +226,7 @@ export class RawData {
         }
       }
 
-      /*
+      /* // OLD METHOD
       const scripts = Array.from(document.querySelectorAll('script')).map(scr => scr.src);
       if (!scripts.includes('/assets/js/external/ZSchema-browser-min.js')) {
         const tag = document.createElement('script');
