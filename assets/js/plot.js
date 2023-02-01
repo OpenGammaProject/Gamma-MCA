@@ -50,9 +50,9 @@ export class SpectrumPlot {
     peakConfig = {
         enabled: false,
         mode: undefined,
-        thres: 0.025,
-        lag: 150,
-        width: 2,
+        thres: 0.005,
+        lag: 50,
+        width: 5,
         seekWidth: 2,
         lines: [],
         lastDataX: [],
