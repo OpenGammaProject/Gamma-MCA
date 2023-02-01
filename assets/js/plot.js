@@ -4,9 +4,7 @@ export class SeekClosest {
         this.isoList = list;
     }
     seek(value, maxDist = 100) {
-        const closeVals = Object.keys(this.isoList).filter(energy => {
-            return (energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
-        });
+        const closeVals = Object.keys(this.isoList).filter(energy => energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
         const closeValsNum = closeVals.map(energy => parseFloat(energy));
         if (closeValsNum.length) {
             const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
@@ -170,29 +168,28 @@ export class SpectrumPlot {
         return calArray;
     }
     computeMovingAverage(target, length = this.smaLength) {
-        let newData = Array(target.length).fill(0);
+        let newData = Array(target.length);
         const half = Math.round(length / 2);
-        for (const i in newData) {
-            const intIndex = parseInt(i);
-            if (intIndex >= half && intIndex <= target.length - half - 1) {
+        for (let i = 0; i < newData.length; i++) {
+            if (i >= half && i <= target.length - half - 1) {
                 const remainderIndexFactor = length % 2;
-                const addVal = target[intIndex + half - remainderIndexFactor];
-                const removeVal = target[intIndex - half];
-                newData[intIndex] = newData[intIndex - 1] + (addVal - removeVal) / length;
+                const addVal = target[i + half - remainderIndexFactor];
+                const removeVal = target[i - half];
+                newData[i] = newData[i - 1] + (addVal - removeVal) / length;
                 continue;
             }
             let val = 0;
             let divider = 0;
             for (let j = 0; j < length; j++) {
                 if (j < half) {
-                    if ((intIndex - j) >= 0) {
-                        val += target[intIndex - j];
+                    if ((i - j) >= 0) {
+                        val += target[i - j];
                         divider++;
                     }
                 }
                 else {
-                    if ((intIndex - half + 1 + j) < newData.length) {
-                        val += target[intIndex - half + 1 + j];
+                    if ((i - half + 1 + j) < newData.length) {
+                        val += target[i - half + 1 + j];
                         divider++;
                     }
                 }
@@ -323,31 +320,32 @@ export class SpectrumPlot {
         this.showCalChart = (typeof override === 'boolean') ? override : !this.showCalChart;
         this.showCalChart ? this.plotCalibration(dataObj) : this.plotData(dataObj);
     }
-    gaussianCorrel(xAxis, data, sigma = 2) {
-        let newGVals = [];
-        for (const midIndex of xAxis) {
-            const sd = Math.sqrt(midIndex);
-            const xMin = -Math.round(sigma * sd);
-            const xMax = +Math.round(sigma * sd);
-            let kVals = [];
-            for (let i = xMin; i < xMax; i++) {
-                kVals.push(i);
+    gaussianCorrel(data, sigma = 2) {
+        let correlValues = [];
+        for (let index = 0; index < data.length; index++) {
+            const std = Math.sqrt(index);
+            const xMin = -Math.round(sigma * std);
+            const xMax = Math.round(sigma * std);
+            let gaussValues = [];
+            for (let k = xMin; k < xMax; k++) {
+                gaussValues.push(Math.exp(-(k ** 2) / (2 * index)));
             }
-            let gVals = [];
-            for (const k of kVals) {
-                gVals.push(Math.exp(-(k ** 2) / (2 * sd ** 2)));
+            let avg = 0;
+            for (const value of gaussValues) {
+                avg += value;
             }
-            const mw = gVals.reduce((acc, curr) => acc + curr, 0) / gVals.length;
-            gVals = gVals.map(value => value - mw);
-            const qs = gVals.reduce((acc, curr) => acc + curr ** 2, 0);
-            gVals = gVals.map(value => value / qs);
+            avg /= xMax - xMin;
+            let squaredSum = 0;
+            for (const value of gaussValues) {
+                squaredSum += (value - avg) ** 2;
+            }
             let resultVal = 0;
             for (let k = xMin; k < xMax; k++) {
-                resultVal += data[midIndex + k] * gVals[k - xMin];
+                resultVal += data[index + k] * (gaussValues[k - xMin] - avg) / squaredSum;
             }
-            newGVals.push((!resultVal || resultVal < 0) ? 0 : resultVal);
+            correlValues.push((resultVal && resultVal > 0) ? resultVal : 0);
         }
-        return newGVals;
+        return correlValues;
     }
     plotCalibration(dataObj, update = true) {
         const trace = {
@@ -513,13 +511,13 @@ export class SpectrumPlot {
         if (this.cps)
             data[0].y = dataObj.dataCps;
         if (dataObj.background.length) {
-            let bgTrace = {
+            const bgTrace = {
                 name: 'Background',
                 stackgroup: 'data',
                 x: this.getXAxis(dataObj.background.length),
                 y: dataObj.background,
                 type: this.fallbackGL ? 'scatter' : 'scattergl',
-                mode: 'ono',
+                mode: 'lines',
                 fill: 'tozeroy',
                 line: {
                     color: 'slategrey',
@@ -543,7 +541,6 @@ export class SpectrumPlot {
             trace.y = newData;
             trace.fill = 'tonexty';
             data.push(bgTrace);
-            data.reverse();
         }
         if (this.sma) {
             for (const element of data) {
@@ -666,13 +663,10 @@ export class SpectrumPlot {
             }
         }
         config.modeBarButtonsToAdd = [this.customModeBarButtons];
-        const startTime = performance.now();
-        const filterData = data[0].y;
-        const filterXAxis = (this.calibration.enabled) ? this.getCalAxis(filterData.length) : this.getXAxis(filterData.length);
-        let eTrace = {
+        const eTrace = {
             name: 'Gauss Correlation',
-            x: filterXAxis,
-            y: this.gaussianCorrel(this.getXAxis(filterData.length), filterData),
+            x: data[0].x,
+            y: this.gaussianCorrel(data[0].y),
             type: this.fallbackGL ? 'scatter' : 'scattergl',
             mode: 'lines',
             line: {
@@ -686,7 +680,7 @@ export class SpectrumPlot {
             width: 1,
         };
         data.push(eTrace);
-        console.log(performance.now() - startTime);
+        data.reverse();
         window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, data, layout, config);
     }
 }

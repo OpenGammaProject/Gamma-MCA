@@ -19,12 +19,10 @@
     - Custom Line when left-clicking into plot. Rightclick to delete.
 
     - (!) FWHM + stats for Gaussian (ROI?)
-    - (!) Optimize Gaussian correlation (Performance -> Web Worker?)
-    - (!) Plot.ts function improvements
-    - (!) ClosestIso Performance
   
   Known Issue:
     - Sometimes only half the actual cps are shown in histogram serial mode?!?!
+    - Gaussian Correlation Filtering still has pretty bad performance 
 
 */
 

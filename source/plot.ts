@@ -66,6 +66,27 @@ interface CoeffPoints {
   [index: string]: number | undefined
 }
 
+interface Trace {
+  name: string,
+  stackgroup?: string,
+  x: number[],
+  y: number[],
+  type: 'scatter' | 'scattergl',
+  yaxis?: string,
+  mode: 'lines' | 'markers' | 'lines+markers',
+  fill?: string,
+  opacity?: number,
+  line?: {
+    color?: string,
+    width?: number,
+    shape?: 'linear' | 'hvh',
+  },
+  marker?: {
+    color?: string,
+  },
+  width?: number
+}
+
 /*
   Seek the closest matching isotope by energy from an isotope list
 */
@@ -77,15 +98,14 @@ export class SeekClosest {
   }
   
   seek(value: number, maxDist = 100): {energy: number, name: string} | {energy: undefined, name: undefined} {
-    const closeVals = Object.keys(this.isoList).filter(energy => { // Only allow closest values and disregard undefined
-      return (energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
-    });
+    // Only allow closest values and disregard undefined
+    const closeVals = Object.keys(this.isoList).filter(energy => energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
     const closeValsNum = closeVals.map(energy => parseFloat(energy)) // After this step there are 100% only numbers left
   
     if (closeValsNum.length) {
       const closest = closeValsNum.reduce((prev, curr) => Math.abs(curr - value) < Math.abs(prev - value) ? curr : prev);
       const endResult = this.isoList[closest];
-  
+
       if (endResult) return {energy: closest, name: endResult};
     }
     return {energy: undefined, name: undefined};
@@ -279,19 +299,17 @@ export class SpectrumPlot {
     Get The Moving Average
   */
   private computeMovingAverage(target: number[], length = this.smaLength): number[] {
-    let newData: number[] = Array(target.length).fill(0);
+    let newData: number[] = Array(target.length);
     const half = Math.round(length/2);
 
-    for(const i in newData) { // Compute the central moving average
-      const intIndex = parseInt(i); // Gotcha, I wasted sooo much time on this -_-
-
-      if (intIndex >= half && intIndex <= target.length - half - 1) { // Shortcut
+    for(let i = 0; i < newData.length; i++) { // Compute the central moving average
+      if (i >= half && i <= target.length - half - 1) { // Shortcut
         const remainderIndexFactor = length % 2;
 
-        const addVal = target[intIndex+half-remainderIndexFactor];
-        const removeVal = target[intIndex-half];
+        const addVal = target[i+half-remainderIndexFactor];
+        const removeVal = target[i-half];
 
-        newData[intIndex] = newData[intIndex - 1] + (addVal - removeVal) / length;
+        newData[i] = newData[i - 1] + (addVal - removeVal) / length;
         continue; // Skip other computation.
       }
 
@@ -300,13 +318,13 @@ export class SpectrumPlot {
 
       for(let j = 0; j < length; j++) { // Slightly asymetrical to the right with even numbers of smaLength
         if (j < half) {
-          if ((intIndex - j) >= 0) {
-            val += target[intIndex - j];
+          if ((i - j) >= 0) {
+            val += target[i - j];
             divider++;
           }
         } else {
-          if ((intIndex - half+1 + j) < newData.length) {
-            val += target[intIndex - half+1 + j];
+          if ((i - half+1 + j) < newData.length) {
+            val += target[i - half+1 + j];
             divider++;
           }
         }
@@ -466,40 +484,39 @@ export class SpectrumPlot {
   /*
     Gaussian correlation filter using the PRA algorithm
   */
-  private gaussianCorrel(xAxis: number[], data: number[], sigma = 2): number[] {
-    let newGVals: number[] = [];
-    
-    for (const midIndex of xAxis) {
-      const sd = Math.sqrt(midIndex);
-      const xMin = - Math.round(sigma*sd);
-      const xMax = + Math.round(sigma*sd);
-      
-      let kVals: number[] = [];
-      for(let i = xMin; i < xMax; i++) {
-        kVals.push(i);
-      }
-      
-      let gVals: number[] = [];
+  private gaussianCorrel(data: number[], sigma = 2): number[] {
+    let correlValues: number[] = [];
 
-      for (const k of kVals) {
-        gVals.push(Math.exp(- (k**2) / (2*sd**2)))
+    for (let index = 0; index < data.length; index++) {
+      const std = Math.sqrt(index);
+      const xMin = - Math.round(sigma * std);
+      const xMax = Math.round(sigma * std);
+
+      let gaussValues: number[] = [];
+      for (let k = xMin; k < xMax; k++) {
+        gaussValues.push(Math.exp(-(k**2) / (2 * index)));
       }
-      
-      const mw = gVals.reduce((acc, curr) => acc + curr, 0) / gVals.length;
-      gVals = gVals.map(value => value - mw);
-      
-      const qs = gVals.reduce((acc, curr) => acc + curr**2, 0);
-      gVals = gVals.map(value => value/qs);
+
+      let avg = 0;
+      for (const value of gaussValues) {
+        avg += value;
+      }
+      avg /= xMax - xMin;
+
+      let squaredSum = 0;
+      for (const value of gaussValues) {
+        squaredSum += (value - avg)**2;
+      }
 
       let resultVal = 0;
 
       for(let k = xMin; k < xMax; k++) {
-        resultVal += data[midIndex + k] * gVals[k - xMin];
+        resultVal += data[index + k] * (gaussValues[k - xMin] - avg) / squaredSum;
       }
 
-      newGVals.push((!resultVal || resultVal < 0 ) ? 0 : resultVal);
+      correlValues.push((resultVal && resultVal > 0 ) ? resultVal : 0);
     }
-    return newGVals;
+    return correlValues;
   }
   /*
     Plot Calibration Chart
@@ -665,7 +682,7 @@ export class SpectrumPlot {
   private plotData(dataObj: SpectrumData, update = true): void {
     if (this.showCalChart) return; // Ignore this if the calibration chart is currently shown
 
-    let trace = {
+    let trace: Trace = {
       name: 'Net Spectrum',
       stackgroup: 'data', // Stack line charts on top of each other
 
@@ -687,7 +704,7 @@ export class SpectrumPlot {
     };
 
     let maxXValue = trace.x.at(-1) ?? 1;
-    let data: any = [trace]; // ANY ANY ANY!!!!!!!!!!!!!!!
+    let data = [trace];
 
     /*
       Total number of pulses divided by seconds running. Counts Per Second
@@ -697,14 +714,14 @@ export class SpectrumPlot {
       Compute Background and Corrected Spectrum
     */
     if (dataObj.background.length) { //== dataObj.data.length)
-      let bgTrace = {
+      const bgTrace: Trace = {
         name: 'Background',
         stackgroup: 'data', // Stack line charts on top of each other
 
         x: this.getXAxis(dataObj.background.length),
         y: dataObj.background,
         type: this.fallbackGL ? 'scatter' : 'scattergl', // 'scatter' for SVG, 'scattergl' for WebGL
-        mode: 'ono', // Remove lines, "lines", "none"
+        mode: 'lines', // Remove lines, "lines", "none"
         fill: 'tozeroy',
         //opacity: 1,
         line: {
@@ -731,8 +748,7 @@ export class SpectrumPlot {
       trace.y = newData;
       trace.fill = 'tonexty'; //'tonextx'
 
-      data.push(bgTrace)
-      data.reverse();
+      data.push(bgTrace);
     }
     /*
       Set Simple Moving Average
@@ -896,16 +912,11 @@ export class SpectrumPlot {
     /*
       Gaussian Correlation Filter
     */
-    const startTime = performance.now();
-
-    const filterData = data[0].y;
-    const filterXAxis = (this.calibration.enabled) ? this.getCalAxis(filterData.length) : this.getXAxis(filterData.length);
-    
-    let eTrace = {
+    const eTrace: Trace = {
       name: 'Gauss Correlation',
       //stackgroup: 'data', // Stack line charts on top of each other
-      x: filterXAxis,
-      y: this.gaussianCorrel(this.getXAxis(filterData.length), filterData),
+      x: data[0].x,
+      y: this.gaussianCorrel(data[0].y),
       //yaxis: 'y2',
       type: this.fallbackGL ? 'scatter' : 'scattergl', // 'scatter' for SVG, 'scattergl' for WebGL
       mode: 'lines', // Remove lines, "lines", "none"
@@ -922,8 +933,7 @@ export class SpectrumPlot {
       width: 1,
     };
     data.push(eTrace);
-
-    console.log(performance.now() - startTime);
+    data.reverse(); // Change data order
 
     /*
     if (!update) {
@@ -933,6 +943,7 @@ export class SpectrumPlot {
     }
     (<any>window).Plotly[(update === 'nuke') ? 'newPlot' : 'react'](this.plotDiv, data, layout, config);
     */
+
     (<any>window).Plotly[update ? 'react' : 'newPlot'](this.plotDiv, data, layout, config);
   }
 }
