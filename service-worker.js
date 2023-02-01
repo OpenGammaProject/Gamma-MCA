@@ -14,8 +14,8 @@
 
 */
 const APP_VERSION = '2023-01-28';
-
 const CACHE_NAME = 'gamma-static'; // A random name for the cache
+
 const OFFLINE_RESOURCES = ['/',
                           '/index.html',
                           '/404.html',
