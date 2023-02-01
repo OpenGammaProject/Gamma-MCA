@@ -49,7 +49,7 @@ export class SpectrumPlot {
     isoList = {};
     peakConfig = {
         enabled: false,
-        mode: 0,
+        mode: undefined,
         thres: 0.025,
         lag: 150,
         width: 2,
@@ -237,11 +237,11 @@ export class SpectrumPlot {
                     result /= values.length;
                     size = this.peakConfig.seekWidth * (Math.max(...values) - Math.min(...values));
                 }
-                if (this.peakConfig.mode === 0) {
+                if (this.peakConfig.mode === 'energy') {
                     this.toggleLine(result, result.toFixed(2));
                     this.peakConfig.lines.push(result);
                 }
-                else {
+                else if (this.peakConfig.mode === 'isotopes') {
                     const { energy, name } = new SeekClosest(this.isoList).seek(result, size);
                     if (energy && name) {
                         this.toggleLine(energy, name);
@@ -256,7 +256,7 @@ export class SpectrumPlot {
         this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData, false);
     }
     updatePlot(spectrumData) {
-        this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData);
+        this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData, true);
     }
     toggleLine(energy, name, enabled = true) {
         name = name.replaceAll('-', '');
@@ -318,7 +318,7 @@ export class SpectrumPlot {
     }
     toggleCalibrationChart(dataObj, override) {
         this.showCalChart = (typeof override === 'boolean') ? override : !this.showCalChart;
-        this.showCalChart ? this.plotCalibration(dataObj) : this.plotData(dataObj);
+        this.showCalChart ? this.plotCalibration(dataObj, true) : this.plotData(dataObj, true);
     }
     gaussianCorrel(data, sigma = 2) {
         let correlValues = [];
@@ -347,7 +347,7 @@ export class SpectrumPlot {
         }
         return correlValues;
     }
-    plotCalibration(dataObj, update = true) {
+    plotCalibration(dataObj, update) {
         const trace = {
             name: 'Calibration',
             x: this.getXAxis(dataObj.data.length),
@@ -356,12 +356,8 @@ export class SpectrumPlot {
             fill: 'tozeroy',
             line: {
                 color: 'orangered',
-                width: .5,
-            },
-            marker: {
-                color: 'orangered',
-            },
-            width: 1,
+                width: 1,
+            }
         };
         const markersTrace = {
             name: 'Calibration Points',
@@ -485,29 +481,29 @@ export class SpectrumPlot {
         config.modeBarButtonsToAdd = [this.customModeBarButtons];
         window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, markersTrace], layout, config);
     }
-    plotData(dataObj, update = true) {
+    plotData(dataObj, update) {
         if (this.showCalChart)
             return;
-        let trace = {
-            name: 'Net Spectrum',
-            stackgroup: 'data',
-            x: this.getXAxis(dataObj.data.length),
-            y: dataObj.data,
-            type: this.fallbackGL ? 'scatter' : 'scattergl',
-            mode: 'lines',
-            fill: 'tozeroy',
-            line: {
-                color: 'orangered',
-                width: .5,
-                shape: this.linePlot ? 'linear' : 'hvh',
-            },
-            marker: {
-                color: 'orangered',
-            },
-            width: 1,
-        };
-        let maxXValue = trace.x.at(-1) ?? 1;
-        let data = [trace];
+        let data = [];
+        let maxXValue = 0;
+        if (dataObj.data.length) {
+            let trace = {
+                name: 'Net Spectrum',
+                stackgroup: 'data',
+                x: this.getXAxis(dataObj.data.length),
+                y: dataObj.data,
+                type: this.fallbackGL ? 'scatter' : 'scattergl',
+                mode: 'lines',
+                fill: 'tozeroy',
+                line: {
+                    color: 'orangered',
+                    width: .5,
+                    shape: this.linePlot ? 'linear' : 'hvh',
+                }
+            };
+            maxXValue = trace.x.at(-1) ?? 1;
+            data.push(trace);
+        }
         if (this.cps)
             data[0].y = dataObj.dataCps;
         if (dataObj.background.length) {
@@ -523,23 +519,21 @@ export class SpectrumPlot {
                     color: 'slategrey',
                     width: .5,
                     shape: this.linePlot ? 'linear' : 'hvh',
-                },
-                marker: {
-                    color: 'slategrey',
-                },
-                width: 1,
+                }
             };
             if (bgTrace.x.length > maxXValue)
                 maxXValue = bgTrace.x.at(-1) ?? 1;
             if (this.cps)
                 bgTrace.y = dataObj.backgroundCps;
-            const newData = [];
-            const dataLen = data[0].y.length;
-            for (let i = 0; i < dataLen; i++) {
-                newData.push(data[0].y[i] - bgTrace.y[i]);
+            if (data.length) {
+                const newData = [];
+                const dataLen = data[0].y.length;
+                for (let i = 0; i < dataLen; i++) {
+                    newData.push(data[0].y[i] - bgTrace.y[i]);
+                }
+                data[0].y = newData;
+                data[0].fill = 'tonexty';
             }
-            trace.y = newData;
-            trace.fill = 'tonexty';
             data.push(bgTrace);
         }
         if (this.sma) {
@@ -650,11 +644,30 @@ export class SpectrumPlot {
             editable: this.editableMode,
             modeBarButtonsToAdd: [],
         };
-        if (this.peakConfig.enabled) {
-            this.peakConfig.lastDataX = data[(data.length === 1) ? 0 : 1].x;
-            this.peakConfig.lastDataY = data[(data.length === 1) ? 0 : 1].y;
+        if (this.peakConfig.enabled && data.length) {
+            const gaussData = this.gaussianCorrel(data[0].y);
+            const eTrace = {
+                name: 'Gaussian Correlation',
+                x: data[0].x,
+                y: gaussData,
+                type: this.fallbackGL ? 'scatter' : 'scattergl',
+                mode: 'lines',
+                line: {
+                    color: 'black',
+                    width: 0.5,
+                    shape: this.linePlot ? 'linear' : 'hvh',
+                },
+                marker: {
+                    color: 'black',
+                }
+            };
+            this.peakConfig.lastDataX = data[0].x;
+            this.peakConfig.lastDataY = gaussData;
             this.peakFinder();
+            data.unshift(eTrace);
         }
+        if (!this.peakConfig.enabled || !data.length || data.length >= 3)
+            data.reverse();
         layout.shapes = this.shapes;
         layout.annotations = JSON.parse(JSON.stringify(this.annotations));
         if (this.calibration.enabled) {
@@ -663,24 +676,6 @@ export class SpectrumPlot {
             }
         }
         config.modeBarButtonsToAdd = [this.customModeBarButtons];
-        const eTrace = {
-            name: 'Gauss Correlation',
-            x: data[0].x,
-            y: this.gaussianCorrel(data[0].y),
-            type: this.fallbackGL ? 'scatter' : 'scattergl',
-            mode: 'lines',
-            line: {
-                color: 'black',
-                width: 0.5,
-                shape: this.linePlot ? 'linear' : 'hvh',
-            },
-            marker: {
-                color: 'black',
-            },
-            width: 1,
-        };
-        data.push(eTrace);
-        data.reverse();
         window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, data, layout, config);
     }
 }

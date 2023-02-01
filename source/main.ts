@@ -26,8 +26,6 @@
 
 */
 
-//import './external/bootstrap.min.js';
-
 import { SpectrumPlot, SeekClosest } from './plot.js';
 import { RawData, NPESv1, NPESv1Spectrum } from './raw-data.js';
 import { SerialManager } from './serial.js';
@@ -1401,20 +1399,29 @@ document.getElementById('peak-finder-btn')!.onclick = event => findPeaks(<HTMLBu
 
 async function findPeaks(button: HTMLButtonElement): Promise<void> {
   if (plot.peakConfig.enabled) {
-    if (plot.peakConfig.mode === 0) {
-      //plot.peakFinder(false); // Delete all old lines
-      await loadIsotopes();
-      plot.peakConfig.mode++;
-      button.innerText = 'Isotope';
-    } else {
-      plot.peakFinder(false); // Delete all old lines
-      plot.peakConfig.enabled = false;
-      button.innerText = 'None';
+    switch(plot.peakConfig.mode) {
+      case 'gaussian': // Second Mode: Energy
+        plot.peakConfig.mode = 'energy';
+        button.innerText = 'Energy';
+        break;
+        
+      case 'energy': // Third Mode: Isotopes
+        //plot.peakFinder(false); // Delete all old lines
+        await loadIsotopes();
+        plot.peakConfig.mode = 'isotopes';
+        button.innerText = 'Isotopes';
+        break;
+
+      case 'isotopes':
+        plot.peakFinder(false); // Delete all old lines
+        plot.peakConfig.enabled = false;
+        button.innerText = 'None';
+        break;
     }
-  } else {
+  } else { // First Mode: Gauss
     plot.peakConfig.enabled = true;
-    plot.peakConfig.mode = 0;
-    button.innerText = 'Energy';
+    plot.peakConfig.mode = 'gaussian';
+    button.innerText = 'Gaussian';
   }
 
   plot.updatePlot(spectrumData);
@@ -1565,7 +1572,8 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
     case 'editMode':
       boolVal = (<HTMLInputElement>element).checked;
       plot.editableMode = boolVal;
-      plot.resetPlot(spectrumData);
+      plot.resetPlot(spectrumData); // Modify won't be disabled if you don't fully reset
+      bindPlotEvents();
 
       saveJSON(name, boolVal);
       break;
@@ -2051,7 +2059,7 @@ function refreshRender(type: DataType, firstLoad = false): void {
     spectrumData[`${type}Cps`] = spectrumData[type].map(val => val / measTime * 1000);
 
     if (firstLoad) {
-      plot.resetPlot(spectrumData);
+      plot.resetPlot(spectrumData); // Prevent the overlay going into the toolbar
       bindPlotEvents();
     } else {
       plot.updatePlot(spectrumData);

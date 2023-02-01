@@ -1002,21 +1002,27 @@ function selectAll(selectBox) {
 document.getElementById('peak-finder-btn').onclick = event => findPeaks(event.target);
 async function findPeaks(button) {
     if (plot.peakConfig.enabled) {
-        if (plot.peakConfig.mode === 0) {
-            await loadIsotopes();
-            plot.peakConfig.mode++;
-            button.innerText = 'Isotope';
-        }
-        else {
-            plot.peakFinder(false);
-            plot.peakConfig.enabled = false;
-            button.innerText = 'None';
+        switch (plot.peakConfig.mode) {
+            case 'gaussian':
+                plot.peakConfig.mode = 'energy';
+                button.innerText = 'Energy';
+                break;
+            case 'energy':
+                await loadIsotopes();
+                plot.peakConfig.mode = 'isotopes';
+                button.innerText = 'Isotopes';
+                break;
+            case 'isotopes':
+                plot.peakFinder(false);
+                plot.peakConfig.enabled = false;
+                button.innerText = 'None';
+                break;
         }
     }
     else {
         plot.peakConfig.enabled = true;
-        plot.peakConfig.mode = 0;
-        button.innerText = 'Energy';
+        plot.peakConfig.mode = 'gaussian';
+        button.innerText = 'Gaussian';
     }
     plot.updatePlot(spectrumData);
 }
@@ -1147,6 +1153,7 @@ function changeSettings(name, element) {
             boolVal = element.checked;
             plot.editableMode = boolVal;
             plot.resetPlot(spectrumData);
+            bindPlotEvents();
             saveJSON(name, boolVal);
             break;
         case 'customURL':
