@@ -19,6 +19,7 @@
     - Custom Line when left-clicking into plot. Rightclick to delete.
 
     - (!) FWHM + stats for Gaussian (ROI?)
+    - (!) Fix forbidden non-null assertions ESLint
   
   Known Issue:
     - Sometimes only half the actual cps are shown in histogram serial mode?!?!
@@ -72,15 +73,15 @@ export class SpectrumData { // Will hold the measurement data globally.
 }
 
 // Holds all the classes
-let spectrumData = new SpectrumData();
-let plot = new SpectrumPlot('plot');
-let raw = new RawData(1); // 2=raw, 1=hist
+const spectrumData = new SpectrumData();
+const plot = new SpectrumPlot('plot');
+const raw = new RawData(1); // 2=raw, 1=hist
 
 // Other "global" vars
-let calClick = { a: false, b: false, c: false };
-let oldCalVals = { a: '', b: '', c: ''};
+const calClick = { a: false, b: false, c: false };
+const oldCalVals = { a: '', b: '', c: ''};
 
-let portsAvail: PortList = {};
+const portsAvail: PortList = {};
 let refreshRate = 1000; // Delay in ms between serial plot updates
 let maxRecTimeEnabled = false;
 let maxRecTime = 1800000; // 30 minutes
@@ -90,7 +91,7 @@ const CONSOLE_REFRESH = 200; // Milliseconds
 let cpsValues: number[] = [];
 
 let isoListURL = 'assets/isotopes_energies_min.json';
-let isoList: IsotopeList = {};
+const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
@@ -150,7 +151,7 @@ document.body.onload = async function(): Promise<void> {
 
   if ('launchQueue' in window && 'LaunchParams' in window) { // File Handling API
     (<any>window).launchQueue.setConsumer(
-      async (launchParams: { files: any[] }) => {
+      async (launchParams: { files: FileSystemFileHandle[] }) => {
         if (!launchParams.files.length) return;
 
         const file: File = await launchParams.files[0].getFile();
@@ -357,7 +358,7 @@ function importFile(input: HTMLInputElement, background = false): void {
 
 
 function getFileData(file: File, background = false): void { // Gets called when a file has been selected.
-  let reader = new FileReader();
+  const reader = new FileReader();
 
   const fileEnding = file.name.split('.')[1];
 
@@ -561,7 +562,7 @@ function updateSpectrumTime() {
 function bindPlotEvents(): void {
   if (!plot.plotDiv) return;
 
-  const myPlot = <any>plot.plotDiv;
+  const myPlot = <any>plot.plotDiv; 
   myPlot.on('plotly_hover', hoverEvent);
   myPlot.on('plotly_unhover', unHover);
   myPlot.on('plotly_click', clickEvent);
@@ -604,7 +605,7 @@ document.getElementById('xAxis')!.onclick = event => changeAxis(<HTMLButtonEleme
 document.getElementById('yAxis')!.onclick = event => changeAxis(<HTMLButtonElement>event.target);
 
 function changeAxis(button: HTMLButtonElement): void {
-  let id = button.id as 'xAxis' | 'yAxis';
+  const id = button.id as 'xAxis' | 'yAxis';
   if (plot[id] === 'linear') {
     plot[id] = 'log';
     button.innerText = 'Log';
@@ -707,14 +708,14 @@ function toggleCal(enabled: boolean): void {
   if (enabled) {
     if (!plot.calibration.imported) {
 
-      let readoutArray = [
+      const readoutArray = [
         [(<HTMLInputElement>document.getElementById('adc-a')).value, (<HTMLInputElement>document.getElementById('cal-a')).value],
         [(<HTMLInputElement>document.getElementById('adc-b')).value, (<HTMLInputElement>document.getElementById('cal-b')).value],
         [(<HTMLInputElement>document.getElementById('adc-c')).value, (<HTMLInputElement>document.getElementById('cal-c')).value]
       ];
 
       let invalid = 0;
-      let validArray: number[][] = [];
+      const validArray: number[][] = [];
 
       for (const pair of readoutArray) {
         const float1 = parseFloat(pair[0]);
@@ -831,7 +832,7 @@ function importCalButton(input: HTMLInputElement): void {
 
 
 function importCal(file: File): void {
-  let reader = new FileReader();
+  const reader = new FileReader();
 
   reader.readAsText(file);
 
@@ -840,7 +841,7 @@ function importCal(file: File): void {
       const result = (<string>reader.result).trim(); // A bit unclean for typescript, I'm sorry
       const obj = JSON.parse(result);
 
-      let readoutArray = [
+      const readoutArray = [
         <HTMLInputElement>document.getElementById('adc-a'),
         <HTMLInputElement>document.getElementById('cal-a'),
         <HTMLInputElement>document.getElementById('adc-b'),
@@ -948,21 +949,21 @@ function downloadCal(): void {
 
 function makeXMLSpectrum(type: DataType, name: string): Element {
   const root = document.createElementNS(null, (type === 'data') ? 'EnergySpectrum' : 'BackgroundEnergySpectrum');
-  let noc = document.createElementNS(null, 'NumberOfChannels');
+  const noc = document.createElementNS(null, 'NumberOfChannels');
 
   noc.textContent = spectrumData[type].length.toString();
   root.appendChild(noc);
 
-  let sn = document.createElementNS(null, 'SpectrumName');
+  const sn = document.createElementNS(null, 'SpectrumName');
   sn.textContent = name;
   root.appendChild(sn);
 
   if (plot.calibration.enabled) {
-    let ec = document.createElementNS(null, 'EnergyCalibration');
+    const ec = document.createElementNS(null, 'EnergyCalibration');
     root.appendChild(ec);
 
-    let c = document.createElementNS(null, 'Coefficients');
-    let coeffs: number[] = [];
+    const c = document.createElementNS(null, 'Coefficients');
+    const coeffs: number[] = [];
     const coeffObj = plot.calibration.coeff;
 
     for (const index in coeffObj) {
@@ -970,13 +971,13 @@ function makeXMLSpectrum(type: DataType, name: string): Element {
     }
     const coeffsRev = coeffs.reverse();
     for (const val of coeffsRev) {
-      let coeff = document.createElementNS(null, 'Coefficient');
+      const coeff = document.createElementNS(null, 'Coefficient');
       coeff.textContent = val.toString();
       c.appendChild(coeff);
     }
     ec.appendChild(c);
 
-    let po = document.createElementNS(null, 'PolynomialOrder');
+    const po = document.createElementNS(null, 'PolynomialOrder');
     /*
     // Specifies the number of coefficients in the XML
     if (plot.calibration.coeff.c1 === 0) {
@@ -989,24 +990,24 @@ function makeXMLSpectrum(type: DataType, name: string): Element {
     ec.appendChild(po);
   }
 
-  let tpc = document.createElementNS(null, 'TotalPulseCount');
+  const tpc = document.createElementNS(null, 'TotalPulseCount');
   tpc.textContent = spectrumData.getTotalCounts(type).toString();
   root.appendChild(tpc);
 
-  let vpc = document.createElementNS(null, 'ValidPulseCount');
+  const vpc = document.createElementNS(null, 'ValidPulseCount');
   vpc.textContent = tpc.textContent;
   root.appendChild(vpc);
 
-  let mt = document.createElementNS(null, 'MeasurementTime');
+  const mt = document.createElementNS(null, 'MeasurementTime');
 
   mt.textContent = (Math.round(spectrumData[`${type}Time`]/1000)).toString();
   root.appendChild(mt)
 
-  let s = document.createElementNS(null, 'Spectrum');
+  const s = document.createElementNS(null, 'Spectrum');
   root.appendChild(s);
 
   for (const datapoint of spectrumData[type]) {
-    let d = document.createElementNS(null, 'DataPoint');
+    const d = document.createElementNS(null, 'DataPoint');
     d.textContent = datapoint.toString();
     s.appendChild(d);
   }
@@ -1024,7 +1025,7 @@ function downloadXML(): void {
   const spectrumName = getDateStringMin() + ' Energy Spectrum';
   const backgroundName = getDateStringMin() + ' Background Energy Spectrum';
 
-  let doc = document.implementation.createDocument(null, "ResultDataFile");
+  const doc = document.implementation.createDocument(null, "ResultDataFile");
 
   const pi = doc.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"');
   doc.insertBefore(pi, doc.firstChild);
@@ -1123,7 +1124,7 @@ function downloadXML(): void {
 
 
 function makeJSONSpectrum(type: DataType): NPESv1Spectrum {
-  let spec: NPESv1Spectrum = {
+  const spec: NPESv1Spectrum = {
     'numberOfChannels': spectrumData[type].length,
     'validPulseCount': spectrumData.getTotalCounts(type),
     'measurementTime': 0,
@@ -1132,7 +1133,7 @@ function makeJSONSpectrum(type: DataType): NPESv1Spectrum {
   spec.measurementTime = Math.round(spectrumData[`${type}Time`]/1000);
 
   if (plot.calibration.enabled) {
-    let calObj = {
+    const calObj = {
       'polynomialOrder': 0,
       'coefficients': <number[]>[]
     }
@@ -1150,7 +1151,7 @@ document.getElementById('npes-export-btn')!.onclick = () => downloadNPES();
 function downloadNPES(): void {
   const filename = `spectrum_${getDateString()}.json`;
 
-  let data: NPESv1 = {
+  const data: NPESv1 = {
     'schemaVersion': 'NPESv1',
     'deviceData': {
       'softwareName': 'Gamma MCA, ' + APP_VERSION,
@@ -1252,7 +1253,7 @@ document.getElementById('reload-isos-btn')!.onclick = () => loadIsotopes(true);
 
 let loadedIsos = false;
 
-async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope Energies JSON ONCE
+async function loadIsotopes(reload = false): Promise<boolean> { // Load Isotope Energies JSON ONCE
   if (loadedIsos && !reload) return true; // Isotopes already loaded
 
   const loadingElement = document.getElementById('iso-loading')!;
@@ -1283,7 +1284,7 @@ async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope 
       plot.clearAnnos(); // Delete all isotope lines
       plot.updatePlot(spectrumData);
 
-      let intKeys = Object.keys(json);
+      const intKeys = Object.keys(json);
       intKeys.sort((a, b) => parseFloat(a) - parseFloat(b)); // Sort Energies numerically
 
       let index = 0; // Index used to avoid HTML id duplicates
@@ -1357,7 +1358,7 @@ async function closestIso(value: number): Promise<void> {
   //}
 
   if (energy && name) {
-    let newIso: IsotopeList = {};
+    const newIso: IsotopeList = {};
     newIso[energy] = name;
 
     if (prevIso !== newIso) prevIso = newIso;
@@ -1739,7 +1740,7 @@ function selectSerialType(button: HTMLInputElement): void {
 function serialConnect(/*event: Event*/): void {
   listSerial();
   popupNotification('serial-connect');
-};
+}
 
 
 function serialDisconnect(event: Event): void {
@@ -1754,7 +1755,7 @@ function serialDisconnect(event: Event): void {
   listSerial();
 
   popupNotification('serial-disconnect');
-};
+}
 
 
 document.getElementById('serial-list-btn')!.onclick = () => listSerial();

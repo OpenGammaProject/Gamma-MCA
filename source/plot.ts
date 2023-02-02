@@ -163,7 +163,7 @@ export class SpectrumPlot {
     icon: (<any>window).Plotly.Icons['disk'],
     direction: 'up',
     click: (plotElement: any) => {
-      let newLayout = JSON.parse(JSON.stringify(plotElement.layout));
+      const newLayout = JSON.parse(JSON.stringify(plotElement.layout));
       newLayout.images[0].source = new URL('/assets/logo.svg', window.location.origin).href;
 
       const newAnno = {
@@ -220,13 +220,13 @@ export class SpectrumPlot {
   */
   constructor(divId: string) {
     this.plotDiv = document.getElementById(divId);
-    console.info('Plotly.js version: ' + (<any>window).Plotly.version);
+    //console.info('Plotly.js version: ' + (<any>window).Plotly.version);
   }
   /*
     Get An Array with Length == Data.length containing ascending numbers
   */
   private getXAxis(len: number): number[] {
-    let xArray: number[] = [];
+    const xArray: number[] = [];
     for(let i = 0; i < len; i++) {
       xArray.push(i);
     }
@@ -283,7 +283,7 @@ export class SpectrumPlot {
     Get the calibrated x-axis using the values in this.calibration
   */
   private getCalAxis(len: number): number[] {
-    let calArray: number[] = [];
+    const calArray: number[] = [];
 
     const a = this.calibration.coeff.c1;
     const k = this.calibration.coeff.c2;
@@ -299,7 +299,7 @@ export class SpectrumPlot {
     Get The Moving Average
   */
   private computeMovingAverage(target: number[], length = this.smaLength): number[] {
-    let newData: number[] = Array(target.length);
+    const newData: number[] = Array(target.length);
     const half = Math.round(length/2);
 
     for(let i = 0; i < newData.length; i++) { // Compute the central moving average
@@ -352,7 +352,7 @@ export class SpectrumPlot {
 
     const maxVal = Math.max(...shortData);
     const xAxisData: number[] = this.peakConfig.lastDataX;
-    let peakLines: number[] = [];
+    const peakLines: number[] = [];
 
     const shortLen = shortData.length;
 
@@ -485,14 +485,14 @@ export class SpectrumPlot {
     Gaussian correlation filter using the PRA algorithm
   */
   private gaussianCorrel(data: number[], sigma = 2): number[] {
-    let correlValues: number[] = [];
+    const correlValues: number[] = [];
 
     for (let index = 0; index < data.length; index++) {
       const std = Math.sqrt(index);
       const xMin = - Math.round(sigma * std);
       const xMax = Math.round(sigma * std);
 
-      let gaussValues: number[] = [];
+      const gaussValues: number[] = [];
       for (let k = xMin; k < xMax; k++) {
         gaussValues.push(Math.exp(-(k**2) / (2 * index)));
       }
@@ -550,7 +550,7 @@ export class SpectrumPlot {
           width: 2
         }
       },
-      text: <String[]>[],
+      text: <string[]>[],
       textposition: 'top',
     };
 
@@ -678,11 +678,11 @@ export class SpectrumPlot {
   private plotData(dataObj: SpectrumData, update: boolean): void {
     if (this.showCalChart) return; // Ignore this if the calibration chart is currently shown
 
-    let data: Trace[] = [];
+    const data: Trace[] = [];
     let maxXValue = 0;
 
     if (dataObj.data.length) {
-      let trace: Trace = {
+      const trace: Trace = {
         name: 'Net Spectrum',
         stackgroup: 'data', // Stack line charts on top of each other
 
@@ -761,7 +761,7 @@ export class SpectrumPlot {
     /*
       All The Layout Stuff
     */
-    let layout = {
+    const layout = {
       uirevision: 1,
       autosize: true, // Needed for resizing on update
       title: 'Energy Spectrum',
@@ -870,7 +870,7 @@ export class SpectrumPlot {
       layout.yaxis.ticksuffix = ' cps';
     }
 
-    let config = {
+    const config = {
       responsive: true,
       scrollZoom: false,
       displayModeBar: true,

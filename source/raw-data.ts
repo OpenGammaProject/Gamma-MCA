@@ -102,7 +102,7 @@ export class RawData {
   }
 
   private histConverter(dataArr: number[]): number[] {
-    let xArray: number[] = Array(this.adcChannels).fill(0);
+    const xArray: number[] = Array(this.adcChannels).fill(0);
 
     for(const element of dataArr) {
       xArray[element] += 1;
@@ -125,12 +125,12 @@ export class RawData {
   }
 
   xmlToArray(data: string): XMLImportData {
-    let coeff: CoeffObj = {
+    const coeff: CoeffObj = {
       c1: 0,
       c2: 0,
       c3: 0
     };
-    let meta: ImportDataMeta = {
+    const meta: ImportDataMeta = {
       name: '',
       location: '',
       time: '',
@@ -143,7 +143,7 @@ export class RawData {
     };
 
     try {
-      let xmlDoc = new DOMParser().parseFromString(data, 'text/xml');
+      const xmlDoc = new DOMParser().parseFromString(data, 'text/xml');
       const especTop = xmlDoc.getElementsByTagName('EnergySpectrum');
       let espectrum = <number[]>[];
       let bgspectrum = <number[]>[];
@@ -237,7 +237,7 @@ export class RawData {
       }
       */
       // Unfortunately needed for Typescript to not compile the js file :/
-      // @ts-ignore
+      // @ts-expect-error: Unreachable code error
       await import('./external/ZSchema-browser-min.js'); // Import ZSchema only when it's needed
 
       const validator = new (<any>window).ZSchema();
