@@ -1,15 +1,12 @@
 /*
 
-  File String in CSV, XML, TKA, ... format -> Array
+  Load and process many different file formats to get usable data.
 
   Gamma MCA: free, open-source web-MCA for gamma spectroscopy
   2022, NuclearPhoenix.- Phoenix1747
   https://nuclearphoenix.xyz
 
-  TODO: Rewrite CSV stuff, it's ugly af and also pretty confusing.
-
-  TODO: Split this into two classes XML, JSON with constructor
-  accepting the files and static class variables.
+  Do not touch my garbage. All the CSV-related stuff is ugly asf.
 
 */
 

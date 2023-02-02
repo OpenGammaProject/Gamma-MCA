@@ -34,7 +34,8 @@ export class SerialManager {
     async showConsole() {
         if (this.recording)
             return;
-        await this.port.open(SerialManager.serOptions);
+        if (!this.port.readable)
+            await this.port.open(SerialManager.serOptions);
         this.recording = true;
         this.onlyConsole = true;
         this.closed = this.readUntilClosed();
@@ -68,7 +69,8 @@ export class SerialManager {
     async startRecord(resume = false) {
         if (this.recording)
             return;
-        await this.port.open(SerialManager.serOptions);
+        if (!this.port.readable)
+            await this.port.open(SerialManager.serOptions);
         if (!resume) {
             this.flushData();
             this.clearBaseHist();

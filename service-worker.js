@@ -1,16 +1,10 @@
 /*
 
+  Manage fetch requests, return cached data and control offline behaviour.
+
   Gamma MCA: free, open-source web-MCA for gamma spectroscopy
   2022, NuclearPhoenix.- Phoenix1747
   https://nuclearphoenix.xyz
-
-  Service Worker for Progressive Web App!
-
-  ===============================
-
-  Possible Future Improvements:
-    - Somehow fetching and caching the hits tracker does not work:
-      URL = https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fspectrum.nuclearphoenix.xyz&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=true
 
 */
 const APP_VERSION = '2023-02-02';

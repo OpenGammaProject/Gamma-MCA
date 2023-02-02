@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /*
 
   Gamma MCA: free, open-source web-MCA for gamma spectroscopy
@@ -6,12 +7,12 @@
 
   ===============================
 
-  Long Term:
+  Long Term Todo:
     - Use Webpack to bundle everything
+    - Remove all any types
 
   Possible Future Improvements:
-    - (??) Add dead time correction for cps
-    - (??) Drag-and-droppable points for calibration chart
+    - (?) Add dead time correction for cps
     - (?) Add desktop notifications
     - (?) File System Access
     - (?) Dark Mode
@@ -24,10 +25,11 @@
     - (!) FWHM + stats for Gaussian (ROI?)
     - (!) Fix forbidden non-null assertions ESLint
     - (!) When only one spectrum in JSON/XML -> import to the selected file slot
-  
+
   Known Issue:
-    - Sometimes only half the actual cps are shown in histogram serial mode?!?!
-    - Gaussian Correlation Filtering still has pretty bad performance 
+    - Serial: Sometimes only half the actual cps are shown in histogram serial mode?!?!
+    - Plot: Gaussian Correlation Filtering still has pretty bad performance
+    - Service Worker: Somehow fetching and caching the hits tracker does not work (hits.seeyoufarm.com)
 
 */
 
@@ -446,25 +448,27 @@ function getFileData(file: File, background = false): void { // Gets called when
       (<HTMLInputElement>document.getElementById('sample-vol')).value = importData.sampleInfo?.volume?.toString() ?? '';
       (<HTMLInputElement>document.getElementById('add-notes')).value = importData.sampleInfo?.note ?? '';
 
-      if (importData.resultData.startTime) {
+      if (importData.resultData.startTime && importData.resultData.endTime) {
         startDate = new Date(importData.resultData.startTime);
-        endDate = new Date(importData.resultData.endTime!); // Always present if startTime is present --> validated NPESv1
+        endDate = new Date(importData.resultData.endTime);
       }
 
       const localKeys = <DataType[]>['data', 'background'];
-      const importKeys = ['energySpectrum', 'backgroundEnergySpectrum'];
+      const importKeys: ['energySpectrum', 'backgroundEnergySpectrum'] = ['energySpectrum', 'backgroundEnergySpectrum'];
 
       for (const i in localKeys) {
-        const newKey = <'energySpectrum' | 'backgroundEnergySpectrum'>importKeys[i];
-        if (newKey in importData.resultData) {
-          spectrumData[localKeys[i]] = importData.resultData[newKey]!.spectrum; // Always present if startTime is present --> validated NPESv1
-          if ('measurementTime' in importData.resultData[newKey]! && importData.resultData[newKey]!.measurementTime! > 0) { // Check if time and greater than zero
-            spectrumData[`${localKeys[i]}Time`] = importData.resultData[newKey]!.measurementTime!*1000;
-            spectrumData[`${localKeys[i]}Cps`] = spectrumData[localKeys[i]].map(val => val / importData.resultData[newKey]!.measurementTime!);
+        const newKey = importKeys[i];
+        const result = importData.resultData[newKey];
+        if (result) {
+          spectrumData[localKeys[i]] = result.spectrum; // Always present if startTime is present --> validated NPESv1
+          const time = result.measurementTime;
+          if (time && time > 0) { // Check if time and greater than zero
+            spectrumData[`${localKeys[i]}Time`] = time * 1000;
+            spectrumData[`${localKeys[i]}Cps`] = spectrumData[localKeys[i]].map(val => val / time);
           }
-          if ('energyCalibration' in importData.resultData[newKey]!) {
-            const coeffArray: number[] = importData.resultData[newKey]!.energyCalibration!.coefficients;
-            const numCoeff: number = importData.resultData[newKey]!.energyCalibration!.polynomialOrder;
+          if (result.energyCalibration) {
+            const coeffArray: number[] = result.energyCalibration.coefficients;
+            const numCoeff: number = result.energyCalibration.polynomialOrder;
 
             resetCal(); // Reset in case of old calibration
 
@@ -497,7 +501,7 @@ function getFileData(file: File, background = false): void { // Gets called when
     /*
       Error Msg Problem with RAW Stream selection?
     */
-    if (!(spectrumData.background.length === spectrumData.data.length || !spectrumData.data.length || !spectrumData.background.length)) {
+    if (spectrumData.background.length !== spectrumData.data.length && spectrumData.data.length && spectrumData.background.length) {
       popupNotification('data-error');
       removeFile(background ? 'background' : 'data'); // Remove file again
     }

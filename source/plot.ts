@@ -1,15 +1,10 @@
 /*
 
-  Plot data using Plotly JS
+  Plot spectra using Plotly JS and do some filtering + statistics.
 
   Gamma MCA: free, open-source web-MCA for gamma spectroscopy
   2022, NuclearPhoenix.- Phoenix1747
   https://nuclearphoenix.xyz
-
-  ===============================
-
-  TODO:
-  - Remove all any types
 
 */
 

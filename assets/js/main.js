@@ -285,7 +285,7 @@ function getFileData(file, background = false) {
             document.getElementById('sample-weight').value = importData.sampleInfo?.weight?.toString() ?? '';
             document.getElementById('sample-vol').value = importData.sampleInfo?.volume?.toString() ?? '';
             document.getElementById('add-notes').value = importData.sampleInfo?.note ?? '';
-            if (importData.resultData.startTime) {
+            if (importData.resultData.startTime && importData.resultData.endTime) {
                 startDate = new Date(importData.resultData.startTime);
                 endDate = new Date(importData.resultData.endTime);
             }
@@ -293,15 +293,17 @@ function getFileData(file, background = false) {
             const importKeys = ['energySpectrum', 'backgroundEnergySpectrum'];
             for (const i in localKeys) {
                 const newKey = importKeys[i];
-                if (newKey in importData.resultData) {
-                    spectrumData[localKeys[i]] = importData.resultData[newKey].spectrum;
-                    if ('measurementTime' in importData.resultData[newKey] && importData.resultData[newKey].measurementTime > 0) {
-                        spectrumData[`${localKeys[i]}Time`] = importData.resultData[newKey].measurementTime * 1000;
-                        spectrumData[`${localKeys[i]}Cps`] = spectrumData[localKeys[i]].map(val => val / importData.resultData[newKey].measurementTime);
+                const result = importData.resultData[newKey];
+                if (result) {
+                    spectrumData[localKeys[i]] = result.spectrum;
+                    const time = result.measurementTime;
+                    if (time && time > 0) {
+                        spectrumData[`${localKeys[i]}Time`] = time * 1000;
+                        spectrumData[`${localKeys[i]}Cps`] = spectrumData[localKeys[i]].map(val => val / time);
                     }
-                    if ('energyCalibration' in importData.resultData[newKey]) {
-                        const coeffArray = importData.resultData[newKey].energyCalibration.coefficients;
-                        const numCoeff = importData.resultData[newKey].energyCalibration.polynomialOrder;
+                    if (result.energyCalibration) {
+                        const coeffArray = result.energyCalibration.coefficients;
+                        const numCoeff = result.energyCalibration.polynomialOrder;
                         resetCal();
                         for (const index in coeffArray) {
                             plot.calibration.coeff[`c${numCoeff - parseInt(index) + 1}`] = coeffArray[index];
@@ -327,7 +329,7 @@ function getFileData(file, background = false) {
         }
         updateSpectrumCounts();
         updateSpectrumTime();
-        if (!(spectrumData.background.length === spectrumData.data.length || !spectrumData.data.length || !spectrumData.background.length)) {
+        if (spectrumData.background.length !== spectrumData.data.length && spectrumData.data.length && spectrumData.background.length) {
             popupNotification('data-error');
             removeFile(background ? 'background' : 'data');
         }
