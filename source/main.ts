@@ -20,6 +20,7 @@
 
     - (!) FWHM + stats for Gaussian (ROI?)
     - (!) Fix forbidden non-null assertions ESLint
+    - (!) When only one spectrum in JSON/XML -> import to the selected file slot
   
   Known Issue:
     - Sometimes only half the actual cps are shown in histogram serial mode?!?!
