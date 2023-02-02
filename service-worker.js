@@ -46,6 +46,7 @@ const OFFLINE_RESOURCES = ['/',
 
 self.addEventListener("install", event => { // First time install of a worker
   console.info('Installing service worker...');
+  console.info(`Installing Gamma MCA version ${APP_VERSION}...`);
 
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => async function() {
@@ -55,7 +56,7 @@ self.addEventListener("install", event => { // First time install of a worker
       }
       */
       cache.keys().then(keys => { // Delete the whole cache
-        keys.forEach(async function(request, index, array) {
+        keys.forEach(async function(request) {
           //console.info('Clearing cache!', request);
           await cache.delete(request);
         });
@@ -68,7 +69,7 @@ self.addEventListener("install", event => { // First time install of a worker
 });
 
 
-self.addEventListener("activate", event => { // New worker takes over
+self.addEventListener("activate", () => { // New worker takes over
   console.info('Activating service worker...');
   self.clients.claim(); // Allows an active service worker to set itself as the controller for all clients within its scope
 });

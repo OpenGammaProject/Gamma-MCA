@@ -132,6 +132,7 @@ export class SerialManager {
       try {
         this.reader = this.port.readable.getReader();
 
+        /*eslint-disable no-constant-condition*/
         while (true) {
           const {value, done} = await this.reader.read();
           if (value) this.addRaw(value); // value is a Uint8Array.
@@ -171,7 +172,7 @@ export class SerialManager {
 
     if (SerialManager.orderType === 'chron') { // CHRONOLOGICAL EVENTS
 
-      let stringArr = this.rawData.split(SerialManager.eolChar); //('\r\n');
+      const stringArr = this.rawData.split(SerialManager.eolChar); //('\r\n');
       stringArr.pop(); // Delete last entry to avoid counting unfinished transmissions
       stringArr.shift(); // Delete first entry. !FIX SERIAL COMMUNICATION ERRORS!
 
@@ -199,7 +200,7 @@ export class SerialManager {
 
     } else if (SerialManager.orderType === 'hist') { // HISTOGRAM DATA
 
-      let stringArr = this.rawData.split('\r\n');
+      const stringArr = this.rawData.split('\r\n');
 
       stringArr.pop(); // Delete last entry to avoid counting unfinished transmissions
       //stringArr.shift(); // Delete first entry. !FIX SERIAL COMMUNICATION ERRORS!
