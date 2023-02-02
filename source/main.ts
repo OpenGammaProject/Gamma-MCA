@@ -6,13 +6,16 @@
 
   ===============================
 
+  Long Term:
+    - Use Webpack to bundle everything
+
   Possible Future Improvements:
-    - (?) Hotkeys
-    - (?) Dark Mode
+    - (??) Add dead time correction for cps
+    - (??) Drag-and-droppable points for calibration chart
     - (?) Add desktop notifications
     - (?) File System Access
-    - (?) Add dead time correction for cps
-    - (?) Drag-and-droppable points for calibration chart
+    - (?) Dark Mode
+    - (?) Hotkeys
 
     - Sorting isotope list
     - Calibration n-polynomial regression
