@@ -241,16 +241,28 @@ function getFileData(file, background = false) {
                 document.getElementById('add-notes').value = meta.notes;
                 startDate = new Date(meta.startTime);
                 endDate = new Date(meta.endTime);
-                if (!espectrum && !bgspectrum)
+                if (espectrum?.length && bgspectrum?.length) {
+                    spectrumData.data = espectrum;
+                    spectrumData.background = bgspectrum;
+                    spectrumData.dataTime = meta.dataMt * 1000;
+                    spectrumData.backgroundTime = meta.backgroundMt * 1000;
+                    if (meta.dataMt)
+                        spectrumData.dataCps = spectrumData.data.map(val => val / meta.dataMt);
+                    if (meta.backgroundMt)
+                        spectrumData.backgroundCps = spectrumData.background.map(val => val / meta.backgroundMt);
+                }
+                else if (!espectrum?.length && !bgspectrum?.length) {
                     popupNotification('file-error');
-                spectrumData.data = espectrum;
-                spectrumData.background = bgspectrum;
-                spectrumData.dataTime = meta.dataMt * 1000;
-                spectrumData.backgroundTime = meta.backgroundMt * 1000;
-                if (meta.dataMt)
-                    spectrumData.dataCps = spectrumData.data.map(val => val / meta.dataMt);
-                if (meta.backgroundMt)
-                    spectrumData.backgroundCps = spectrumData.background.map(val => val / meta.backgroundMt);
+                }
+                else {
+                    const fileData = espectrum?.length ? espectrum : bgspectrum;
+                    const fileDataTime = (espectrum?.length ? meta.dataMt : meta.backgroundMt) * 1000;
+                    const fileDataType = background ? 'background' : 'data';
+                    spectrumData[fileDataType] = fileData;
+                    spectrumData[`${fileDataType}Time`] = fileDataTime;
+                    if (fileDataTime)
+                        spectrumData[`${fileDataType}Cps`] = spectrumData[fileDataType].map(val => val / fileDataTime * 1000);
+                }
                 const importedCount = Object.values(coeff).filter(value => value !== 0).length;
                 if (importedCount >= 2) {
                     resetCal();
@@ -285,38 +297,52 @@ function getFileData(file, background = false) {
             document.getElementById('sample-weight').value = importData.sampleInfo?.weight?.toString() ?? '';
             document.getElementById('sample-vol').value = importData.sampleInfo?.volume?.toString() ?? '';
             document.getElementById('add-notes').value = importData.sampleInfo?.note ?? '';
-            if (importData.resultData.startTime && importData.resultData.endTime) {
-                startDate = new Date(importData.resultData.startTime);
-                endDate = new Date(importData.resultData.endTime);
+            const resultData = importData.resultData;
+            if (resultData.startTime && resultData.endTime) {
+                startDate = new Date(resultData.startTime);
+                endDate = new Date(resultData.endTime);
             }
-            const localKeys = ['data', 'background'];
-            const importKeys = ['energySpectrum', 'backgroundEnergySpectrum'];
-            for (const i in localKeys) {
-                const newKey = importKeys[i];
-                const result = importData.resultData[newKey];
-                if (result) {
-                    spectrumData[localKeys[i]] = result.spectrum;
-                    const time = result.measurementTime;
-                    if (time && time > 0) {
-                        spectrumData[`${localKeys[i]}Time`] = time * 1000;
-                        spectrumData[`${localKeys[i]}Cps`] = spectrumData[localKeys[i]].map(val => val / time);
-                    }
-                    if (result.energyCalibration) {
-                        const coeffArray = result.energyCalibration.coefficients;
-                        const numCoeff = result.energyCalibration.polynomialOrder;
-                        resetCal();
-                        for (const index in coeffArray) {
-                            plot.calibration.coeff[`c${numCoeff - parseInt(index) + 1}`] = coeffArray[index];
-                        }
-                        plot.calibration.imported = true;
-                        displayCoeffs();
-                        const calSettings = document.getElementsByClassName('cal-setting');
-                        for (const element of calSettings) {
-                            element.disabled = true;
-                        }
-                        addImportLabel();
-                    }
+            const espectrum = resultData.energySpectrum;
+            const bgspectrum = resultData.backgroundEnergySpectrum;
+            if (espectrum && bgspectrum) {
+                spectrumData.data = espectrum.spectrum;
+                spectrumData.background = bgspectrum.spectrum;
+                const eMeasurementTime = espectrum.measurementTime;
+                if (eMeasurementTime) {
+                    spectrumData.dataTime = eMeasurementTime * 1000;
+                    spectrumData.dataCps = spectrumData.data.map(val => val / eMeasurementTime);
                 }
+                const bgMeasurementTime = bgspectrum.measurementTime;
+                if (bgMeasurementTime) {
+                    spectrumData.backgroundTime = bgMeasurementTime * 1000;
+                    spectrumData.backgroundCps = spectrumData.background.map(val => val / bgMeasurementTime);
+                }
+            }
+            else {
+                const dataObj = espectrum ?? bgspectrum;
+                const fileData = dataObj?.spectrum ?? [];
+                const fileDataTime = (dataObj?.measurementTime ?? 1) * 1000;
+                const fileDataType = background ? 'background' : 'data';
+                spectrumData[fileDataType] = fileData;
+                spectrumData[`${fileDataType}Time`] = fileDataTime;
+                if (fileDataTime)
+                    spectrumData[`${fileDataType}Cps`] = spectrumData[fileDataType].map(val => val / fileDataTime * 1000);
+            }
+            const calDataObj = (espectrum ?? bgspectrum)?.energyCalibration;
+            if (calDataObj) {
+                const coeffArray = calDataObj.coefficients;
+                const numCoeff = calDataObj.polynomialOrder;
+                resetCal();
+                for (const index in coeffArray) {
+                    plot.calibration.coeff[`c${numCoeff - parseInt(index) + 1}`] = coeffArray[index];
+                }
+                plot.calibration.imported = true;
+                displayCoeffs();
+                const calSettings = document.getElementsByClassName('cal-setting');
+                for (const element of calSettings) {
+                    element.disabled = true;
+                }
+                addImportLabel();
             }
         }
         else if (background) {

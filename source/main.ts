@@ -23,8 +23,7 @@
     - Custom Line when left-clicking into plot. Rightclick to delete.
 
     - (!) FWHM + stats for Gaussian (ROI?)
-    - (!) Fix forbidden non-null assertions ESLint
-    - (!) When only one spectrum in JSON/XML -> import to the selected file slot
+    - (!) Remove file, also remove measurement time
 
   Known Issue:
     - Serial: Sometimes only half the actual cps are shown in histogram serial mode?!?!
@@ -374,7 +373,6 @@ function getFileData(file: File, background = false): void { // Gets called when
     const result = (<string>reader.result).trim(); // A bit unclean for typescript, I'm sorry
 
     if (fileEnding.toLowerCase() === 'xml') {
-      //const time1 = performance.now();
       if (window.DOMParser) {
         const {espectrum, bgspectrum, coeff, meta} = raw.xmlToArray(result);
 
@@ -395,15 +393,27 @@ function getFileData(file: File, background = false): void { // Gets called when
         startDate = new Date(meta.startTime);
         endDate = new Date(meta.endTime);
 
-        if (!espectrum && !bgspectrum) popupNotification('file-error');
+        if (espectrum?.length && bgspectrum?.length) { // Both files ok
+          spectrumData.data = espectrum;
+          spectrumData.background = bgspectrum;
+          spectrumData.dataTime = meta.dataMt*1000;
+          spectrumData.backgroundTime = meta.backgroundMt*1000;
+        
+          if (meta.dataMt) spectrumData.dataCps = spectrumData.data.map(val => val / meta.dataMt);
+          if (meta.backgroundMt) spectrumData.backgroundCps = spectrumData.background.map(val => val / meta.backgroundMt);
 
-        spectrumData.data = espectrum;
-        spectrumData.background = bgspectrum;
-        spectrumData.dataTime = meta.dataMt*1000;
-        spectrumData.backgroundTime = meta.backgroundMt*1000;
+        } else if (!espectrum?.length && !bgspectrum?.length) { // No spectrum
+          popupNotification('file-error');
+        } else { // Only one spectrum
+          const fileData = espectrum?.length ? espectrum : bgspectrum;
+          const fileDataTime = (espectrum?.length ? meta.dataMt : meta.backgroundMt)*1000;
+          const fileDataType = background ? 'background' : 'data';
 
-        if (meta.dataMt) spectrumData.dataCps = spectrumData.data.map(val => val / meta.dataMt);
-        if (meta.backgroundMt) spectrumData.backgroundCps = spectrumData.background.map(val => val / meta.backgroundMt);
+          spectrumData[fileDataType] = fileData;
+          spectrumData[`${fileDataType}Time`] = fileDataTime;
+          
+          if (fileDataTime) spectrumData[`${fileDataType}Cps`] = spectrumData[fileDataType].map(val => val / fileDataTime * 1000);
+        }
 
         const importedCount = Object.values(coeff).filter(value => value !== 0).length;
 
@@ -423,9 +433,7 @@ function getFileData(file: File, background = false): void { // Gets called when
       } else {
         console.error('No DOM parser in this browser!');
       }
-      //console.log(performance.now() - time1);
     } else if (fileEnding.toLowerCase() === 'json') { // THIS SECTION MAKES EVERYTHING ASYNC!!!
-      //const time1 = performance.now();
       const importData = await raw.jsonToObject(result);
 
       if (!importData) { // Data does not validate the schema
@@ -448,45 +456,61 @@ function getFileData(file: File, background = false): void { // Gets called when
       (<HTMLInputElement>document.getElementById('sample-vol')).value = importData.sampleInfo?.volume?.toString() ?? '';
       (<HTMLInputElement>document.getElementById('add-notes')).value = importData.sampleInfo?.note ?? '';
 
-      if (importData.resultData.startTime && importData.resultData.endTime) {
-        startDate = new Date(importData.resultData.startTime);
-        endDate = new Date(importData.resultData.endTime);
+      const resultData = importData.resultData;
+
+      if (resultData.startTime && resultData.endTime) {
+        startDate = new Date(resultData.startTime);
+        endDate = new Date(resultData.endTime);
       }
 
-      const localKeys = <DataType[]>['data', 'background'];
-      const importKeys: ['energySpectrum', 'backgroundEnergySpectrum'] = ['energySpectrum', 'backgroundEnergySpectrum'];
+      const espectrum = resultData.energySpectrum;
+      const bgspectrum = resultData.backgroundEnergySpectrum;
+      if (espectrum && bgspectrum) { // Both files ok
+        spectrumData.data = espectrum.spectrum;
+        spectrumData.background = bgspectrum.spectrum;
 
-      for (const i in localKeys) {
-        const newKey = importKeys[i];
-        const result = importData.resultData[newKey];
-        if (result) {
-          spectrumData[localKeys[i]] = result.spectrum; // Always present if startTime is present --> validated NPESv1
-          const time = result.measurementTime;
-          if (time && time > 0) { // Check if time and greater than zero
-            spectrumData[`${localKeys[i]}Time`] = time * 1000;
-            spectrumData[`${localKeys[i]}Cps`] = spectrumData[localKeys[i]].map(val => val / time);
-          }
-          if (result.energyCalibration) {
-            const coeffArray: number[] = result.energyCalibration.coefficients;
-            const numCoeff: number = result.energyCalibration.polynomialOrder;
-
-            resetCal(); // Reset in case of old calibration
-
-            for (const index in coeffArray) {
-              plot.calibration.coeff[`c${numCoeff-parseInt(index)+1}`] = coeffArray[index];
-            }
-            plot.calibration.imported = true;
-            displayCoeffs();
-
-            const calSettings = document.getElementsByClassName('cal-setting');
-            for (const element of calSettings) {
-              (<HTMLInputElement>element).disabled = true;
-            }
-            addImportLabel();
-          }
+        const eMeasurementTime = espectrum.measurementTime;
+        if (eMeasurementTime) {
+          spectrumData.dataTime = eMeasurementTime * 1000;
+          spectrumData.dataCps = spectrumData.data.map(val => val / eMeasurementTime);
         }
+        const bgMeasurementTime = bgspectrum.measurementTime;
+        if (bgMeasurementTime) {
+          spectrumData.backgroundTime = bgMeasurementTime * 1000;
+          spectrumData.backgroundCps = spectrumData.background.map(val => val / bgMeasurementTime);
+        }
+      } else { // Only one spectrum
+        const dataObj = espectrum ?? bgspectrum;
+        const fileData = dataObj?.spectrum ?? [];
+        const fileDataTime = (dataObj?.measurementTime ?? 1) * 1000;
+        const fileDataType = background ? 'background' : 'data';
+
+        spectrumData[fileDataType] = fileData;
+        spectrumData[`${fileDataType}Time`] = fileDataTime;
+        
+        if (fileDataTime) spectrumData[`${fileDataType}Cps`] = spectrumData[fileDataType].map(val => val / fileDataTime * 1000);
       }
-      //console.log(performance.now() - time1);
+
+      const calDataObj = (espectrum ?? bgspectrum)?.energyCalibration; // Grab calibration preferably from energy spectrum
+
+      if (calDataObj) {
+        const coeffArray: number[] = calDataObj.coefficients;
+        const numCoeff: number = calDataObj.polynomialOrder;
+
+        resetCal(); // Reset in case of old calibration
+
+        for (const index in coeffArray) {
+          plot.calibration.coeff[`c${numCoeff-parseInt(index)+1}`] = coeffArray[index];
+        }
+        plot.calibration.imported = true;
+        displayCoeffs();
+
+        const calSettings = document.getElementsByClassName('cal-setting');
+        for (const element of calSettings) {
+          (<HTMLInputElement>element).disabled = true;
+        }
+        addImportLabel();
+      }
     } else if (background) {
       spectrumData.backgroundTime = 1000;
       spectrumData.background = raw.csvToArray(result);
