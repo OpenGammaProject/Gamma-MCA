@@ -1464,10 +1464,7 @@ function loadSettingsDefault(): void {
   (<HTMLInputElement>document.getElementById('custom-ser-refresh')).value = (refreshRate / 1000).toString(); // convert ms to s
   (<HTMLInputElement>document.getElementById('custom-ser-buffer')).value = SerialManager.maxSize.toString();
   (<HTMLInputElement>document.getElementById('custom-ser-adc')).value = SerialManager.adcChannels.toString();
-  const autoStop = <HTMLInputElement>document.getElementById('ser-limit');
-  autoStop.value = (maxRecTime / 1000).toString(); // convert ms to s
-  autoStop.disabled = !maxRecTimeEnabled;
-  (<HTMLInputElement>document.getElementById('ser-limit-btn')).disabled = !maxRecTimeEnabled;
+  (<HTMLInputElement>document.getElementById('ser-limit')).value = (maxRecTime / 1000).toString(); // convert ms to s
   (<HTMLInputElement>document.getElementById('toggle-time-limit')).checked = maxRecTimeEnabled;
   (<HTMLInputElement>document.getElementById('iso-hover-prox')).value = maxDist.toString();
   (<HTMLInputElement>document.getElementById('custom-baud')).value = SerialManager.serOptions.baudRate.toString();
@@ -1616,9 +1613,6 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
 
     case 'timeLimitBool':
       boolVal = (<HTMLInputElement>element).checked;
-      (<HTMLInputElement>document.getElementById('ser-limit')).disabled = !boolVal;
-      (<HTMLButtonElement>document.getElementById('ser-limit-btn')).disabled = !boolVal;
-
       maxRecTimeEnabled = boolVal;
 
       saveJSON(name, boolVal);

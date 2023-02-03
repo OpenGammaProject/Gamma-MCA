@@ -1046,10 +1046,7 @@ function loadSettingsDefault() {
     document.getElementById('custom-ser-refresh').value = (refreshRate / 1000).toString();
     document.getElementById('custom-ser-buffer').value = SerialManager.maxSize.toString();
     document.getElementById('custom-ser-adc').value = SerialManager.adcChannels.toString();
-    const autoStop = document.getElementById('ser-limit');
-    autoStop.value = (maxRecTime / 1000).toString();
-    autoStop.disabled = !maxRecTimeEnabled;
-    document.getElementById('ser-limit-btn').disabled = !maxRecTimeEnabled;
+    document.getElementById('ser-limit').value = (maxRecTime / 1000).toString();
     document.getElementById('toggle-time-limit').checked = maxRecTimeEnabled;
     document.getElementById('iso-hover-prox').value = maxDist.toString();
     document.getElementById('custom-baud').value = SerialManager.serOptions.baudRate.toString();
@@ -1180,8 +1177,6 @@ function changeSettings(name, element) {
             break;
         case 'timeLimitBool':
             boolVal = element.checked;
-            document.getElementById('ser-limit').disabled = !boolVal;
-            document.getElementById('ser-limit-btn').disabled = !boolVal;
             maxRecTimeEnabled = boolVal;
             saveJSON(name, boolVal);
             break;
