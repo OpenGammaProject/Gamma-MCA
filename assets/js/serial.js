@@ -34,7 +34,8 @@ export class SerialManager {
     async showConsole() {
         if (this.recording)
             return;
-        await this.port.open(SerialManager.serOptions);
+        if (!this.port.readable)
+            await this.port.open(SerialManager.serOptions);
         this.recording = true;
         this.onlyConsole = true;
         this.closed = this.readUntilClosed();
@@ -68,7 +69,8 @@ export class SerialManager {
     async startRecord(resume = false) {
         if (this.recording)
             return;
-        await this.port.open(SerialManager.serOptions);
+        if (!this.port.readable)
+            await this.port.open(SerialManager.serOptions);
         if (!resume) {
             this.flushData();
             this.clearBaseHist();
@@ -113,7 +115,7 @@ export class SerialManager {
         }
         this.rawData += string;
         if (SerialManager.orderType === 'chron') {
-            let stringArr = this.rawData.split(SerialManager.eolChar);
+            const stringArr = this.rawData.split(SerialManager.eolChar);
             stringArr.pop();
             stringArr.shift();
             if (stringArr.length <= 1) {
@@ -140,7 +142,7 @@ export class SerialManager {
             }
         }
         else if (SerialManager.orderType === 'hist') {
-            let stringArr = this.rawData.split('\r\n');
+            const stringArr = this.rawData.split('\r\n');
             stringArr.pop();
             if (!stringArr.length) {
                 if (this.rawData.length > this.maxHistLength)

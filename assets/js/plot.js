@@ -63,7 +63,7 @@ export class SpectrumPlot {
         icon: window.Plotly.Icons['disk'],
         direction: 'up',
         click: (plotElement) => {
-            let newLayout = JSON.parse(JSON.stringify(plotElement.layout));
+            const newLayout = JSON.parse(JSON.stringify(plotElement.layout));
             newLayout.images[0].source = new URL('/assets/logo.svg', window.location.origin).href;
             const newAnno = {
                 x: 1,
@@ -111,10 +111,9 @@ export class SpectrumPlot {
     };
     constructor(divId) {
         this.plotDiv = document.getElementById(divId);
-        console.info('Plotly.js version: ' + window.Plotly.version);
     }
     getXAxis(len) {
-        let xArray = [];
+        const xArray = [];
         for (let i = 0; i < len; i++) {
             xArray.push(i);
         }
@@ -158,7 +157,7 @@ export class SpectrumPlot {
         }
     }
     getCalAxis(len) {
-        let calArray = [];
+        const calArray = [];
         const a = this.calibration.coeff.c1;
         const k = this.calibration.coeff.c2;
         const d = this.calibration.coeff.c3;
@@ -168,7 +167,7 @@ export class SpectrumPlot {
         return calArray;
     }
     computeMovingAverage(target, length = this.smaLength) {
-        let newData = Array(target.length);
+        const newData = Array(target.length);
         const half = Math.round(length / 2);
         for (let i = 0; i < newData.length; i++) {
             if (i >= half && i <= target.length - half - 1) {
@@ -212,7 +211,7 @@ export class SpectrumPlot {
         const longData = this.computeMovingAverage(this.peakConfig.lastDataY, this.peakConfig.lag);
         const maxVal = Math.max(...shortData);
         const xAxisData = this.peakConfig.lastDataX;
-        let peakLines = [];
+        const peakLines = [];
         const shortLen = shortData.length;
         for (let i = 0; i < shortLen; i++) {
             if (shortData[i] - longData[i] > this.peakConfig.thres * maxVal)
@@ -321,12 +320,12 @@ export class SpectrumPlot {
         this.showCalChart ? this.plotCalibration(dataObj, true) : this.plotData(dataObj, true);
     }
     gaussianCorrel(data, sigma = 2) {
-        let correlValues = [];
+        const correlValues = [];
         for (let index = 0; index < data.length; index++) {
             const std = Math.sqrt(index);
             const xMin = -Math.round(sigma * std);
             const xMax = Math.round(sigma * std);
-            let gaussValues = [];
+            const gaussValues = [];
             for (let k = xMin; k < xMax; k++) {
                 gaussValues.push(Math.exp(-(k ** 2) / (2 * index)));
             }
@@ -484,10 +483,10 @@ export class SpectrumPlot {
     plotData(dataObj, update) {
         if (this.showCalChart)
             return;
-        let data = [];
+        const data = [];
         let maxXValue = 0;
         if (dataObj.data.length) {
-            let trace = {
+            const trace = {
                 name: 'Net Spectrum',
                 stackgroup: 'data',
                 x: this.getXAxis(dataObj.data.length),
@@ -502,10 +501,10 @@ export class SpectrumPlot {
                 }
             };
             maxXValue = trace.x.at(-1) ?? 1;
+            if (this.cps)
+                trace.y = dataObj.dataCps;
             data.push(trace);
         }
-        if (this.cps)
-            data[0].y = dataObj.dataCps;
         if (dataObj.background.length) {
             const bgTrace = {
                 name: 'Background',
@@ -543,7 +542,7 @@ export class SpectrumPlot {
         }
         if (this.xAxis === 'log')
             maxXValue = Math.log10(maxXValue);
-        let layout = {
+        const layout = {
             uirevision: 1,
             autosize: true,
             title: 'Energy Spectrum',
@@ -596,7 +595,7 @@ export class SpectrumPlot {
             plot_bgcolor: 'white',
             paper_bgcolor: '#f8f9fa',
             margin: {
-                l: 80,
+                l: 40,
                 r: 40,
                 b: 60,
                 t: 60,
@@ -632,7 +631,7 @@ export class SpectrumPlot {
             layout.yaxis.title = 'Counts Per Second [Hz]';
             layout.yaxis.ticksuffix = ' cps';
         }
-        let config = {
+        const config = {
             responsive: true,
             scrollZoom: false,
             displayModeBar: true,

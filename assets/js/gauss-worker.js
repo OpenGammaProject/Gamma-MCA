@@ -2,12 +2,12 @@
 onmessage = e => {
     const data = e.data.data;
     const sigma = e.data.sigma;
-    let correlValues = [];
+    const correlValues = [];
     for (let index = 0; index < data.length; index++) {
         const std = Math.sqrt(index);
         const xMin = -Math.round(sigma * std);
         const xMax = Math.round(sigma * std);
-        let gaussValues = [];
+        const gaussValues = [];
         for (let k = xMin; k < xMax; k++) {
             gaussValues.push(Math.exp(-(k ** 2) / (2 * index)));
         }

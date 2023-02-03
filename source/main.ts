@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /*
 
   Gamma MCA: free, open-source web-MCA for gamma spectroscopy
@@ -6,23 +7,27 @@
 
   ===============================
 
+  Long Term Todo:
+    - Use Webpack to bundle everything
+    - Remove all any types
+
   Possible Future Improvements:
-    - (?) Hotkeys
-    - (?) Dark Mode
+    - (?) Add dead time correction for cps
     - (?) Add desktop notifications
     - (?) File System Access
-    - (?) Add dead time correction for cps
-    - (?) Drag-and-droppable points for calibration chart
+    - (?) Dark Mode
+    - (?) Hotkeys
 
     - Sorting isotope list
     - Calibration n-polynomial regression
     - Custom Line when left-clicking into plot. Rightclick to delete.
 
     - (!) FWHM + stats for Gaussian (ROI?)
-  
+
   Known Issue:
-    - Sometimes only half the actual cps are shown in histogram serial mode?!?!
-    - Gaussian Correlation Filtering still has pretty bad performance 
+    - Serial: Sometimes only half the actual cps are shown in histogram serial mode?!?!
+    - Plot: Gaussian Correlation Filtering still has pretty bad performance
+    - Service Worker: Somehow fetching and caching the hits tracker does not work (hits.seeyoufarm.com)
 
 */
 
@@ -72,15 +77,15 @@ export class SpectrumData { // Will hold the measurement data globally.
 }
 
 // Holds all the classes
-let spectrumData = new SpectrumData();
-let plot = new SpectrumPlot('plot');
-let raw = new RawData(1); // 2=raw, 1=hist
+const spectrumData = new SpectrumData();
+const plot = new SpectrumPlot('plot');
+const raw = new RawData(1); // 2=raw, 1=hist
 
 // Other "global" vars
-let calClick = { a: false, b: false, c: false };
-let oldCalVals = { a: '', b: '', c: ''};
+const calClick = { a: false, b: false, c: false };
+const oldCalVals = { a: '', b: '', c: ''};
 
-let portsAvail: PortList = {};
+const portsAvail: PortList = {};
 let refreshRate = 1000; // Delay in ms between serial plot updates
 let maxRecTimeEnabled = false;
 let maxRecTime = 1800000; // 30 minutes
@@ -90,11 +95,11 @@ const CONSOLE_REFRESH = 200; // Milliseconds
 let cpsValues: number[] = [];
 
 let isoListURL = 'assets/isotopes_energies_min.json';
-let isoList: IsotopeList = {};
+const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2023-02-02';
+const APP_VERSION = '2023-02-03';
 let localStorageAvailable = false;
 let firstInstall = false;
 
@@ -150,7 +155,7 @@ document.body.onload = async function(): Promise<void> {
 
   if ('launchQueue' in window && 'LaunchParams' in window) { // File Handling API
     (<any>window).launchQueue.setConsumer(
-      async (launchParams: { files: any[] }) => {
+      async (launchParams: { files: FileSystemFileHandle[] }) => {
         if (!launchParams.files.length) return;
 
         const file: File = await launchParams.files[0].getFile();
@@ -357,7 +362,7 @@ function importFile(input: HTMLInputElement, background = false): void {
 
 
 function getFileData(file: File, background = false): void { // Gets called when a file has been selected.
-  let reader = new FileReader();
+  const reader = new FileReader();
 
   const fileEnding = file.name.split('.')[1];
 
@@ -367,7 +372,6 @@ function getFileData(file: File, background = false): void { // Gets called when
     const result = (<string>reader.result).trim(); // A bit unclean for typescript, I'm sorry
 
     if (fileEnding.toLowerCase() === 'xml') {
-      //const time1 = performance.now();
       if (window.DOMParser) {
         const {espectrum, bgspectrum, coeff, meta} = raw.xmlToArray(result);
 
@@ -388,15 +392,27 @@ function getFileData(file: File, background = false): void { // Gets called when
         startDate = new Date(meta.startTime);
         endDate = new Date(meta.endTime);
 
-        if (!espectrum && !bgspectrum) popupNotification('file-error');
+        if (espectrum?.length && bgspectrum?.length) { // Both files ok
+          spectrumData.data = espectrum;
+          spectrumData.background = bgspectrum;
+          spectrumData.dataTime = meta.dataMt*1000;
+          spectrumData.backgroundTime = meta.backgroundMt*1000;
+        
+          if (meta.dataMt) spectrumData.dataCps = spectrumData.data.map(val => val / meta.dataMt);
+          if (meta.backgroundMt) spectrumData.backgroundCps = spectrumData.background.map(val => val / meta.backgroundMt);
 
-        spectrumData.data = espectrum;
-        spectrumData.background = bgspectrum;
-        spectrumData.dataTime = meta.dataMt*1000;
-        spectrumData.backgroundTime = meta.backgroundMt*1000;
+        } else if (!espectrum?.length && !bgspectrum?.length) { // No spectrum
+          popupNotification('file-error');
+        } else { // Only one spectrum
+          const fileData = espectrum?.length ? espectrum : bgspectrum;
+          const fileDataTime = (espectrum?.length ? meta.dataMt : meta.backgroundMt)*1000;
+          const fileDataType = background ? 'background' : 'data';
 
-        if (meta.dataMt) spectrumData.dataCps = spectrumData.data.map(val => val / meta.dataMt);
-        if (meta.backgroundMt) spectrumData.backgroundCps = spectrumData.background.map(val => val / meta.backgroundMt);
+          spectrumData[fileDataType] = fileData;
+          spectrumData[`${fileDataType}Time`] = fileDataTime;
+          
+          if (fileDataTime) spectrumData[`${fileDataType}Cps`] = spectrumData[fileDataType].map(val => val / fileDataTime * 1000);
+        }
 
         const importedCount = Object.values(coeff).filter(value => value !== 0).length;
 
@@ -416,9 +432,7 @@ function getFileData(file: File, background = false): void { // Gets called when
       } else {
         console.error('No DOM parser in this browser!');
       }
-      //console.log(performance.now() - time1);
     } else if (fileEnding.toLowerCase() === 'json') { // THIS SECTION MAKES EVERYTHING ASYNC!!!
-      //const time1 = performance.now();
       const importData = await raw.jsonToObject(result);
 
       if (!importData) { // Data does not validate the schema
@@ -441,43 +455,61 @@ function getFileData(file: File, background = false): void { // Gets called when
       (<HTMLInputElement>document.getElementById('sample-vol')).value = importData.sampleInfo?.volume?.toString() ?? '';
       (<HTMLInputElement>document.getElementById('add-notes')).value = importData.sampleInfo?.note ?? '';
 
-      if (importData.resultData.startTime) {
-        startDate = new Date(importData.resultData.startTime);
-        endDate = new Date(importData.resultData.endTime!); // Always present if startTime is present --> validated NPESv1
+      const resultData = importData.resultData;
+
+      if (resultData.startTime && resultData.endTime) {
+        startDate = new Date(resultData.startTime);
+        endDate = new Date(resultData.endTime);
       }
 
-      const localKeys = <DataType[]>['data', 'background'];
-      const importKeys = ['energySpectrum', 'backgroundEnergySpectrum'];
+      const espectrum = resultData.energySpectrum;
+      const bgspectrum = resultData.backgroundEnergySpectrum;
+      if (espectrum && bgspectrum) { // Both files ok
+        spectrumData.data = espectrum.spectrum;
+        spectrumData.background = bgspectrum.spectrum;
 
-      for (const i in localKeys) {
-        const newKey = <'energySpectrum' | 'backgroundEnergySpectrum'>importKeys[i];
-        if (newKey in importData.resultData) {
-          spectrumData[localKeys[i]] = importData.resultData[newKey]!.spectrum; // Always present if startTime is present --> validated NPESv1
-          if ('measurementTime' in importData.resultData[newKey]! && importData.resultData[newKey]!.measurementTime! > 0) { // Check if time and greater than zero
-            spectrumData[`${localKeys[i]}Time`] = importData.resultData[newKey]!.measurementTime!*1000;
-            spectrumData[`${localKeys[i]}Cps`] = spectrumData[localKeys[i]].map(val => val / importData.resultData[newKey]!.measurementTime!);
-          }
-          if ('energyCalibration' in importData.resultData[newKey]!) {
-            const coeffArray: number[] = importData.resultData[newKey]!.energyCalibration!.coefficients;
-            const numCoeff: number = importData.resultData[newKey]!.energyCalibration!.polynomialOrder;
-
-            resetCal(); // Reset in case of old calibration
-
-            for (const index in coeffArray) {
-              plot.calibration.coeff[`c${numCoeff-parseInt(index)+1}`] = coeffArray[index];
-            }
-            plot.calibration.imported = true;
-            displayCoeffs();
-
-            const calSettings = document.getElementsByClassName('cal-setting');
-            for (const element of calSettings) {
-              (<HTMLInputElement>element).disabled = true;
-            }
-            addImportLabel();
-          }
+        const eMeasurementTime = espectrum.measurementTime;
+        if (eMeasurementTime) {
+          spectrumData.dataTime = eMeasurementTime * 1000;
+          spectrumData.dataCps = spectrumData.data.map(val => val / eMeasurementTime);
         }
+        const bgMeasurementTime = bgspectrum.measurementTime;
+        if (bgMeasurementTime) {
+          spectrumData.backgroundTime = bgMeasurementTime * 1000;
+          spectrumData.backgroundCps = spectrumData.background.map(val => val / bgMeasurementTime);
+        }
+      } else { // Only one spectrum
+        const dataObj = espectrum ?? bgspectrum;
+        const fileData = dataObj?.spectrum ?? [];
+        const fileDataTime = (dataObj?.measurementTime ?? 1) * 1000;
+        const fileDataType = background ? 'background' : 'data';
+
+        spectrumData[fileDataType] = fileData;
+        spectrumData[`${fileDataType}Time`] = fileDataTime;
+        
+        if (fileDataTime) spectrumData[`${fileDataType}Cps`] = spectrumData[fileDataType].map(val => val / fileDataTime * 1000);
       }
-      //console.log(performance.now() - time1);
+
+      const calDataObj = (espectrum ?? bgspectrum)?.energyCalibration; // Grab calibration preferably from energy spectrum
+
+      if (calDataObj) {
+        const coeffArray: number[] = calDataObj.coefficients;
+        const numCoeff: number = calDataObj.polynomialOrder;
+
+        resetCal(); // Reset in case of old calibration
+
+        for (const index in coeffArray) {
+          plot.calibration.coeff[`c${numCoeff-parseInt(index)+1}`] = coeffArray[index];
+        }
+        plot.calibration.imported = true;
+        displayCoeffs();
+
+        const calSettings = document.getElementsByClassName('cal-setting');
+        for (const element of calSettings) {
+          (<HTMLInputElement>element).disabled = true;
+        }
+        addImportLabel();
+      }
     } else if (background) {
       spectrumData.backgroundTime = 1000;
       spectrumData.background = raw.csvToArray(result);
@@ -492,7 +524,7 @@ function getFileData(file: File, background = false): void { // Gets called when
     /*
       Error Msg Problem with RAW Stream selection?
     */
-    if (!(spectrumData.background.length === spectrumData.data.length || !spectrumData.data.length || !spectrumData.background.length)) {
+    if (spectrumData.background.length !== spectrumData.data.length && spectrumData.data.length && spectrumData.background.length) {
       popupNotification('data-error');
       removeFile(background ? 'background' : 'data'); // Remove file again
     }
@@ -525,8 +557,8 @@ function removeFile(id: DataType): void {
   spectrumData[`${id}Time`] = 0;
   (<HTMLInputElement>document.getElementById(id)).value = '';
 
-  document.getElementById('total-spec-cts')!.innerText = spectrumData.getTotalCounts('data').toString();
-  document.getElementById('total-bg-cts')!.innerText = spectrumData.getTotalCounts('background').toString();
+  updateSpectrumCounts();
+  updateSpectrumTime();
 
   document.getElementById(id + '-icon')!.classList.add('d-none');
 
@@ -561,7 +593,7 @@ function updateSpectrumTime() {
 function bindPlotEvents(): void {
   if (!plot.plotDiv) return;
 
-  const myPlot = <any>plot.plotDiv;
+  const myPlot = <any>plot.plotDiv; 
   myPlot.on('plotly_hover', hoverEvent);
   myPlot.on('plotly_unhover', unHover);
   myPlot.on('plotly_click', clickEvent);
@@ -604,7 +636,7 @@ document.getElementById('xAxis')!.onclick = event => changeAxis(<HTMLButtonEleme
 document.getElementById('yAxis')!.onclick = event => changeAxis(<HTMLButtonElement>event.target);
 
 function changeAxis(button: HTMLButtonElement): void {
-  let id = button.id as 'xAxis' | 'yAxis';
+  const id = button.id as 'xAxis' | 'yAxis';
   if (plot[id] === 'linear') {
     plot[id] = 'log';
     button.innerText = 'Log';
@@ -707,14 +739,14 @@ function toggleCal(enabled: boolean): void {
   if (enabled) {
     if (!plot.calibration.imported) {
 
-      let readoutArray = [
+      const readoutArray = [
         [(<HTMLInputElement>document.getElementById('adc-a')).value, (<HTMLInputElement>document.getElementById('cal-a')).value],
         [(<HTMLInputElement>document.getElementById('adc-b')).value, (<HTMLInputElement>document.getElementById('cal-b')).value],
         [(<HTMLInputElement>document.getElementById('adc-c')).value, (<HTMLInputElement>document.getElementById('cal-c')).value]
       ];
 
       let invalid = 0;
-      let validArray: number[][] = [];
+      const validArray: number[][] = [];
 
       for (const pair of readoutArray) {
         const float1 = parseFloat(pair[0]);
@@ -831,7 +863,7 @@ function importCalButton(input: HTMLInputElement): void {
 
 
 function importCal(file: File): void {
-  let reader = new FileReader();
+  const reader = new FileReader();
 
   reader.readAsText(file);
 
@@ -840,7 +872,7 @@ function importCal(file: File): void {
       const result = (<string>reader.result).trim(); // A bit unclean for typescript, I'm sorry
       const obj = JSON.parse(result);
 
-      let readoutArray = [
+      const readoutArray = [
         <HTMLInputElement>document.getElementById('adc-a'),
         <HTMLInputElement>document.getElementById('cal-a'),
         <HTMLInputElement>document.getElementById('adc-b'),
@@ -948,21 +980,21 @@ function downloadCal(): void {
 
 function makeXMLSpectrum(type: DataType, name: string): Element {
   const root = document.createElementNS(null, (type === 'data') ? 'EnergySpectrum' : 'BackgroundEnergySpectrum');
-  let noc = document.createElementNS(null, 'NumberOfChannels');
+  const noc = document.createElementNS(null, 'NumberOfChannels');
 
   noc.textContent = spectrumData[type].length.toString();
   root.appendChild(noc);
 
-  let sn = document.createElementNS(null, 'SpectrumName');
+  const sn = document.createElementNS(null, 'SpectrumName');
   sn.textContent = name;
   root.appendChild(sn);
 
   if (plot.calibration.enabled) {
-    let ec = document.createElementNS(null, 'EnergyCalibration');
+    const ec = document.createElementNS(null, 'EnergyCalibration');
     root.appendChild(ec);
 
-    let c = document.createElementNS(null, 'Coefficients');
-    let coeffs: number[] = [];
+    const c = document.createElementNS(null, 'Coefficients');
+    const coeffs: number[] = [];
     const coeffObj = plot.calibration.coeff;
 
     for (const index in coeffObj) {
@@ -970,13 +1002,13 @@ function makeXMLSpectrum(type: DataType, name: string): Element {
     }
     const coeffsRev = coeffs.reverse();
     for (const val of coeffsRev) {
-      let coeff = document.createElementNS(null, 'Coefficient');
+      const coeff = document.createElementNS(null, 'Coefficient');
       coeff.textContent = val.toString();
       c.appendChild(coeff);
     }
     ec.appendChild(c);
 
-    let po = document.createElementNS(null, 'PolynomialOrder');
+    const po = document.createElementNS(null, 'PolynomialOrder');
     /*
     // Specifies the number of coefficients in the XML
     if (plot.calibration.coeff.c1 === 0) {
@@ -989,24 +1021,24 @@ function makeXMLSpectrum(type: DataType, name: string): Element {
     ec.appendChild(po);
   }
 
-  let tpc = document.createElementNS(null, 'TotalPulseCount');
+  const tpc = document.createElementNS(null, 'TotalPulseCount');
   tpc.textContent = spectrumData.getTotalCounts(type).toString();
   root.appendChild(tpc);
 
-  let vpc = document.createElementNS(null, 'ValidPulseCount');
+  const vpc = document.createElementNS(null, 'ValidPulseCount');
   vpc.textContent = tpc.textContent;
   root.appendChild(vpc);
 
-  let mt = document.createElementNS(null, 'MeasurementTime');
+  const mt = document.createElementNS(null, 'MeasurementTime');
 
   mt.textContent = (Math.round(spectrumData[`${type}Time`]/1000)).toString();
   root.appendChild(mt)
 
-  let s = document.createElementNS(null, 'Spectrum');
+  const s = document.createElementNS(null, 'Spectrum');
   root.appendChild(s);
 
   for (const datapoint of spectrumData[type]) {
-    let d = document.createElementNS(null, 'DataPoint');
+    const d = document.createElementNS(null, 'DataPoint');
     d.textContent = datapoint.toString();
     s.appendChild(d);
   }
@@ -1024,7 +1056,7 @@ function downloadXML(): void {
   const spectrumName = getDateStringMin() + ' Energy Spectrum';
   const backgroundName = getDateStringMin() + ' Background Energy Spectrum';
 
-  let doc = document.implementation.createDocument(null, "ResultDataFile");
+  const doc = document.implementation.createDocument(null, "ResultDataFile");
 
   const pi = doc.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"');
   doc.insertBefore(pi, doc.firstChild);
@@ -1123,7 +1155,7 @@ function downloadXML(): void {
 
 
 function makeJSONSpectrum(type: DataType): NPESv1Spectrum {
-  let spec: NPESv1Spectrum = {
+  const spec: NPESv1Spectrum = {
     'numberOfChannels': spectrumData[type].length,
     'validPulseCount': spectrumData.getTotalCounts(type),
     'measurementTime': 0,
@@ -1132,7 +1164,7 @@ function makeJSONSpectrum(type: DataType): NPESv1Spectrum {
   spec.measurementTime = Math.round(spectrumData[`${type}Time`]/1000);
 
   if (plot.calibration.enabled) {
-    let calObj = {
+    const calObj = {
       'polynomialOrder': 0,
       'coefficients': <number[]>[]
     }
@@ -1150,7 +1182,7 @@ document.getElementById('npes-export-btn')!.onclick = () => downloadNPES();
 function downloadNPES(): void {
   const filename = `spectrum_${getDateString()}.json`;
 
-  let data: NPESv1 = {
+  const data: NPESv1 = {
     'schemaVersion': 'NPESv1',
     'deviceData': {
       'softwareName': 'Gamma MCA, ' + APP_VERSION,
@@ -1252,7 +1284,7 @@ document.getElementById('reload-isos-btn')!.onclick = () => loadIsotopes(true);
 
 let loadedIsos = false;
 
-async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope Energies JSON ONCE
+async function loadIsotopes(reload = false): Promise<boolean> { // Load Isotope Energies JSON ONCE
   if (loadedIsos && !reload) return true; // Isotopes already loaded
 
   const loadingElement = document.getElementById('iso-loading')!;
@@ -1283,7 +1315,7 @@ async function loadIsotopes(reload = false): Promise<Boolean> { // Load Isotope 
       plot.clearAnnos(); // Delete all isotope lines
       plot.updatePlot(spectrumData);
 
-      let intKeys = Object.keys(json);
+      const intKeys = Object.keys(json);
       intKeys.sort((a, b) => parseFloat(a) - parseFloat(b)); // Sort Energies numerically
 
       let index = 0; // Index used to avoid HTML id duplicates
@@ -1357,7 +1389,7 @@ async function closestIso(value: number): Promise<void> {
   //}
 
   if (energy && name) {
-    let newIso: IsotopeList = {};
+    const newIso: IsotopeList = {};
     newIso[energy] = name;
 
     if (prevIso !== newIso) prevIso = newIso;
@@ -1455,10 +1487,7 @@ function loadSettingsDefault(): void {
   (<HTMLInputElement>document.getElementById('custom-ser-refresh')).value = (refreshRate / 1000).toString(); // convert ms to s
   (<HTMLInputElement>document.getElementById('custom-ser-buffer')).value = SerialManager.maxSize.toString();
   (<HTMLInputElement>document.getElementById('custom-ser-adc')).value = SerialManager.adcChannels.toString();
-  const autoStop = <HTMLInputElement>document.getElementById('ser-limit');
-  autoStop.value = (maxRecTime / 1000).toString(); // convert ms to s
-  autoStop.disabled = !maxRecTimeEnabled;
-  (<HTMLInputElement>document.getElementById('ser-limit-btn')).disabled = !maxRecTimeEnabled;
+  (<HTMLInputElement>document.getElementById('ser-limit')).value = (maxRecTime / 1000).toString(); // convert ms to s
   (<HTMLInputElement>document.getElementById('toggle-time-limit')).checked = maxRecTimeEnabled;
   (<HTMLInputElement>document.getElementById('iso-hover-prox')).value = maxDist.toString();
   (<HTMLInputElement>document.getElementById('custom-baud')).value = SerialManager.serOptions.baudRate.toString();
@@ -1607,9 +1636,6 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
 
     case 'timeLimitBool':
       boolVal = (<HTMLInputElement>element).checked;
-      (<HTMLInputElement>document.getElementById('ser-limit')).disabled = !boolVal;
-      (<HTMLButtonElement>document.getElementById('ser-limit-btn')).disabled = !boolVal;
-
       maxRecTimeEnabled = boolVal;
 
       saveJSON(name, boolVal);
@@ -1739,7 +1765,7 @@ function selectSerialType(button: HTMLInputElement): void {
 function serialConnect(/*event: Event*/): void {
   listSerial();
   popupNotification('serial-connect');
-};
+}
 
 
 function serialDisconnect(event: Event): void {
@@ -1754,7 +1780,7 @@ function serialDisconnect(event: Event): void {
   listSerial();
 
   popupNotification('serial-disconnect');
-};
+}
 
 
 document.getElementById('serial-list-btn')!.onclick = () => listSerial();

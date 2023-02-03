@@ -1,12 +1,10 @@
 /*
 
-  Serial Capability and Management
+  Serial device connection, recording of spectra and serial console.
 
   Gamma MCA: free, open-source web-MCA for gamma spectroscopy
   2022, NuclearPhoenix.- Phoenix1747
   https://nuclearphoenix.xyz
-
-  TODO: Check if serial port is already open and ok when sending
 
 */
 
@@ -67,7 +65,7 @@ export class SerialManager {
   async showConsole(): Promise<void> {
     if (this.recording) return; // Port is already being read, nothing to do
 
-    await this.port.open(SerialManager.serOptions); // Baud-Rate optional
+    if (!this.port.readable) await this.port.open(SerialManager.serOptions); // Open port if not open yet with optional baud rate
 
     this.recording = true;
     this.onlyConsole = true;
@@ -111,7 +109,7 @@ export class SerialManager {
   async startRecord(resume = false): Promise<void> {
     if (this.recording) return;
 
-    await this.port.open(SerialManager.serOptions); // Baud-Rate optional
+    if (!this.port.readable) await this.port.open(SerialManager.serOptions); // Open port if not open yet with optional baud rate
 
     if (!resume) {
       //this.flushRawData();
@@ -132,6 +130,7 @@ export class SerialManager {
       try {
         this.reader = this.port.readable.getReader();
 
+        /*eslint-disable no-constant-condition*/
         while (true) {
           const {value, done} = await this.reader.read();
           if (value) this.addRaw(value); // value is a Uint8Array.
@@ -171,7 +170,7 @@ export class SerialManager {
 
     if (SerialManager.orderType === 'chron') { // CHRONOLOGICAL EVENTS
 
-      let stringArr = this.rawData.split(SerialManager.eolChar); //('\r\n');
+      const stringArr = this.rawData.split(SerialManager.eolChar); //('\r\n');
       stringArr.pop(); // Delete last entry to avoid counting unfinished transmissions
       stringArr.shift(); // Delete first entry. !FIX SERIAL COMMUNICATION ERRORS!
 
@@ -199,7 +198,7 @@ export class SerialManager {
 
     } else if (SerialManager.orderType === 'hist') { // HISTOGRAM DATA
 
-      let stringArr = this.rawData.split('\r\n');
+      const stringArr = this.rawData.split('\r\n');
 
       stringArr.pop(); // Delete last entry to avoid counting unfinished transmissions
       //stringArr.shift(); // Delete first entry. !FIX SERIAL COMMUNICATION ERRORS!

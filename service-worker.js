@@ -1,19 +1,13 @@
 /*
 
+  Manage fetch requests, return cached data and control offline behaviour.
+
   Gamma MCA: free, open-source web-MCA for gamma spectroscopy
   2022, NuclearPhoenix.- Phoenix1747
   https://nuclearphoenix.xyz
 
-  Service Worker for Progressive Web App!
-
-  ===============================
-
-  Possible Future Improvements:
-    - Somehow fetching and caching the hits tracker does not work:
-      URL = https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fspectrum.nuclearphoenix.xyz&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=true
-
 */
-const APP_VERSION = '2023-02-02';
+const APP_VERSION = '2023-02-03';
 const CACHE_NAME = 'gamma-static'; // A random name for the cache
 
 const OFFLINE_RESOURCES = ['/',
@@ -46,6 +40,7 @@ const OFFLINE_RESOURCES = ['/',
 
 self.addEventListener("install", event => { // First time install of a worker
   console.info('Installing service worker...');
+  console.info(`Installing Gamma MCA version ${APP_VERSION}...`);
 
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => async function() {
@@ -55,7 +50,7 @@ self.addEventListener("install", event => { // First time install of a worker
       }
       */
       cache.keys().then(keys => { // Delete the whole cache
-        keys.forEach(async function(request, index, array) {
+        keys.forEach(async function(request) {
           //console.info('Clearing cache!', request);
           await cache.delete(request);
         });
@@ -68,7 +63,7 @@ self.addEventListener("install", event => { // First time install of a worker
 });
 
 
-self.addEventListener("activate", event => { // New worker takes over
+self.addEventListener("activate", () => { // New worker takes over
   console.info('Activating service worker...');
   self.clients.claim(); // Allows an active service worker to set itself as the controller for all clients within its scope
 });

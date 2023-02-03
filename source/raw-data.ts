@@ -1,19 +1,23 @@
 /*
 
-  File String in CSV, XML, TKA, ... format -> Array
+  Load and process many different file formats to get usable data.
 
   Gamma MCA: free, open-source web-MCA for gamma spectroscopy
   2022, NuclearPhoenix.- Phoenix1747
   https://nuclearphoenix.xyz
 
-  TODO: Rewrite CSV stuff, it's ugly af and also pretty confusing.
-
-  TODO: Split this into two classes XML, JSON with constructor
-  accepting the files and static class variables.
+  Do not touch my garbage. All the CSV-related stuff is ugly asf.
 
 */
 
 import { CoeffObj } from './plot.js';
+
+export interface NPESv1 {
+  'schemaVersion': 'NPESv1',
+  'deviceData'?: NPESv1DeviceData,
+  'sampleInfo'?: NPESv1SampleInfo,
+  'resultData': NPESv1ResultData
+}
 
 export interface NPESv1Spectrum {
   'numberOfChannels': number,
@@ -26,26 +30,25 @@ export interface NPESv1Spectrum {
   'spectrum': number[]
 }
 
-export interface NPESv1 {
-  'schemaVersion': 'NPESv1',
-  'deviceData'?: {
-    'deviceName'?: string,
-    'softwareName': string
-  },
-  'sampleInfo'?: {
-    'name'?: string,
-    'location'?: string,
-    'time'?: string,
-    'weight'?: number,
-    'volume'?: number,
-    'note'?: string
-  },
-  'resultData': {
-    'startTime'?: string,
-    'endTime'?: string,
-    'energySpectrum'?: NPESv1Spectrum,
-    'backgroundEnergySpectrum'?: NPESv1Spectrum
-  }
+interface NPESv1ResultData {
+  'startTime'?: string,
+  'endTime'?: string,
+  'energySpectrum'?: NPESv1Spectrum,
+  'backgroundEnergySpectrum'?: NPESv1Spectrum
+}
+
+interface NPESv1DeviceData {
+  'deviceName'?: string,
+  'softwareName': string
+}
+
+interface NPESv1SampleInfo {
+  'name'?: string,
+  'location'?: string,
+  'time'?: string,
+  'weight'?: number,
+  'volume'?: number,
+  'note'?: string
 }
 
 interface ImportDataMeta {
@@ -102,7 +105,7 @@ export class RawData {
   }
 
   private histConverter(dataArr: number[]): number[] {
-    let xArray: number[] = Array(this.adcChannels).fill(0);
+    const xArray: number[] = Array(this.adcChannels).fill(0);
 
     for(const element of dataArr) {
       xArray[element] += 1;
@@ -125,12 +128,12 @@ export class RawData {
   }
 
   xmlToArray(data: string): XMLImportData {
-    let coeff: CoeffObj = {
+    const coeff: CoeffObj = {
       c1: 0,
       c2: 0,
       c3: 0
     };
-    let meta: ImportDataMeta = {
+    const meta: ImportDataMeta = {
       name: '',
       location: '',
       time: '',
@@ -143,7 +146,7 @@ export class RawData {
     };
 
     try {
-      let xmlDoc = new DOMParser().parseFromString(data, 'text/xml');
+      const xmlDoc = new DOMParser().parseFromString(data, 'text/xml');
       const especTop = xmlDoc.getElementsByTagName('EnergySpectrum');
       let espectrum = <number[]>[];
       let bgspectrum = <number[]>[];
@@ -237,7 +240,7 @@ export class RawData {
       }
       */
       // Unfortunately needed for Typescript to not compile the js file :/
-      // @ts-ignore
+      // @ts-expect-error: Unreachable code error
       await import('./external/ZSchema-browser-min.js'); // Import ZSchema only when it's needed
 
       const validator = new (<any>window).ZSchema();

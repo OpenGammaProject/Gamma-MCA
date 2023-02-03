@@ -26,7 +26,7 @@ export class RawData {
         return parseFloat(values[this.tempValIndex].trim());
     }
     histConverter(dataArr) {
-        let xArray = Array(this.adcChannels).fill(0);
+        const xArray = Array(this.adcChannels).fill(0);
         for (const element of dataArr) {
             xArray[element] += 1;
         }
@@ -44,12 +44,12 @@ export class RawData {
         }
     }
     xmlToArray(data) {
-        let coeff = {
+        const coeff = {
             c1: 0,
             c2: 0,
             c3: 0
         };
-        let meta = {
+        const meta = {
             name: '',
             location: '',
             time: '',
@@ -61,7 +61,7 @@ export class RawData {
             backgroundMt: 0
         };
         try {
-            let xmlDoc = new DOMParser().parseFromString(data, 'text/xml');
+            const xmlDoc = new DOMParser().parseFromString(data, 'text/xml');
             const especTop = xmlDoc.getElementsByTagName('EnergySpectrum');
             let espectrum = [];
             let bgspectrum = [];
