@@ -20,9 +20,11 @@
 
     - Sorting isotope list
     - Calibration n-polynomial regression
-    - Custom Line when left-clicking into plot. Rightclick to delete.
+    - ROI with stats (total counts, max, min, FWHM, range,...)
+    - Remove screen size warning
 
-    - (!) FWHM + stats for Gaussian (ROI?)
+    - (!) Custom Line when left-clicking into plot. Rightclick to delete.
+    - (!) FWHM for Gaussian peaks
 
   Known Issue:
     - Serial: Sometimes only half the actual cps are shown in histogram serial mode?!?!
