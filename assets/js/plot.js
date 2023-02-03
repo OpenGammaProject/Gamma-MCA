@@ -501,10 +501,10 @@ export class SpectrumPlot {
                 }
             };
             maxXValue = trace.x.at(-1) ?? 1;
+            if (this.cps)
+                trace.y = dataObj.dataCps;
             data.push(trace);
         }
-        if (this.cps)
-            data[0].y = dataObj.dataCps;
         if (dataObj.background.length) {
             const bgTrace = {
                 name: 'Background',

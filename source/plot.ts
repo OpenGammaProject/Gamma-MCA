@@ -695,13 +695,10 @@ export class SpectrumPlot {
       };
 
       maxXValue = trace.x.at(-1) ?? 1;
+      if (this.cps) trace.y = dataObj.dataCps;
       data.push(trace);
     }
 
-    /*
-      Total number of pulses divided by seconds running. Counts Per Second
-    */
-    if (this.cps) data[0].y = dataObj.dataCps;
     /*
       Compute Background and Corrected Spectrum
     */
