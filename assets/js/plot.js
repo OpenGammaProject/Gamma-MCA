@@ -595,7 +595,7 @@ export class SpectrumPlot {
             plot_bgcolor: 'white',
             paper_bgcolor: '#f8f9fa',
             margin: {
-                l: 80,
+                l: 40,
                 r: 40,
                 b: 60,
                 t: 60,
