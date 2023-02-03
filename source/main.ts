@@ -23,7 +23,6 @@
     - Custom Line when left-clicking into plot. Rightclick to delete.
 
     - (!) FWHM + stats for Gaussian (ROI?)
-    - (!) Remove file, also remove measurement time
 
   Known Issue:
     - Serial: Sometimes only half the actual cps are shown in histogram serial mode?!?!
@@ -558,8 +557,8 @@ function removeFile(id: DataType): void {
   spectrumData[`${id}Time`] = 0;
   (<HTMLInputElement>document.getElementById(id)).value = '';
 
-  document.getElementById('total-spec-cts')!.innerText = spectrumData.getTotalCounts('data').toString();
-  document.getElementById('total-bg-cts')!.innerText = spectrumData.getTotalCounts('background').toString();
+  updateSpectrumCounts();
+  updateSpectrumTime();
 
   document.getElementById(id + '-icon')!.classList.add('d-none');
 

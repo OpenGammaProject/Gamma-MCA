@@ -381,8 +381,8 @@ function removeFile(id) {
     spectrumData[id] = [];
     spectrumData[`${id}Time`] = 0;
     document.getElementById(id).value = '';
-    document.getElementById('total-spec-cts').innerText = spectrumData.getTotalCounts('data').toString();
-    document.getElementById('total-bg-cts').innerText = spectrumData.getTotalCounts('background').toString();
+    updateSpectrumCounts();
+    updateSpectrumTime();
     document.getElementById(id + '-icon').classList.add('d-none');
     plot.resetPlot(spectrumData);
     bindPlotEvents();
