@@ -12,6 +12,13 @@
 
 import { CoeffObj } from './plot.js';
 
+export interface NPESv1 {
+  'schemaVersion': 'NPESv1',
+  'deviceData'?: NPESv1DeviceData,
+  'sampleInfo'?: NPESv1SampleInfo,
+  'resultData': NPESv1ResultData
+}
+
 export interface NPESv1Spectrum {
   'numberOfChannels': number,
   'validPulseCount'?: number,
@@ -23,26 +30,25 @@ export interface NPESv1Spectrum {
   'spectrum': number[]
 }
 
-export interface NPESv1 {
-  'schemaVersion': 'NPESv1',
-  'deviceData'?: {
-    'deviceName'?: string,
-    'softwareName': string
-  },
-  'sampleInfo'?: {
-    'name'?: string,
-    'location'?: string,
-    'time'?: string,
-    'weight'?: number,
-    'volume'?: number,
-    'note'?: string
-  },
-  'resultData': {
-    'startTime'?: string,
-    'endTime'?: string,
-    'energySpectrum'?: NPESv1Spectrum,
-    'backgroundEnergySpectrum'?: NPESv1Spectrum
-  }
+interface NPESv1ResultData {
+  'startTime'?: string,
+  'endTime'?: string,
+  'energySpectrum'?: NPESv1Spectrum,
+  'backgroundEnergySpectrum'?: NPESv1Spectrum
+}
+
+interface NPESv1DeviceData {
+  'deviceName'?: string,
+  'softwareName': string
+}
+
+interface NPESv1SampleInfo {
+  'name'?: string,
+  'location'?: string,
+  'time'?: string,
+  'weight'?: number,
+  'volume'?: number,
+  'note'?: string
 }
 
 interface ImportDataMeta {
