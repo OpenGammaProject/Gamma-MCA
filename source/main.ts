@@ -217,28 +217,7 @@ document.body.onload = async function(): Promise<void> {
   loadSettingsDefault();
   sizeCheck();
 
-  // Enable Settings Enter Press Func
-  const enterPressObj = {
-    'smaVal': 'sma',
-    'ser-command': 'send-command',
-    'iso-hover-prox': 'setting1',
-    'custom-url': 'setting2',
-    'custom-delimiter': 'setting3',
-    'custom-file-adc': 'setting4',
-    'custom-baud': 'setting5',
-    'eol-char': 'setting5-1',
-    'ser-limit': 'ser-limit-btn',
-    'custom-ser-refresh': 'setting6',
-    'custom-ser-buffer': 'setting7',
-    'custom-ser-adc': 'setting8',
-    'peak-thres': 'setting9',
-    'peak-lag': 'setting10',
-    'peak-width': 'setting11',
-    'seek-width': 'setting12'
-  }
-  for (const [key, value] of Object.entries(enterPressObj)) {
-    document.getElementById(key)!.onkeydown = event => enterPress(event, value);
-  }
+  bindInputs(); // Enable settings enter press and onclick buttons
 
   const menuElements = document.getElementById('main-tabs')!.getElementsByTagName('button');
   for (const button of menuElements) {
@@ -649,11 +628,6 @@ function changeAxis(button: HTMLButtonElement): void {
     button.innerText = 'Linear';
     plot.updatePlot(spectrumData);
   }
-}
-
-
-function enterPress(event: KeyboardEvent, id: string): void {
-  if (event.key === 'Enter') document.getElementById(id)?.click(); // ENTER key
 }
 
 
@@ -1481,6 +1455,50 @@ function loadJSON(name: string): any {
 }
 
 
+function bindInputs(): void {
+  const nonSettingsEnterPressElements = {
+    'smaVal': 'sma',
+    'ser-command': 'send-command'
+  }
+  for (const [key, value] of Object.entries(nonSettingsEnterPressElements)) {
+    document.getElementById(key)!.onkeydown = event => function() {
+      if (event.key === 'Enter') document.getElementById(value)?.click(); // ENTER key
+    };
+  }
+
+  // Bind settings button onclick events and enter press
+  const settingsEnterPressElements = {
+    'iso-hover-prox': 'maxIsoDist',
+    'custom-url': 'customURL',
+    'custom-delimiter': 'fileDelimiter',
+    'custom-file-adc': 'fileChannels',
+    'custom-baud': 'baudRate',
+    'eol-char': 'eolChar',
+    'ser-limit': 'timeLimit',
+    'custom-ser-refresh': 'plotRefreshRate',
+    'custom-ser-buffer': 'serBufferSize',
+    'custom-ser-adc': 'serChannels',
+    'peak-thres': 'peakThres',
+    'peak-lag': 'peakLag',
+    'peak-width': 'peakWidth',
+    'seek-width': 'seekWidth'
+  }
+  for (const [id, name] of Object.entries(settingsEnterPressElements)) {
+    const valueElement = <HTMLInputElement>document.getElementById(id);
+    const buttonElement = <HTMLButtonElement>document.getElementById(`${id}-btn`);
+    valueElement.onkeydown = event => {
+      if (event.key === 'Enter') buttonElement.click(); // Press ENTER key;
+    };
+    buttonElement.onclick = () => changeSettings(name, valueElement);
+  }
+
+  // Bind settings button press or onchange events for settings that do not have the default value input element
+  document.getElementById('edit-plot')!.onclick = event => changeSettings('editMode', <HTMLInputElement>event.target); // Checkbox
+  document.getElementById('toggle-time-limit')!.onclick = event => changeSettings('timeLimitBool', <HTMLInputElement>event.target); // Checkbox
+  document.getElementById('download-format')!.onchange = event => changeSettings('plotDownload', <HTMLSelectElement>event.target); // Select
+}
+
+
 function loadSettingsDefault(): void {
   (<HTMLInputElement>document.getElementById('custom-url')).value = isoListURL;
   (<HTMLInputElement>document.getElementById('edit-plot')).checked = plot.editableMode;
@@ -1513,10 +1531,7 @@ function loadSettingsDefault(): void {
 
 function loadSettingsStorage(): void {
   let setting = loadJSON('customURL');
-  if (setting) {
-    const newUrl = new URL(setting);
-    isoListURL = newUrl.href;
-  }
+  if (setting) isoListURL = new URL(setting).href;
 
   setting = loadJSON('editMode');
   if (setting) plot.editableMode = setting;
@@ -1571,170 +1586,153 @@ function loadSettingsStorage(): void {
 }
 
 
-document.getElementById('edit-plot')!.onclick = event => changeSettings('editMode', <HTMLInputElement>event.target);
-document.getElementById('setting1')!.onclick = () => changeSettings('maxIsoDist', <HTMLInputElement>document.getElementById('iso-hover-prox'));
-document.getElementById('setting2')!.onclick = () => changeSettings('customURL', <HTMLInputElement>document.getElementById('custom-url'));
-document.getElementById('download-format')!.onchange = event => changeSettings('plotDownload', <HTMLSelectElement>event.target);
-document.getElementById('setting3')!.onclick = () => changeSettings('fileDelimiter', <HTMLInputElement>document.getElementById('custom-delimiter'));
-document.getElementById('setting4')!.onclick = () => changeSettings('fileChannels', <HTMLInputElement>document.getElementById('custom-file-adc'));
-document.getElementById('setting5')!.onclick = () => changeSettings('baudRate', <HTMLInputElement>document.getElementById('custom-baud'));
-document.getElementById('setting5-1')!.onclick = () => changeSettings('eolChar', <HTMLInputElement>document.getElementById('eol-char'));
-document.getElementById('toggle-time-limit')!.onclick = event => changeSettings('timeLimitBool', <HTMLInputElement>event.target);
-document.getElementById('ser-limit-btn')!.onclick = () => changeSettings('timeLimit', <HTMLInputElement>document.getElementById('ser-limit'));
-document.getElementById('setting6')!.onclick = () => changeSettings('plotRefreshRate', <HTMLInputElement>document.getElementById('custom-ser-refresh'));
-document.getElementById('setting7')!.onclick = () => changeSettings('serBufferSize', <HTMLInputElement>document.getElementById('custom-ser-buffer'));
-document.getElementById('setting8')!.onclick = () => changeSettings('serChannels', <HTMLInputElement>document.getElementById('custom-ser-adc'));
-document.getElementById('setting9')!.onclick = () => changeSettings('peakThres', <HTMLInputElement>document.getElementById('peak-thres'));
-document.getElementById('setting10')!.onclick = () => changeSettings('peakLag', <HTMLInputElement>document.getElementById('peak-lag'));
-document.getElementById('setting11')!.onclick = () => changeSettings('peakWidth', <HTMLInputElement>document.getElementById('peak-width'));
-document.getElementById('setting12')!.onclick = () => changeSettings('seekWidth', <HTMLInputElement>document.getElementById('seek-width'));
-
 function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElement): void {
-  if (!element.checkValidity()) {
+  const stringValue = element.value.trim();
+  let result = false;
+
+  if (!element.checkValidity() && stringValue) {
     popupNotification('setting-type');
     return;
   }
 
-  const value = element.value;
-  let boolVal: boolean;
-  let numVal: number;
-
   switch (name) {
-    case 'editMode':
-      boolVal = (<HTMLInputElement>element).checked;
+    case 'editMode': {
+      const boolVal = (<HTMLInputElement>element).checked;
       plot.editableMode = boolVal;
       plot.resetPlot(spectrumData); // Modify won't be disabled if you don't fully reset
       bindPlotEvents();
 
-      saveJSON(name, boolVal);
+      result = saveJSON(name, boolVal);
       break;
-
-    case 'customURL':
+    }
+    case 'customURL': {
       try {
-        isoListURL = new URL(value).href;
+        isoListURL = new URL(stringValue).href;
 
         loadIsotopes(true);
 
-        saveJSON(name, isoListURL);
+        result = saveJSON(name, isoListURL);
 
       } catch(e) {
         popupNotification('setting-error');
         console.error('Custom URL Error', e);
       }
       break;
+    }
+    case 'fileDelimiter': {
+      raw.delimiter = stringValue;
 
-    case 'fileDelimiter':
-      raw.delimiter = value;
-
-      saveJSON(name, value);
+      result = saveJSON(name, stringValue);
       break;
-
-    case 'fileChannels':
-      numVal = parseInt(value);
+    }
+    case 'fileChannels': {
+      const numVal = parseInt(stringValue);
       raw.adcChannels = numVal;
 
-      saveJSON(name, numVal);
+      result = saveJSON(name, numVal);
       break;
-
-    case 'timeLimitBool':
-      boolVal = (<HTMLInputElement>element).checked;
+    }
+    case 'timeLimitBool': {
+      const boolVal = (<HTMLInputElement>element).checked;
       maxRecTimeEnabled = boolVal;
 
-      saveJSON(name, boolVal);
+      result = saveJSON(name, boolVal);
       break;
-
-    case 'timeLimit':
-      numVal = parseFloat(value);
+    }
+    case 'timeLimit': {
+      const numVal = parseFloat(stringValue);
       maxRecTime = numVal * 1000; // convert s to ms
 
-      saveJSON(name, maxRecTime);
+      result = saveJSON(name, maxRecTime);
       break;
-
-    case 'maxIsoDist':
-      numVal = parseFloat(value);
+    }
+    case 'maxIsoDist': {
+      const numVal = parseFloat(stringValue);
       maxDist = numVal;
 
-      saveJSON(name, maxDist);
+      result = saveJSON(name, maxDist);
       break;
-
-    case 'plotRefreshRate':
-      numVal = parseFloat(value);
+    }
+    case 'plotRefreshRate': {
+      const numVal = parseFloat(stringValue);
       refreshRate = numVal * 1000; // convert s to ms
 
-      saveJSON(name, refreshRate);
+      result = saveJSON(name, refreshRate);
       break;
-
-    case 'serBufferSize':
-      numVal = parseInt(value);
+    }
+    case 'serBufferSize': {
+      const numVal = parseInt(stringValue);
       SerialManager.maxSize = numVal;
 
-      saveJSON(name, SerialManager.maxSize);
+      result = saveJSON(name, SerialManager.maxSize);
       break;
-
-    case 'baudRate':
-      numVal = parseInt(value);
+    }
+    case 'baudRate': {
+      const numVal = parseInt(stringValue);
       SerialManager.serOptions.baudRate = numVal;
 
-      saveJSON(name, SerialManager.serOptions.baudRate);
+      result = saveJSON(name, SerialManager.serOptions.baudRate);
       break;
+    }
+    case 'eolChar': {
+      SerialManager.eolChar = stringValue;
 
-    case 'eolChar':
-      SerialManager.eolChar = value;
-
-      saveJSON(name, value);
+      result = saveJSON(name, stringValue);
       break;
-
-    case 'serChannels':
-      numVal = parseInt(value);
+    }
+    case 'serChannels': {
+      const numVal = parseInt(stringValue);
       SerialManager.adcChannels = numVal;
 
-      saveJSON(name, numVal);
+      result = saveJSON(name, numVal);
       break;
-
-    case 'peakThres':
-      numVal = parseFloat(value);
+    }
+    case 'peakThres': {
+      const numVal = parseFloat(stringValue);
       plot.peakConfig.thres = numVal;
       plot.updatePlot(spectrumData);
 
-      saveJSON(name, numVal);
+      result = saveJSON(name, numVal);
       break;
-
-    case 'peakLag':
-      numVal = parseInt(value);
+    }
+    case 'peakLag': {
+      const numVal = parseInt(stringValue);
       plot.peakConfig.lag = numVal;
       plot.updatePlot(spectrumData);
 
-      saveJSON(name, numVal);
+      result = saveJSON(name, numVal);
       break;
-
-    case 'peakWidth':
-      numVal = parseInt(value);
+    }
+    case 'peakWidth': {
+      const numVal = parseInt(stringValue);
       plot.peakConfig.width = numVal;
       plot.updatePlot(spectrumData);
 
-      saveJSON(name, numVal);
+      result = saveJSON(name, numVal);
       break;
-
-    case 'seekWidth':
-      numVal = parseFloat(value);
+    }
+    case 'seekWidth': {
+      const numVal = parseFloat(stringValue);
       plot.peakConfig.seekWidth = numVal;
       plot.updatePlot(spectrumData);
 
-      saveJSON(name, numVal);
+      result = saveJSON(name, numVal);
       break;
-
-    case 'plotDownload':
-      plot.downloadFormat = value;
+    }
+    case 'plotDownload': {
+      plot.downloadFormat = stringValue;
       plot.updatePlot(spectrumData);
 
-      saveJSON(name, value);
+      result = saveJSON(name, stringValue);
       break;
-
-    default:
+    }
+    default: {
       popupNotification('setting-error');
       return;
+    }
   }
-  popupNotification('setting-success'); // Success Toast
+
+  if (result) popupNotification('setting-success'); // Success Toast
 }
 
 
