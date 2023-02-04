@@ -1165,7 +1165,7 @@ function loadSettingsStorage() {
 function changeSettings(name, element) {
     const stringValue = element.value.trim();
     let result = false;
-    if (!element.checkValidity() && stringValue) {
+    if (!element.checkValidity() || !stringValue) {
         popupNotification('setting-type');
         return;
     }

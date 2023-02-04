@@ -1593,7 +1593,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
   const stringValue = element.value.trim();
   let result = false;
 
-  if (!element.checkValidity() && stringValue) {
+  if (!element.checkValidity() || !stringValue) {
     popupNotification('setting-type');
     return;
   }
