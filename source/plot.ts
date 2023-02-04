@@ -27,6 +27,7 @@ interface Shape {
   y0: number;
   x1: number;
   y1: number;
+  editable?: boolean;
   //fillcolor: string,
   line: {
       color: string;
@@ -45,6 +46,7 @@ interface Anno {
   arrowhead: number;
   ax: number;
   ay: number;
+  editable?: boolean;
   hovertext: string;
   font: {
     size: number;
@@ -420,6 +422,7 @@ export class SpectrumPlot {
         x1: energy,
         y1: 1,
         //fillcolor: 'black',
+        editable: false,
         line: {
             color: 'blue',
             width: .5,
@@ -436,6 +439,7 @@ export class SpectrumPlot {
         arrowhead: 7,
         ax: 0,
         ay: -20,
+        editable: false,
         hovertext: energy.toFixed(2),
         font: {
           size: 11,
@@ -481,6 +485,7 @@ export class SpectrumPlot {
   */
   private gaussianCorrel(data: number[], sigma = 2): number[] {
     const correlValues: number[] = [];
+    const peakValues: number[] = []
 
     for (let index = 0; index < data.length; index++) {
       const std = Math.sqrt(index);
@@ -509,8 +514,20 @@ export class SpectrumPlot {
         resultVal += data[index + k] * (gaussValues[k - xMin] - avg) / squaredSum;
       }
 
-      correlValues.push((resultVal && resultVal > 0 ) ? resultVal : 0);
+      const value = (resultVal && resultVal > 0 ) ? resultVal : 0;
+      correlValues.push(value);
+
+      // Check for peaks (FWHM calculation); Check beginning of new peak or end of current peak
+      if (value > 0 && peakValues.length % 2 === 0 || value === 0 && peakValues.length % 2 === 1) peakValues.push(index);
     }
+    
+    // Approx. FWHM values for all peaks
+    for (let i = 0; i < peakValues.length; i+=2) {
+      const fwhm = (peakValues[i+1] - peakValues[i])/(2 * sigma) * 2.335; // Approximation for peak FWHM
+      const center = (peakValues[i+1] + peakValues[i])/2;
+      console.log('peak',i,'resolution',fwhm/center*100);
+    }
+
     return correlValues;
   }
   /*

@@ -268,6 +268,7 @@ export class SpectrumPlot {
                 y0: 0,
                 x1: energy,
                 y1: 1,
+                editable: false,
                 line: {
                     color: 'blue',
                     width: .5,
@@ -284,6 +285,7 @@ export class SpectrumPlot {
                 arrowhead: 7,
                 ax: 0,
                 ay: -20,
+                editable: false,
                 hovertext: energy.toFixed(2),
                 font: {
                     size: 11,
@@ -321,6 +323,7 @@ export class SpectrumPlot {
     }
     gaussianCorrel(data, sigma = 2) {
         const correlValues = [];
+        const peakValues = [];
         for (let index = 0; index < data.length; index++) {
             const std = Math.sqrt(index);
             const xMin = -Math.round(sigma * std);
@@ -342,7 +345,15 @@ export class SpectrumPlot {
             for (let k = xMin; k < xMax; k++) {
                 resultVal += data[index + k] * (gaussValues[k - xMin] - avg) / squaredSum;
             }
-            correlValues.push((resultVal && resultVal > 0) ? resultVal : 0);
+            const value = (resultVal && resultVal > 0) ? resultVal : 0;
+            correlValues.push(value);
+            if (value > 0 && peakValues.length % 2 === 0 || value === 0 && peakValues.length % 2 === 1)
+                peakValues.push(index);
+        }
+        for (let i = 0; i < peakValues.length; i += 2) {
+            const fwhm = (peakValues[i + 1] - peakValues[i]) / (2 * sigma) * 2.335;
+            const center = (peakValues[i + 1] + peakValues[i]) / 2;
+            console.log('peak', i, 'resolution', fwhm / center * 100);
         }
         return correlValues;
     }
