@@ -25,6 +25,7 @@
 
     - (!) Custom Line when left-clicking into plot. Rightclick to delete.
     - (!) FWHM for Gaussian peaks
+    - (!) Notifications in Notification class
 
   Known Issue:
     - Serial: Sometimes only half the actual cps are shown in histogram serial mode?!?!
@@ -1440,6 +1441,8 @@ async function findPeaks(button: HTMLButtonElement): Promise<void> {
   LOADING AND SAVING
 =========================================
 */
+// These functions are REALLY ugly and a nightmare to maintain, but I don't know how to make it
+// better without nuking everything related to the settings and starting again from the ground up.
 
 function saveJSON(name: string, value: string | boolean | number): boolean {
   if (localStorageAvailable) {
