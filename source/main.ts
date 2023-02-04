@@ -571,23 +571,6 @@ function updateSpectrumTime() {
 }
 
 
-function bindPlotEvents(): void {
-  if (!plot.plotDiv) return;
-
-  const myPlot = <any>plot.plotDiv; 
-  myPlot.on('plotly_hover', hoverEvent);
-  myPlot.on('plotly_unhover', unHover);
-  myPlot.on('plotly_click', clickEvent);
-  myPlot.on('plotly_webglcontextlost', webGLcontextLoss);
-  /* // Rightclick menu thingy
-  myPlot.addEventListener('contextmenu', function(e) {
-    console.log("You've tried to open context menu"); //here you draw your own menu
-    e.preventDefault();
-  });
-  */
-}
-
-
 document.getElementById('r1')!.onchange = event => selectFileType(<HTMLInputElement>event.target);
 document.getElementById('r2')!.onchange = event => selectFileType(<HTMLInputElement>event.target);
 
@@ -654,6 +637,20 @@ function changeSma(input: HTMLInputElement): void {
 }
 
 
+function bindPlotEvents(): void {
+  if (!plot.plotDiv) return;
+
+  const myPlot = <any>plot.plotDiv; 
+  myPlot.on('plotly_hover', hoverEvent);
+  myPlot.on('plotly_unhover', unHover);
+  myPlot.on('plotly_click', clickEvent);
+  myPlot.on('plotly_webglcontextlost', webGLcontextLoss);
+  myPlot.addEventListener('contextmenu', (event: PointerEvent) => {
+    event.preventDefault(); // Prevent the context menu from opening inside the plot!
+  });
+}
+
+
 function hoverEvent(data: any): void {
   for (const key in calClick) {
     const castKey = <CalType>key;
@@ -669,7 +666,6 @@ function unHover(/*data: any*/): void {
     const castKey = <CalType>key;
     if (calClick[castKey]) (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = oldCalVals[castKey];
   }
-
   /*
   if (Object.keys(prevIso).length > 0) {
     closestIso(-maxDist); // Force Reset Iso Highlighting
@@ -677,6 +673,8 @@ function unHover(/*data: any*/): void {
   */
 }
 
+
+let prevClickLine: number | undefined;
 
 function clickEvent(data: any): void {
   //console.log(data.event);
@@ -692,6 +690,17 @@ function clickEvent(data: any): void {
       (<HTMLInputElement>document.getElementById(`select-${castKey}`)).checked = calClick[<CalType>key];
     }
   }
+
+  if (data.event.which === 1) { // Left-click
+    if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
+    const newLine = data.points[0].x;
+    plot.toggleLine(newLine, newLine.toFixed(2), true);
+    prevClickLine = newLine;
+  } else if (data.event.which === 3) { // Right-click
+    if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
+    prevClickLine = undefined;
+  }
+  plot.updatePlot(spectrumData);
 }
 
 

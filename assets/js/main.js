@@ -383,15 +383,6 @@ function updateSpectrumTime() {
     document.getElementById('spec-time').innerText = getRecordTimeStamp(spectrumData.dataTime);
     document.getElementById('bg-time').innerText = getRecordTimeStamp(spectrumData.backgroundTime);
 }
-function bindPlotEvents() {
-    if (!plot.plotDiv)
-        return;
-    const myPlot = plot.plotDiv;
-    myPlot.on('plotly_hover', hoverEvent);
-    myPlot.on('plotly_unhover', unHover);
-    myPlot.on('plotly_click', clickEvent);
-    myPlot.on('plotly_webglcontextlost', webGLcontextLoss);
-}
 document.getElementById('r1').onchange = event => selectFileType(event.target);
 document.getElementById('r2').onchange = event => selectFileType(event.target);
 function selectFileType(button) {
@@ -448,6 +439,18 @@ function changeSma(input) {
         saveJSON('smaLength', parsedInput);
     }
 }
+function bindPlotEvents() {
+    if (!plot.plotDiv)
+        return;
+    const myPlot = plot.plotDiv;
+    myPlot.on('plotly_hover', hoverEvent);
+    myPlot.on('plotly_unhover', unHover);
+    myPlot.on('plotly_click', clickEvent);
+    myPlot.on('plotly_webglcontextlost', webGLcontextLoss);
+    myPlot.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+    });
+}
 function hoverEvent(data) {
     for (const key in calClick) {
         const castKey = key;
@@ -464,6 +467,7 @@ function unHover() {
             document.getElementById(`adc-${castKey}`).value = oldCalVals[castKey];
     }
 }
+let prevClickLine;
 function clickEvent(data) {
     document.getElementById('click-data').innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
     for (const key in calClick) {
@@ -475,6 +479,19 @@ function clickEvent(data) {
             document.getElementById(`select-${castKey}`).checked = calClick[key];
         }
     }
+    if (data.event.which === 1) {
+        if (prevClickLine)
+            plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
+        const newLine = data.points[0].x;
+        plot.toggleLine(newLine, newLine.toFixed(2), true);
+        prevClickLine = newLine;
+    }
+    else if (data.event.which === 3) {
+        if (prevClickLine)
+            plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
+        prevClickLine = undefined;
+    }
+    plot.updatePlot(spectrumData);
 }
 function webGLcontextLoss() {
     console.error('Lost WebGL context for Plotly.js! Falling back to default SVG render mode...');
