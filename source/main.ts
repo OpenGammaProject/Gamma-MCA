@@ -18,6 +18,7 @@
     - (?) Dark Mode
     - (?) Hotkeys
 
+    - Toasts in Notification class, remove from HTML DOM
     - Sorting isotope list
     - Calibration n-polynomial regression
     - ROI with stats (total counts, max, min, FWHM, range,...)
@@ -25,7 +26,6 @@
 
     - (!) Custom Line when left-clicking into plot. Rightclick to delete.
     - (!) FWHM for Gaussian peaks
-    - (!) Notifications in Notification class
 
   Known Issue:
     - Serial: Sometimes only half the actual cps are shown in histogram serial mode?!?!
