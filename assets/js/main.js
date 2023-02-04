@@ -348,11 +348,10 @@ function getFileData(file, background = false) {
     };
 }
 function sizeCheck() {
-    if (document.documentElement.clientWidth < 1100 || document.documentElement.clientHeight < 700) {
-        popupNotification('screen-size-warning');
-    }
-    else {
-        hideNotification('screen-size-warning');
+    const minWidth = 1100;
+    const minHeight = 700;
+    if (document.documentElement.clientWidth <= minWidth || document.documentElement.clientHeight <= minHeight) {
+        console.warn(`Small screen detected. Screen should be at least ${minWidth}x${minHeight} px for the best experience.`);
     }
 }
 document.getElementById('clear-data').onclick = () => removeFile('data');

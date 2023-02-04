@@ -22,7 +22,6 @@
     - Sorting isotope list
     - Calibration n-polynomial regression
     - ROI with stats (total counts, max, min, FWHM, range,...)
-    - Remove screen size warning
 
     - (!) Custom Line when left-clicking into plot. Rightclick to delete.
     - (!) FWHM for Gaussian peaks
@@ -523,10 +522,10 @@ function getFileData(file: File, background = false): void { // Gets called when
 
 
 function sizeCheck(): void {
-  if (document.documentElement.clientWidth < 1100 || document.documentElement.clientHeight < 700) {
-    popupNotification('screen-size-warning');
-  } else {
-    hideNotification('screen-size-warning');
+  const minWidth = 1100;
+  const minHeight = 700;
+  if (document.documentElement.clientWidth <= minWidth || document.documentElement.clientHeight <= minHeight) {
+    console.warn(`Small screen detected. Screen should be at least ${minWidth}x${minHeight} px for the best experience.`)
   }
 }
 
