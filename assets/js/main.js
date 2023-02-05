@@ -482,8 +482,8 @@ function clickEvent(data) {
     if (data.event.which === 1) {
         if (prevClickLine)
             plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
-        const newLine = data.points[0].x;
-        plot.toggleLine(newLine, newLine.toFixed(2), true);
+        const newLine = Math.round(data.points[0].x);
+        plot.toggleLine(newLine, newLine.toString(), true);
         prevClickLine = newLine;
     }
     else if (data.event.which === 3) {

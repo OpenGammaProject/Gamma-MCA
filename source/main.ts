@@ -23,10 +23,8 @@
     - Calibration n-polynomial regression
     - ROI with stats (total counts, max, min, FWHM, range,...)
 
-    - (!) Custom Line when left-clicking into plot. Rightclick to delete.
     - (!) Gaussian Correl Filter setting for sigma + scaling?
     - (!) FWHM for Gaussian peaks -> add to energy/isotope line annotation
-    - (!) Check screen reader support
 
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
@@ -678,8 +676,6 @@ function unHover(/*data: any*/): void {
 let prevClickLine: number | undefined;
 
 function clickEvent(data: any): void {
-  //console.log(data.event);
-  
   document.getElementById('click-data')!.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
 
   for (const key in calClick) {
@@ -694,8 +690,8 @@ function clickEvent(data: any): void {
 
   if (data.event.which === 1) { // Left-click
     if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
-    const newLine = data.points[0].x;
-    plot.toggleLine(newLine, newLine.toFixed(2), true);
+    const newLine: number = Math.round(data.points[0].x);
+    plot.toggleLine(newLine, newLine.toString(), true);
     prevClickLine = newLine;
   } else if (data.event.which === 3) { // Right-click
     if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
