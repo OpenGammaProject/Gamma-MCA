@@ -24,7 +24,9 @@
     - ROI with stats (total counts, max, min, FWHM, range,...)
 
     - (!) Custom Line when left-clicking into plot. Rightclick to delete.
-    - (!) FWHM for Gaussian peaks
+    - (!) Gaussian Correl Filter setting for sigma + scaling?
+    - (!) FWHM for Gaussian peaks -> add to energy/isotope line annotation
+    - (!) Check screen reader support
 
   Known Issue:
     - Serial: Sometimes only half the actual cps are shown in histogram serial mode?!?!
