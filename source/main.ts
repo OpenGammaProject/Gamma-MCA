@@ -29,7 +29,6 @@
     - (!) Check screen reader support
 
   Known Issue:
-    - Serial: Sometimes only half the actual cps are shown in histogram serial mode?!?!
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
     - Service Worker: Somehow fetching and caching the hits tracker does not work (hits.seeyoufarm.com)
 
