@@ -53,11 +53,13 @@ interface Anno {
   };
 }
 
+/*
 interface resolutionData {
   start: number, // Start of peak
   end: number, // End of peak
   resolution: number // FWHM of peak in %
 }
+*/
 
 interface CoeffPoints {
   aFrom: number,
@@ -161,7 +163,7 @@ export class SpectrumPlot {
     lastDataX: <number[]>[],
     lastDataY: <number[]>[],
   };
-  resolutionValues: resolutionData[] = [];
+  //resolutionValues: resolutionData[] = [];
   gaussSigma = 2;
   private customModeBarButtons = {
     name: 'Download plot as HTML',
@@ -493,7 +495,7 @@ export class SpectrumPlot {
   */
   private gaussianCorrel(xaxis: number[], data: number[], sigma = 2): number[] {
     const correlValues: number[] = [];
-    const peakValues: number[] = []
+    //const peakValues: number[] = []
 
     for (let index = 0; index < data.length; index++) {
       const std = Math.sqrt(index);
@@ -526,9 +528,10 @@ export class SpectrumPlot {
       correlValues.push(value);
 
       // Check for peaks (FWHM calculation); Check beginning of new peak or end of current peak
-      if ((value > 0 && peakValues.length % 2 === 0) || (value === 0 && peakValues.length % 2 === 1)) peakValues.push(index);
+      //if ((value > 0 && peakValues.length % 2 === 0) || (value === 0 && peakValues.length % 2 === 1)) peakValues.push(index);
     }
 
+    /*
     this.resolutionValues = []; // Clear Array
 
     // Approx. FWHM values for all peaks
@@ -538,7 +541,7 @@ export class SpectrumPlot {
       const center = Math.round((start + end)/2); // Round to get a bin value
 
       start = xaxis[Math.round(start)]; // Round to convert to bin value
-      end = xaxis[Math.round(end)]; // Round to convert to bin value
+      end = xaxis[Math.round(end)]; // Round to convert to bin value yxcfvgbhnjm,.-_.,mv 
 
       const fwhm = (end - start)/(2 * sigma) * 2.335; // Approximation for peak FWHM
       this.resolutionValues.push({start: start, end: end, resolution: fwhm/xaxis[center]*100});
@@ -546,6 +549,7 @@ export class SpectrumPlot {
 
     const scalingFactor = .8 * Math.max(...data) / Math.max(...correlValues); // Scale GCF values depending on the spectrum data
     correlValues.forEach((value, index, array) => array[index] = value * scalingFactor);
+    */
 
     return correlValues;
   }

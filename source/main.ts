@@ -23,7 +23,7 @@
     - Calibration n-polynomial regression
     - ROI with stats (total counts, max, min, FWHM, range,...)
 
-    - (!) FWHM for Gaussian peaks -> add to energy/isotope line annotation
+    - (!) FWHM calculation for Gaussian peaks still wrong
 
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
@@ -691,6 +691,7 @@ function clickEvent(data: any): void {
     if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
     const newLine: number = Math.round(data.points[0].x);
 
+    /*
     let extraText = '';
     for (const peak of plot.resolutionValues) { // Add FWHM stats if clicked inside a GCF peak
       if (peak.end >= newLine && newLine >= peak.start) {
@@ -698,8 +699,10 @@ function clickEvent(data: any): void {
         break;
       }
     }
-
     plot.toggleLine(newLine, newLine.toString() + extraText, true);
+    */
+
+    plot.toggleLine(newLine, newLine.toString(), true);
     prevClickLine = newLine;
   } else if (data.event.which === 3) { // Right-click
     if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
