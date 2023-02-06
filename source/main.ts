@@ -1431,14 +1431,14 @@ async function findPeaks(button: HTMLButtonElement): Promise<void> {
         break;
         
       case 'energy': // Third Mode: Isotopes
-        //plot.peakFinder(false); // Delete all old lines
+        plot.clearPeakFinder(); // Delete all old lines
         await loadIsotopes();
         plot.peakConfig.mode = 'isotopes';
         button.innerText = 'Isotopes';
         break;
 
       case 'isotopes':
-        plot.peakFinder(false); // Delete all old lines
+        plot.clearPeakFinder(); // Delete all old lines
         plot.peakConfig.enabled = false;
         button.innerText = 'None';
         break;

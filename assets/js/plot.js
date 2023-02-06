@@ -55,8 +55,6 @@ export class SpectrumPlot {
         width: 5,
         seekWidth: 2,
         lines: [],
-        lastDataX: [],
-        lastDataY: [],
     };
     gaussSigma = 2;
     customModeBarButtons = {
@@ -198,7 +196,7 @@ export class SpectrumPlot {
         }
         return newData;
     }
-    peakFinder(doFind = true) {
+    clearPeakFinder() {
         if (this.peakConfig.lines.length) {
             const lines = this.peakConfig.lines;
             for (const line of lines) {
@@ -206,17 +204,16 @@ export class SpectrumPlot {
             }
             this.peakConfig.lines = [];
         }
-        if (!doFind)
-            return;
-        const shortData = this.peakConfig.lastDataY;
-        const longData = this.computeMovingAverage(this.peakConfig.lastDataY, this.peakConfig.lag);
-        const maxVal = Math.max(...shortData);
-        const xAxisData = this.peakConfig.lastDataX;
+    }
+    peakFinder(xaxis, yaxis) {
+        this.clearPeakFinder();
+        const longData = this.computeMovingAverage(yaxis, this.peakConfig.lag);
+        const maxVal = Math.max(...yaxis);
         const peakLines = [];
-        const shortLen = shortData.length;
+        const shortLen = yaxis.length;
         for (let i = 0; i < shortLen; i++) {
-            if (shortData[i] - longData[i] > this.peakConfig.thres * maxVal)
-                peakLines.push(xAxisData[i]);
+            if (yaxis[i] - longData[i] > this.peakConfig.thres * maxVal)
+                peakLines.push(xaxis[i]);
         }
         let values = [];
         peakLines.push(0);
@@ -664,9 +661,7 @@ export class SpectrumPlot {
                     color: 'black',
                 }
             };
-            this.peakConfig.lastDataX = data[0].x;
-            this.peakConfig.lastDataY = gaussData;
-            this.peakFinder();
+            this.peakFinder(data[0].x, gaussData);
             data.unshift(eTrace);
         }
         if (!this.peakConfig.enabled || !data.length || data.length >= 3)

@@ -1028,12 +1028,13 @@ async function findPeaks(button) {
                 button.innerText = 'Energy';
                 break;
             case 'energy':
+                plot.clearPeakFinder();
                 await loadIsotopes();
                 plot.peakConfig.mode = 'isotopes';
                 button.innerText = 'Isotopes';
                 break;
             case 'isotopes':
-                plot.peakFinder(false);
+                plot.clearPeakFinder();
                 plot.peakConfig.enabled = false;
                 button.innerText = 'None';
                 break;

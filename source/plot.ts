@@ -160,8 +160,8 @@ export class SpectrumPlot {
     width: 5,
     seekWidth: 2,
     lines: <number[]>[],
-    lastDataX: <number[]>[],
-    lastDataY: <number[]>[],
+    //lastDataX: <number[]>[],
+    //lastDataY: <number[]>[],
   };
   //resolutionValues: resolutionData[] = [];
   gaussSigma = 2;
@@ -341,9 +341,9 @@ export class SpectrumPlot {
     return newData;
   }
   /*
-    Find and mark energy peaks by using two different moving averages
+    Clear all lines placed by the peak finder
   */
-  peakFinder(doFind = true): void {
+  clearPeakFinder(): void {
     if (this.peakConfig.lines.length) {
       const lines = this.peakConfig.lines
       for (const line of lines) {
@@ -351,20 +351,22 @@ export class SpectrumPlot {
       }
       this.peakConfig.lines = [];
     }
+  }
+  /*
+    Find and mark energy peaks by using two different moving averages
+  */
+  peakFinder(xaxis: number[], yaxis: number[]): void {
+    this.clearPeakFinder();
 
-    if (!doFind) return;
+    const longData = this.computeMovingAverage(yaxis, this.peakConfig.lag);
 
-    const shortData: number[] = this.peakConfig.lastDataY;
-    const longData = this.computeMovingAverage(this.peakConfig.lastDataY, this.peakConfig.lag);
-
-    const maxVal = Math.max(...shortData);
-    const xAxisData: number[] = this.peakConfig.lastDataX;
+    const maxVal = Math.max(...yaxis);
     const peakLines: number[] = [];
 
-    const shortLen = shortData.length;
+    const shortLen = yaxis.length;
 
     for (let i = 0; i < shortLen; i++) {
-      if (shortData[i] - longData[i] > this.peakConfig.thres * maxVal) peakLines.push(xAxisData[i]);
+      if (yaxis[i] - longData[i] > this.peakConfig.thres * maxVal) peakLines.push(xaxis[i]);
     }
 
     let values: number[] = [];
@@ -942,9 +944,9 @@ export class SpectrumPlot {
         }
       };
 
-      this.peakConfig.lastDataX = data[0].x;
-      this.peakConfig.lastDataY = gaussData;
-      this.peakFinder();
+      //this.peakConfig.lastDataX = data[0].x;
+      //this.peakConfig.lastDataY = gaussData;
+      this.peakFinder(data[0].x, gaussData);
 
       data.unshift(eTrace);
     }
