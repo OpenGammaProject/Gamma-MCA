@@ -205,15 +205,15 @@ export class SpectrumPlot {
             this.peakConfig.lines = [];
         }
     }
-    peakFinder(xaxis, yaxis) {
+    peakFinder(xAxis, yAxis) {
         this.clearPeakFinder();
-        const longData = this.computeMovingAverage(yaxis, this.peakConfig.lag);
-        const maxVal = Math.max(...yaxis);
+        const longData = this.computeMovingAverage(yAxis, this.peakConfig.lag);
+        const maxVal = Math.max(...yAxis);
         const peakLines = [];
-        const shortLen = yaxis.length;
+        const shortLen = yAxis.length;
         for (let i = 0; i < shortLen; i++) {
-            if (yaxis[i] - longData[i] > this.peakConfig.thres * maxVal)
-                peakLines.push(xaxis[i]);
+            if (yAxis[i] - longData[i] > this.peakConfig.thres * maxVal)
+                peakLines.push(xAxis[i]);
         }
         let values = [];
         peakLines.push(0);

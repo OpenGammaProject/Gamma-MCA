@@ -353,18 +353,18 @@ export class SpectrumPlot {
   /*
     Find and mark energy peaks by using two different moving averages
   */
-  peakFinder(xaxis: number[], yaxis: number[]): void {
+  peakFinder(xAxis: number[], yAxis: number[]): void {
     this.clearPeakFinder();
 
-    const longData = this.computeMovingAverage(yaxis, this.peakConfig.lag);
+    const longData = this.computeMovingAverage(yAxis, this.peakConfig.lag);
 
-    const maxVal = Math.max(...yaxis);
+    const maxVal = Math.max(...yAxis);
     const peakLines: number[] = [];
 
-    const shortLen = yaxis.length;
+    const shortLen = yAxis.length;
 
     for (let i = 0; i < shortLen; i++) {
-      if (yaxis[i] - longData[i] > this.peakConfig.thres * maxVal) peakLines.push(xaxis[i]);
+      if (yAxis[i] - longData[i] > this.peakConfig.thres * maxVal) peakLines.push(xAxis[i]);
     }
 
     let values: number[] = [];
