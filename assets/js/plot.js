@@ -345,6 +345,8 @@ export class SpectrumPlot {
             const value = (resultVal && resultVal > 0) ? resultVal : 0;
             correlValues.push(value);
         }
+        const scalingFactor = .8 * Math.max(...data) / Math.max(...correlValues);
+        correlValues.forEach((value, index, array) => array[index] = value * scalingFactor);
         return correlValues;
     }
     plotCalibration(dataObj, update) {
