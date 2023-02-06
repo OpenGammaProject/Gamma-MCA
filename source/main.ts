@@ -1468,9 +1468,9 @@ function bindInputs(): void {
     'smaVal': 'sma',
     'ser-command': 'send-command'
   }
-  for (const [key, value] of Object.entries(nonSettingsEnterPressElements)) {
-    document.getElementById(key)!.onkeydown = event => function() {
-      if (event.key === 'Enter') document.getElementById(value)?.click(); // ENTER key
+  for (const [inputId, buttonId] of Object.entries(nonSettingsEnterPressElements)) {
+    document.getElementById(inputId)!.onkeydown = event => {
+      if (event.key === 'Enter') document.getElementById(buttonId)?.click(); // ENTER key
     };
   }
 
@@ -1491,13 +1491,13 @@ function bindInputs(): void {
     'peak-width': 'peakWidth',
     'seek-width': 'seekWidth'
   }
-  for (const [id, name] of Object.entries(settingsEnterPressElements)) {
-    const valueElement = <HTMLInputElement>document.getElementById(id);
-    const buttonElement = <HTMLButtonElement>document.getElementById(`${id}-btn`);
+  for (const [inputId, settingsName] of Object.entries(settingsEnterPressElements)) {
+    const valueElement = <HTMLInputElement>document.getElementById(inputId);
+    const buttonElement = <HTMLButtonElement>document.getElementById(`${inputId}-btn`);
     valueElement.onkeydown = event => {
       if (event.key === 'Enter') buttonElement.click(); // Press ENTER key;
     };
-    buttonElement.onclick = () => changeSettings(name, valueElement);
+    buttonElement.onclick = () => changeSettings(settingsName, valueElement);
   }
 
   // Bind settings button press or onchange events for settings that do not have the default value input element

@@ -1061,10 +1061,10 @@ function bindInputs() {
         'smaVal': 'sma',
         'ser-command': 'send-command'
     };
-    for (const [key, value] of Object.entries(nonSettingsEnterPressElements)) {
-        document.getElementById(key).onkeydown = event => function () {
+    for (const [inputId, buttonId] of Object.entries(nonSettingsEnterPressElements)) {
+        document.getElementById(inputId).onkeydown = event => {
             if (event.key === 'Enter')
-                document.getElementById(value)?.click();
+                document.getElementById(buttonId)?.click();
         };
     }
     const settingsEnterPressElements = {
@@ -1083,14 +1083,14 @@ function bindInputs() {
         'peak-width': 'peakWidth',
         'seek-width': 'seekWidth'
     };
-    for (const [id, name] of Object.entries(settingsEnterPressElements)) {
-        const valueElement = document.getElementById(id);
-        const buttonElement = document.getElementById(`${id}-btn`);
+    for (const [inputId, settingsName] of Object.entries(settingsEnterPressElements)) {
+        const valueElement = document.getElementById(inputId);
+        const buttonElement = document.getElementById(`${inputId}-btn`);
         valueElement.onkeydown = event => {
             if (event.key === 'Enter')
                 buttonElement.click();
         };
-        buttonElement.onclick = () => changeSettings(name, valueElement);
+        buttonElement.onclick = () => changeSettings(settingsName, valueElement);
     }
     document.getElementById('edit-plot').onclick = event => changeSettings('editMode', event.target);
     document.getElementById('toggle-time-limit').onclick = event => changeSettings('timeLimitBool', event.target);
