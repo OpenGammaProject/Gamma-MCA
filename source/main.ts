@@ -690,7 +690,16 @@ function clickEvent(data: any): void {
   if (data.event.which === 1) { // Left-click
     if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
     const newLine: number = Math.round(data.points[0].x);
-    plot.toggleLine(newLine, newLine.toString(), true);
+
+    let extraText = '';
+    for (const peak of plot.resolutionValues) { // Add FWHM stats if clicked inside a GCF peak
+      if (peak.end >= newLine && newLine >= peak.start) {
+        extraText = `<br>FWHM ${peak.resolution.toFixed(1)}%`;
+        break;
+      }
+    }
+
+    plot.toggleLine(newLine, newLine.toString() + extraText, true);
     prevClickLine = newLine;
   } else if (data.event.which === 3) { // Right-click
     if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false);

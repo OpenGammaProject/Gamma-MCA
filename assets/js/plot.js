@@ -58,6 +58,7 @@ export class SpectrumPlot {
         lastDataX: [],
         lastDataY: [],
     };
+    resolutionValues = [];
     gaussSigma = 2;
     customModeBarButtons = {
         name: 'Download plot as HTML',
@@ -322,7 +323,7 @@ export class SpectrumPlot {
         this.showCalChart = (typeof override === 'boolean') ? override : !this.showCalChart;
         this.showCalChart ? this.plotCalibration(dataObj, true) : this.plotData(dataObj, true);
     }
-    gaussianCorrel(data, sigma = 2) {
+    gaussianCorrel(xaxis, data, sigma = 2) {
         const correlValues = [];
         const peakValues = [];
         for (let index = 0; index < data.length; index++) {
@@ -348,15 +349,20 @@ export class SpectrumPlot {
             }
             const value = (resultVal && resultVal > 0) ? resultVal : 0;
             correlValues.push(value);
-            if (value > 0 && peakValues.length % 2 === 0 || value === 0 && peakValues.length % 2 === 1)
+            if ((value > 0 && peakValues.length % 2 === 0) || (value === 0 && peakValues.length % 2 === 1))
                 peakValues.push(index);
         }
+        this.resolutionValues = [];
         for (let i = 0; i < peakValues.length; i += 2) {
-            const fwhm = (peakValues[i + 1] - peakValues[i]) / (2 * sigma) * 2.335;
-            const center = (peakValues[i + 1] + peakValues[i]) / 2;
-            console.log('peak', i, 'resolution', fwhm / center * 100);
+            let start = peakValues[i];
+            let end = peakValues[i + 1] - 1;
+            const center = Math.round((start + end) / 2);
+            start = xaxis[Math.round(start)];
+            end = xaxis[Math.round(end)];
+            const fwhm = (end - start) / (2 * sigma) * 2.335;
+            this.resolutionValues.push({ start: start, end: end, resolution: fwhm / xaxis[center] * 100 });
         }
-        const scalingFactor = 2 / 3 * Math.max(...data) / Math.max(...correlValues);
+        const scalingFactor = .8 * Math.max(...data) / Math.max(...correlValues);
         correlValues.forEach((value, index, array) => array[index] = value * scalingFactor);
         return correlValues;
     }
@@ -658,7 +664,7 @@ export class SpectrumPlot {
             modeBarButtonsToAdd: [],
         };
         if (this.peakConfig.enabled && data.length) {
-            const gaussData = this.gaussianCorrel(data[0].y, this.gaussSigma);
+            const gaussData = this.gaussianCorrel(data[0].x, data[0].y, this.gaussSigma);
             const eTrace = {
                 name: 'Gaussian Correlation',
                 x: data[0].x,
