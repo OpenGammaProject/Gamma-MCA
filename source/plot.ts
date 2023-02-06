@@ -548,10 +548,10 @@ export class SpectrumPlot {
       const fwhm = (end - start)/(2 * sigma) * 2.335; // Approximation for peak FWHM
       this.resolutionValues.push({start: start, end: end, resolution: fwhm/xaxis[center]*100});
     }
+    */
 
     const scalingFactor = .8 * Math.max(...data) / Math.max(...correlValues); // Scale GCF values depending on the spectrum data
     correlValues.forEach((value, index, array) => array[index] = value * scalingFactor);
-    */
 
     return correlValues;
   }

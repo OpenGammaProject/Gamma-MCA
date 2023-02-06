@@ -23,7 +23,7 @@
     - Calibration n-polynomial regression
     - ROI with stats (total counts, max, min, FWHM, range,...)
 
-    - (!) FWHM calculation for Gaussian peaks still wrong
+    - (!) FWHM calculation in peak finder
 
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
