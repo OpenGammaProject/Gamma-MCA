@@ -54,7 +54,7 @@ export class SpectrumPlot {
         lag: 50,
         width: 5,
         seekWidth: 2,
-        lines: [],
+        lines: []
     };
     gaussSigma = 2;
     customModeBarButtons = {
@@ -319,7 +319,7 @@ export class SpectrumPlot {
         this.showCalChart = (typeof override === 'boolean') ? override : !this.showCalChart;
         this.showCalChart ? this.plotCalibration(dataObj, true) : this.plotData(dataObj, true);
     }
-    gaussianCorrel(xaxis, data, sigma = 2) {
+    gaussianCorrel(data, sigma = 2) {
         const correlValues = [];
         for (let index = 0; index < data.length; index++) {
             const std = Math.sqrt(index);
@@ -647,7 +647,7 @@ export class SpectrumPlot {
             modeBarButtonsToAdd: [],
         };
         if (this.peakConfig.enabled && data.length) {
-            const gaussData = this.gaussianCorrel(data[0].x, data[0].y, this.gaussSigma);
+            const gaussData = this.gaussianCorrel(data[0].y, this.gaussSigma);
             const eTrace = {
                 name: 'Gaussian Correlation',
                 x: data[0].x,

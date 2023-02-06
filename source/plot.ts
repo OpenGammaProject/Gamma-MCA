@@ -159,9 +159,7 @@ export class SpectrumPlot {
     lag: 50,
     width: 5,
     seekWidth: 2,
-    lines: <number[]>[],
-    //lastDataX: <number[]>[],
-    //lastDataY: <number[]>[],
+    lines: <number[]>[]
   };
   //resolutionValues: resolutionData[] = [];
   gaussSigma = 2;
@@ -495,9 +493,8 @@ export class SpectrumPlot {
   /*
     Gaussian correlation filter using the PRA algorithm
   */
-  private gaussianCorrel(xaxis: number[], data: number[], sigma = 2): number[] {
+  private gaussianCorrel(data: number[], sigma = 2): number[] {
     const correlValues: number[] = [];
-    //const peakValues: number[] = []
 
     for (let index = 0; index < data.length; index++) {
       const std = Math.sqrt(index);
@@ -528,27 +525,7 @@ export class SpectrumPlot {
 
       const value = (resultVal && resultVal > 0 ) ? resultVal : 0;
       correlValues.push(value);
-
-      // Check for peaks (FWHM calculation); Check beginning of new peak or end of current peak
-      //if ((value > 0 && peakValues.length % 2 === 0) || (value === 0 && peakValues.length % 2 === 1)) peakValues.push(index);
     }
-
-    /*
-    this.resolutionValues = []; // Clear Array
-
-    // Approx. FWHM values for all peaks
-    for (let i = 0; i < peakValues.length; i+=2) {
-      let start = peakValues[i];
-      let end = peakValues[i+1] - 1; // Subtract one because the end check is delayed by one
-      const center = Math.round((start + end)/2); // Round to get a bin value
-
-      start = xaxis[Math.round(start)]; // Round to convert to bin value
-      end = xaxis[Math.round(end)]; // Round to convert to bin value yxcfvgbhnjm,.-_.,mv 
-
-      const fwhm = (end - start)/(2 * sigma) * 2.335; // Approximation for peak FWHM
-      this.resolutionValues.push({start: start, end: end, resolution: fwhm/xaxis[center]*100});
-    }
-    */
 
     const scalingFactor = .8 * Math.max(...data) / Math.max(...correlValues); // Scale GCF values depending on the spectrum data
     correlValues.forEach((value, index, array) => array[index] = value * scalingFactor);
@@ -922,7 +899,7 @@ export class SpectrumPlot {
     */
     if (this.peakConfig.enabled && data.length) {
       // Gaussian Correlation Filter
-      const gaussData = this.gaussianCorrel(data[0].x, data[0].y, this.gaussSigma);
+      const gaussData = this.gaussianCorrel(data[0].y, this.gaussSigma);
 
       const eTrace: Trace = {
         name: 'Gaussian Correlation',
@@ -944,8 +921,6 @@ export class SpectrumPlot {
         }
       };
 
-      //this.peakConfig.lastDataX = data[0].x;
-      //this.peakConfig.lastDataY = gaussData;
       this.peakFinder(data[0].x, gaussData);
 
       data.unshift(eTrace);
