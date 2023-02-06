@@ -528,6 +528,9 @@ export class SpectrumPlot {
       console.log('peak',i,'resolution',fwhm/center*100);
     }
 
+    const scalingFactor = 2/3 * Math.max(...data) / Math.max(...correlValues); // Scale GCF values depending on the spectrum data
+    correlValues.forEach((value, index, array) => array[index] = value * scalingFactor);
+    
     return correlValues;
   }
   /*

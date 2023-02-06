@@ -355,6 +355,8 @@ export class SpectrumPlot {
             const center = (peakValues[i + 1] + peakValues[i]) / 2;
             console.log('peak', i, 'resolution', fwhm / center * 100);
         }
+        const scalingFactor = 2 / 3 * Math.max(...data) / Math.max(...correlValues);
+        correlValues.forEach((value, index, array) => array[index] = value * scalingFactor);
         return correlValues;
     }
     plotCalibration(dataObj, update) {
