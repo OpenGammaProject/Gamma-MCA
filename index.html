@@ -916,6 +916,13 @@
                   <div class="accordion-body">
 
                     <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="gauss-sigma">Gaussian Filter &sigma;</label>
+                      <input type="number" class="form-control" id="gauss-sigma" min="1", step="1">
+                      <button class="btn btn-primary" type="button" id="gauss-sigma-btn" title="Apply"> <i class="fas fa-check"></i> </button>
+                    </div>
+                    <p><small>Defines how many standard deviations of the peak the Gaussian shape is covering. 2 equals 95% coverage. Any positive integer is valid.</small></p>
+
+                    <div class="input-group input-group-sm">
                       <label class="input-group-text" for="peak-lag">Smoothing</label>
                       <input type="number" class="form-control" id="peak-lag" min="1">
                       <button class="btn btn-primary" type="button" id="peak-lag-btn" title="Apply"> <i class="fas fa-check"></i> </button>

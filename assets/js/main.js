@@ -1081,7 +1081,8 @@ function bindInputs() {
         'peak-thres': 'peakThres',
         'peak-lag': 'peakLag',
         'peak-width': 'peakWidth',
-        'seek-width': 'seekWidth'
+        'seek-width': 'seekWidth',
+        'gauss-sigma': 'gaussSigma'
     };
     for (const [inputId, settingsName] of Object.entries(settingsEnterPressElements)) {
         const valueElement = document.getElementById(inputId);
@@ -1114,6 +1115,7 @@ function loadSettingsDefault() {
     document.getElementById('peak-lag').value = plot.peakConfig.lag.toString();
     document.getElementById('peak-width').value = plot.peakConfig.width.toString();
     document.getElementById('seek-width').value = plot.peakConfig.seekWidth.toString();
+    document.getElementById('gauss-sigma').value = plot.gaussSigma.toString();
     const formatSelector = document.getElementById('download-format');
     const len = formatSelector.options.length;
     const format = plot.downloadFormat;
@@ -1177,6 +1179,9 @@ function loadSettingsStorage() {
     setting = loadJSON('plotDownload');
     if (setting)
         plot.downloadFormat = setting;
+    setting = loadJSON('gaussSigma');
+    if (setting)
+        plot.gaussSigma = setting;
 }
 function changeSettings(name, element) {
     const stringValue = element.value.trim();
@@ -1296,6 +1301,13 @@ function changeSettings(name, element) {
             plot.downloadFormat = stringValue;
             plot.updatePlot(spectrumData);
             result = saveJSON(name, stringValue);
+            break;
+        }
+        case 'gaussSigma': {
+            const numVal = parseInt(stringValue);
+            plot.gaussSigma = numVal;
+            plot.updatePlot(spectrumData);
+            result = saveJSON(name, numVal);
             break;
         }
         default: {

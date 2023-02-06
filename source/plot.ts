@@ -155,6 +155,7 @@ export class SpectrumPlot {
     lastDataX: <number[]>[],
     lastDataY: <number[]>[],
   };
+  gaussSigma = 2;
   private customModeBarButtons = {
     name: 'Download plot as HTML',
     icon: (<any>window).Plotly.Icons['disk'],
@@ -530,7 +531,7 @@ export class SpectrumPlot {
 
     const scalingFactor = 2/3 * Math.max(...data) / Math.max(...correlValues); // Scale GCF values depending on the spectrum data
     correlValues.forEach((value, index, array) => array[index] = value * scalingFactor);
-    
+
     return correlValues;
   }
   /*
@@ -900,7 +901,7 @@ export class SpectrumPlot {
     */
     if (this.peakConfig.enabled && data.length) {
       // Gaussian Correlation Filter
-      const gaussData = this.gaussianCorrel(data[0].y);
+      const gaussData = this.gaussianCorrel(data[0].y, this.gaussSigma);
 
       const eTrace: Trace = {
         name: 'Gaussian Correlation',

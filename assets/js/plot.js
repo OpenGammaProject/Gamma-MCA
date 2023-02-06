@@ -58,6 +58,7 @@ export class SpectrumPlot {
         lastDataX: [],
         lastDataY: [],
     };
+    gaussSigma = 2;
     customModeBarButtons = {
         name: 'Download plot as HTML',
         icon: window.Plotly.Icons['disk'],
@@ -657,7 +658,7 @@ export class SpectrumPlot {
             modeBarButtonsToAdd: [],
         };
         if (this.peakConfig.enabled && data.length) {
-            const gaussData = this.gaussianCorrel(data[0].y);
+            const gaussData = this.gaussianCorrel(data[0].y, this.gaussSigma);
             const eTrace = {
                 name: 'Gaussian Correlation',
                 x: data[0].x,

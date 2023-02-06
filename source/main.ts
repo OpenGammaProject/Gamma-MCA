@@ -23,7 +23,6 @@
     - Calibration n-polynomial regression
     - ROI with stats (total counts, max, min, FWHM, range,...)
 
-    - (!) Gaussian Correl Filter setting for sigma + scaling?
     - (!) FWHM for Gaussian peaks -> add to energy/isotope line annotation
 
   Known Issue:
@@ -1474,7 +1473,7 @@ function bindInputs(): void {
     };
   }
 
-  // Bind settings button onclick events and enter press
+  // Bind settings button onclick events and enter press, format: {settingsValueElement: settingsName}
   const settingsEnterPressElements = {
     'iso-hover-prox': 'maxIsoDist',
     'custom-url': 'customURL',
@@ -1489,7 +1488,8 @@ function bindInputs(): void {
     'peak-thres': 'peakThres',
     'peak-lag': 'peakLag',
     'peak-width': 'peakWidth',
-    'seek-width': 'seekWidth'
+    'seek-width': 'seekWidth',
+    'gauss-sigma': 'gaussSigma'
   }
   for (const [inputId, settingsName] of Object.entries(settingsEnterPressElements)) {
     const valueElement = <HTMLInputElement>document.getElementById(inputId);
@@ -1527,6 +1527,7 @@ function loadSettingsDefault(): void {
   (<HTMLInputElement>document.getElementById('peak-lag')).value = plot.peakConfig.lag.toString();
   (<HTMLInputElement>document.getElementById('peak-width')).value = plot.peakConfig.width.toString();
   (<HTMLInputElement>document.getElementById('seek-width')).value = plot.peakConfig.seekWidth.toString();
+  (<HTMLInputElement>document.getElementById('gauss-sigma')).value = plot.gaussSigma.toString();
 
   const formatSelector = <HTMLSelectElement>document.getElementById('download-format');
   const len = formatSelector.options.length;
@@ -1591,6 +1592,9 @@ function loadSettingsStorage(): void {
 
   setting = loadJSON('plotDownload');
   if (setting) plot.downloadFormat = setting;
+
+  setting = loadJSON('gaussSigma');
+  if (setting) plot.gaussSigma = setting;
 }
 
 
@@ -1732,6 +1736,14 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       plot.updatePlot(spectrumData);
 
       result = saveJSON(name, stringValue);
+      break;
+    }
+    case 'gaussSigma': {
+      const numVal = parseInt(stringValue);
+      plot.gaussSigma = numVal;
+      plot.updatePlot(spectrumData);
+
+      result = saveJSON(name, numVal);
       break;
     }
     default: {
