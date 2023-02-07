@@ -20,6 +20,7 @@
 
     - Toasts in Notification class, remove from HTML DOM
     - Sorting isotope list
+    - Isotope list: Add grouped display, e.g. show all Bi-214 lines with one click
     - Calibration n-polynomial regression
     - ROI with stats (total counts, max, min, FWHM, range,...)
 
