@@ -1,6 +1,151 @@
+import { WebUSBSerialPort } from './webusbserial.js';
+export class Serial {
+    async sendString(value) {
+        ;
+    }
+    async read() {
+        let ret = new Uint8Array();
+        return ret;
+    }
+    async close() {
+        ;
+    }
+    isOpen = false;
+    async open(baudRate) {
+        ;
+    }
+    isThisPort(port) {
+        return false;
+    }
+    getInfo() {
+        return "dummy";
+    }
+}
+export class WebUSBSerial extends Serial {
+    port;
+    device;
+    serOptions = {
+        overridePortSettings: true,
+        baudrate: 115200,
+    };
+    static deviceFilters = [
+        { 'vendorId': 0x0403, 'productId': 0x6015 },
+    ];
+    constructor(device) {
+        super();
+        this.device = device;
+        this.port = new WebUSBSerialPort(device, this.serOptions);
+    }
+    buffer = new Uint8Array(102400);
+    pos = 0;
+    async read() {
+        if (this.pos == 0) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            return new Uint8Array();
+        }
+        let ret = this.buffer.subarray(0, this.pos);
+        this.pos = 0;
+        return ret;
+    }
+    async open(baudRate) {
+        this.serOptions.baudRate = baudRate;
+        this.pos = 0;
+        await this.port.connect((data) => {
+            this.buffer.set(data, this.pos);
+            this.pos += data.length;
+        }, (error) => {
+            console.warn("Error receiving data: " + error);
+            this.isOpen = false;
+        });
+        this.isOpen = true;
+    }
+    async close() {
+        if (!this.isOpen)
+            return;
+        this.isOpen = false;
+        this.port.disconnect();
+    }
+    isThisPort(port) {
+        return (this.device == port);
+    }
+    getInfo() {
+        return "WebUSB";
+    }
+}
+export class WebSerial extends Serial {
+    port;
+    constructor(port) {
+        super();
+        this.port = port;
+    }
+    isThisPort(port) {
+        return this.port === port;
+    }
+    async sendString(value) {
+        if (!this.isOpen)
+            return;
+        if (!this.port?.writable)
+            throw 'Port is not writable!';
+        const textEncoder = new TextEncoderStream();
+        const writer = textEncoder.writable.getWriter();
+        const writableStreamClosed = textEncoder.readable.pipeTo(this.port.writable);
+        writer.write(value.trim() + '\n');
+        await writer.close();
+        await writableStreamClosed;
+    }
+    reader;
+    async read() {
+        let ret = new Uint8Array();
+        if (!this.isOpen)
+            return ret;
+        if (this.port.readable) {
+            try {
+                this.reader = this.port.readable.getReader();
+                try {
+                    const { value, done } = await this.reader.read();
+                    if (value)
+                        ret = value;
+                    else
+                        await new Promise(resolve => setTimeout(resolve, 10));
+                }
+                finally {
+                    this.reader?.releaseLock();
+                    this.reader = undefined;
+                }
+            }
+            catch (err) {
+                this.reader?.releaseLock();
+                this.reader = undefined;
+                await new Promise(resolve => setTimeout(resolve, 100));
+                console.warn('Error Readnig.', err);
+                return ret;
+            }
+        }
+        else {
+            await close();
+        }
+        return ret;
+    }
+    serOptions = { baudRate: 9600 };
+    async open(baudRate) {
+        this.serOptions.baudRate = baudRate;
+        await this.port.open(SerialManager.serOptions);
+        this.isOpen = true;
+    }
+    async close() {
+        if (!this.isOpen)
+            return;
+        this.isOpen = false;
+        if (this.reader)
+            await this.reader?.cancel();
+        await this.port?.close();
+    }
+    getInfo() {
+        return `Id: 0x${this.port.getInfo().usbProductId?.toString(16)}`;
+    }
+}
 export class SerialManager {
     port;
-    reader;
     closed;
     recording = false;
     onlyConsole = true;
@@ -21,21 +166,16 @@ export class SerialManager {
     constructor(port) {
         this.port = port;
     }
+    isThisPort(port) {
+        return this.port.isThisPort(port);
+    }
     async sendString(value) {
-        if (!this.port?.writable)
-            throw 'Port is not writable!';
-        const textEncoder = new TextEncoderStream();
-        const writer = textEncoder.writable.getWriter();
-        const writableStreamClosed = textEncoder.readable.pipeTo(this.port.writable);
-        writer.write(value.trim() + '\n');
-        await writer.close();
-        await writableStreamClosed;
+        await this.port.sendString(value);
     }
     async showConsole() {
         if (this.recording)
             return;
-        if (!this.port.readable)
-            await this.port.open(SerialManager.serOptions);
+        await this.port.open(SerialManager.serOptions.baudRate);
         this.recording = true;
         this.onlyConsole = true;
         this.closed = this.readUntilClosed();
@@ -46,7 +186,7 @@ export class SerialManager {
         this.onlyConsole = false;
         this.recording = false;
         try {
-            this.reader?.cancel();
+            this.port.close();
         }
         catch (err) {
             console.warn('Nothing to disconnect.', err);
@@ -59,7 +199,7 @@ export class SerialManager {
         this.recording = false;
         this.timeDone += performance.now() - this.startTime;
         try {
-            this.reader?.cancel();
+            this.port.close();
         }
         catch (err) {
             console.warn('Nothing to disconnect.', err);
@@ -69,8 +209,7 @@ export class SerialManager {
     async startRecord(resume = false) {
         if (this.recording)
             return;
-        if (!this.port.readable)
-            await this.port.open(SerialManager.serOptions);
+        await this.port.open(SerialManager.serOptions.baudRate);
         if (!resume) {
             this.flushData();
             this.clearBaseHist();
@@ -82,22 +221,9 @@ export class SerialManager {
         this.closed = this.readUntilClosed();
     }
     async readUntilClosed() {
-        while (this.port?.readable && this.recording) {
-            try {
-                this.reader = this.port.readable.getReader();
-                while (true) {
-                    const { value, done } = await this.reader.read();
-                    if (value)
-                        this.addRaw(value);
-                    if (done) {
-                        break;
-                    }
-                }
-            }
-            finally {
-                this.reader?.releaseLock();
-                this.reader = undefined;
-            }
+        while (this.port.isOpen && this.recording) {
+            let data = await this.port.read();
+            this.addRaw(data);
         }
         await this.port?.close();
     }
