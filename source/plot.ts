@@ -676,14 +676,6 @@ export class SpectrumPlot {
 
     config.modeBarButtonsToAdd = [this.customModeBarButtons]; // HTML EXPORT FUNCTIONALITY
 
-    /*
-    if (!update) {
-      layout.uirevision = Math.random();
-      Object.assign(layout, {selectionrevision: Math.random()});
-      Object.assign(layout, {editrevision: Math.random()});
-    }
-    (<any>window).Plotly[(update === 'nuke') ? 'newPlot' : 'react'](this.plotDiv, [trace, markersTrace], layout, config);
-    */
     (<any>window).Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, markersTrace], layout, config);
   }
   /*
