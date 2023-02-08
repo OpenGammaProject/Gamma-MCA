@@ -490,7 +490,7 @@ export class SpectrumPlot {
         let maxXValue = 0;
         if (dataObj.data.length) {
             const trace = {
-                name: 'Net Spectrum',
+                name: 'Spectrum',
                 stackgroup: 'data',
                 x: this.getXAxis(dataObj.data.length),
                 y: dataObj.data,
@@ -535,6 +535,7 @@ export class SpectrumPlot {
                 }
                 data[0].y = newData;
                 data[0].fill = 'tonexty';
+                data[0].name = 'Net Spectrum';
             }
             data.push(bgTrace);
         }

@@ -697,7 +697,7 @@ export class SpectrumPlot {
 
     if (dataObj.data.length) {
       const trace: Trace = {
-        name: 'Net Spectrum',
+        name: 'Spectrum',
         stackgroup: 'data', // Stack line charts on top of each other
 
         x: this.getXAxis(dataObj.data.length),
@@ -753,6 +753,7 @@ export class SpectrumPlot {
 
         data[0].y = newData;
         data[0].fill = 'tonexty'; //'tonextx'
+        data[0].name = 'Net Spectrum';
       }
 
       //data.unshift(bgTrace);
