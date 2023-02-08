@@ -615,7 +615,7 @@
 
         <div class="col-auto p-1">
           <input type="checkbox" class="btn-check" id="iso-hover">
-          <label class="btn btn-outline-primary btn-sm" title="Show closest isotope when hovering (experimental)" for="iso-hover"> <i class="fa-solid fa-magnifying-glass"></i> Isotopes </label>
+          <label class="btn btn-outline-primary btn-sm" title="Show closest isotope when hovering" for="iso-hover"> <i class="fa-solid fa-magnifying-glass"></i> Isotopes </label>
         </div>
 
       </div>
@@ -796,19 +796,19 @@
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="iso-hover-prox">Iso Hover Proximity</label>
                       <input type="number" class="form-control" id="iso-hover-prox" min="1">
-                      <button class="btn btn-primary" type="button" id="setting1" title="Apply"> <i class="fas fa-check"></i> </button>
+                      <button class="btn btn-primary" type="button" id="iso-hover-prox-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <p><small>Input in keV. Any positive integer is valid.</small></p>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="custom-url">Isotope List</label>
                       <input type="url" class="form-control" id="custom-url" spellcheck="false">
-                      <button class="btn btn-primary" type="button" id="setting2" title="Apply"> <i class="fas fa-check"></i> </button>
+                      <button class="btn btn-primary" type="button" id="custom-url-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <p><small>File must be of valid JSON format. Use only trusted sources!</small></p>
 
                     <div class="input-group input-group-sm">
-                      <label class="input-group-text" for="iso-hover-prox">Download Plot</label>
+                      <label class="input-group-text" for="download-format">Download Plot</label>
                       <select class="form-select form-select-sm" id="download-format" aria-label="Plot download file format">
                         <option value="png" selected>.png</option>
                         <option value="svg">.svg</option>
@@ -833,14 +833,14 @@
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="custom-delimiter">CSV File Delimiter</label>
                       <input type="text" class="form-control" id="custom-delimiter" spellcheck="false">
-                      <button class="btn btn-primary" type="button" id="setting3" title="Apply"> <i class="fas fa-check"></i> </button>
+                      <button class="btn btn-primary" type="button" id="custom-delimiter-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <p><small>Any character is valid.</small></p>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="custom-file-adc">RAW Stream Channel No</label>
                       <input type="number" class="form-control" id="custom-file-adc" min="1">
-                      <button class="btn btn-primary" type="button" id="setting4" title="Apply"> <i class="fas fa-check"></i> </button>
+                      <button class="btn btn-primary" type="button" id="custom-file-adc-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <p><small>Number of (ADC) channels of the original device. Any positive integer is valid.</small></p>
 
@@ -859,14 +859,14 @@
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="custom-baud">Baud Rate</label>
                       <input type="number" class="form-control serial-controls" id="custom-baud" min="1">
-                      <button class="btn btn-primary serial-controls" type="button" id="setting5" title="Apply"> <i class="fas fa-check"></i> </button>
+                      <button class="btn btn-primary serial-controls" type="button" id="custom-baud-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <p><small>Input in bits per second. Any positive integer is valid.</small></p>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="eol-char">EOL character</label>
                       <input type="text" class="form-control serial-controls" id="eol-char" spellcheck="false">
-                      <button class="btn btn-primary serial-controls" type="button" id="setting5-1" title="Apply"> <i class="fas fa-check"></i> </button>
+                      <button class="btn btn-primary serial-controls" type="button" id="eol-char-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <p><small>Character transmitted at the end of every single data point. Any character is valid.</small></p>
 
@@ -885,21 +885,21 @@
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="custom-ser-refresh">Plot Refresh Time</label>
                       <input type="number" class="form-control serial-controls" id="custom-ser-refresh" min="1">
-                      <button class="btn btn-primary serial-controls" type="button" id="setting6" title="Apply"> <i class="fas fa-check"></i> </button>
+                      <button class="btn btn-primary serial-controls" type="button" id="custom-ser-refresh-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <p><small>Input in seconds. Any positive float is valid, use integers for best performance.</small></p>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="custom-ser-buffer">Max Serial Buffer</label>
                       <input type="number" class="form-control serial-controls" id="custom-ser-buffer" min="1">
-                      <button class="btn btn-primary serial-controls" type="button" id="setting7" title="Apply"> <i class="fas fa-check"></i> </button>
+                      <button class="btn btn-primary serial-controls" type="button" id="custom-ser-buffer-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <p><small>Max number of serial input events buffered between plot refreshes. Any positive integer is valid.</small></p>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="custom-ser-adc">Serial Channel No</label>
                       <input type="number" class="form-control serial-controls" id="custom-ser-adc" min="1">
-                      <button class="btn btn-primary serial-controls" type="button" id="setting8" title="Apply"> <i class="fas fa-check"></i> </button>
+                      <button class="btn btn-primary serial-controls" type="button" id="custom-ser-adc-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <p><small>Number of (ADC) channels of the serial device. Any positive integer is valid.</small></p>
 
@@ -916,30 +916,37 @@
                   <div class="accordion-body">
 
                     <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="gauss-sigma">Gaussian Filter &sigma;</label>
+                      <input type="number" class="form-control" id="gauss-sigma" min="1", step="1">
+                      <button class="btn btn-primary" type="button" id="gauss-sigma-btn" title="Apply"> <i class="fas fa-check"></i> </button>
+                    </div>
+                    <p><small>Defines how many standard deviations of the peak the Gaussian shape is covering. 2 equals 95% coverage. Any positive integer is valid.</small></p>
+
+                    <div class="input-group input-group-sm">
                       <label class="input-group-text" for="peak-lag">Smoothing</label>
                       <input type="number" class="form-control" id="peak-lag" min="1">
-                      <button class="btn btn-primary" type="button" id="setting10" title="Apply"> <i class="fas fa-check"></i> </button>
+                      <button class="btn btn-primary" type="button" id="peak-lag-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <p><small>Decrease this if your data already looks pretty smooth, increase otherwise. Too high values can hide smaller peaks, too low values might generate false-positives. Any positive integer is valid.</small></p>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="peak-thres">Threshold</label>
                       <input type="number" class="form-control" id="peak-thres" min="0" step="0.0005">
-                      <button class="btn btn-primary" type="button" id="setting9" title="Apply"> <i class="fas fa-check"></i> </button>
+                      <button class="btn btn-primary" type="button" id="peak-thres-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <p><small>Change this after adapting the <code>Smoothing</code> setting. Decreasing this will make the peak finder trigger on lower-amplitude peaks and vice versa. Any positive float is valid.</small></p>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="peak-width">Peak Width</label>
                       <input type="number" class="form-control" id="peak-width" min="1">
-                      <button class="btn btn-primary" type="button" id="setting11" title="Apply"> <i class="fas fa-check"></i> </button>
+                      <button class="btn btn-primary" type="button" id="peak-width-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <p><small>Maximum distance two peak lines can be apart to count as one single peak. Any positive integer is valid.</small></p>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="seek-width">Isotope Seek</label>
                       <input type="number" class="form-control" id="seek-width" min="1">
-                      <button class="btn btn-primary" type="button" id="setting12" title="Apply"> <i class="fas fa-check"></i> </button>
+                      <button class="btn btn-primary" type="button" id="seek-width-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <p><small>Maximum distance to search for isotopes around the peak energy (multiple of the peak width). Any positive float is valid.</small></p>
 
@@ -1036,7 +1043,7 @@
         </div>
       </div>
 
-      <div id="update-installed" class="toast text-bg-info" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="10000">
+      <div id="update-installed" class="toast text-bg-info" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
         <div class="toast-header">
           <i class="fa-solid fa-cloud-arrow-down me-2"></i>
           <strong class="me-auto">Installed Update</strong>
@@ -1045,17 +1052,6 @@
         <div class="toast-body">
           An update has been found and installed. You must reload Gamma MCA for the changes to take effect.
           <em>You can also continue on this page without reloading for now.</em>
-        </div>
-      </div>
-
-      <div id="screen-size-warning" class="toast bg-warning" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="10000">
-        <div class="toast-header">
-          <i class="fas fa-info-circle me-2"></i>
-          <strong class="me-auto">Window Size Warning</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-          Your window/screen size is smaller than recommended - therefore your experience may vary. For optimal usage increase the window size to a minimum of 1100 x 700 px.
         </div>
       </div>
 
@@ -1150,7 +1146,7 @@
         </div>
       </div>
 
-      <div id="auto-stop" class="toast text-bg-info" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="8000">
+      <div id="auto-stop" class="toast text-bg-info" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
         <div class="toast-header">
           <i class="fas fa-info-circle me-2"></i>
           <strong class="me-auto">Recording Stopped</strong>
@@ -1194,7 +1190,7 @@
         </div>
       </div>
 
-      <div id="setting-success" class="toast text-bg-success" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
+      <div id="setting-success" class="toast text-bg-success" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
         <div class="toast-header">
           <i class="fas fa-check-circle me-2"></i>
           <strong class="me-auto">Changed Setting</strong>
@@ -1205,7 +1201,7 @@
         </div>
       </div>
 
-      <div id="setting-type" class="toast text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
+      <div id="setting-type" class="toast text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
         <div class="toast-header">
           <i class="fas fa-exclamation-triangle me-2"></i>
           <strong class="me-auto">Wrong Datatype</strong>
@@ -1216,7 +1212,7 @@
         </div>
       </div>
 
-      <div id="setting-error" class="toast text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
+      <div id="setting-error" class="toast text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
         <div class="toast-header">
           <i class="fas fa-exclamation-triangle me-2"></i>
           <strong class="me-auto">Settings Error</strong>

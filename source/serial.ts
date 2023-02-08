@@ -218,8 +218,10 @@ export class SerialManager {
 
           if (stringHist.length !== SerialManager.adcChannels) continue; // Something is wrong with this histogram
 
-          let numHist = stringHist.map(x => parseInt(x));
-          numHist = numHist.map(item => isNaN(item) ? 0 : item);
+          const numHist = stringHist.map(x => { // Parse ints from strings and check if NaN
+            const parsed = parseInt(x);
+            return isNaN(parsed) ? 0 : parsed;
+          });
 
           if (!this.baseHist.length) {
             this.baseHist = numHist;

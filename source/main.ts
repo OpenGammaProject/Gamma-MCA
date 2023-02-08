@@ -18,14 +18,15 @@
     - (?) Dark Mode
     - (?) Hotkeys
 
+    - Toasts in Notification class, remove from HTML DOM
     - Sorting isotope list
+    - Isotope list: Add grouped display, e.g. show all Bi-214 lines with one click
     - Calibration n-polynomial regression
-    - Custom Line when left-clicking into plot. Rightclick to delete.
+    - ROI with stats (total counts, max, min, FWHM, range,...)
 
-    - (!) FWHM + stats for Gaussian (ROI?)
+    - (!) FWHM calculation in peak finder
 
   Known Issue:
-    - Serial: Sometimes only half the actual cps are shown in histogram serial mode?!?!
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
     - Service Worker: Somehow fetching and caching the hits tracker does not work (hits.seeyoufarm.com)
 
@@ -99,7 +100,7 @@ const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2023-02-03';
+const APP_VERSION = '2023-02-08';
 let localStorageAvailable = false;
 let firstInstall = false;
 
@@ -215,28 +216,7 @@ document.body.onload = async function(): Promise<void> {
   loadSettingsDefault();
   sizeCheck();
 
-  // Enable Settings Enter Press Func
-  const enterPressObj = {
-    'smaVal': 'sma',
-    'ser-command': 'send-command',
-    'iso-hover-prox': 'setting1',
-    'custom-url': 'setting2',
-    'custom-delimiter': 'setting3',
-    'custom-file-adc': 'setting4',
-    'custom-baud': 'setting5',
-    'eol-char': 'setting5-1',
-    'ser-limit': 'ser-limit-btn',
-    'custom-ser-refresh': 'setting6',
-    'custom-ser-buffer': 'setting7',
-    'custom-ser-adc': 'setting8',
-    'peak-thres': 'setting9',
-    'peak-lag': 'setting10',
-    'peak-width': 'setting11',
-    'seek-width': 'setting12'
-  }
-  for (const [key, value] of Object.entries(enterPressObj)) {
-    document.getElementById(key)!.onkeydown = event => enterPress(event, value);
-  }
+  bindInputs(); // Enable settings enter press and onclick buttons
 
   const menuElements = document.getElementById('main-tabs')!.getElementsByTagName('button');
   for (const button of menuElements) {
@@ -541,10 +521,10 @@ function getFileData(file: File, background = false): void { // Gets called when
 
 
 function sizeCheck(): void {
-  if (document.documentElement.clientWidth < 1100 || document.documentElement.clientHeight < 700) {
-    popupNotification('screen-size-warning');
-  } else {
-    hideNotification('screen-size-warning');
+  const minWidth = 1100;
+  const minHeight = 700;
+  if (document.documentElement.clientWidth <= minWidth || document.documentElement.clientHeight <= minHeight) {
+    console.warn(`Small screen detected. Screen should be at least ${minWidth}x${minHeight} px for the best experience.`)
   }
 }
 
@@ -587,23 +567,6 @@ function updateSpectrumCounts() {
 function updateSpectrumTime() {
   document.getElementById('spec-time')!.innerText = getRecordTimeStamp(spectrumData.dataTime);
   document.getElementById('bg-time')!.innerText = getRecordTimeStamp(spectrumData.backgroundTime);
-}
-
-
-function bindPlotEvents(): void {
-  if (!plot.plotDiv) return;
-
-  const myPlot = <any>plot.plotDiv; 
-  myPlot.on('plotly_hover', hoverEvent);
-  myPlot.on('plotly_unhover', unHover);
-  myPlot.on('plotly_click', clickEvent);
-  myPlot.on('plotly_webglcontextlost', webGLcontextLoss);
-  /* // Rightclick menu thingy
-  myPlot.addEventListener('contextmenu', function(e) {
-    console.log("You've tried to open context menu"); //here you draw your own menu
-    e.preventDefault();
-  });
-  */
 }
 
 
@@ -650,11 +613,6 @@ function changeAxis(button: HTMLButtonElement): void {
 }
 
 
-function enterPress(event: KeyboardEvent, id: string): void {
-  if (event.key === 'Enter') document.getElementById(id)?.click(); // ENTER key
-}
-
-
 document.getElementById('sma')!.onclick = event => toggleSma((<HTMLInputElement>event.target).checked);
 
 function toggleSma(value: boolean, thisValue: HTMLInputElement | null = null ): void {
@@ -678,6 +636,20 @@ function changeSma(input: HTMLInputElement): void {
 }
 
 
+function bindPlotEvents(): void {
+  if (!plot.plotDiv) return;
+
+  const myPlot = <any>plot.plotDiv; 
+  myPlot.on('plotly_hover', hoverEvent);
+  myPlot.on('plotly_unhover', unHover);
+  myPlot.on('plotly_click', clickEvent);
+  myPlot.on('plotly_webglcontextlost', webGLcontextLoss);
+  myPlot.addEventListener('contextmenu', (event: PointerEvent) => {
+    event.preventDefault(); // Prevent the context menu from opening inside the plot!
+  });
+}
+
+
 function hoverEvent(data: any): void {
   for (const key in calClick) {
     const castKey = <CalType>key;
@@ -693,7 +665,6 @@ function unHover(/*data: any*/): void {
     const castKey = <CalType>key;
     if (calClick[castKey]) (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = oldCalVals[castKey];
   }
-
   /*
   if (Object.keys(prevIso).length > 0) {
     closestIso(-maxDist); // Force Reset Iso Highlighting
@@ -702,9 +673,9 @@ function unHover(/*data: any*/): void {
 }
 
 
+let prevClickLine: number | undefined;
+
 function clickEvent(data: any): void {
-  //console.log(data.event);
-  
   document.getElementById('click-data')!.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
 
   for (const key in calClick) {
@@ -716,6 +687,17 @@ function clickEvent(data: any): void {
       (<HTMLInputElement>document.getElementById(`select-${castKey}`)).checked = calClick[<CalType>key];
     }
   }
+
+  if (data.event.which === 1) { // Left-click. spawn a line in the plot and delete the last line
+    if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
+    const newLine: number = Math.round(data.points[0].x);
+    plot.toggleLine(newLine, newLine.toString(), true);
+    prevClickLine = newLine;
+  } else if (data.event.which === 3) { // Right-click, delete all clicked lines
+    if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
+    prevClickLine = undefined;
+  }
+  plot.updatePlot(spectrumData);
 }
 
 
@@ -1438,14 +1420,14 @@ async function findPeaks(button: HTMLButtonElement): Promise<void> {
         break;
         
       case 'energy': // Third Mode: Isotopes
-        //plot.peakFinder(false); // Delete all old lines
+        plot.clearPeakFinder(); // Delete all old lines
         await loadIsotopes();
         plot.peakConfig.mode = 'isotopes';
         button.innerText = 'Isotopes';
         break;
 
       case 'isotopes':
-        plot.peakFinder(false); // Delete all old lines
+        plot.clearPeakFinder(); // Delete all old lines
         plot.peakConfig.enabled = false;
         button.innerText = 'None';
         break;
@@ -1464,6 +1446,8 @@ async function findPeaks(button: HTMLButtonElement): Promise<void> {
   LOADING AND SAVING
 =========================================
 */
+// These functions are REALLY ugly and a nightmare to maintain, but I don't know how to make it
+// better without nuking everything related to the settings and starting again from the ground up.
 
 function saveJSON(name: string, value: string | boolean | number): boolean {
   if (localStorageAvailable) {
@@ -1476,6 +1460,51 @@ function saveJSON(name: string, value: string | boolean | number): boolean {
 
 function loadJSON(name: string): any {
   return JSON.parse(<string>localStorage.getItem(name));
+}
+
+
+function bindInputs(): void {
+  const nonSettingsEnterPressElements = {
+    'smaVal': 'sma',
+    'ser-command': 'send-command'
+  }
+  for (const [inputId, buttonId] of Object.entries(nonSettingsEnterPressElements)) {
+    document.getElementById(inputId)!.onkeydown = event => {
+      if (event.key === 'Enter') document.getElementById(buttonId)?.click(); // ENTER key
+    };
+  }
+
+  // Bind settings button onclick events and enter press, format: {settingsValueElement: settingsName}
+  const settingsEnterPressElements = {
+    'iso-hover-prox': 'maxIsoDist',
+    'custom-url': 'customURL',
+    'custom-delimiter': 'fileDelimiter',
+    'custom-file-adc': 'fileChannels',
+    'custom-baud': 'baudRate',
+    'eol-char': 'eolChar',
+    'ser-limit': 'timeLimit',
+    'custom-ser-refresh': 'plotRefreshRate',
+    'custom-ser-buffer': 'serBufferSize',
+    'custom-ser-adc': 'serChannels',
+    'peak-thres': 'peakThres',
+    'peak-lag': 'peakLag',
+    'peak-width': 'peakWidth',
+    'seek-width': 'seekWidth',
+    'gauss-sigma': 'gaussSigma'
+  }
+  for (const [inputId, settingsName] of Object.entries(settingsEnterPressElements)) {
+    const valueElement = <HTMLInputElement>document.getElementById(inputId);
+    const buttonElement = <HTMLButtonElement>document.getElementById(`${inputId}-btn`);
+    valueElement.onkeydown = event => {
+      if (event.key === 'Enter') buttonElement.click(); // Press ENTER key;
+    };
+    buttonElement.onclick = () => changeSettings(settingsName, valueElement);
+  }
+
+  // Bind settings button press or onchange events for settings that do not have the default value input element
+  document.getElementById('edit-plot')!.onclick = event => changeSettings('editMode', <HTMLInputElement>event.target); // Checkbox
+  document.getElementById('toggle-time-limit')!.onclick = event => changeSettings('timeLimitBool', <HTMLInputElement>event.target); // Checkbox
+  document.getElementById('download-format')!.onchange = event => changeSettings('plotDownload', <HTMLSelectElement>event.target); // Select
 }
 
 
@@ -1499,6 +1528,7 @@ function loadSettingsDefault(): void {
   (<HTMLInputElement>document.getElementById('peak-lag')).value = plot.peakConfig.lag.toString();
   (<HTMLInputElement>document.getElementById('peak-width')).value = plot.peakConfig.width.toString();
   (<HTMLInputElement>document.getElementById('seek-width')).value = plot.peakConfig.seekWidth.toString();
+  (<HTMLInputElement>document.getElementById('gauss-sigma')).value = plot.gaussSigma.toString();
 
   const formatSelector = <HTMLSelectElement>document.getElementById('download-format');
   const len = formatSelector.options.length;
@@ -1511,10 +1541,7 @@ function loadSettingsDefault(): void {
 
 function loadSettingsStorage(): void {
   let setting = loadJSON('customURL');
-  if (setting) {
-    const newUrl = new URL(setting);
-    isoListURL = newUrl.href;
-  }
+  if (setting) isoListURL = new URL(setting).href;
 
   setting = loadJSON('editMode');
   if (setting) plot.editableMode = setting;
@@ -1566,173 +1593,167 @@ function loadSettingsStorage(): void {
 
   setting = loadJSON('plotDownload');
   if (setting) plot.downloadFormat = setting;
+
+  setting = loadJSON('gaussSigma');
+  if (setting) plot.gaussSigma = setting;
 }
 
 
-document.getElementById('edit-plot')!.onclick = event => changeSettings('editMode', <HTMLInputElement>event.target);
-document.getElementById('setting1')!.onclick = () => changeSettings('maxIsoDist', <HTMLInputElement>document.getElementById('iso-hover-prox'));
-document.getElementById('setting2')!.onclick = () => changeSettings('customURL', <HTMLInputElement>document.getElementById('custom-url'));
-document.getElementById('download-format')!.onchange = event => changeSettings('plotDownload', <HTMLSelectElement>event.target);
-document.getElementById('setting3')!.onclick = () => changeSettings('fileDelimiter', <HTMLInputElement>document.getElementById('custom-delimiter'));
-document.getElementById('setting4')!.onclick = () => changeSettings('fileChannels', <HTMLInputElement>document.getElementById('custom-file-adc'));
-document.getElementById('setting5')!.onclick = () => changeSettings('baudRate', <HTMLInputElement>document.getElementById('custom-baud'));
-document.getElementById('setting5-1')!.onclick = () => changeSettings('eolChar', <HTMLInputElement>document.getElementById('eol-char'));
-document.getElementById('toggle-time-limit')!.onclick = event => changeSettings('timeLimitBool', <HTMLInputElement>event.target);
-document.getElementById('ser-limit-btn')!.onclick = () => changeSettings('timeLimit', <HTMLInputElement>document.getElementById('ser-limit'));
-document.getElementById('setting6')!.onclick = () => changeSettings('plotRefreshRate', <HTMLInputElement>document.getElementById('custom-ser-refresh'));
-document.getElementById('setting7')!.onclick = () => changeSettings('serBufferSize', <HTMLInputElement>document.getElementById('custom-ser-buffer'));
-document.getElementById('setting8')!.onclick = () => changeSettings('serChannels', <HTMLInputElement>document.getElementById('custom-ser-adc'));
-document.getElementById('setting9')!.onclick = () => changeSettings('peakThres', <HTMLInputElement>document.getElementById('peak-thres'));
-document.getElementById('setting10')!.onclick = () => changeSettings('peakLag', <HTMLInputElement>document.getElementById('peak-lag'));
-document.getElementById('setting11')!.onclick = () => changeSettings('peakWidth', <HTMLInputElement>document.getElementById('peak-width'));
-document.getElementById('setting12')!.onclick = () => changeSettings('seekWidth', <HTMLInputElement>document.getElementById('seek-width'));
-
 function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElement): void {
-  if (!element.checkValidity()) {
+  const stringValue = element.value.trim();
+  let result = false;
+
+  if (!element.checkValidity() || !stringValue) {
     popupNotification('setting-type');
     return;
   }
 
-  const value = element.value;
-  let boolVal: boolean;
-  let numVal: number;
-
   switch (name) {
-    case 'editMode':
-      boolVal = (<HTMLInputElement>element).checked;
+    case 'editMode': {
+      const boolVal = (<HTMLInputElement>element).checked;
       plot.editableMode = boolVal;
       plot.resetPlot(spectrumData); // Modify won't be disabled if you don't fully reset
       bindPlotEvents();
 
-      saveJSON(name, boolVal);
+      result = saveJSON(name, boolVal);
       break;
-
-    case 'customURL':
+    }
+    case 'customURL': {
       try {
-        isoListURL = new URL(value).href;
+        isoListURL = new URL(stringValue).href;
 
         loadIsotopes(true);
 
-        saveJSON(name, isoListURL);
+        result = saveJSON(name, isoListURL);
 
       } catch(e) {
         popupNotification('setting-error');
         console.error('Custom URL Error', e);
       }
       break;
+    }
+    case 'fileDelimiter': {
+      raw.delimiter = stringValue;
 
-    case 'fileDelimiter':
-      raw.delimiter = value;
-
-      saveJSON(name, value);
+      result = saveJSON(name, stringValue);
       break;
-
-    case 'fileChannels':
-      numVal = parseInt(value);
+    }
+    case 'fileChannels': {
+      const numVal = parseInt(stringValue);
       raw.adcChannels = numVal;
 
-      saveJSON(name, numVal);
+      result = saveJSON(name, numVal);
       break;
-
-    case 'timeLimitBool':
-      boolVal = (<HTMLInputElement>element).checked;
+    }
+    case 'timeLimitBool': {
+      const boolVal = (<HTMLInputElement>element).checked;
       maxRecTimeEnabled = boolVal;
 
-      saveJSON(name, boolVal);
+      result = saveJSON(name, boolVal);
       break;
-
-    case 'timeLimit':
-      numVal = parseFloat(value);
+    }
+    case 'timeLimit': {
+      const numVal = parseFloat(stringValue);
       maxRecTime = numVal * 1000; // convert s to ms
 
-      saveJSON(name, maxRecTime);
+      result = saveJSON(name, maxRecTime);
       break;
-
-    case 'maxIsoDist':
-      numVal = parseFloat(value);
+    }
+    case 'maxIsoDist': {
+      const numVal = parseFloat(stringValue);
       maxDist = numVal;
 
-      saveJSON(name, maxDist);
+      result = saveJSON(name, maxDist);
       break;
-
-    case 'plotRefreshRate':
-      numVal = parseFloat(value);
+    }
+    case 'plotRefreshRate': {
+      const numVal = parseFloat(stringValue);
       refreshRate = numVal * 1000; // convert s to ms
 
-      saveJSON(name, refreshRate);
+      result = saveJSON(name, refreshRate);
       break;
-
-    case 'serBufferSize':
-      numVal = parseInt(value);
+    }
+    case 'serBufferSize': {
+      const numVal = parseInt(stringValue);
       SerialManager.maxSize = numVal;
 
-      saveJSON(name, SerialManager.maxSize);
+      result = saveJSON(name, SerialManager.maxSize);
       break;
-
-    case 'baudRate':
-      numVal = parseInt(value);
+    }
+    case 'baudRate': {
+      const numVal = parseInt(stringValue);
       SerialManager.serOptions.baudRate = numVal;
 
-      saveJSON(name, SerialManager.serOptions.baudRate);
+      result = saveJSON(name, SerialManager.serOptions.baudRate);
       break;
+    }
+    case 'eolChar': {
+      SerialManager.eolChar = stringValue;
 
-    case 'eolChar':
-      SerialManager.eolChar = value;
-
-      saveJSON(name, value);
+      result = saveJSON(name, stringValue);
       break;
-
-    case 'serChannels':
-      numVal = parseInt(value);
+    }
+    case 'serChannels': {
+      const numVal = parseInt(stringValue);
       SerialManager.adcChannels = numVal;
 
-      saveJSON(name, numVal);
+      result = saveJSON(name, numVal);
       break;
-
-    case 'peakThres':
-      numVal = parseFloat(value);
+    }
+    case 'peakThres': {
+      const numVal = parseFloat(stringValue);
       plot.peakConfig.thres = numVal;
       plot.updatePlot(spectrumData);
 
-      saveJSON(name, numVal);
+      result = saveJSON(name, numVal);
       break;
-
-    case 'peakLag':
-      numVal = parseInt(value);
+    }
+    case 'peakLag': {
+      const numVal = parseInt(stringValue);
       plot.peakConfig.lag = numVal;
       plot.updatePlot(spectrumData);
 
-      saveJSON(name, numVal);
+      result = saveJSON(name, numVal);
       break;
-
-    case 'peakWidth':
-      numVal = parseInt(value);
+    }
+    case 'peakWidth': {
+      const numVal = parseInt(stringValue);
       plot.peakConfig.width = numVal;
       plot.updatePlot(spectrumData);
 
-      saveJSON(name, numVal);
+      result = saveJSON(name, numVal);
       break;
-
-    case 'seekWidth':
-      numVal = parseFloat(value);
+    }
+    case 'seekWidth': {
+      const numVal = parseFloat(stringValue);
       plot.peakConfig.seekWidth = numVal;
       plot.updatePlot(spectrumData);
 
-      saveJSON(name, numVal);
+      result = saveJSON(name, numVal);
       break;
-
-    case 'plotDownload':
-      plot.downloadFormat = value;
+    }
+    case 'plotDownload': {
+      plot.downloadFormat = stringValue;
       plot.updatePlot(spectrumData);
 
-      saveJSON(name, value);
+      result = saveJSON(name, stringValue);
       break;
+    }
+    case 'gaussSigma': {
+      const numVal = parseInt(stringValue);
+      plot.gaussSigma = numVal;
+      plot.updatePlot(spectrumData);
 
-    default:
+      result = saveJSON(name, numVal);
+      break;
+    }
+    default: {
       popupNotification('setting-error');
       return;
+    }
   }
-  popupNotification('setting-success'); // Success Toast
+
+  if (result) popupNotification('setting-success'); // Success Toast
 }
 
 

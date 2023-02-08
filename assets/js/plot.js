@@ -54,10 +54,9 @@ export class SpectrumPlot {
         lag: 50,
         width: 5,
         seekWidth: 2,
-        lines: [],
-        lastDataX: [],
-        lastDataY: [],
+        lines: []
     };
+    gaussSigma = 2;
     customModeBarButtons = {
         name: 'Download plot as HTML',
         icon: window.Plotly.Icons['disk'],
@@ -197,7 +196,7 @@ export class SpectrumPlot {
         }
         return newData;
     }
-    peakFinder(doFind = true) {
+    clearPeakFinder() {
         if (this.peakConfig.lines.length) {
             const lines = this.peakConfig.lines;
             for (const line of lines) {
@@ -205,17 +204,16 @@ export class SpectrumPlot {
             }
             this.peakConfig.lines = [];
         }
-        if (!doFind)
-            return;
-        const shortData = this.peakConfig.lastDataY;
-        const longData = this.computeMovingAverage(this.peakConfig.lastDataY, this.peakConfig.lag);
-        const maxVal = Math.max(...shortData);
-        const xAxisData = this.peakConfig.lastDataX;
+    }
+    peakFinder(xAxis, yAxis) {
+        this.clearPeakFinder();
+        const longData = this.computeMovingAverage(yAxis, this.peakConfig.lag);
+        const maxVal = Math.max(...yAxis);
         const peakLines = [];
-        const shortLen = shortData.length;
+        const shortLen = yAxis.length;
         for (let i = 0; i < shortLen; i++) {
-            if (shortData[i] - longData[i] > this.peakConfig.thres * maxVal)
-                peakLines.push(xAxisData[i]);
+            if (yAxis[i] - longData[i] > this.peakConfig.thres * maxVal)
+                peakLines.push(xAxis[i]);
         }
         let values = [];
         peakLines.push(0);
@@ -268,6 +266,7 @@ export class SpectrumPlot {
                 y0: 0,
                 x1: energy,
                 y1: 1,
+                editable: false,
                 line: {
                     color: 'blue',
                     width: .5,
@@ -284,6 +283,7 @@ export class SpectrumPlot {
                 arrowhead: 7,
                 ax: 0,
                 ay: -20,
+                editable: false,
                 hovertext: energy.toFixed(2),
                 font: {
                     size: 11,
@@ -342,8 +342,11 @@ export class SpectrumPlot {
             for (let k = xMin; k < xMax; k++) {
                 resultVal += data[index + k] * (gaussValues[k - xMin] - avg) / squaredSum;
             }
-            correlValues.push((resultVal && resultVal > 0) ? resultVal : 0);
+            const value = (resultVal && resultVal > 0) ? resultVal : 0;
+            correlValues.push(value);
         }
+        const scalingFactor = .8 * Math.max(...data) / Math.max(...correlValues);
+        correlValues.forEach((value, index, array) => array[index] = value * scalingFactor);
         return correlValues;
     }
     plotCalibration(dataObj, update) {
@@ -487,7 +490,7 @@ export class SpectrumPlot {
         let maxXValue = 0;
         if (dataObj.data.length) {
             const trace = {
-                name: 'Net Spectrum',
+                name: 'Spectrum',
                 stackgroup: 'data',
                 x: this.getXAxis(dataObj.data.length),
                 y: dataObj.data,
@@ -532,6 +535,7 @@ export class SpectrumPlot {
                 }
                 data[0].y = newData;
                 data[0].fill = 'tonexty';
+                data[0].name = 'Net Spectrum';
             }
             data.push(bgTrace);
         }
@@ -644,7 +648,7 @@ export class SpectrumPlot {
             modeBarButtonsToAdd: [],
         };
         if (this.peakConfig.enabled && data.length) {
-            const gaussData = this.gaussianCorrel(data[0].y);
+            const gaussData = this.gaussianCorrel(data[0].y, this.gaussSigma);
             const eTrace = {
                 name: 'Gaussian Correlation',
                 x: data[0].x,
@@ -660,9 +664,7 @@ export class SpectrumPlot {
                     color: 'black',
                 }
             };
-            this.peakConfig.lastDataX = data[0].x;
-            this.peakConfig.lastDataY = gaussData;
-            this.peakFinder();
+            this.peakFinder(data[0].x, gaussData);
             data.unshift(eTrace);
         }
         if (!this.peakConfig.enabled || !data.length || data.length >= 3)

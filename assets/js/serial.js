@@ -159,8 +159,10 @@ export class SerialManager {
                     stringHist.pop();
                     if (stringHist.length !== SerialManager.adcChannels)
                         continue;
-                    let numHist = stringHist.map(x => parseInt(x));
-                    numHist = numHist.map(item => isNaN(item) ? 0 : item);
+                    const numHist = stringHist.map(x => {
+                        const parsed = parseInt(x);
+                        return isNaN(parsed) ? 0 : parsed;
+                    });
                     if (!this.baseHist.length) {
                         this.baseHist = numHist;
                         this.startTime = performance.now();

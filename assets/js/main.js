@@ -42,7 +42,7 @@ let isoListURL = 'assets/isotopes_energies_min.json';
 const isoList = {};
 let checkNearIso = false;
 let maxDist = 100;
-const APP_VERSION = '2023-02-03';
+const APP_VERSION = '2023-02-08';
 let localStorageAvailable = false;
 let firstInstall = false;
 document.body.onload = async function () {
@@ -135,27 +135,7 @@ document.body.onload = async function () {
     }
     loadSettingsDefault();
     sizeCheck();
-    const enterPressObj = {
-        'smaVal': 'sma',
-        'ser-command': 'send-command',
-        'iso-hover-prox': 'setting1',
-        'custom-url': 'setting2',
-        'custom-delimiter': 'setting3',
-        'custom-file-adc': 'setting4',
-        'custom-baud': 'setting5',
-        'eol-char': 'setting5-1',
-        'ser-limit': 'ser-limit-btn',
-        'custom-ser-refresh': 'setting6',
-        'custom-ser-buffer': 'setting7',
-        'custom-ser-adc': 'setting8',
-        'peak-thres': 'setting9',
-        'peak-lag': 'setting10',
-        'peak-width': 'setting11',
-        'seek-width': 'setting12'
-    };
-    for (const [key, value] of Object.entries(enterPressObj)) {
-        document.getElementById(key).onkeydown = event => enterPress(event, value);
-    }
+    bindInputs();
     const menuElements = document.getElementById('main-tabs').getElementsByTagName('button');
     for (const button of menuElements) {
         button.addEventListener('shown.bs.tab', (event) => {
@@ -368,11 +348,10 @@ function getFileData(file, background = false) {
     };
 }
 function sizeCheck() {
-    if (document.documentElement.clientWidth < 1100 || document.documentElement.clientHeight < 700) {
-        popupNotification('screen-size-warning');
-    }
-    else {
-        hideNotification('screen-size-warning');
+    const minWidth = 1100;
+    const minHeight = 700;
+    if (document.documentElement.clientWidth <= minWidth || document.documentElement.clientHeight <= minHeight) {
+        console.warn(`Small screen detected. Screen should be at least ${minWidth}x${minHeight} px for the best experience.`);
     }
 }
 document.getElementById('clear-data').onclick = () => removeFile('data');
@@ -403,15 +382,6 @@ function updateSpectrumCounts() {
 function updateSpectrumTime() {
     document.getElementById('spec-time').innerText = getRecordTimeStamp(spectrumData.dataTime);
     document.getElementById('bg-time').innerText = getRecordTimeStamp(spectrumData.backgroundTime);
-}
-function bindPlotEvents() {
-    if (!plot.plotDiv)
-        return;
-    const myPlot = plot.plotDiv;
-    myPlot.on('plotly_hover', hoverEvent);
-    myPlot.on('plotly_unhover', unHover);
-    myPlot.on('plotly_click', clickEvent);
-    myPlot.on('plotly_webglcontextlost', webGLcontextLoss);
 }
 document.getElementById('r1').onchange = event => selectFileType(event.target);
 document.getElementById('r2').onchange = event => selectFileType(event.target);
@@ -450,10 +420,6 @@ function changeAxis(button) {
         plot.updatePlot(spectrumData);
     }
 }
-function enterPress(event, id) {
-    if (event.key === 'Enter')
-        document.getElementById(id)?.click();
-}
 document.getElementById('sma').onclick = event => toggleSma(event.target.checked);
 function toggleSma(value, thisValue = null) {
     plot.sma = value;
@@ -473,6 +439,18 @@ function changeSma(input) {
         saveJSON('smaLength', parsedInput);
     }
 }
+function bindPlotEvents() {
+    if (!plot.plotDiv)
+        return;
+    const myPlot = plot.plotDiv;
+    myPlot.on('plotly_hover', hoverEvent);
+    myPlot.on('plotly_unhover', unHover);
+    myPlot.on('plotly_click', clickEvent);
+    myPlot.on('plotly_webglcontextlost', webGLcontextLoss);
+    myPlot.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+    });
+}
 function hoverEvent(data) {
     for (const key in calClick) {
         const castKey = key;
@@ -489,6 +467,7 @@ function unHover() {
             document.getElementById(`adc-${castKey}`).value = oldCalVals[castKey];
     }
 }
+let prevClickLine;
 function clickEvent(data) {
     document.getElementById('click-data').innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
     for (const key in calClick) {
@@ -500,6 +479,19 @@ function clickEvent(data) {
             document.getElementById(`select-${castKey}`).checked = calClick[key];
         }
     }
+    if (data.event.which === 1) {
+        if (prevClickLine)
+            plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
+        const newLine = Math.round(data.points[0].x);
+        plot.toggleLine(newLine, newLine.toString(), true);
+        prevClickLine = newLine;
+    }
+    else if (data.event.which === 3) {
+        if (prevClickLine)
+            plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
+        prevClickLine = undefined;
+    }
+    plot.updatePlot(spectrumData);
 }
 function webGLcontextLoss() {
     console.error('Lost WebGL context for Plotly.js! Falling back to default SVG render mode...');
@@ -1036,12 +1028,13 @@ async function findPeaks(button) {
                 button.innerText = 'Energy';
                 break;
             case 'energy':
+                plot.clearPeakFinder();
                 await loadIsotopes();
                 plot.peakConfig.mode = 'isotopes';
                 button.innerText = 'Isotopes';
                 break;
             case 'isotopes':
-                plot.peakFinder(false);
+                plot.clearPeakFinder();
                 plot.peakConfig.enabled = false;
                 button.innerText = 'None';
                 break;
@@ -1064,6 +1057,47 @@ function saveJSON(name, value) {
 function loadJSON(name) {
     return JSON.parse(localStorage.getItem(name));
 }
+function bindInputs() {
+    const nonSettingsEnterPressElements = {
+        'smaVal': 'sma',
+        'ser-command': 'send-command'
+    };
+    for (const [inputId, buttonId] of Object.entries(nonSettingsEnterPressElements)) {
+        document.getElementById(inputId).onkeydown = event => {
+            if (event.key === 'Enter')
+                document.getElementById(buttonId)?.click();
+        };
+    }
+    const settingsEnterPressElements = {
+        'iso-hover-prox': 'maxIsoDist',
+        'custom-url': 'customURL',
+        'custom-delimiter': 'fileDelimiter',
+        'custom-file-adc': 'fileChannels',
+        'custom-baud': 'baudRate',
+        'eol-char': 'eolChar',
+        'ser-limit': 'timeLimit',
+        'custom-ser-refresh': 'plotRefreshRate',
+        'custom-ser-buffer': 'serBufferSize',
+        'custom-ser-adc': 'serChannels',
+        'peak-thres': 'peakThres',
+        'peak-lag': 'peakLag',
+        'peak-width': 'peakWidth',
+        'seek-width': 'seekWidth',
+        'gauss-sigma': 'gaussSigma'
+    };
+    for (const [inputId, settingsName] of Object.entries(settingsEnterPressElements)) {
+        const valueElement = document.getElementById(inputId);
+        const buttonElement = document.getElementById(`${inputId}-btn`);
+        valueElement.onkeydown = event => {
+            if (event.key === 'Enter')
+                buttonElement.click();
+        };
+        buttonElement.onclick = () => changeSettings(settingsName, valueElement);
+    }
+    document.getElementById('edit-plot').onclick = event => changeSettings('editMode', event.target);
+    document.getElementById('toggle-time-limit').onclick = event => changeSettings('timeLimitBool', event.target);
+    document.getElementById('download-format').onchange = event => changeSettings('plotDownload', event.target);
+}
 function loadSettingsDefault() {
     document.getElementById('custom-url').value = isoListURL;
     document.getElementById('edit-plot').checked = plot.editableMode;
@@ -1082,6 +1116,7 @@ function loadSettingsDefault() {
     document.getElementById('peak-lag').value = plot.peakConfig.lag.toString();
     document.getElementById('peak-width').value = plot.peakConfig.width.toString();
     document.getElementById('seek-width').value = plot.peakConfig.seekWidth.toString();
+    document.getElementById('gauss-sigma').value = plot.gaussSigma.toString();
     const formatSelector = document.getElementById('download-format');
     const len = formatSelector.options.length;
     const format = plot.downloadFormat;
@@ -1092,10 +1127,8 @@ function loadSettingsDefault() {
 }
 function loadSettingsStorage() {
     let setting = loadJSON('customURL');
-    if (setting) {
-        const newUrl = new URL(setting);
-        isoListURL = newUrl.href;
-    }
+    if (setting)
+        isoListURL = new URL(setting).href;
     setting = loadJSON('editMode');
     if (setting)
         plot.editableMode = setting;
@@ -1147,133 +1180,144 @@ function loadSettingsStorage() {
     setting = loadJSON('plotDownload');
     if (setting)
         plot.downloadFormat = setting;
+    setting = loadJSON('gaussSigma');
+    if (setting)
+        plot.gaussSigma = setting;
 }
-document.getElementById('edit-plot').onclick = event => changeSettings('editMode', event.target);
-document.getElementById('setting1').onclick = () => changeSettings('maxIsoDist', document.getElementById('iso-hover-prox'));
-document.getElementById('setting2').onclick = () => changeSettings('customURL', document.getElementById('custom-url'));
-document.getElementById('download-format').onchange = event => changeSettings('plotDownload', event.target);
-document.getElementById('setting3').onclick = () => changeSettings('fileDelimiter', document.getElementById('custom-delimiter'));
-document.getElementById('setting4').onclick = () => changeSettings('fileChannels', document.getElementById('custom-file-adc'));
-document.getElementById('setting5').onclick = () => changeSettings('baudRate', document.getElementById('custom-baud'));
-document.getElementById('setting5-1').onclick = () => changeSettings('eolChar', document.getElementById('eol-char'));
-document.getElementById('toggle-time-limit').onclick = event => changeSettings('timeLimitBool', event.target);
-document.getElementById('ser-limit-btn').onclick = () => changeSettings('timeLimit', document.getElementById('ser-limit'));
-document.getElementById('setting6').onclick = () => changeSettings('plotRefreshRate', document.getElementById('custom-ser-refresh'));
-document.getElementById('setting7').onclick = () => changeSettings('serBufferSize', document.getElementById('custom-ser-buffer'));
-document.getElementById('setting8').onclick = () => changeSettings('serChannels', document.getElementById('custom-ser-adc'));
-document.getElementById('setting9').onclick = () => changeSettings('peakThres', document.getElementById('peak-thres'));
-document.getElementById('setting10').onclick = () => changeSettings('peakLag', document.getElementById('peak-lag'));
-document.getElementById('setting11').onclick = () => changeSettings('peakWidth', document.getElementById('peak-width'));
-document.getElementById('setting12').onclick = () => changeSettings('seekWidth', document.getElementById('seek-width'));
 function changeSettings(name, element) {
-    if (!element.checkValidity()) {
+    const stringValue = element.value.trim();
+    let result = false;
+    if (!element.checkValidity() || !stringValue) {
         popupNotification('setting-type');
         return;
     }
-    const value = element.value;
-    let boolVal;
-    let numVal;
     switch (name) {
-        case 'editMode':
-            boolVal = element.checked;
+        case 'editMode': {
+            const boolVal = element.checked;
             plot.editableMode = boolVal;
             plot.resetPlot(spectrumData);
             bindPlotEvents();
-            saveJSON(name, boolVal);
+            result = saveJSON(name, boolVal);
             break;
-        case 'customURL':
+        }
+        case 'customURL': {
             try {
-                isoListURL = new URL(value).href;
+                isoListURL = new URL(stringValue).href;
                 loadIsotopes(true);
-                saveJSON(name, isoListURL);
+                result = saveJSON(name, isoListURL);
             }
             catch (e) {
                 popupNotification('setting-error');
                 console.error('Custom URL Error', e);
             }
             break;
-        case 'fileDelimiter':
-            raw.delimiter = value;
-            saveJSON(name, value);
+        }
+        case 'fileDelimiter': {
+            raw.delimiter = stringValue;
+            result = saveJSON(name, stringValue);
             break;
-        case 'fileChannels':
-            numVal = parseInt(value);
+        }
+        case 'fileChannels': {
+            const numVal = parseInt(stringValue);
             raw.adcChannels = numVal;
-            saveJSON(name, numVal);
+            result = saveJSON(name, numVal);
             break;
-        case 'timeLimitBool':
-            boolVal = element.checked;
+        }
+        case 'timeLimitBool': {
+            const boolVal = element.checked;
             maxRecTimeEnabled = boolVal;
-            saveJSON(name, boolVal);
+            result = saveJSON(name, boolVal);
             break;
-        case 'timeLimit':
-            numVal = parseFloat(value);
+        }
+        case 'timeLimit': {
+            const numVal = parseFloat(stringValue);
             maxRecTime = numVal * 1000;
-            saveJSON(name, maxRecTime);
+            result = saveJSON(name, maxRecTime);
             break;
-        case 'maxIsoDist':
-            numVal = parseFloat(value);
+        }
+        case 'maxIsoDist': {
+            const numVal = parseFloat(stringValue);
             maxDist = numVal;
-            saveJSON(name, maxDist);
+            result = saveJSON(name, maxDist);
             break;
-        case 'plotRefreshRate':
-            numVal = parseFloat(value);
+        }
+        case 'plotRefreshRate': {
+            const numVal = parseFloat(stringValue);
             refreshRate = numVal * 1000;
-            saveJSON(name, refreshRate);
+            result = saveJSON(name, refreshRate);
             break;
-        case 'serBufferSize':
-            numVal = parseInt(value);
+        }
+        case 'serBufferSize': {
+            const numVal = parseInt(stringValue);
             SerialManager.maxSize = numVal;
-            saveJSON(name, SerialManager.maxSize);
+            result = saveJSON(name, SerialManager.maxSize);
             break;
-        case 'baudRate':
-            numVal = parseInt(value);
+        }
+        case 'baudRate': {
+            const numVal = parseInt(stringValue);
             SerialManager.serOptions.baudRate = numVal;
-            saveJSON(name, SerialManager.serOptions.baudRate);
+            result = saveJSON(name, SerialManager.serOptions.baudRate);
             break;
-        case 'eolChar':
-            SerialManager.eolChar = value;
-            saveJSON(name, value);
+        }
+        case 'eolChar': {
+            SerialManager.eolChar = stringValue;
+            result = saveJSON(name, stringValue);
             break;
-        case 'serChannels':
-            numVal = parseInt(value);
+        }
+        case 'serChannels': {
+            const numVal = parseInt(stringValue);
             SerialManager.adcChannels = numVal;
-            saveJSON(name, numVal);
+            result = saveJSON(name, numVal);
             break;
-        case 'peakThres':
-            numVal = parseFloat(value);
+        }
+        case 'peakThres': {
+            const numVal = parseFloat(stringValue);
             plot.peakConfig.thres = numVal;
             plot.updatePlot(spectrumData);
-            saveJSON(name, numVal);
+            result = saveJSON(name, numVal);
             break;
-        case 'peakLag':
-            numVal = parseInt(value);
+        }
+        case 'peakLag': {
+            const numVal = parseInt(stringValue);
             plot.peakConfig.lag = numVal;
             plot.updatePlot(spectrumData);
-            saveJSON(name, numVal);
+            result = saveJSON(name, numVal);
             break;
-        case 'peakWidth':
-            numVal = parseInt(value);
+        }
+        case 'peakWidth': {
+            const numVal = parseInt(stringValue);
             plot.peakConfig.width = numVal;
             plot.updatePlot(spectrumData);
-            saveJSON(name, numVal);
+            result = saveJSON(name, numVal);
             break;
-        case 'seekWidth':
-            numVal = parseFloat(value);
+        }
+        case 'seekWidth': {
+            const numVal = parseFloat(stringValue);
             plot.peakConfig.seekWidth = numVal;
             plot.updatePlot(spectrumData);
-            saveJSON(name, numVal);
+            result = saveJSON(name, numVal);
             break;
-        case 'plotDownload':
-            plot.downloadFormat = value;
+        }
+        case 'plotDownload': {
+            plot.downloadFormat = stringValue;
             plot.updatePlot(spectrumData);
-            saveJSON(name, value);
+            result = saveJSON(name, stringValue);
             break;
-        default:
+        }
+        case 'gaussSigma': {
+            const numVal = parseInt(stringValue);
+            plot.gaussSigma = numVal;
+            plot.updatePlot(spectrumData);
+            result = saveJSON(name, numVal);
+            break;
+        }
+        default: {
             popupNotification('setting-error');
             return;
+        }
     }
-    popupNotification('setting-success');
+    if (result)
+        popupNotification('setting-success');
 }
 document.getElementById('reset-gamma-mca').onclick = () => resetMCA();
 function resetMCA() {
