@@ -73,14 +73,8 @@ document.body.onload = async function () {
     if (navigator.serial || navigator.usb) {
         const serErrDiv = document.getElementById('serial-error');
         serErrDiv.parentNode.removeChild(serErrDiv);
-        if (navigator.serial) {
-            navigator.serial.addEventListener('connect', serialConnect);
-            navigator.serial.addEventListener('disconnect', serialDisconnect);
-        }
-        else {
-            navigator.usb.addEventListener('connect', serialConnect);
-            navigator.usb.addEventListener('disconnect', usbDisconnect);
-        }
+        navigator[navigator.serial ? 'serial' : 'usb'].addEventListener('connect', serialConnect);
+        navigator[navigator.serial ? 'serial' : 'usb'].addEventListener('disconnect', serialDisconnect);
         listSerial();
     }
     else {
@@ -1385,7 +1379,7 @@ async function listSerial() {
         portSelector.add(option, parseInt(index));
     }
     const serSettingsElements = document.getElementsByClassName('ser-settings');
-    if (portSelector.options.length == 0) {
+    if (portSelector.options.length === 0) {
         const option = document.createElement('option');
         option.text = 'No Ports Available';
         portSelector.add(option);

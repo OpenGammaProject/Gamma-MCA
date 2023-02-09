@@ -1,18 +1,17 @@
-import { WebUSBSerialPort } from './webusbserial.js';
+import { WebUSBSerialPort } from './external/webusbserial.js';
 export class Serial {
     async sendString(value) {
-        ;
+        return;
     }
     async read() {
-        let ret = new Uint8Array();
-        return ret;
+        return new Uint8Array();
     }
     async close() {
-        ;
+        return;
     }
     isOpen = false;
     async open(baudRate) {
-        ;
+        return;
     }
     isThisPort(port) {
         return false;
@@ -28,9 +27,7 @@ export class WebUSBSerial extends Serial {
         overridePortSettings: true,
         baudrate: 115200,
     };
-    static deviceFilters = [
-        { 'vendorId': 0x0403, 'productId': 0x6015 },
-    ];
+    static deviceFilters = [{ 'vendorId': 0x0403, 'productId': 0x6015 }];
     constructor(device) {
         super();
         this.device = device;
@@ -39,21 +36,21 @@ export class WebUSBSerial extends Serial {
     buffer = new Uint8Array(102400);
     pos = 0;
     async read() {
-        if (this.pos == 0) {
+        if (this.pos === 0) {
             await new Promise(resolve => setTimeout(resolve, 100));
             return new Uint8Array();
         }
-        let ret = this.buffer.subarray(0, this.pos);
+        const ret = this.buffer.subarray(0, this.pos);
         this.pos = 0;
         return ret;
     }
     async open(baudRate) {
         this.serOptions.baudRate = baudRate;
         this.pos = 0;
-        await this.port.connect((data) => {
+        this.port.connect(data => {
             this.buffer.set(data, this.pos);
             this.pos += data.length;
-        }, (error) => {
+        }, error => {
             console.warn("Error receiving data: " + error);
             this.isOpen = false;
         });
@@ -66,7 +63,7 @@ export class WebUSBSerial extends Serial {
         this.port.disconnect();
     }
     isThisPort(port) {
-        return (this.device == port);
+        return (this.device === port);
     }
     getInfo() {
         return "WebUSB";
@@ -103,10 +100,12 @@ export class WebSerial extends Serial {
                 this.reader = this.port.readable.getReader();
                 try {
                     const { value, done } = await this.reader.read();
-                    if (value)
+                    if (value) {
                         ret = value;
-                    else
+                    }
+                    else {
                         await new Promise(resolve => setTimeout(resolve, 10));
+                    }
                 }
                 finally {
                     this.reader?.releaseLock();
@@ -122,7 +121,7 @@ export class WebSerial extends Serial {
             }
         }
         else {
-            await close();
+            await this.close();
         }
         return ret;
     }
@@ -222,8 +221,7 @@ export class SerialManager {
     }
     async readUntilClosed() {
         while (this.port.isOpen && this.recording) {
-            let data = await this.port.read();
-            this.addRaw(data);
+            this.addRaw(await this.port.read());
         }
         await this.port?.close();
     }

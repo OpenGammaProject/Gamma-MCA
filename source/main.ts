@@ -44,7 +44,7 @@ export interface IsotopeList {
 }
 
 interface PortList {
-  [key: number]: Serial| undefined;
+  [key: number]: Serial | undefined;
 }
 
 export type DataOrder = 'hist' | 'chron';
@@ -137,16 +137,11 @@ document.body.onload = async function(): Promise<void> {
 
   isoListURL = new URL(isoListURL, window.location.origin).href;
 
-  if (navigator.serial || navigator.usb) { // Web Serial API
+  if (navigator.serial || navigator.usb) { // Web Serial API or fallback Web USB API with FTDx JS driver
     const serErrDiv = document.getElementById('serial-error')!;
     serErrDiv.parentNode!.removeChild(serErrDiv); // Delete Serial Not Supported Warning
-    if(navigator.serial) {
-      navigator.serial.addEventListener('connect', serialConnect);
-      navigator.serial.addEventListener('disconnect', serialDisconnect);
-    } else { //fallback WebUSB api with FTDx javascript driver
-      navigator.usb.addEventListener('connect', serialConnect);
-      navigator.usb.addEventListener('disconnect', usbDisconnect);
-    }
+    navigator[navigator.serial ? 'serial' : 'usb'].addEventListener('connect', serialConnect);
+    navigator[navigator.serial ? 'serial' : 'usb'].addEventListener('disconnect', serialDisconnect);
     listSerial(); // List Available Serial Ports
   } else {
     const serDiv = document.getElementById('serial-div')!;
@@ -197,8 +192,7 @@ document.body.onload = async function(): Promise<void> {
 
     if (sVal) {
       const element = <HTMLInputElement>document.getElementById(sVal);
-      if(element)
-      {
+      if (element) {
         element.checked = true;
         selectSerialType(element);
       }
@@ -1801,18 +1795,17 @@ function serialConnect(/*event: Event*/): void {
 
 
 function serialDisconnect(event: Event): void {
-  if (serRecorder?.isThisPort(event.target)) 
-    disconnectPort(true);
+  if (serRecorder?.isThisPort(event.target)) disconnectPort(true);
 
   listSerial();
 
   popupNotification('serial-disconnect');
 }
 
-function usbDisconnect(event: USBConnectionEvent): void {
-  if (serRecorder?.isThisPort(event.device)) 
-    disconnectPort(true);
 
+function usbDisconnect(event: USBConnectionEvent): void {
+  if (serRecorder?.isThisPort(event.device)) disconnectPort(true);
+  
   listSerial();
 
   popupNotification('usb-disconnect');
@@ -1828,13 +1821,13 @@ async function listSerial(): Promise<void> {
     portSelector.remove(parseInt(index));
   }
 
-  if(navigator.serial){
+  if (navigator.serial) {
     const ports = await navigator.serial.getPorts();
     for (const index in ports) { // List new Ports
       portsAvail[index] = new WebSerial(ports[index]);
     }
   } else {
-    if(navigator.usb) {
+    if (navigator.usb) {
       const ports = await navigator.usb.getDevices();
       for (const index in ports) { // List new Ports
         portsAvail[index] = new WebUSBSerial(ports[index]);
@@ -1842,15 +1835,15 @@ async function listSerial(): Promise<void> {
     }
   }
 
-  for(const index in portsAvail) {
-      const option = document.createElement('option');
-      option.text = `Port ${index} (`+portsAvail[index]?.getInfo()+`)`;
-      portSelector.add(option, parseInt(index));
+  for (const index in portsAvail) {
+    const option = document.createElement('option');
+    option.text = `Port ${index} (`+portsAvail[index]?.getInfo()+`)`;
+    portSelector.add(option, parseInt(index));
   }
 
   const serSettingsElements = document.getElementsByClassName('ser-settings') as HTMLCollectionOf<HTMLInputElement> | HTMLCollectionOf<HTMLSelectElement>;
 
-  if (portSelector.options.length==0) {
+  if (portSelector.options.length === 0) {
     const option = document.createElement('option');
     option.text = 'No Ports Available';
     portSelector.add(option);
@@ -1870,11 +1863,11 @@ document.getElementById('serial-add-device')!.onclick = () => requestSerial();
 
 async function requestSerial(): Promise<void> {
   try {
-    if(navigator.serial) {
+    if (navigator.serial) {
       await navigator.serial.requestPort();
     } else {
-			  await navigator.usb.requestDevice({
-				filters : WebUSBSerial.deviceFilters 
+      await navigator.usb.requestDevice({
+        filters : WebUSBSerial.deviceFilters 
 			});
     }
     listSerial();
