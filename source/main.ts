@@ -1817,7 +1817,7 @@ async function listSerial(): Promise<void> {
     for (const index in ports) { // List new Ports
       portsAvail[index] = new WebSerial(ports[index]);
     }
-  } else {
+  } else { // Fallback Web USB API, only if Web Serial is not avail
     if (navigator.usb) {
       const ports = await navigator.usb.getDevices();
       for (const index in ports) { // List new Ports
