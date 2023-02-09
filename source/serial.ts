@@ -10,54 +10,21 @@
 
 import { WebUSBSerialPort } from './external/webusbserial.js';
 
-export class Serial { // Dummy wrapper for the Web Serial and Web USB Serial classes
-  async sendString(value: string): Promise<void> {
-    return;
-  }
-
-  async read(): Promise<Uint8Array> {
-    return new Uint8Array();
-  }
-
-  async close(): Promise<void> {
-    return;
-  }
-
-  isOpen = false;
-  async open(baudRate: number): Promise<void> {
-    return;
-  }
-
-  isThisPort(port: any): boolean {
-    return false;
-  }
-
-  getInfo(): string {
-    return "dummy";
-  }
-}
-
-
-export class WebUSBSerial extends Serial {
-  private port: WebUSBSerialPort;
+export class WebUSBSerial {
+  private port: WebUSBSerialPort | undefined;
   private device: any;
+  isOpen = false;
   
-  serOptions: any = {
-    overridePortSettings: true,
-    baudrate: 115200,
-  };
   static deviceFilters = [{ 'vendorId': 0x0403, 'productId': 0x6015 }]; // FTDx Chips
 
   constructor(device: any) {
-    super();
     this.device = device;
-    this.port = new WebUSBSerialPort(device, this.serOptions);
   }
 
-  //TODO: check if this work before PR
-  /*async sendString(value: string): Promise<void> {
-     await port.send(data);
-  }*/
+  //TODO: check if this work before PR (o-o' )
+  async sendString(value: string): Promise<void> {
+     await this.port?.send(value);
+  }
 
   private buffer = new Uint8Array(102400);
   private pos = 0;
@@ -72,8 +39,15 @@ export class WebUSBSerial extends Serial {
     return ret; 
   }
 
-  async open(baudRate:number): Promise<void> { 
+  serOptions = {
+    overridePortSettings: true,
+    baudRate: 115200,
+  };
+
+  async open(baudRate: number): Promise<void> { 
     this.serOptions.baudRate = baudRate;
+    this.port = new WebUSBSerialPort(this.device, this.serOptions);
+
     this.pos = 0;
    
     this.port.connect(data => {
@@ -90,10 +64,10 @@ export class WebUSBSerial extends Serial {
   async close(): Promise<void> {
     if(!this.isOpen) return;
     this.isOpen = false;
-    this.port.disconnect();
+    this.port?.disconnect();
   }
 
-  isThisPort(port: any): boolean  {
+  isThisPort(port: SerialPort | WebUSBSerialPort): boolean  {
     return (this.device === port);
   }
 
@@ -102,15 +76,16 @@ export class WebUSBSerial extends Serial {
   }
 }
 
-export class WebSerial extends Serial {
+
+export class WebSerial {
   private port: SerialPort;
+  isOpen = false;
 
   constructor(port: SerialPort) {
-    super();
     this.port = port;
   }
 
-  isThisPort(port: any): boolean {
+  isThisPort(port: SerialPort | WebUSBSerialPort): boolean {
     return this.port === port;
   }
 
@@ -170,7 +145,7 @@ export class WebSerial extends Serial {
 
   async open(baudRate: number): Promise<void> {
     this.serOptions.baudRate = baudRate;
-    await this.port.open(SerialManager.serOptions);
+    await this.port.open(this.serOptions);
     this.isOpen = true;
   }
 
@@ -204,7 +179,7 @@ export class SerialManager {
   private timeDone = 0;
 
   static orderType: DataOrder = 'chron'; // Chronological data order;
-  static serOptions: SerialOptions = { baudRate: 9600 } // Default 9600 baud rate
+  static baudRate = 9600; // Default 9600 baud rate
 
   // SECTION: Serial Data
   private consoleMemory = 1_000_000;
@@ -223,7 +198,7 @@ export class SerialManager {
     this.port = port;
   }
 
-  isThisPort(port: any): boolean {
+  isThisPort(port: SerialPort | WebUSBSerialPort): boolean {
     return this.port.isThisPort(port);
   }
 
@@ -233,13 +208,13 @@ export class SerialManager {
 
   */
   async sendString(value: string): Promise<void> {
-    await this.port.sendString(value)
+    await this.port.sendString(value);
   }
 
   async showConsole(): Promise<void> {
     if (this.recording) return; // Port is already being read, nothing to do
 
-    await this.port.open(SerialManager.serOptions.baudRate);
+    await this.port.open(SerialManager.baudRate);
 
     this.recording = true;
     this.onlyConsole = true;
@@ -283,7 +258,7 @@ export class SerialManager {
   async startRecord(resume = false): Promise<void> {
     if (this.recording) return;
 
-    await this.port.open(SerialManager.serOptions.baudRate); // Baud-Rate optional
+    await this.port.open(SerialManager.baudRate); // Baud-Rate optional
 
     if (!resume) {
       //this.flushRawData();

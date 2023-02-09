@@ -34,9 +34,8 @@
 
 import { SpectrumPlot, SeekClosest } from './plot.js';
 import { RawData, NPESv1, NPESv1Spectrum } from './raw-data.js';
-import { SerialManager } from './serial.js';
-import { WebSerial } from './serial.js';
-import { WebUSBSerial } from './serial.js';
+import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
+import { WebUSBSerialPort } from './external/webusbserial.js'
 
 export interface IsotopeList {
   [key: number]: string | undefined;
@@ -1518,7 +1517,7 @@ function loadSettingsDefault(): void {
   (<HTMLInputElement>document.getElementById('ser-limit')).value = (maxRecTime / 1000).toString(); // convert ms to s
   (<HTMLInputElement>document.getElementById('toggle-time-limit')).checked = maxRecTimeEnabled;
   (<HTMLInputElement>document.getElementById('iso-hover-prox')).value = maxDist.toString();
-  (<HTMLInputElement>document.getElementById('custom-baud')).value = SerialManager.serOptions.baudRate.toString();
+  (<HTMLInputElement>document.getElementById('custom-baud')).value = SerialManager.baudRate.toString();
   (<HTMLInputElement>document.getElementById('eol-char')).value = SerialManager.eolChar;
 
   (<HTMLInputElement>document.getElementById('smaVal')).value = plot.smaLength.toString();
@@ -1570,7 +1569,7 @@ function loadSettingsStorage(): void {
   if (setting) maxDist = setting;
 
   setting = loadJSON('baudRate');
-  if (setting) SerialManager.serOptions.baudRate = setting;
+  if (setting) SerialManager.baudRate = setting;
 
   setting = loadJSON('eolChar');
   if (setting) SerialManager.eolChar = setting;
@@ -1681,9 +1680,9 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
     }
     case 'baudRate': {
       const numVal = parseInt(stringValue);
-      SerialManager.serOptions.baudRate = numVal;
+      SerialManager.baudRate = numVal;
 
-      result = saveJSON(name, SerialManager.serOptions.baudRate);
+      result = saveJSON(name, SerialManager.baudRate);
       break;
     }
     case 'eolChar': {
@@ -1789,7 +1788,7 @@ function serialConnect(/*event: Event*/): void {
 
 
 function serialDisconnect(event: Event): void {
-  if (serRecorder?.isThisPort(event.target)) disconnectPort(true);
+  if (serRecorder?.isThisPort(<SerialPort | WebUSBSerialPort>event.target)) disconnectPort(true);
 
   listSerial();
 

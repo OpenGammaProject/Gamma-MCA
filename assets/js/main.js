@@ -1,8 +1,6 @@
 import { SpectrumPlot, SeekClosest } from './plot.js';
 import { RawData } from './raw-data.js';
-import { SerialManager } from './serial.js';
-import { WebSerial } from './serial.js';
-import { WebUSBSerial } from './serial.js';
+import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
 export class SpectrumData {
     data = [];
     background = [];
@@ -1111,7 +1109,7 @@ function loadSettingsDefault() {
     document.getElementById('ser-limit').value = (maxRecTime / 1000).toString();
     document.getElementById('toggle-time-limit').checked = maxRecTimeEnabled;
     document.getElementById('iso-hover-prox').value = maxDist.toString();
-    document.getElementById('custom-baud').value = SerialManager.serOptions.baudRate.toString();
+    document.getElementById('custom-baud').value = SerialManager.baudRate.toString();
     document.getElementById('eol-char').value = SerialManager.eolChar;
     document.getElementById('smaVal').value = plot.smaLength.toString();
     document.getElementById('peak-thres').value = plot.peakConfig.thres.toString();
@@ -1160,7 +1158,7 @@ function loadSettingsStorage() {
         maxDist = setting;
     setting = loadJSON('baudRate');
     if (setting)
-        SerialManager.serOptions.baudRate = setting;
+        SerialManager.baudRate = setting;
     setting = loadJSON('eolChar');
     if (setting)
         SerialManager.eolChar = setting;
@@ -1257,8 +1255,8 @@ function changeSettings(name, element) {
         }
         case 'baudRate': {
             const numVal = parseInt(stringValue);
-            SerialManager.serOptions.baudRate = numVal;
-            result = saveJSON(name, SerialManager.serOptions.baudRate);
+            SerialManager.baudRate = numVal;
+            result = saveJSON(name, SerialManager.baudRate);
             break;
         }
         case 'eolChar': {

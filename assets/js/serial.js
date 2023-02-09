@@ -1,37 +1,14 @@
 import { WebUSBSerialPort } from './external/webusbserial.js';
-export class Serial {
-    async sendString(value) {
-        return;
-    }
-    async read() {
-        return new Uint8Array();
-    }
-    async close() {
-        return;
-    }
-    isOpen = false;
-    async open(baudRate) {
-        return;
-    }
-    isThisPort(port) {
-        return false;
-    }
-    getInfo() {
-        return "dummy";
-    }
-}
-export class WebUSBSerial extends Serial {
+export class WebUSBSerial {
     port;
     device;
-    serOptions = {
-        overridePortSettings: true,
-        baudrate: 115200,
-    };
+    isOpen = false;
     static deviceFilters = [{ 'vendorId': 0x0403, 'productId': 0x6015 }];
     constructor(device) {
-        super();
         this.device = device;
-        this.port = new WebUSBSerialPort(device, this.serOptions);
+    }
+    async sendString(value) {
+        await this.port?.send(value);
     }
     buffer = new Uint8Array(102400);
     pos = 0;
@@ -44,8 +21,13 @@ export class WebUSBSerial extends Serial {
         this.pos = 0;
         return ret;
     }
+    serOptions = {
+        overridePortSettings: true,
+        baudRate: 115200,
+    };
     async open(baudRate) {
         this.serOptions.baudRate = baudRate;
+        this.port = new WebUSBSerialPort(this.device, this.serOptions);
         this.pos = 0;
         this.port.connect(data => {
             this.buffer.set(data, this.pos);
@@ -60,7 +42,7 @@ export class WebUSBSerial extends Serial {
         if (!this.isOpen)
             return;
         this.isOpen = false;
-        this.port.disconnect();
+        this.port?.disconnect();
     }
     isThisPort(port) {
         return (this.device === port);
@@ -69,10 +51,10 @@ export class WebUSBSerial extends Serial {
         return "WebUSB";
     }
 }
-export class WebSerial extends Serial {
+export class WebSerial {
     port;
+    isOpen = false;
     constructor(port) {
-        super();
         this.port = port;
     }
     isThisPort(port) {
@@ -128,7 +110,7 @@ export class WebSerial extends Serial {
     serOptions = { baudRate: 9600 };
     async open(baudRate) {
         this.serOptions.baudRate = baudRate;
-        await this.port.open(SerialManager.serOptions);
+        await this.port.open(this.serOptions);
         this.isOpen = true;
     }
     async close() {
@@ -151,7 +133,7 @@ export class SerialManager {
     startTime = 0;
     timeDone = 0;
     static orderType = 'chron';
-    static serOptions = { baudRate: 9600 };
+    static baudRate = 9600;
     consoleMemory = 1000000;
     rawConsoleData = '';
     rawData = '';
@@ -174,7 +156,7 @@ export class SerialManager {
     async showConsole() {
         if (this.recording)
             return;
-        await this.port.open(SerialManager.serOptions.baudRate);
+        await this.port.open(SerialManager.baudRate);
         this.recording = true;
         this.onlyConsole = true;
         this.closed = this.readUntilClosed();
@@ -208,7 +190,7 @@ export class SerialManager {
     async startRecord(resume = false) {
         if (this.recording)
             return;
-        await this.port.open(SerialManager.serOptions.baudRate);
+        await this.port.open(SerialManager.baudRate);
         if (!resume) {
             this.flushData();
             this.clearBaseHist();
