@@ -1375,7 +1375,7 @@ async function listSerial() {
     }
     for (const index in portsAvail) {
         const option = document.createElement('option');
-        option.text = `Port ${index} (` + portsAvail[index]?.getInfo() + `)`;
+        option.text = `Port ${index} (${portsAvail[index]?.getInfo()})`;
         portSelector.add(option, parseInt(index));
     }
     const serSettingsElements = document.getElementsByClassName('ser-settings');

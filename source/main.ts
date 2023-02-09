@@ -44,7 +44,7 @@ export interface IsotopeList {
 }
 
 interface PortList {
-  [key: number]: Serial | undefined;
+  [key: number]: WebSerial | WebUSBSerial | undefined;
 }
 
 export type DataOrder = 'hist' | 'chron';
@@ -1837,7 +1837,7 @@ async function listSerial(): Promise<void> {
 
   for (const index in portsAvail) {
     const option = document.createElement('option');
-    option.text = `Port ${index} (`+portsAvail[index]?.getInfo()+`)`;
+    option.text = `Port ${index} (${portsAvail[index]?.getInfo()})`;
     portSelector.add(option, parseInt(index));
   }
 

@@ -194,7 +194,7 @@ import { DataOrder } from './main.js';
 
 export class SerialManager {
   // SECTION: Serial Manager
-  readonly port: Serial;
+  readonly port: WebSerial | WebUSBSerial;
 
   //private reader: ReadableStreamDefaultReader | undefined;
   private closed: Promise<void> | undefined;
@@ -219,7 +219,7 @@ export class SerialManager {
   static adcChannels = 4096; // Default 12-bit ADC
   static eolChar = ';'; // End of Line/Data character
 
-  constructor(port: Serial) {
+  constructor(port: WebSerial | WebUSBSerial) {
     this.port = port;
   }
 
