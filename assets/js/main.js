@@ -114,10 +114,8 @@ document.body.onload = async function () {
         const rVal = loadJSON('fileDataMode');
         if (sVal) {
             const element = document.getElementById(sVal);
-            if (element) {
-                element.checked = true;
-                selectSerialType(element);
-            }
+            element.checked = true;
+            selectSerialType(element);
         }
         if (rVal) {
             const element = document.getElementById(rVal);

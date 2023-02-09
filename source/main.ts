@@ -35,7 +35,6 @@
 import { SpectrumPlot, SeekClosest } from './plot.js';
 import { RawData, NPESv1, NPESv1Spectrum } from './raw-data.js';
 import { SerialManager } from './serial.js';
-import { Serial } from './serial.js';
 import { WebSerial } from './serial.js';
 import { WebUSBSerial } from './serial.js';
 
@@ -189,10 +188,8 @@ document.body.onload = async function(): Promise<void> {
 
     if (sVal) {
       const element = <HTMLInputElement>document.getElementById(sVal);
-      if (element) {
-        element.checked = true;
-        selectSerialType(element);
-      }
+      element.checked = true;
+      selectSerialType(element);
     }
 
     if (rVal) {
