@@ -1803,15 +1803,6 @@ function serialDisconnect(event: Event): void {
 }
 
 
-function usbDisconnect(event: USBConnectionEvent): void {
-  if (serRecorder?.isThisPort(event.device)) disconnectPort(true);
-  
-  listSerial();
-
-  popupNotification('usb-disconnect');
-}
-
-
 document.getElementById('serial-list-btn')!.onclick = () => listSerial();
 
 async function listSerial(): Promise<void> {

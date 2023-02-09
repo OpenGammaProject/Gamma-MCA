@@ -1346,12 +1346,6 @@ function serialDisconnect(event) {
     listSerial();
     popupNotification('serial-disconnect');
 }
-function usbDisconnect(event) {
-    if (serRecorder?.isThisPort(event.device))
-        disconnectPort(true);
-    listSerial();
-    popupNotification('usb-disconnect');
-}
 document.getElementById('serial-list-btn').onclick = () => listSerial();
 async function listSerial() {
     const portSelector = document.getElementById('port-selector');
