@@ -33,7 +33,7 @@ const plot = new SpectrumPlot('plot');
 const raw = new RawData(1);
 const calClick = { a: false, b: false, c: false };
 const oldCalVals = { a: '', b: '', c: '' };
-const portsAvail = {};
+let portsAvail = [];
 let refreshRate = 1000;
 let maxRecTimeEnabled = false;
 let maxRecTime = 1800000;
@@ -1349,21 +1349,22 @@ function serialDisconnect(event) {
 document.getElementById('serial-list-btn').onclick = () => listSerial();
 async function listSerial() {
     const portSelector = document.getElementById('port-selector');
-    const options = portSelector.options;
-    for (const index in options) {
-        portSelector.remove(parseInt(index));
+    const optionsLen = portSelector.options.length;
+    for (let i = optionsLen; i >= 0; i--) {
+        portSelector.remove(i);
     }
+    portsAvail = [];
     if (navigator.serial) {
         const ports = await navigator.serial.getPorts();
-        for (const index in ports) {
-            portsAvail[index] = new WebSerial(ports[index]);
+        for (const port of ports) {
+            portsAvail.push(new WebSerial(port));
         }
     }
     else {
         if (navigator.usb) {
             const ports = await navigator.usb.getDevices();
-            for (const index in ports) {
-                portsAvail[index] = new WebUSBSerial(ports[index]);
+            for (const port of ports) {
+                portsAvail.push(new WebUSBSerial(port));
             }
         }
     }
@@ -1373,7 +1374,7 @@ async function listSerial() {
         portSelector.add(option, parseInt(index));
     }
     const serSettingsElements = document.getElementsByClassName('ser-settings');
-    if (portSelector.options.length === 0) {
+    if (!portSelector.options.length) {
         const option = document.createElement('option');
         option.text = 'No Ports Available';
         portSelector.add(option);
