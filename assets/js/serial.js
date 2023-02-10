@@ -1,4 +1,4 @@
-import { WebUSBSerialPort } from './external/webusbserial.js';
+import { WebUSBSerialPort } from './external/webusbserial-min.js';
 export class WebUSBSerial {
     port;
     device;
@@ -9,7 +9,7 @@ export class WebUSBSerial {
     }
     async sendString(value) {
         const enc = new TextEncoder();
-        await this.port?.send(enc.encode(value + '\n'));
+        this.port?.send(enc.encode(value + '\n'));
     }
     buffer = new Uint8Array(102400);
     pos = 0;

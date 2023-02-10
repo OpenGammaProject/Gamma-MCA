@@ -35,7 +35,7 @@
 import { SpectrumPlot, SeekClosest } from './plot.js';
 import { RawData, NPESv1, NPESv1Spectrum } from './raw-data.js';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
-import { WebUSBSerialPort } from './external/webusbserial.js'
+import { WebUSBSerialPort } from './external/webusbserial-min.js'
 
 export interface IsotopeList {
   [key: number]: string | undefined;

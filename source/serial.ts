@@ -8,7 +8,7 @@
 
 */
 
-import { WebUSBSerialPort } from './external/webusbserial.js';
+import { WebUSBSerialPort } from './external/webusbserial-min.js';
 
 export class WebUSBSerial {
   private port: WebUSBSerialPort | undefined;
@@ -22,8 +22,8 @@ export class WebUSBSerial {
   }
 
   async sendString(value: string): Promise<void> {
-     const enc= new TextEncoder(); 
-     await this.port?.send(enc.encode(value+'\n'));
+     const enc = new TextEncoder(); 
+     this.port?.send(enc.encode(value+'\n'));
   }
 
   private buffer = new Uint8Array(102400); //is 100kB enought?
