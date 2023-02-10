@@ -8,46 +8,91 @@
 
 */
 
-import { DataOrder } from './main.js';
+import { WebUSBSerialPort } from './external/webusbserial.js';
 
-export class SerialManager {
-  // SECTION: Serial Manager
-  readonly port: SerialPort;
+export class WebUSBSerial {
+  private port: WebUSBSerialPort | undefined;
+  private device: any;
+  isOpen = false;
+  
+  static deviceFilters = [{ 'vendorId': 0x0403, 'productId': 0x6015 }]; // FTDx Chips
 
-  private reader: ReadableStreamDefaultReader | undefined;
-  private closed: Promise<void> | undefined;
-  private recording = false;
-  private onlyConsole = true;
-  private startTime = 0;
-  private timeDone = 0;
+  constructor(device: any) {
+    this.device = device;
+  }
 
-  static orderType: DataOrder = 'chron'; // Chronological data order;
-  static serOptions: SerialOptions = { baudRate: 9600 } // Default 9600 baud rate
+  async sendString(value: string): Promise<void> {
+     const enc= new TextEncoder(); 
+     await this.port?.send(enc.encode(value+'\n'));
+  }
 
-  // SECTION: Serial Data
-  private consoleMemory = 1_000_000;
-  private rawConsoleData = '';
-  private rawData = ''; // Raw String Input from Serial Reading
-  private maxHistLength = 2**18 * 2 * 10; // Maximum number of characters for a valid histogram string/number
-  private maxLength = 20; // Maximum number of characters for a valid string/number
-  private bufferPulseData = <number[]>[]; // Ready to use Integer Pulse Heights, could use a setget meh
-  private baseHist = <number[]>[]; // Baseline histogram that will be subtracted from every other newer hist
+  private buffer = new Uint8Array(102400); //is 100kB enought?
+  private pos = 0;
+  
+  async read(): Promise<Uint8Array> {
+    if (this.pos === 0) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      return new Uint8Array();
+    }
+    const ret = this.buffer.subarray(0, this.pos);
+    this.pos = 0;
+    return ret; 
+  }
 
-  static maxSize = 200_000; // Maximum number of pulses/events to hold in the buffer
-  static adcChannels = 4096; // Default 12-bit ADC
-  static eolChar = ';'; // End of Line/Data character
+  serOptions = {
+    overridePortSettings: true,
+    baudrate: 115200,
+  };
+
+  async open(baudRate: number): Promise<void> { 
+    this.serOptions.baudrate = baudRate;
+    this.port = new WebUSBSerialPort(this.device, this.serOptions);
+
+    this.pos = 0;
+   
+    this.port.connect(data => {
+      //console.log(data);
+      this.buffer.set(data,this.pos);
+      this.pos += data.length;
+    }, error => {
+      console.warn("Error receiving data: " + error)
+      this.isOpen = false;
+    });
+    this.isOpen = true;
+  }
+
+  async close(): Promise<void> {
+    if(!this.isOpen) return;
+    this.isOpen = false;
+    this.port?.disconnect();
+  }
+
+  isThisPort(port: SerialPort | WebUSBSerialPort): boolean  {
+    return (this.device === port);
+  }
+
+  getInfo(): string {
+    return "WebUSB";
+  }
+}
+
+
+export class WebSerial {
+  private port: SerialPort;
+  isOpen = false;
 
   constructor(port: SerialPort) {
     this.port = port;
   }
 
-  /*
+  isThisPort(port: SerialPort | WebUSBSerialPort): boolean {
+    return this.port === port;
+  }
 
-    SERIAL CONSOLE CONTROL
-
-  */
   async sendString(value: string): Promise<void> {
     // Maybe also check if the serial port is open?
+    if (!this.isOpen) return;
+      
     if (!this.port?.writable) throw 'Port is not writable!';
 
     const textEncoder = new TextEncoderStream();
@@ -62,10 +107,114 @@ export class SerialManager {
     await writableStreamClosed;
   }
 
+  private reader: ReadableStreamDefaultReader | undefined;
+
+  async read(): Promise<Uint8Array>{
+    let ret = new Uint8Array();
+    if(!this.isOpen) return ret;
+  
+    if(this.port.readable) {
+      try {
+        this.reader = this.port.readable.getReader();
+        try {      
+          const {value, done} = await this.reader.read();
+          if (value) {
+            ret = value;
+          } else {
+            await new Promise(resolve => setTimeout(resolve, 10));
+          }
+        } finally {
+          this.reader?.releaseLock();
+          this.reader = undefined;
+        }
+      }
+      catch(err) {
+        this.reader?.releaseLock();
+        this.reader = undefined;
+        await new Promise(resolve => setTimeout(resolve, 100));
+        console.warn('Error Readnig.', err);
+        return ret;
+      }
+    } else {
+      await this.close();
+    }
+    return ret;
+  }
+
+  serOptions: SerialOptions = { baudRate: 9600 } // Default 9600 baud rate
+
+  async open(baudRate: number): Promise<void> {
+    this.serOptions.baudRate = baudRate;
+    await this.port.open(this.serOptions);
+    this.isOpen = true;
+  }
+
+  async close(): Promise<void> {
+    if (!this.isOpen) return;
+
+    this.isOpen = false;
+
+    if(this.reader) await this.reader?.cancel();
+
+    await this.port?.close();
+  }
+
+  getInfo(): string {
+    return `Id: 0x${this.port.getInfo().usbProductId?.toString(16)}`;
+  }
+}
+
+
+import { DataOrder } from './main.js';
+
+export class SerialManager {
+  // SECTION: Serial Manager
+  readonly port: WebSerial | WebUSBSerial;
+
+  //private reader: ReadableStreamDefaultReader | undefined;
+  private closed: Promise<void> | undefined;
+  private recording = false;
+  private onlyConsole = true;
+  private startTime = 0;
+  private timeDone = 0;
+
+  static orderType: DataOrder = 'chron'; // Chronological data order;
+  static baudRate = 9600; // Default 9600 baud rate
+
+  // SECTION: Serial Data
+  private consoleMemory = 1_000_000;
+  private rawConsoleData = '';
+  private rawData = ''; // Raw String Input from Serial Reading
+  private maxHistLength = 2**18 * 2 * 10; // Maximum number of characters for a valid histogram string/number
+  private maxLength = 20; // Maximum number of characters for a valid string/number
+  private bufferPulseData = <number[]>[]; // Ready to use Integer Pulse Heights, could use a setget meh
+  private baseHist = <number[]>[]; // Baseline histogram that will be subtracted from every other newer hist
+
+  static maxSize = 200_000; // Maximum number of pulses/events to hold in the buffer
+  static adcChannels = 4096; // Default 12-bit ADC
+  static eolChar = ';'; // End of Line/Data character
+
+  constructor(port: WebSerial | WebUSBSerial) {
+    this.port = port;
+  }
+
+  isThisPort(port: SerialPort | WebUSBSerialPort): boolean {
+    return this.port.isThisPort(port);
+  }
+
+  /*
+
+    SERIAL CONSOLE CONTROL
+
+  */
+  async sendString(value: string): Promise<void> {
+    await this.port.sendString(value);
+  }
+
   async showConsole(): Promise<void> {
     if (this.recording) return; // Port is already being read, nothing to do
 
-    if (!this.port.readable) await this.port.open(SerialManager.serOptions); // Open port if not open yet with optional baud rate
+    await this.port.open(SerialManager.baudRate);
 
     this.recording = true;
     this.onlyConsole = true;
@@ -73,13 +222,13 @@ export class SerialManager {
   }
 
   async hideConsole(): Promise<void> {
-    if (!this.recording || !this.onlyConsole) return // Not recording or currently in a measurement so don't do anything...
+    if (!this.recording || !this.onlyConsole) return; // Not recording or currently in a measurement so don't do anything...
 
     this.onlyConsole = false;
     this.recording = false;
 
     try {
-      this.reader?.cancel();
+      await this.port.close();
     } catch(err) {
       console.warn('Nothing to disconnect.', err);
     }
@@ -98,7 +247,7 @@ export class SerialManager {
     this.timeDone += performance.now() - this.startTime;
 
     try {
-      this.reader?.cancel();
+      await this.port.close();
     } catch(err) {
       console.warn('Nothing to disconnect.', err);
     }
@@ -109,7 +258,7 @@ export class SerialManager {
   async startRecord(resume = false): Promise<void> {
     if (this.recording) return;
 
-    if (!this.port.readable) await this.port.open(SerialManager.serOptions); // Open port if not open yet with optional baud rate
+    await this.port.open(SerialManager.baudRate); // Baud-Rate optional
 
     if (!resume) {
       //this.flushRawData();
@@ -126,24 +275,9 @@ export class SerialManager {
   }
 
   private async readUntilClosed(): Promise<void> {
-    while (this.port?.readable && this.recording) {
-      try {
-        this.reader = this.port.readable.getReader();
 
-        /*eslint-disable no-constant-condition*/
-        while (true) {
-          const {value, done} = await this.reader.read();
-          if (value) this.addRaw(value); // value is a Uint8Array.
-          if (done) {
-            // reader.cancel() has been called.
-            break;
-          }
-        }
-      } finally {
-        // Allow the serial port to be closed later.
-        this.reader?.releaseLock();
-        this.reader = undefined;
-      }
+    while (this.port.isOpen && this.recording) {
+      this.addRaw(await this.port.read());
     }
     await this.port?.close();
   }
