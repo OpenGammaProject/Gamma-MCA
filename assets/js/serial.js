@@ -181,7 +181,7 @@ export class SerialManager {
         this.recording = false;
         this.timeDone += performance.now() - this.startTime;
         try {
-            this.port.close();
+            await this.port.close();
         }
         catch (err) {
             console.warn('Nothing to disconnect.', err);
