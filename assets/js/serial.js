@@ -1,59 +1,38 @@
-import { WebUSBSerialPort } from './webusbserial.js';
-export class Serial {
-    async sendString(value) {
-        ;
-    }
-    async read() {
-        let ret = new Uint8Array();
-        return ret;
-    }
-    async close() {
-        ;
-    }
-    isOpen = false;
-    async open(baudRate) {
-        ;
-    }
-    isThisPort(port) {
-        return false;
-    }
-    getInfo() {
-        return "dummy";
-    }
-}
-export class WebUSBSerial extends Serial {
+import { WebUSBSerialPort } from './external/webusbserial.js';
+export class WebUSBSerial {
     port;
     device;
-    serOptions = {
-        overridePortSettings: true,
-        baudrate: 115200,
-    };
-    static deviceFilters = [
-        { 'vendorId': 0x0403, 'productId': 0x6015 },
-    ];
+    isOpen = false;
+    static deviceFilters = [{ 'vendorId': 0x0403, 'productId': 0x6015 }];
     constructor(device) {
-        super();
         this.device = device;
-        this.port = new WebUSBSerialPort(device, this.serOptions);
+    }
+    async sendString(value) {
+        await this.port?.send(value);
     }
     buffer = new Uint8Array(102400);
     pos = 0;
     async read() {
-        if (this.pos == 0) {
+        if (this.pos === 0) {
             await new Promise(resolve => setTimeout(resolve, 100));
             return new Uint8Array();
         }
-        let ret = this.buffer.subarray(0, this.pos);
+        const ret = this.buffer.subarray(0, this.pos);
         this.pos = 0;
         return ret;
     }
+    serOptions = {
+        overridePortSettings: true,
+        baudRate: 115200,
+    };
     async open(baudRate) {
         this.serOptions.baudRate = baudRate;
+        this.port = new WebUSBSerialPort(this.device, this.serOptions);
         this.pos = 0;
-        await this.port.connect((data) => {
+        this.port.connect(data => {
             this.buffer.set(data, this.pos);
             this.pos += data.length;
-        }, (error) => {
+        }, error => {
             console.warn("Error receiving data: " + error);
             this.isOpen = false;
         });
@@ -63,19 +42,19 @@ export class WebUSBSerial extends Serial {
         if (!this.isOpen)
             return;
         this.isOpen = false;
-        this.port.disconnect();
+        this.port?.disconnect();
     }
     isThisPort(port) {
-        return (this.device == port);
+        return (this.device === port);
     }
     getInfo() {
         return "WebUSB";
     }
 }
-export class WebSerial extends Serial {
+export class WebSerial {
     port;
+    isOpen = false;
     constructor(port) {
-        super();
         this.port = port;
     }
     isThisPort(port) {
@@ -103,10 +82,12 @@ export class WebSerial extends Serial {
                 this.reader = this.port.readable.getReader();
                 try {
                     const { value, done } = await this.reader.read();
-                    if (value)
+                    if (value) {
                         ret = value;
-                    else
+                    }
+                    else {
                         await new Promise(resolve => setTimeout(resolve, 10));
+                    }
                 }
                 finally {
                     this.reader?.releaseLock();
@@ -122,14 +103,14 @@ export class WebSerial extends Serial {
             }
         }
         else {
-            await close();
+            await this.close();
         }
         return ret;
     }
     serOptions = { baudRate: 9600 };
     async open(baudRate) {
         this.serOptions.baudRate = baudRate;
-        await this.port.open(SerialManager.serOptions);
+        await this.port.open(this.serOptions);
         this.isOpen = true;
     }
     async close() {
@@ -152,7 +133,7 @@ export class SerialManager {
     startTime = 0;
     timeDone = 0;
     static orderType = 'chron';
-    static serOptions = { baudRate: 9600 };
+    static baudRate = 9600;
     consoleMemory = 1000000;
     rawConsoleData = '';
     rawData = '';
@@ -175,7 +156,7 @@ export class SerialManager {
     async showConsole() {
         if (this.recording)
             return;
-        await this.port.open(SerialManager.serOptions.baudRate);
+        await this.port.open(SerialManager.baudRate);
         this.recording = true;
         this.onlyConsole = true;
         this.closed = this.readUntilClosed();
@@ -209,7 +190,7 @@ export class SerialManager {
     async startRecord(resume = false) {
         if (this.recording)
             return;
-        await this.port.open(SerialManager.serOptions.baudRate);
+        await this.port.open(SerialManager.baudRate);
         if (!resume) {
             this.flushData();
             this.clearBaseHist();
@@ -222,8 +203,7 @@ export class SerialManager {
     }
     async readUntilClosed() {
         while (this.port.isOpen && this.recording) {
-            let data = await this.port.read();
-            this.addRaw(data);
+            this.addRaw(await this.port.read());
         }
         await this.port?.close();
     }

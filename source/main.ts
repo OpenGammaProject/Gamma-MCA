@@ -34,22 +34,17 @@
 
 import { SpectrumPlot, SeekClosest } from './plot.js';
 import { RawData, NPESv1, NPESv1Spectrum } from './raw-data.js';
-import { SerialManager } from './serial.js';
-import { Serial } from './serial.js';
-import { WebSerial } from './serial.js';
-import { WebUSBSerial } from './serial.js';
+import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
+import { WebUSBSerialPort } from './external/webusbserial.js'
 
 export interface IsotopeList {
   [key: number]: string | undefined;
 }
 
-interface PortList {
-  [key: number]: Serial| undefined;
-}
-
 export type DataOrder = 'hist' | 'chron';
 type CalType = 'a' | 'b' | 'c';
 type DataType = 'data' | 'background';
+type PortList = (WebSerial | WebUSBSerial | undefined)[];
 
 export class SpectrumData { // Will hold the measurement data globally.
   data: number[] = [];
@@ -89,7 +84,7 @@ const raw = new RawData(1); // 2=raw, 1=hist
 const calClick = { a: false, b: false, c: false };
 const oldCalVals = { a: '', b: '', c: ''};
 
-const portsAvail: PortList = {};
+let portsAvail: PortList = [];
 let refreshRate = 1000; // Delay in ms between serial plot updates
 let maxRecTimeEnabled = false;
 let maxRecTime = 1800000; // 30 minutes
@@ -137,16 +132,11 @@ document.body.onload = async function(): Promise<void> {
 
   isoListURL = new URL(isoListURL, window.location.origin).href;
 
-  if (navigator.serial || navigator.usb) { // Web Serial API
+  if (navigator.serial || navigator.usb) { // Web Serial API or fallback Web USB API with FTDx JS driver
     const serErrDiv = document.getElementById('serial-error')!;
     serErrDiv.parentNode!.removeChild(serErrDiv); // Delete Serial Not Supported Warning
-    if(navigator.serial) {
-      navigator.serial.addEventListener('connect', serialConnect);
-      navigator.serial.addEventListener('disconnect', serialDisconnect);
-    } else { //fallback WebUSB api with FTDx javascript driver
-      navigator.usb.addEventListener('connect', serialConnect);
-      navigator.usb.addEventListener('disconnect', usbDisconnect);
-    }
+    navigator[navigator.serial ? 'serial' : 'usb'].addEventListener('connect', serialConnect);
+    navigator[navigator.serial ? 'serial' : 'usb'].addEventListener('disconnect', serialDisconnect);
     listSerial(); // List Available Serial Ports
   } else {
     const serDiv = document.getElementById('serial-div')!;
@@ -197,11 +187,8 @@ document.body.onload = async function(): Promise<void> {
 
     if (sVal) {
       const element = <HTMLInputElement>document.getElementById(sVal);
-      if(element)
-      {
-        element.checked = true;
-        selectSerialType(element);
-      }
+      element.checked = true;
+      selectSerialType(element);
     }
 
     if (rVal) {
@@ -1530,7 +1517,7 @@ function loadSettingsDefault(): void {
   (<HTMLInputElement>document.getElementById('ser-limit')).value = (maxRecTime / 1000).toString(); // convert ms to s
   (<HTMLInputElement>document.getElementById('toggle-time-limit')).checked = maxRecTimeEnabled;
   (<HTMLInputElement>document.getElementById('iso-hover-prox')).value = maxDist.toString();
-  (<HTMLInputElement>document.getElementById('custom-baud')).value = SerialManager.serOptions.baudRate.toString();
+  (<HTMLInputElement>document.getElementById('custom-baud')).value = SerialManager.baudRate.toString();
   (<HTMLInputElement>document.getElementById('eol-char')).value = SerialManager.eolChar;
 
   (<HTMLInputElement>document.getElementById('smaVal')).value = plot.smaLength.toString();
@@ -1582,7 +1569,7 @@ function loadSettingsStorage(): void {
   if (setting) maxDist = setting;
 
   setting = loadJSON('baudRate');
-  if (setting) SerialManager.serOptions.baudRate = setting;
+  if (setting) SerialManager.baudRate = setting;
 
   setting = loadJSON('eolChar');
   if (setting) SerialManager.eolChar = setting;
@@ -1693,9 +1680,9 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
     }
     case 'baudRate': {
       const numVal = parseInt(stringValue);
-      SerialManager.serOptions.baudRate = numVal;
+      SerialManager.baudRate = numVal;
 
-      result = saveJSON(name, SerialManager.serOptions.baudRate);
+      result = saveJSON(name, SerialManager.baudRate);
       break;
     }
     case 'eolChar': {
@@ -1801,21 +1788,11 @@ function serialConnect(/*event: Event*/): void {
 
 
 function serialDisconnect(event: Event): void {
-  if (serRecorder?.isThisPort(event.target)) 
-    disconnectPort(true);
+  if (serRecorder?.isThisPort(<SerialPort | WebUSBSerialPort>event.target)) disconnectPort(true);
 
   listSerial();
 
   popupNotification('serial-disconnect');
-}
-
-function usbDisconnect(event: USBConnectionEvent): void {
-  if (serRecorder?.isThisPort(event.device)) 
-    disconnectPort(true);
-
-  listSerial();
-
-  popupNotification('usb-disconnect');
 }
 
 
@@ -1823,34 +1800,36 @@ document.getElementById('serial-list-btn')!.onclick = () => listSerial();
 
 async function listSerial(): Promise<void> {
   const portSelector = <HTMLSelectElement>document.getElementById('port-selector');
-  const options = portSelector.options;
-  for (const index in options) { // Remove all "old" ports
-    portSelector.remove(parseInt(index));
+  const optionsLen = portSelector.options.length;
+  for (let i = optionsLen; i >= 0; i--) { // Remove all "old" ports
+    portSelector.remove(i);
   }
+  portsAvail = [];
+  
 
-  if(navigator.serial){
+  if (navigator.serial) {
     const ports = await navigator.serial.getPorts();
-    for (const index in ports) { // List new Ports
-      portsAvail[index] = new WebSerial(ports[index]);
+    for (const port of ports) { // List new Ports
+      portsAvail.push(new WebSerial(port));
     }
-  } else {
-    if(navigator.usb) {
+  } else { // Fallback Web USB API, only if Web Serial is not avail
+    if (navigator.usb) {
       const ports = await navigator.usb.getDevices();
-      for (const index in ports) { // List new Ports
-        portsAvail[index] = new WebUSBSerial(ports[index]);
+      for (const port of ports) { // List new Ports
+        portsAvail.push(new WebUSBSerial(port));
       }
     }
   }
 
-  for(const index in portsAvail) {
-      const option = document.createElement('option');
-      option.text = `Port ${index} (`+portsAvail[index]?.getInfo()+`)`;
-      portSelector.add(option, parseInt(index));
+  for (const index in portsAvail) {
+    const option = document.createElement('option');
+    option.text = `Port ${index} (${portsAvail[index]?.getInfo()})`;
+    portSelector.add(option, parseInt(index));
   }
 
   const serSettingsElements = document.getElementsByClassName('ser-settings') as HTMLCollectionOf<HTMLInputElement> | HTMLCollectionOf<HTMLSelectElement>;
 
-  if (portSelector.options.length==0) {
+  if (!portSelector.options.length) {
     const option = document.createElement('option');
     option.text = 'No Ports Available';
     portSelector.add(option);
@@ -1870,11 +1849,11 @@ document.getElementById('serial-add-device')!.onclick = () => requestSerial();
 
 async function requestSerial(): Promise<void> {
   try {
-    if(navigator.serial) {
+    if (navigator.serial) {
       await navigator.serial.requestPort();
     } else {
-			  await navigator.usb.requestDevice({
-				filters : WebUSBSerial.deviceFilters 
+      await navigator.usb.requestDevice({
+        filters : WebUSBSerial.deviceFilters 
 			});
     }
     listSerial();
