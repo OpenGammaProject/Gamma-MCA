@@ -168,7 +168,7 @@ export class SerialManager {
         this.onlyConsole = false;
         this.recording = false;
         try {
-            this.port.close();
+            await this.port.close();
         }
         catch (err) {
             console.warn('Nothing to disconnect.', err);
