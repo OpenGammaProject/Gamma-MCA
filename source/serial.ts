@@ -325,7 +325,7 @@ export class SerialManager {
 
     } else if (SerialManager.orderType === 'hist') { // HISTOGRAM DATA
 
-      const stringArr = this.rawData.split('\r\n');
+      const stringArr = this.rawData.split('\n');
 
       stringArr.pop(); // Delete last entry to avoid counting unfinished transmissions
       //stringArr.shift(); // Delete first entry. !FIX SERIAL COMMUNICATION ERRORS!
@@ -335,7 +335,7 @@ export class SerialManager {
         return;
       } else {
         for (const element of stringArr) {
-          this.rawData = this.rawData.replace(element + '\r\n', '');
+          this.rawData = this.rawData.replace(element + '\n', '');
           const trimString = element.trim(); // Delete whitespace and line breaks
 
           if (!trimString.length || trimString.length >= this.maxHistLength) continue; // String is empty or longer than maxHistLength --> Invalid, disregard

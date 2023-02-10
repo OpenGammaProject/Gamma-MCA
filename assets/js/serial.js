@@ -228,7 +228,7 @@ export class SerialManager {
             }
         }
         else if (SerialManager.orderType === 'hist') {
-            const stringArr = this.rawData.split('\r\n');
+            const stringArr = this.rawData.split('\n');
             stringArr.pop();
             if (!stringArr.length) {
                 if (this.rawData.length > this.maxHistLength)
@@ -237,7 +237,7 @@ export class SerialManager {
             }
             else {
                 for (const element of stringArr) {
-                    this.rawData = this.rawData.replace(element + '\r\n', '');
+                    this.rawData = this.rawData.replace(element + '\n', '');
                     const trimString = element.trim();
                     if (!trimString.length || trimString.length >= this.maxHistLength)
                         continue;
