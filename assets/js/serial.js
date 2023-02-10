@@ -204,7 +204,9 @@ export class SerialManager {
     }
     async readUntilClosed() {
         while (this.port.isOpen && this.recording) {
-            this.addRaw(await this.port.read());
+            const data = await this.port.read();
+            if (data.length)
+                this.addRaw(data);
         }
         await this.port?.close();
     }

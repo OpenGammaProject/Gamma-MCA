@@ -276,7 +276,8 @@ export class SerialManager {
   private async readUntilClosed(): Promise<void> {
 
     while (this.port.isOpen && this.recording) {
-      this.addRaw(await this.port.read());
+      const data = await this.port.read();
+      if (data.length) this.addRaw(data); // Only submit non-empty arrays
     }
     await this.port?.close();
   }
