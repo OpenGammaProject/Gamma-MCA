@@ -22,7 +22,7 @@ export class WebUSBSerial {
   }
 
   async sendString(value: string): Promise<void> {
-     let enc= new TextEncoder(); 
+     const enc= new TextEncoder(); 
      await this.port?.send(enc.encode(value+'\n'));
   }
 

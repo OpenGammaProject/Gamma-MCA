@@ -8,7 +8,7 @@ export class WebUSBSerial {
         this.device = device;
     }
     async sendString(value) {
-        let enc = new TextEncoder();
+        const enc = new TextEncoder();
         await this.port?.send(enc.encode(value + '\n'));
     }
     buffer = new Uint8Array(102400);
