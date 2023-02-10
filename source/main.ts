@@ -1574,6 +1574,9 @@ function loadSettingsStorage(): void {
   setting = loadJSON('eolChar');
   if (setting) SerialManager.eolChar = setting;
 
+  setting = loadJSON('serChannels');
+  if (setting) SerialManager.adcChannels = setting;
+
   setting = loadJSON('smaLength');
   if (setting) plot.smaLength = setting;
 
