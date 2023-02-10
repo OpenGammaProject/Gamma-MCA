@@ -1,3 +1,7 @@
+/*
+  Type definitions for the WebUSB FTDI Driver
+*/
+
 type DataCallback = (data: Uint8Array) => void;
 type ErrorCallback = (data: any) => void;
 

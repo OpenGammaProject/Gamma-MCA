@@ -9,7 +9,7 @@ export class WebUSBSerial {
     }
     async sendString(value) {
         const enc = new TextEncoder();
-        this.port?.send(enc.encode(value + '\n'));
+        this.port?.send(enc.encode(`${value}\n`));
     }
     buffer = new Uint8Array(102400);
     pos = 0;
@@ -81,7 +81,7 @@ export class WebSerial {
             try {
                 this.reader = this.port.readable.getReader();
                 try {
-                    const { value, done } = await this.reader.read();
+                    const { value } = await this.reader.read();
                     if (value) {
                         ret = value;
                     }
@@ -114,10 +114,10 @@ export class WebSerial {
     async close() {
         if (!this.isOpen)
             return;
-        this.isOpen = false;
         if (this.reader)
             await this.reader?.cancel();
         await this.port?.close();
+        this.isOpen = false;
     }
     getInfo() {
         return `Id: 0x${this.port.getInfo().usbProductId?.toString(16)}`;

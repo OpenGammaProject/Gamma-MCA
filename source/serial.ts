@@ -15,7 +15,7 @@ export class WebUSBSerial {
   private device: any;
   isOpen = false;
   
-  static deviceFilters = [{ 'vendorId': 0x0403, 'productId': 0x6015 }]; // FTDx Chips
+  static deviceFilters = [{ 'vendorId': 0x0403, 'productId': 0x6015 }]; // Filter FTDx Chips
 
   constructor(device: any) {
     this.device = device;
@@ -23,10 +23,10 @@ export class WebUSBSerial {
 
   async sendString(value: string): Promise<void> {
      const enc = new TextEncoder(); 
-     this.port?.send(enc.encode(value+'\n'));
+     this.port?.send(enc.encode(`${value}\n`));
   }
 
-  private buffer = new Uint8Array(102400); //is 100kB enought?
+  private buffer = new Uint8Array(102400); // Is 100kB enough?
   private pos = 0;
   
   async read(): Promise<Uint8Array> {
@@ -116,7 +116,7 @@ export class WebSerial {
       try {
         this.reader = this.port.readable.getReader();
         try {
-          const {value, done} = await this.reader.read();
+          const {value} = await this.reader.read();
           if (value) {
             ret = value;
           } else {
@@ -150,12 +150,10 @@ export class WebSerial {
 
   async close(): Promise<void> {
     if (!this.isOpen) return;
-
-    this.isOpen = false;
-
-    if(this.reader) await this.reader?.cancel();
+    if (this.reader) await this.reader?.cancel();
 
     await this.port?.close();
+    this.isOpen = false;
   }
 
   getInfo(): string {
@@ -274,7 +272,6 @@ export class SerialManager {
   }
 
   private async readUntilClosed(): Promise<void> {
-
     while (this.port.isOpen && this.recording) {
       const data = await this.port.read();
       if (data.length) this.addRaw(data); // Only submit non-empty arrays
