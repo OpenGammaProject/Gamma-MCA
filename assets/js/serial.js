@@ -1,4 +1,4 @@
-import { WebUSBSerialPort } from './external/webusbserial.js';
+import { WebUSBSerialPort } from './external/webusbserial-min.js';
 export class WebUSBSerial {
     port;
     device;
