@@ -52,6 +52,12 @@ You can find all the `.ts` files inside the `source` folder. The `tsconfig.json`
 
 To make changes to the service worker, have a look at `service-worker.js`. It is written in vanilla JS, because compiling it in TS is absolute pain and totally not worth it.
 
----
+## Branding
 
-Notice: The [LICENSE](/LICENSE) does not apply to the name "Gamma MCA" and especially the Gamma MCA logo. These are Copyright 2021 by me, Phoenix1747.
+The [LICENSE](/LICENSE) does not apply to the name _Gamma MCA_ and especially the Gamma MCA/OpenGammaProject [logo](assets/logo.svg). This also includes any derivatives that contain the same logo, such as the images inside `assets/favicon` or `assets/files`.
+
+- Do not use them in any way that suggests you are the OpenGammaProject or Gamma MCA or that the OpenGammaProject is endorsing you or your offering or project.
+- Do not use the OpenGammaProject logo as the icon or logo for your business/organization, offering, project, domain name, social media account, or website.
+- Do not modify the OpenGammaProject logo.
+
+Feel free to fork this repository to archive it or create pull requests here and contribute. However, if you're forking the project, then make (significant) changes without the purpose of contribution these here, please remove the branding (_Gamma MCA_ name and all OpenGammaProject-related logos).
