@@ -62,7 +62,7 @@ export class WebUSBSerial {
   }
 
   async close(): Promise<void> {
-    if(!this.isOpen) return;
+    if (!this.isOpen) return;
     this.isOpen = false;
     this.port?.disconnect();
   }
@@ -216,11 +216,13 @@ export class SerialManager {
     this.onlyConsole = false;
     this.recording = false;
 
+    /*
     try {
       await this.port.close();
     } catch(err) {
       console.warn('Nothing to disconnect.', err);
     }
+    */
 
     await this.closed;
   }
@@ -235,11 +237,13 @@ export class SerialManager {
     this.recording = false;
     this.timeDone += performance.now() - this.startTime;
 
+    /*
     try {
       await this.port.close();
     } catch(err) {
       console.warn('Nothing to disconnect.', err);
     }
+    */
 
     await this.closed;
   }

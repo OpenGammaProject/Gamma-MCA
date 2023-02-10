@@ -156,12 +156,6 @@ export class SerialManager {
             return;
         this.onlyConsole = false;
         this.recording = false;
-        try {
-            await this.port.close();
-        }
-        catch (err) {
-            console.warn('Nothing to disconnect.', err);
-        }
         await this.closed;
     }
     async stopRecord() {
@@ -169,12 +163,6 @@ export class SerialManager {
             return;
         this.recording = false;
         this.timeDone += performance.now() - this.startTime;
-        try {
-            await this.port.close();
-        }
-        catch (err) {
-            console.warn('Nothing to disconnect.', err);
-        }
         await this.closed;
     }
     async startRecord(resume = false) {
