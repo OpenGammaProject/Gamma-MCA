@@ -25,6 +25,7 @@
     - ROI with stats (total counts, max, min, FWHM, range,...)
 
     - (!) FWHM calculation in peak finder
+    - (!) Serial newline only \n instead of \r\n
 
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance

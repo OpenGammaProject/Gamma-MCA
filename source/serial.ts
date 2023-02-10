@@ -55,7 +55,7 @@ export class WebUSBSerial {
       this.buffer.set(data,this.pos);
       this.pos += data.length;
     }, error => {
-      console.warn("Error receiving data: " + error)
+      console.error("Error receiving data!" + error)
       this.isOpen = false;
     });
     this.isOpen = true;
@@ -90,7 +90,6 @@ export class WebSerial {
   }
 
   async sendString(value: string): Promise<void> {
-    // Maybe also check if the serial port is open?
     if (!this.isOpen) return;
       
     if (!this.port?.writable) throw 'Port is not writable!';
@@ -132,7 +131,7 @@ export class WebSerial {
         this.reader?.releaseLock();
         this.reader = undefined;
         await new Promise(resolve => setTimeout(resolve, 100));
-        console.warn('Error Readnig.', err);
+        console.error('Error reading!', err);
         return ret;
       }
     } else {
