@@ -15,7 +15,8 @@ Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://
 * Straightforward interface to get down to business
 * File import of common data formats (e.g. CSV, TKA, XML, JSON)
 * Export JSON/XML files combining all the spectra, calibration data and sample info
-* Live plotting via the serial interface, compatible with any serial device (e.g. Arduino)
+* Live plotting via the serial interface, compatible with any serial device (e.g. Arduino) on [desktop](https://caniuse.com/web-serial)
+* Compatible with serial FTDI chips on [mobile](https://caniuse.com/webusb)
 * Serial console to control your device
 * Linear and quadratic energy calibration
 * Gaussian correlation filtering for peak detection
