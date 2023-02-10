@@ -115,24 +115,16 @@ export class WebSerial {
     if(this.port.readable) {
       try {
         this.reader = this.port.readable.getReader();
-        try {
-          const {value} = await this.reader.read();
-          if (value) {
-            ret = value;
-          } else {
-            //await new Promise(resolve => setTimeout(resolve, 10));
-          }
-        } finally {
-          this.reader?.releaseLock();
-          this.reader = undefined;
+        const {value} = await this.reader.read();
+        if (value) {
+          ret = value;
+        } else {
+          //await new Promise(resolve => setTimeout(resolve, 10));
         }
-      }
-      catch(err) {
+      } finally {
         this.reader?.releaseLock();
         this.reader = undefined;
         //await new Promise(resolve => setTimeout(resolve, 100));
-        console.error('Error reading!', err);
-        return ret;
       }
     } else {
       await this.close();
@@ -276,7 +268,7 @@ export class SerialManager {
       const data = await this.port.read();
       if (data.length) this.addRaw(data); // Only submit non-empty arrays
     }
-    await this.port?.close();
+    await this.port.close();
   }
   /*
 

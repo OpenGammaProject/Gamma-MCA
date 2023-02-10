@@ -80,24 +80,16 @@ export class WebSerial {
         if (this.port.readable) {
             try {
                 this.reader = this.port.readable.getReader();
-                try {
-                    const { value } = await this.reader.read();
-                    if (value) {
-                        ret = value;
-                    }
-                    else {
-                    }
+                const { value } = await this.reader.read();
+                if (value) {
+                    ret = value;
                 }
-                finally {
-                    this.reader?.releaseLock();
-                    this.reader = undefined;
+                else {
                 }
             }
-            catch (err) {
+            finally {
                 this.reader?.releaseLock();
                 this.reader = undefined;
-                console.error('Error reading!', err);
-                return ret;
             }
         }
         else {
@@ -205,7 +197,7 @@ export class SerialManager {
             if (data.length)
                 this.addRaw(data);
         }
-        await this.port?.close();
+        await this.port.close();
     }
     addRaw(uintArray) {
         const string = new TextDecoder("utf-8").decode(uintArray);
