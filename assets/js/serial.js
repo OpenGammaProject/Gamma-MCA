@@ -15,7 +15,6 @@ export class WebUSBSerial {
     pos = 0;
     async read() {
         if (this.pos === 0) {
-            await new Promise(resolve => setTimeout(resolve, 100));
             return new Uint8Array();
         }
         const ret = this.buffer.subarray(0, this.pos);
@@ -87,7 +86,6 @@ export class WebSerial {
                         ret = value;
                     }
                     else {
-                        await new Promise(resolve => setTimeout(resolve, 10));
                     }
                 }
                 finally {
@@ -98,7 +96,6 @@ export class WebSerial {
             catch (err) {
                 this.reader?.releaseLock();
                 this.reader = undefined;
-                await new Promise(resolve => setTimeout(resolve, 100));
                 console.error('Error reading!', err);
                 return ret;
             }
