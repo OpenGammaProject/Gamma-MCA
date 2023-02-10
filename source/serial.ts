@@ -21,12 +21,12 @@ export class WebUSBSerial {
     this.device = device;
   }
 
-  //TODO: check if this work before PR (o-o' )
   async sendString(value: string): Promise<void> {
-     await this.port?.send(value);
+     let enc= new TextEncoder(); 
+     await this.port?.send(enc.encode(value+'\n'));
   }
 
-  private buffer = new Uint8Array(102400);
+  private buffer = new Uint8Array(102400); //is 100kB enought?
   private pos = 0;
   
   async read(): Promise<Uint8Array> {

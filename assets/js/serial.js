@@ -8,7 +8,8 @@ export class WebUSBSerial {
         this.device = device;
     }
     async sendString(value) {
-        await this.port?.send(value);
+        let enc = new TextEncoder();
+        await this.port?.send(enc.encode(value + '\n'));
     }
     buffer = new Uint8Array(102400);
     pos = 0;
@@ -23,10 +24,10 @@ export class WebUSBSerial {
     }
     serOptions = {
         overridePortSettings: true,
-        baudRate: 115200,
+        baudrate: 115200,
     };
     async open(baudRate) {
-        this.serOptions.baudRate = baudRate;
+        this.serOptions.baudrate = baudRate;
         this.port = new WebUSBSerialPort(this.device, this.serOptions);
         this.pos = 0;
         this.port.connect(data => {
