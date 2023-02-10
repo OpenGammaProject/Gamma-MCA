@@ -41,11 +41,11 @@ export class WebUSBSerial {
 
   serOptions = {
     overridePortSettings: true,
-    baudRate: 115200,
+    baudrate: 115200,
   };
 
   async open(baudRate: number): Promise<void> { 
-    this.serOptions.baudRate = baudRate;
+    this.serOptions.baudrate = baudRate;
     this.port = new WebUSBSerialPort(this.device, this.serOptions);
 
     this.pos = 0;
