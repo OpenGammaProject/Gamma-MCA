@@ -15,7 +15,8 @@ Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://
 * Straightforward interface to get down to business
 * File import of common data formats (e.g. CSV, TKA, XML, JSON)
 * Export JSON/XML files combining all the spectra, calibration data and sample info
-* Live plotting via the serial interface, compatible with any serial device (e.g. Arduino)
+* Live plotting via the serial interface, compatible with any serial device (e.g. Arduino) on [desktop](https://caniuse.com/web-serial)
+* Compatible with serial FTDI chips on [mobile](https://caniuse.com/webusb)
 * Serial console to control your device
 * Linear and quadratic energy calibration
 * Gaussian correlation filtering for peak detection
@@ -37,8 +38,8 @@ Gamma MCA can import JSON files complying with the [NPES JSON Schema](https://gi
 
 Thanks to the Web Serial API you can use any serial device capable of doing gamma spectroscopy or processing the data to plot your spectra. The are two types of prints supported:
 
-1. _Chronological streams_ where each new detected event gets printed to the serial interface after the other. **Important:** Your device has to print an EOL character (default's a semicolon `;`) after every single event to signalize the end of a data entry. Whitespace or newlines do not matter. The delimiter can be changed in the settings.
-2. Ready-to-use _histograms_. This data has been pre-processed and the finished histogram will be periodically transmitted. **Important:** Your device has to print an EOL character (default's a semicolon `;`) after every single histogram channel to signalize the end of a data entry and each new histogram needs to be on a new line (`\r\n` or Arduino `Serial.println(...)`)! The delimiter can be changed in the settings, as well as the correct number of ADC channels that is required for this to work.
+1. _Chronological streams_ where each new detected event gets printed to the serial interface after the other. **Important:** Your device has to print a special character (default's a semicolon `;`) after every single event to signalize the end of a data entry. Whitespace or newlines do not matter. The delimiter can be changed in the settings.
+2. Ready-to-use _histograms_. This data has been pre-processed and the finished histogram will be periodically transmitted. **Important:** Your device has to print a special character (default's a semicolon `;`) after every single histogram channel/bin to signalize the end of a data entry and each new histogram needs to be on a new line (`\n` or e.g., Arduino's `Serial.println(...)`)! The delimiter can be changed in the settings, as well as the correct number of ADC channels that is required for this to work.
 
 Both modes are currently supported by our [Open Gamma Detector](https://github.com/OpenGammaProject/Open-Gamma-Detector) or any other serial device that has been set up to do so.
 

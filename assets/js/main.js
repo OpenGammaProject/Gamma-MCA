@@ -1,6 +1,6 @@
 import { SpectrumPlot, SeekClosest } from './plot.js';
 import { RawData } from './raw-data.js';
-import { SerialManager } from './serial.js';
+import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
 export class SpectrumData {
     data = [];
     background = [];
@@ -31,7 +31,7 @@ const plot = new SpectrumPlot('plot');
 const raw = new RawData(1);
 const calClick = { a: false, b: false, c: false };
 const oldCalVals = { a: '', b: '', c: '' };
-const portsAvail = {};
+let portsAvail = [];
 let refreshRate = 1000;
 let maxRecTimeEnabled = false;
 let maxRecTime = 1800000;
@@ -42,7 +42,7 @@ let isoListURL = 'assets/isotopes_energies_min.json';
 const isoList = {};
 let checkNearIso = false;
 let maxDist = 100;
-const APP_VERSION = '2023-02-08';
+const APP_VERSION = '2023-02-11';
 let localStorageAvailable = false;
 let firstInstall = false;
 document.body.onload = async function () {
@@ -68,11 +68,11 @@ document.body.onload = async function () {
         document.title += ' web application';
     }
     isoListURL = new URL(isoListURL, window.location.origin).href;
-    if (navigator.serial) {
+    if (navigator.serial || navigator.usb) {
         const serErrDiv = document.getElementById('serial-error');
         serErrDiv.parentNode.removeChild(serErrDiv);
-        navigator.serial.addEventListener('connect', serialConnect);
-        navigator.serial.addEventListener('disconnect', serialDisconnect);
+        navigator[navigator.serial ? 'serial' : 'usb'].addEventListener('connect', serialConnect);
+        navigator[navigator.serial ? 'serial' : 'usb'].addEventListener('disconnect', serialDisconnect);
         listSerial();
     }
     else {
@@ -1109,7 +1109,7 @@ function loadSettingsDefault() {
     document.getElementById('ser-limit').value = (maxRecTime / 1000).toString();
     document.getElementById('toggle-time-limit').checked = maxRecTimeEnabled;
     document.getElementById('iso-hover-prox').value = maxDist.toString();
-    document.getElementById('custom-baud').value = SerialManager.serOptions.baudRate.toString();
+    document.getElementById('custom-baud').value = SerialManager.baudRate.toString();
     document.getElementById('eol-char').value = SerialManager.eolChar;
     document.getElementById('smaVal').value = plot.smaLength.toString();
     document.getElementById('peak-thres').value = plot.peakConfig.thres.toString();
@@ -1158,10 +1158,13 @@ function loadSettingsStorage() {
         maxDist = setting;
     setting = loadJSON('baudRate');
     if (setting)
-        SerialManager.serOptions.baudRate = setting;
+        SerialManager.baudRate = setting;
     setting = loadJSON('eolChar');
     if (setting)
         SerialManager.eolChar = setting;
+    setting = loadJSON('serChannels');
+    if (setting)
+        SerialManager.adcChannels = setting;
     setting = loadJSON('smaLength');
     if (setting)
         plot.smaLength = setting;
@@ -1255,8 +1258,8 @@ function changeSettings(name, element) {
         }
         case 'baudRate': {
             const numVal = parseInt(stringValue);
-            SerialManager.serOptions.baudRate = numVal;
-            result = saveJSON(name, SerialManager.serOptions.baudRate);
+            SerialManager.baudRate = numVal;
+            result = saveJSON(name, SerialManager.baudRate);
             break;
         }
         case 'eolChar': {
@@ -1337,13 +1340,7 @@ function serialConnect() {
     popupNotification('serial-connect');
 }
 function serialDisconnect(event) {
-    for (const key in portsAvail) {
-        if (portsAvail[key] == event.target) {
-            delete portsAvail[key];
-            break;
-        }
-    }
-    if (event.target === serRecorder?.port)
+    if (serRecorder?.isThisPort(event.target))
         disconnectPort(true);
     listSerial();
     popupNotification('serial-disconnect');
@@ -1351,19 +1348,35 @@ function serialDisconnect(event) {
 document.getElementById('serial-list-btn').onclick = () => listSerial();
 async function listSerial() {
     const portSelector = document.getElementById('port-selector');
-    const options = portSelector.options;
-    for (const index in options) {
-        portSelector.remove(parseInt(index));
+    const optionsLen = portSelector.options.length;
+    for (let i = optionsLen; i >= 0; i--) {
+        portSelector.remove(i);
     }
-    const ports = await navigator.serial.getPorts();
-    for (const index in ports) {
-        portsAvail[index] = ports[index];
+    portsAvail = [];
+    if (navigator.serial) {
+        const ports = await navigator.serial.getPorts();
+        for (const port of ports) {
+            portsAvail.push(new WebSerial(port));
+        }
+    }
+    else {
+        if (navigator.usb) {
+            const ports = await navigator.usb.getDevices();
+            for (const port of ports) {
+                portsAvail.push(new WebUSBSerial(port));
+            }
+        }
+    }
+    let selectIndex = 0;
+    for (const index in portsAvail) {
         const option = document.createElement('option');
-        option.text = `Port ${index} (Id: 0x${ports[index].getInfo().usbProductId?.toString(16)})`;
+        option.text = `Port ${index} (${portsAvail[index]?.getInfo()})`;
         portSelector.add(option, parseInt(index));
+        if (serRecorder?.isThisPort(portsAvail[index]?.getPort()))
+            selectIndex = parseInt(index);
     }
     const serSettingsElements = document.getElementsByClassName('ser-settings');
-    if (!ports.length) {
+    if (!portSelector.options.length) {
         const option = document.createElement('option');
         option.text = 'No Ports Available';
         portSelector.add(option);
@@ -1372,6 +1385,7 @@ async function listSerial() {
         }
     }
     else {
+        portSelector.selectedIndex = selectIndex;
         for (const element of serSettingsElements) {
             element.disabled = false;
         }
@@ -1380,13 +1394,13 @@ async function listSerial() {
 document.getElementById('serial-add-device').onclick = () => requestSerial();
 async function requestSerial() {
     try {
-        const port = await navigator.serial.requestPort();
-        if (Object.keys(portsAvail).length === 0) {
-            portsAvail[0] = port;
+        if (navigator.serial) {
+            await navigator.serial.requestPort();
         }
         else {
-            const intKeys = Object.keys(portsAvail).map(value => parseInt(value));
-            portsAvail[Math.max(...intKeys) + 1] = port;
+            await navigator.usb.requestDevice({
+                filters: WebUSBSerial.deviceFilters
+            });
         }
         listSerial();
     }
@@ -1397,7 +1411,7 @@ async function requestSerial() {
 function selectPort() {
     const selectedPort = document.getElementById('port-selector').selectedIndex;
     const newport = portsAvail[selectedPort];
-    if (newport && serRecorder?.port !== newport) {
+    if (newport && !serRecorder?.isThisPort(newport.getPort())) {
         serRecorder = new SerialManager(newport);
         clearConsoleLog();
     }
@@ -1481,8 +1495,8 @@ document.getElementById('serialConsoleModal').addEventListener('hide.bs.modal', 
 async function readSerial() {
     try {
         const portNumber = selectPort();
+        document.getElementById('serial-console-title').innerText = `Serial Console (Port ${portNumber})`;
         await serRecorder?.showConsole();
-        document.getElementById('serial-console-title').innerText = 'Serial Console (Port ' + portNumber + ')';
     }
     catch (err) {
         console.error('Connection Error:', err);
@@ -1518,7 +1532,7 @@ function toggleAutoscroll(enabled) {
 }
 let consoleTimeout;
 function refreshConsole() {
-    if (serRecorder?.port?.readable) {
+    if (serRecorder?.port?.isOpen) {
         document.getElementById('ser-output').innerText = serRecorder.getRawData();
         consoleTimeout = setTimeout(refreshConsole, CONSOLE_REFRESH);
         if (autoscrollEnabled)
@@ -1531,7 +1545,7 @@ function getRecordTimeStamp(time) {
 }
 let metaTimeout;
 function refreshMeta(type) {
-    if (serRecorder?.port?.readable) {
+    if (serRecorder?.port?.isOpen) {
         const nowTime = performance.now();
         const totalTimeElement = document.getElementById('total-record-time');
         const totalMeasTime = serRecorder.getTime();
@@ -1564,7 +1578,7 @@ function refreshMeta(type) {
 let lastUpdate = performance.now();
 let refreshTimeout;
 function refreshRender(type, firstLoad = false) {
-    if (serRecorder?.port?.readable) {
+    if (serRecorder?.port?.isOpen) {
         const startDelay = performance.now();
         const newData = serRecorder.getData();
         const measTime = serRecorder.getTime() ?? 1000;
