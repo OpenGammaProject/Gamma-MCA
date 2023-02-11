@@ -31,7 +31,7 @@ export class WebUSBSerial {
   
   async read(): Promise<Uint8Array> {
     if (this.pos === 0) {
-      //await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 100)); // Cooldown delay
       return new Uint8Array();
     }
     const ret = this.buffer.subarray(0, this.pos);

@@ -15,6 +15,7 @@ export class WebUSBSerial {
     pos = 0;
     async read() {
         if (this.pos === 0) {
+            await new Promise(resolve => setTimeout(resolve, 100));
             return new Uint8Array();
         }
         const ret = this.buffer.subarray(0, this.pos);
