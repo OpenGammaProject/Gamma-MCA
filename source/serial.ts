@@ -74,6 +74,10 @@ export class WebUSBSerial {
   getInfo(): string {
     return "WebUSB";
   }
+
+  getPort(): any {
+    return this.device;
+  }
 }
 
 
@@ -110,9 +114,9 @@ export class WebSerial {
 
   async read(): Promise<Uint8Array>{
     let ret = new Uint8Array();
-    if(!this.isOpen) return ret;
+    if (!this.isOpen) return ret;
   
-    if(this.port.readable) {
+    if (this.port.readable) {
       try {
         this.reader = this.port.readable.getReader();
         const {value} = await this.reader.read();
@@ -150,6 +154,10 @@ export class WebSerial {
 
   getInfo(): string {
     return `Id: 0x${this.port.getInfo().usbProductId?.toString(16)}`;
+  }
+
+  getPort(): SerialPort {
+    return this.port;
   }
 }
 
@@ -215,13 +223,11 @@ export class SerialManager {
     this.onlyConsole = false;
     this.recording = false;
 
-    /*
     try {
       await this.port.close();
     } catch(err) {
       console.warn('Nothing to disconnect.', err);
     }
-    */
 
     await this.closed;
   }
@@ -236,13 +242,11 @@ export class SerialManager {
     this.recording = false;
     this.timeDone += performance.now() - this.startTime;
 
-    /*
     try {
       await this.port.close();
     } catch(err) {
       console.warn('Nothing to disconnect.', err);
     }
-    */
 
     await this.closed;
   }

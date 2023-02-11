@@ -1407,7 +1407,7 @@ async function requestSerial() {
 function selectPort() {
     const selectedPort = document.getElementById('port-selector').selectedIndex;
     const newport = portsAvail[selectedPort];
-    if (newport && serRecorder?.port !== newport) {
+    if (newport && !serRecorder?.isThisPort(newport.getPort())) {
         serRecorder = new SerialManager(newport);
         clearConsoleLog();
     }
@@ -1491,8 +1491,8 @@ document.getElementById('serialConsoleModal').addEventListener('hide.bs.modal', 
 async function readSerial() {
     try {
         const portNumber = selectPort();
+        document.getElementById('serial-console-title').innerText = `Serial Console (Port ${portNumber})`;
         await serRecorder?.showConsole();
-        document.getElementById('serial-console-title').innerText = 'Serial Console (Port ' + portNumber + ')';
     }
     catch (err) {
         console.error('Connection Error:', err);

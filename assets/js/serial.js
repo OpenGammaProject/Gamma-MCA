@@ -50,6 +50,9 @@ export class WebUSBSerial {
     getInfo() {
         return "WebUSB";
     }
+    getPort() {
+        return this.device;
+    }
 }
 export class WebSerial {
     port;
@@ -114,6 +117,9 @@ export class WebSerial {
     getInfo() {
         return `Id: 0x${this.port.getInfo().usbProductId?.toString(16)}`;
     }
+    getPort() {
+        return this.port;
+    }
 }
 export class SerialManager {
     port;
@@ -157,6 +163,12 @@ export class SerialManager {
             return;
         this.onlyConsole = false;
         this.recording = false;
+        try {
+            await this.port.close();
+        }
+        catch (err) {
+            console.warn('Nothing to disconnect.', err);
+        }
         await this.closed;
     }
     async stopRecord() {
@@ -164,6 +176,12 @@ export class SerialManager {
             return;
         this.recording = false;
         this.timeDone += performance.now() - this.startTime;
+        try {
+            await this.port.close();
+        }
+        catch (err) {
+            console.warn('Nothing to disconnect.', err);
+        }
         await this.closed;
     }
     async startRecord(resume = false) {
