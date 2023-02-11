@@ -202,8 +202,7 @@ export class SerialManager {
 
   async showConsole(): Promise<void> {
     if (this.recording) return; // Port is already being read, nothing to do
-
-    await this.port.open(SerialManager.baudRate);
+    if (!this.port.isOpen) await this.port.open(SerialManager.baudRate); // Only try to open port if not open already
 
     this.recording = true;
     this.onlyConsole = true;
@@ -250,8 +249,7 @@ export class SerialManager {
 
   async startRecord(resume = false): Promise<void> {
     if (this.recording) return;
-
-    await this.port.open(SerialManager.baudRate); // Baud-Rate optional
+    if (!this.port.isOpen) await this.port.open(SerialManager.baudRate); // Only try to open port if not open already
 
     if (!resume) {
       //this.flushRawData();
