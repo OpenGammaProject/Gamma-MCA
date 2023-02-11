@@ -1824,10 +1824,14 @@ async function listSerial(): Promise<void> {
     }
   }
 
+  let selectIndex = 0;
+
   for (const index in portsAvail) {
     const option = document.createElement('option');
     option.text = `Port ${index} (${portsAvail[index]?.getInfo()})`;
     portSelector.add(option, parseInt(index));
+
+    if (serRecorder?.isThisPort(portsAvail[index]?.getPort())) selectIndex = parseInt(index);
   }
 
   const serSettingsElements = document.getElementsByClassName('ser-settings') as HTMLCollectionOf<HTMLInputElement> | HTMLCollectionOf<HTMLSelectElement>;
@@ -1841,6 +1845,8 @@ async function listSerial(): Promise<void> {
       element.disabled = true;
     }
   } else {
+    portSelector.selectedIndex = selectIndex;
+    
     for (const element of serSettingsElements) {
       element.disabled = false;
     }

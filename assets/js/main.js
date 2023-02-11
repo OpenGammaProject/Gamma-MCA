@@ -1367,10 +1367,13 @@ async function listSerial() {
             }
         }
     }
+    let selectIndex = 0;
     for (const index in portsAvail) {
         const option = document.createElement('option');
         option.text = `Port ${index} (${portsAvail[index]?.getInfo()})`;
         portSelector.add(option, parseInt(index));
+        if (serRecorder?.isThisPort(portsAvail[index]?.getPort()))
+            selectIndex = parseInt(index);
     }
     const serSettingsElements = document.getElementsByClassName('ser-settings');
     if (!portSelector.options.length) {
@@ -1382,6 +1385,7 @@ async function listSerial() {
         }
     }
     else {
+        portSelector.selectedIndex = selectIndex;
         for (const element of serSettingsElements) {
             element.disabled = false;
         }
