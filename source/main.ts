@@ -1831,7 +1831,10 @@ async function listSerial(): Promise<void> {
     option.text = `Port ${index} (${portsAvail[index]?.getInfo()})`;
     portSelector.add(option, parseInt(index));
 
-    if (serRecorder?.isThisPort(portsAvail[index]?.getPort())) selectIndex = parseInt(index);
+    if (serRecorder?.isThisPort(portsAvail[index]?.getPort())) {
+      selectIndex = parseInt(index);
+      option.text = '> ' + option.text;
+    }
   }
 
   const serSettingsElements = document.getElementsByClassName('ser-settings') as HTMLCollectionOf<HTMLInputElement> | HTMLCollectionOf<HTMLSelectElement>;

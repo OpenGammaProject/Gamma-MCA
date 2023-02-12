@@ -1372,8 +1372,10 @@ async function listSerial() {
         const option = document.createElement('option');
         option.text = `Port ${index} (${portsAvail[index]?.getInfo()})`;
         portSelector.add(option, parseInt(index));
-        if (serRecorder?.isThisPort(portsAvail[index]?.getPort()))
+        if (serRecorder?.isThisPort(portsAvail[index]?.getPort())) {
             selectIndex = parseInt(index);
+            option.text = '> ' + option.text;
+        }
     }
     const serSettingsElements = document.getElementsByClassName('ser-settings');
     if (!portSelector.options.length) {
