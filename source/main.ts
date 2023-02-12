@@ -24,6 +24,7 @@
     - (!) Dark Mode -> Bootstrap v5.3
     - (!) Toasts in Notification class, remove from HTML DOM
     - (!) FWHM calculation in peak finder
+    - (!) Multi-thread gauss filter for a much needed performance boost
 
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
