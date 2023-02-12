@@ -14,16 +14,15 @@
   Possible Future Improvements:
     - (?) Add dead time correction for cps
     - (?) Add desktop notifications
-    - (?) File System Access
-    - (?) Dark Mode
     - (?) Hotkeys
 
-    - Toasts in Notification class, remove from HTML DOM
     - Sorting isotope list
     - Isotope list: Add grouped display, e.g. show all Bi-214 lines with one click
     - Calibration n-polynomial regression
     - ROI with stats (total counts, max, min, FWHM, range,...)
 
+    - (!) Dark Mode -> Bootstrap v5.3
+    - (!) Toasts in Notification class, remove from HTML DOM
     - (!) FWHM calculation in peak finder
 
   Known Issue:
@@ -45,6 +44,7 @@ export type DataOrder = 'hist' | 'chron';
 type CalType = 'a' | 'b' | 'c';
 type DataType = 'data' | 'background';
 type PortList = (WebSerial | WebUSBSerial | undefined)[];
+type DownloadType = 'CAL' | 'XML' | 'JSON' | 'CSV';
 
 export class SpectrumData { // Will hold the measurement data globally.
   data: number[] = [];
@@ -954,7 +954,7 @@ function downloadCal(): void {
   if (!calObj.points.cFrom) delete calObj.points.cFrom;
   if (!calObj.points.cTo) delete calObj.points.cTo;
 
-  download(`calibration_${getDateString()}.json`, JSON.stringify(calObj));
+  download(`calibration_${getDateString()}.json`, JSON.stringify(calObj), 'CAL');
 }
 
 
@@ -1130,7 +1130,7 @@ function downloadXML(): void {
   vis.textContent = true.toString();
   rd.appendChild(vis);
 
-  download(filename, new XMLSerializer().serializeToString(doc));
+  download(filename, new XMLSerializer().serializeToString(doc), 'XML');
 }
 
 
@@ -1204,7 +1204,7 @@ function downloadNPES(): void {
     return;
   }
 
-  download(filename, JSON.stringify(data));
+  download(filename, JSON.stringify(data), 'JSON');
 }
 
 
@@ -1217,23 +1217,55 @@ function downloadData(filename: string, data: DataType): void {
   let text = '';
   spectrumData[data].forEach(item => text += item + '\n');
 
-  download(filename, text);
+  download(filename, text, 'CSV');
 }
 
 
-function download(filename: string, text: string): void {
+async function download(filename: string, text: string, type: DownloadType): Promise<void> {
   if (!text.trim()) { // Check empty string
     popupNotification('file-empty-error');
     return;
   }
 
-  const element = document.createElement('a');
-  element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
+  if (window.FileSystemHandle) { // Try to use File System Access API
+    const saveFileTypes = {
+      'CAL': {
+        description: 'Calibration data',
+        accept: {'application/json': ['.json']}
+      },
+      'XML': {
+        description: 'Combination file with all data',
+        accept: {'application/xml': ['.xml']}
+      },
+      'JSON': {
+        description: 'Combination file with all data',
+        accept: {'application/json': ['.json']}
+      },
+      'CSV': {
+        description: 'Single spectrum file',
+        accept: {'text/csv': ['.csv']}
+      }
+    }
 
-  element.setAttribute('download', filename);
+    const saveFilePickerOptions = {
+      suggestedName: filename,
+      types: [saveFileTypes[type]]
+    }
 
-  element.style.display = 'none';
-  element.click();
+    const newHandle = await window.showSaveFilePicker(saveFilePickerOptions); // Create a new handle
+    const writableStream = await newHandle.createWritable(); // Create a FileSystemWritableFileStream to write to
+
+    await writableStream.write(text); // Write our file
+    await writableStream.close(); // Close the file and write the contents to disk.
+  } else { // Fallback old download-only method
+    const element = document.createElement('a');
+    element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
+
+    element.setAttribute('download', filename);
+
+    element.style.display = 'none';
+    element.click();
+  }
 }
 
 

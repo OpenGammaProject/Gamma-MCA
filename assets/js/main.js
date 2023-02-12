@@ -685,7 +685,7 @@ function downloadCal() {
         delete calObj.points.cFrom;
     if (!calObj.points.cTo)
         delete calObj.points.cTo;
-    download(`calibration_${getDateString()}.json`, JSON.stringify(calObj));
+    download(`calibration_${getDateString()}.json`, JSON.stringify(calObj), 'CAL');
 }
 function makeXMLSpectrum(type, name) {
     const root = document.createElementNS(null, (type === 'data') ? 'EnergySpectrum' : 'BackgroundEnergySpectrum');
@@ -808,7 +808,7 @@ function downloadXML() {
     const vis = document.createElementNS(null, 'Visible');
     vis.textContent = true.toString();
     rd.appendChild(vis);
-    download(filename, new XMLSerializer().serializeToString(doc));
+    download(filename, new XMLSerializer().serializeToString(doc), 'XML');
 }
 function makeJSONSpectrum(type) {
     const spec = {
@@ -871,7 +871,7 @@ function downloadNPES() {
         popupNotification('file-empty-error');
         return;
     }
-    download(filename, JSON.stringify(data));
+    download(filename, JSON.stringify(data), 'JSON');
 }
 document.getElementById('download-spectrum-btn').onclick = () => downloadData('spectrum', 'data');
 document.getElementById('download-bg-btn').onclick = () => downloadData('background', 'background');
@@ -879,18 +879,48 @@ function downloadData(filename, data) {
     filename += `_${getDateString()}.csv`;
     let text = '';
     spectrumData[data].forEach(item => text += item + '\n');
-    download(filename, text);
+    download(filename, text, 'CSV');
 }
-function download(filename, text) {
+async function download(filename, text, type) {
     if (!text.trim()) {
         popupNotification('file-empty-error');
         return;
     }
-    const element = document.createElement('a');
-    element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
-    element.setAttribute('download', filename);
-    element.style.display = 'none';
-    element.click();
+    if (window.FileSystemHandle) {
+        const saveFileTypes = {
+            'CAL': {
+                description: 'Calibration data',
+                accept: { 'application/json': ['.json'] }
+            },
+            'XML': {
+                description: 'Combination file with all data',
+                accept: { 'application/xml': ['.xml'] }
+            },
+            'JSON': {
+                description: 'Combination file with all data',
+                accept: { 'application/json': ['.json'] }
+            },
+            'CSV': {
+                description: 'Single spectrum file',
+                accept: { 'text/csv': ['.csv'] }
+            }
+        };
+        const saveFilePickerOptions = {
+            suggestedName: filename,
+            types: [saveFileTypes[type]]
+        };
+        const newHandle = await window.showSaveFilePicker(saveFilePickerOptions);
+        const writableStream = await newHandle.createWritable();
+        await writableStream.write(text);
+        await writableStream.close();
+    }
+    else {
+        const element = document.createElement('a');
+        element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
+        element.setAttribute('download', filename);
+        element.style.display = 'none';
+        element.click();
+    }
 }
 document.getElementById('reset-meta-values').onclick = () => resetSampleInfo();
 function resetSampleInfo() {
