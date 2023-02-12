@@ -1036,7 +1036,7 @@ function downloadXML(): void {
   const spectrumName = getDateStringMin() + ' Energy Spectrum';
   const backgroundName = getDateStringMin() + ' Background Energy Spectrum';
 
-  const doc = document.implementation.createDocument(null, "ResultDataFile");
+  const doc = document.implementation.createDocument(null, 'ResultDataFile');
 
   const pi = doc.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"');
   doc.insertBefore(pi, doc.firstChild);
@@ -2047,7 +2047,7 @@ function refreshConsole(): void {
     document.getElementById('ser-output')!.innerText = serRecorder.getRawData();
     consoleTimeout = setTimeout(refreshConsole, CONSOLE_REFRESH);
 
-    if (autoscrollEnabled) document.getElementById('ser-output')!.scrollIntoView({behavior: "smooth", block: "end"});
+    if (autoscrollEnabled) document.getElementById('ser-output')!.scrollIntoView({behavior: 'smooth', block: 'end'});
   }
 }
 

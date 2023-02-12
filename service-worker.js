@@ -38,7 +38,7 @@ const OFFLINE_RESOURCES = ['/',
                           '/assets/npes-1.schema.json'];
 
 
-self.addEventListener("install", event => { // First time install of a worker
+self.addEventListener('install', event => { // First time install of a worker
   console.info('Installing service worker...');
   console.info(`Installing Gamma MCA version ${APP_VERSION}...`);
 
@@ -63,13 +63,13 @@ self.addEventListener("install", event => { // First time install of a worker
 });
 
 
-self.addEventListener("activate", () => { // New worker takes over
+self.addEventListener('activate', () => { // New worker takes over
   console.info('Activating service worker...');
   self.clients.claim(); // Allows an active service worker to set itself as the controller for all clients within its scope
 });
 
 
-self.addEventListener("fetch", event => {
+self.addEventListener('fetch', event => {
   //console.info('mode', event.request);
 
   event.respondWith(async function() {

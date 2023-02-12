@@ -177,8 +177,8 @@ export class SpectrumPlot {
         opacity: 0.9,
         xref: 'paper',
         yref: 'paper',
-        xanchor: "right",
-        yanchor: "bottom",
+        xanchor: 'right',
+        yanchor: 'bottom',
         text: window.location.origin,
         showarrow: false,
         font: {
