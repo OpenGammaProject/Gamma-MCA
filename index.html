@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"> <!-- data-bs-theme="dark/light" -->
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -49,7 +49,7 @@
     <script type="module" src="/assets/js/serial.js"></script>
     <script type="module" src="/assets/js/main.js"></script>
   </head>
-  <body>
+  <body class="theme-mode text-bg-white">
     <!--
 
       LOADING AND NOSCRIPT ALERT
@@ -79,7 +79,7 @@
 
     -->
     <div class="container-fluid flex-column d-flex vh-100 pb-1 p-1 text-dark lh-sm main" id="main"> <!-- pb-1 needed for vertical scroll bar -->
-      <div class="row border border-1 border-secondary text-bg-light">
+      <div class="row border border-1 border-secondary theme-mode text-bg-light">
 
         <div class="col-md-auto p-2 text-center">
 
@@ -528,7 +528,7 @@
         </div>
       </div>
 
-      <div class="row text-bg-light flex-grow-1 plot-div border border-top-0 border-1 border-secondary"> <!-- flex-fill -->
+      <div class="row theme-mode text-bg-light flex-grow-1 plot-div border border-top-0 border-1 border-secondary"> <!-- flex-fill -->
         <div class="col">
           <!--
             PLOT DIV
@@ -537,7 +537,7 @@
         </div>
       </div>
 
-      <div class="row border border-top-0 border-1 border-secondary text-bg-light p-1">
+      <div class="row border border-top-0 border-1 border-secondary theme-mode text-bg-light p-1">
 
         <div class="col-auto p-1">
           <button class="btn btn-primary btn-sm" type="button" id="reset-plot" title="Reset plot settings"> <i class="fas fa-redo"></i> Reset Plot </button>
@@ -750,7 +750,7 @@
             <div class="table-responsive"> <!-- style="max-height:70vh;" -->
               <table id="table" class="table table-hover align-middle">
                 <caption>List of gamma-ray energies of common isotopes.</caption>
-                <thead class="table-light"> <!-- style="box-shadow: inset 1px 1px #000, 0 2px #000;" -->
+                <thead class="theme-mode table-light"> <!-- style="box-shadow: inset 1px 1px #000, 0 2px #000;" -->
                   <tr>
                     <th> <input class="form-check-input" id="check-all-isos" type="checkbox" value="" title="Toggle all isotopes"> </th>
                     <th>Isotope</th>

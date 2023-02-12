@@ -108,7 +108,10 @@ let firstInstall = false;
 document.body.onload = async function(): Promise<void> {
   localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 
-  if (localStorageAvailable) loadSettingsStorage();
+  if (localStorageAvailable) {
+    loadSettingsStorage();
+    //toggleDarkMode(); // Load from settings
+  } 
 
   if (navigator.serviceWorker) { // Add service worker for PWA
     const reg = await navigator.serviceWorker.register('/service-worker.js'); // Onload async because of this... good? hmmm.
@@ -252,6 +255,19 @@ document.body.onresize = (): void => {
     sizeCheck();
   }
 };
+
+/*
+document.getElementById()!.onclick = () => toggleDarkMode();
+
+function toggleDarkMode(): void {
+  const themeElements = document.getElementsByClassName('theme-mode');
+  for (const element of themeElements) {
+    element.classList.remove('text-bg-light', 'text-bg-white', 'table-light');
+    element.classList.add('text-bg-dark'); // TODO: add table-dark
+    // TODO: Change font color, reset to light mode, save to settings
+  }
+}
+*/
 
 /*
 window.addEventListener('hidden.bs.collapse', (event: Event) => {

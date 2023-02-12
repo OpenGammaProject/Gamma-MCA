@@ -637,8 +637,8 @@ export class SpectrumPlot {
         exponentformat: 'SI',
         automargin: true
       },
-      plot_bgcolor: 'white',
-      paper_bgcolor: '#f8f9fa', // Bootstrap bg-light
+      plot_bgcolor: 'white', // Change depending on dark mode
+      paper_bgcolor: '#f8f9fa', // Bootstrap bg-light, bg-dark: 212529
       margin: {
         l: 80,
         r: 40,
@@ -825,8 +825,8 @@ export class SpectrumPlot {
         side: 'right'
       },
       */
-      plot_bgcolor: 'white',
-      paper_bgcolor: '#f8f9fa', // Bootstrap bg-light
+      plot_bgcolor: 'white', // Change depending on dark mode
+      paper_bgcolor: '#f8f9fa', // Bootstrap bg-light, bg-dark: 212529
       margin: {
         l: 40,
         r: 40,

@@ -47,8 +47,9 @@ let localStorageAvailable = false;
 let firstInstall = false;
 document.body.onload = async function () {
     localStorageAvailable = 'localStorage' in self;
-    if (localStorageAvailable)
+    if (localStorageAvailable) {
         loadSettingsStorage();
+    }
     if (navigator.serviceWorker) {
         const reg = await navigator.serviceWorker.register('/service-worker.js');
         if (localStorageAvailable) {
