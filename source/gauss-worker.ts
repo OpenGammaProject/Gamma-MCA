@@ -8,36 +8,41 @@ onmessage = e => {
 	const data = e.data.data;
 	const sigma = e.data.sigma;
 
-	const correlValues: number[] = [];
+  const correlValues: number[] = [];
 
-    for (let index = 0; index < data.length; index++) {
-      const std = Math.sqrt(index);
-      const xMin = - Math.round(sigma * std);
-      const xMax = Math.round(sigma * std);
+  for (let index = 0; index < data.length; index++) {
+    const std = Math.sqrt(index);
+    const xMin = - Math.round(sigma * std);
+    const xMax = Math.round(sigma * std);
 
-      const gaussValues: number[] = [];
-      for (let k = xMin; k < xMax; k++) {
-        gaussValues.push(Math.exp(-(k**2) / (2 * index)));
-      }
-
-      let avg = 0;
-      for (let i = 0; i < gaussValues.length; i++) {
-        avg += gaussValues[i];
-      }
-      avg /= gaussValues.length;
-
-      let squaredSum = 0;
-      for (let i = 0; i < gaussValues.length; i++) {
-        squaredSum += (gaussValues[i] - avg)**2;
-      }
-
-      let resultVal = 0;
-
-      for(let k = xMin; k < xMax; k++) {
-        resultVal += data[index + k] * (gaussValues[k - xMin] - avg) / squaredSum;
-      }
-
-      correlValues.push((resultVal && resultVal > 0 ) ? resultVal : 0);
+    const gaussValues: number[] = [];
+    for (let k = xMin; k < xMax; k++) {
+      gaussValues.push(Math.exp(-(k**2) / (2 * index)));
     }
-    postMessage(correlValues);
+
+    let avg = 0;
+    for (const value of gaussValues) {
+      avg += value;
+    }
+    avg /= xMax - xMin;
+
+    let squaredSum = 0;
+    for (const value of gaussValues) {
+      squaredSum += (value - avg)**2;
+    }
+
+    let resultVal = 0;
+
+    for(let k = xMin; k < xMax; k++) {
+      resultVal += data[index + k] * (gaussValues[k - xMin] - avg) / squaredSum;
+    }
+
+    const value = (resultVal && resultVal > 0 ) ? resultVal : 0;
+    correlValues.push(value);
+  }
+
+  const scalingFactor = .8 * Math.max(...data) / Math.max(...correlValues); // Scale GCF values depending on the spectrum data
+  correlValues.forEach((value, index, array) => array[index] = value * scalingFactor);
+
+  postMessage(correlValues);
 }

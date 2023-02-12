@@ -12,20 +12,23 @@ onmessage = e => {
             gaussValues.push(Math.exp(-(k ** 2) / (2 * index)));
         }
         let avg = 0;
-        for (let i = 0; i < gaussValues.length; i++) {
-            avg += gaussValues[i];
+        for (const value of gaussValues) {
+            avg += value;
         }
-        avg /= gaussValues.length;
+        avg /= xMax - xMin;
         let squaredSum = 0;
-        for (let i = 0; i < gaussValues.length; i++) {
-            squaredSum += (gaussValues[i] - avg) ** 2;
+        for (const value of gaussValues) {
+            squaredSum += (value - avg) ** 2;
         }
         let resultVal = 0;
         for (let k = xMin; k < xMax; k++) {
             resultVal += data[index + k] * (gaussValues[k - xMin] - avg) / squaredSum;
         }
-        correlValues.push((resultVal && resultVal > 0) ? resultVal : 0);
+        const value = (resultVal && resultVal > 0) ? resultVal : 0;
+        correlValues.push(value);
     }
+    const scalingFactor = .8 * Math.max(...data) / Math.max(...correlValues);
+    correlValues.forEach((value, index, array) => array[index] = value * scalingFactor);
     postMessage(correlValues);
 };
 //# sourceMappingURL=gauss-worker.js.map
