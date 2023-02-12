@@ -1230,15 +1230,15 @@ async function download(filename: string, text: string, type: DownloadType): Pro
   if (window.FileSystemHandle) { // Try to use File System Access API
     const saveFileTypes = {
       'CAL': {
-        description: 'Calibration data',
+        description: 'Calibration data file',
         accept: {'application/json': ['.json']}
       },
       'XML': {
-        description: 'Combination file with all data',
+        description: 'Combination file with all available data',
         accept: {'application/xml': ['.xml']}
       },
       'JSON': {
-        description: 'Combination file with all data',
+        description: 'Combination file (NPES) with all available data',
         accept: {'application/json': ['.json']}
       },
       'CSV': {
