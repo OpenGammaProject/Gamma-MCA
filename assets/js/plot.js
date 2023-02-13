@@ -108,6 +108,10 @@ export class SpectrumPlot {
             element.click();
         }
     };
+    gaussValues = {
+        dataArray: [],
+        sigma: 0
+    };
     constructor(divId) {
         this.plotDiv = document.getElementById(divId);
     }
@@ -319,31 +323,46 @@ export class SpectrumPlot {
         this.showCalChart = (typeof override === 'boolean') ? override : !this.showCalChart;
         this.showCalChart ? this.plotCalibration(dataObj, false) : this.plotData(dataObj, false);
     }
+    computeGaussValues(index, xMin, xMax) {
+        const gaussValues = [];
+        for (let k = xMin; k < xMax; k++) {
+            gaussValues.push(Math.exp(-k * k / (2 * index)));
+        }
+        let avg = 0;
+        for (const value of gaussValues) {
+            avg += value;
+        }
+        avg /= (xMax - xMin);
+        let squaredSum = 0;
+        for (const value of gaussValues) {
+            squaredSum += (value - avg) * (value - avg);
+        }
+        for (const index in gaussValues) {
+            gaussValues[index] = (gaussValues[index] - avg) / squaredSum;
+        }
+        return gaussValues;
+    }
     gaussianCorrel(data, sigma = 2) {
-        const correlValues = [];
+        const correlValues = Array(data.length);
+        let computeNew = false;
+        if (data.length !== this.gaussValues.dataArray.length || sigma !== this.gaussValues.sigma) {
+            this.gaussValues.dataArray = Array(data.length);
+            this.gaussValues.sigma = sigma;
+            computeNew = true;
+        }
         for (let index = 0; index < data.length; index++) {
             const std = Math.sqrt(index);
             const xMin = -Math.round(sigma * std);
             const xMax = Math.round(sigma * std);
-            const gaussValues = [];
-            for (let k = xMin; k < xMax; k++) {
-                gaussValues.push(Math.exp(-(k ** 2) / (2 * index)));
-            }
-            let avg = 0;
-            for (const value of gaussValues) {
-                avg += value;
-            }
-            avg /= xMax - xMin;
-            let squaredSum = 0;
-            for (const value of gaussValues) {
-                squaredSum += (value - avg) ** 2;
-            }
+            if (computeNew)
+                this.gaussValues.dataArray[index] = this.computeGaussValues(index, xMin, xMax);
+            const gaussValues = this.gaussValues.dataArray[index];
             let resultVal = 0;
             for (let k = xMin; k < xMax; k++) {
-                resultVal += data[index + k] * (gaussValues[k - xMin] - avg) / squaredSum;
+                resultVal += data[index + k] * gaussValues[k - xMin];
             }
             const value = (resultVal && resultVal > 0) ? resultVal : 0;
-            correlValues.push(value);
+            correlValues[index] = value;
         }
         const scalingFactor = .8 * Math.max(...data) / Math.max(...correlValues);
         correlValues.forEach((value, index, array) => array[index] = value * scalingFactor);

@@ -15,12 +15,12 @@
     - (?) Add dead time correction for cps
     - (?) Add desktop notifications
     - (?) Hotkeys
+    - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with one click
 
-    - Sorting isotope list
-    - Isotope list: Add grouped display, e.g. show all Bi-214 lines with one click
     - Calibration n-polynomial regression
     - ROI with stats (total counts, max, min, FWHM, range,...)
 
+    - (!) Sorting isotope list
     - (!) Dark Mode -> Bootstrap v5.3
     - (!) FWHM calculation in peak finder
 
