@@ -2,6 +2,9 @@
 onmessage = e => {
     const data = e.data.data;
     const sigma = e.data.sigma;
+    postMessage(gaussianCorrel(data, sigma));
+};
+function gaussianCorrel(data, sigma = 2) {
     const correlValues = [];
     for (let index = 0; index < data.length; index++) {
         const std = Math.sqrt(index);
@@ -29,6 +32,6 @@ onmessage = e => {
     }
     const scalingFactor = .8 * Math.max(...data) / Math.max(...correlValues);
     correlValues.forEach((value, index, array) => array[index] = value * scalingFactor);
-    postMessage(correlValues);
-};
+    return correlValues;
+}
 //# sourceMappingURL=gauss-worker.js.map

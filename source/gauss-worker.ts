@@ -8,6 +8,11 @@ onmessage = e => {
 	const data = e.data.data;
 	const sigma = e.data.sigma;
 
+  postMessage(gaussianCorrel(data, sigma));
+}
+
+
+function gaussianCorrel(data: number[], sigma = 2): number[] {
   const correlValues: number[] = [];
 
   for (let index = 0; index < data.length; index++) {
@@ -44,5 +49,5 @@ onmessage = e => {
   const scalingFactor = .8 * Math.max(...data) / Math.max(...correlValues); // Scale GCF values depending on the spectrum data
   correlValues.forEach((value, index, array) => array[index] = value * scalingFactor);
 
-  postMessage(correlValues);
+  return correlValues;
 }
