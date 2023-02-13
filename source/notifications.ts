@@ -1,6 +1,6 @@
 /*
 
-  Create and delete notifications via Bootstrap Toasts.
+  Create and auto-delete notifications via Bootstrap Toasts.
 
   Gamma MCA: free, open-source web-MCA for gamma spectroscopy
   2023, NuclearPhoenix.- Phoenix1747
@@ -153,9 +153,9 @@ const notificationContents: NotificationStorage = {
 };
 
 export class Notification {
-	toastElement: HTMLElement | undefined;
-	toast: any | undefined;
-	toastContainer: HTMLElement | null;
+	private toastElement: HTMLElement | undefined;
+	private toast: any | undefined;
+	private toastContainer: HTMLElement | null;
 
 	constructor(type: string) {
 		this.toastContainer = document.getElementById('toast-container');
@@ -168,8 +168,7 @@ export class Notification {
 		if (!content) {
 			console.error('Not a valid notification:', type, content);
 			return;
-		} 
-		
+		}
 
 		const root = document.createElement('div');
 		root.className = `toast text-bg-${content.type}`;
@@ -213,4 +212,18 @@ export class Notification {
 		this.toast = new (<any>window).bootstrap.Toast(root);
 		this.toast.show();
 	}
+
+	/*
+	show(): void {
+
+	}
+
+	hide(): void {
+
+	}
+
+	delete(): void {
+
+	}
+	*/
 }
