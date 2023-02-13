@@ -27,7 +27,7 @@
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
     - Plot: Plotly Update takes forever, but there is no real way to improve it
-    - Service Worker: Somehow fetching and caching the hits tracker does not work (hits.seeyoufarm.com)
+    - Service Worker: Somehow fetching and caching the hits tracker does not work in Edge for me (hits.seeyoufarm.com). Works fine with FF.
 
 */
 
