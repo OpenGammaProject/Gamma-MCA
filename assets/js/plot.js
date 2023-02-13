@@ -317,7 +317,7 @@ export class SpectrumPlot {
     }
     toggleCalibrationChart(dataObj, override) {
         this.showCalChart = (typeof override === 'boolean') ? override : !this.showCalChart;
-        this.showCalChart ? this.plotCalibration(dataObj, true) : this.plotData(dataObj, true);
+        this.showCalChart ? this.plotCalibration(dataObj, false) : this.plotData(dataObj, false);
     }
     gaussianCorrel(data, sigma = 2) {
         const correlValues = [];

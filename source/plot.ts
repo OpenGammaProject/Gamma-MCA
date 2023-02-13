@@ -488,7 +488,7 @@ export class SpectrumPlot {
   */
   toggleCalibrationChart(dataObj: SpectrumData, override: boolean): void {
     this.showCalChart = (typeof override === 'boolean') ? override : !this.showCalChart;
-    this.showCalChart ? this.plotCalibration(dataObj, true) : this.plotData(dataObj, true);
+    this.showCalChart ? this.plotCalibration(dataObj, false) : this.plotData(dataObj, false); // Needs to be false, otherwise the xaxis range won't update correctly.
   }
   /*
     Gaussian correlation filter using the PRA algorithm
