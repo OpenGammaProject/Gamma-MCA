@@ -490,7 +490,6 @@ export class SpectrumPlot {
         const config = {
             responsive: true,
             scrollZoom: false,
-            displayModeBar: true,
             displaylogo: false,
             toImageButtonOptions: {
                 format: this.downloadFormat,
@@ -657,7 +656,6 @@ export class SpectrumPlot {
         const config = {
             responsive: true,
             scrollZoom: false,
-            displayModeBar: true,
             displaylogo: false,
             toImageButtonOptions: {
                 format: this.downloadFormat,
