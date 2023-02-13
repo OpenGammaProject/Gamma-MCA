@@ -31,6 +31,10 @@ body {
   --fa-animation-duration: 5s;
 }
 
+.notification-beat-slow {
+  --fa-animation-duration: 2s;
+}
+
 .logo {
   width: 27%;
   height: auto;

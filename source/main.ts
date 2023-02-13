@@ -23,7 +23,6 @@
 
     - (!) Dark Mode -> Bootstrap v5.3
     - (!) FWHM calculation in peak finder
-    - (!) Toasts in Notification class, remove from HTML DOM
 
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
@@ -36,6 +35,7 @@ import { SpectrumPlot, SeekClosest } from './plot.js';
 import { RawData, NPESv1, NPESv1Spectrum } from './raw-data.js';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
 import { WebUSBSerialPort } from './external/webusbserial-min.js'
+import { Notification } from './notifications.js';
 
 export interface IsotopeList {
   [key: number]: string | undefined;
@@ -121,7 +121,7 @@ document.body.onload = async function(): Promise<void> {
       reg.addEventListener('updatefound', () => {
         if (firstInstall) return; // "Update" will always be installed on first load (service worker installation)
 
-        popupNotification('update-installed');
+        new Notification('updateInstalled'); //popupNotification('update-installed');
       });
     }
   }
@@ -179,7 +179,7 @@ document.body.onload = async function(): Promise<void> {
 
   if (localStorageAvailable) {
     if (loadJSON('lastVisit') <= 0) {
-      popupNotification('welcome-msg');
+      new Notification('welcomeMessage'); //popupNotification('welcome-msg');
       firstInstall = true;
     }
 
@@ -212,7 +212,7 @@ document.body.onload = async function(): Promise<void> {
   } else {
     const settingsSaveAlert = document.getElementById('ls-available')!; // Remove saving alert
     settingsSaveAlert.parentNode!.removeChild(settingsSaveAlert);
-    popupNotification('welcome-msg');
+    new Notification('welcomeMessage'); //popupNotification('welcome-msg');
   }
 
   loadSettingsDefault();
@@ -234,7 +234,7 @@ document.body.onload = async function(): Promise<void> {
     });
   }
 
-  popupNotification('poll-msg'); // Remove this after some time...
+  new Notification('githubPoll'); //popupNotification('poll-msg'); // Remove this after some time...
 
   const loadingSpinner = document.getElementById('loading')!;
   loadingSpinner.parentNode!.removeChild(loadingSpinner); // Delete Loading Thingymajig
@@ -305,7 +305,7 @@ window.addEventListener('beforeinstallprompt', (event: Event): void => {
 
   if (localStorageAvailable) {
     if (!loadJSON('installPrompt')) {
-      popupNotification('pwa-installer'); // Show notification on first visit
+      legacyPopupNotification('pwa-installer'); // Show notification on first visit
       saveJSON('installPrompt', true);
     }
   }
@@ -397,7 +397,7 @@ function getFileData(file: File, background = false): void { // Gets called when
           if (meta.backgroundMt) spectrumData.backgroundCps = spectrumData.background.map(val => val / meta.backgroundMt);
 
         } else if (!espectrum?.length && !bgspectrum?.length) { // No spectrum
-          popupNotification('file-error');
+          new Notification('fileError'); //popupNotification('file-error');
         } else { // Only one spectrum
           const fileData = espectrum?.length ? espectrum : bgspectrum;
           const fileDataTime = (espectrum?.length ? meta.dataMt : meta.backgroundMt)*1000;
@@ -431,7 +431,7 @@ function getFileData(file: File, background = false): void { // Gets called when
       const importData = await raw.jsonToObject(result);
 
       if (!importData) { // Data does not validate the schema
-        popupNotification('npes-error');
+        new Notification('npesError'); //popupNotification('npes-error');
         return;
       }
 
@@ -520,7 +520,7 @@ function getFileData(file: File, background = false): void { // Gets called when
       Error Msg Problem with RAW Stream selection?
     */
     if (spectrumData.background.length !== spectrumData.data.length && spectrumData.data.length && spectrumData.background.length) {
-      popupNotification('data-error');
+      new Notification('dataError'); //popupNotification('data-error');
       removeFile(background ? 'background' : 'data'); // Remove file again
     }
 
@@ -529,7 +529,7 @@ function getFileData(file: File, background = false): void { // Gets called when
   };
 
   reader.onerror = () => {
-    popupNotification('file-error');
+    new Notification('fileError'); //popupNotification('file-error');
     return;
   };
 }
@@ -642,7 +642,7 @@ document.getElementById('smaVal')!.oninput = event => changeSma(<HTMLInputElemen
 function changeSma(input: HTMLInputElement): void {
   const parsedInput = parseInt(input.value);
   if (isNaN(parsedInput)) {
-    popupNotification('sma-error');
+    new Notification('smaError'); //popupNotification('sma-error');
   } else {
     plot.smaLength = parsedInput;
     plot.updatePlot(spectrumData);
@@ -756,7 +756,7 @@ function toggleCal(enabled: boolean): void {
           validArray.push([float1, float2]);
         }
         if (invalid > 1) {
-          popupNotification('cal-error');
+          new Notification('calibrationApplyError'); //popupNotification('cal-error');
 
           const checkbox = <HTMLInputElement>document.getElementById('apply-cal');
           checkbox.checked = false;
@@ -909,12 +909,12 @@ function importCal(file: File): void {
 
     } catch(e) {
       console.error('Calibration Import Error:', e);
-      popupNotification('cal-import-error');
+      new Notification('calibrationImportError'); //popupNotification('cal-import-error');
     }
   };
 
   reader.onerror = () => {
-    popupNotification('file-error');
+    new Notification('fileError'); //popupNotification('file-error');
     return;
   };
 }
@@ -1217,7 +1217,7 @@ function downloadNPES(): void {
 
   // Additionally validate the JSON Schema?
   if (!data.resultData.energySpectrum && !data.resultData.backgroundEnergySpectrum) {
-    popupNotification('file-empty-error');
+    new Notification('fileEmptyError'); //popupNotification('file-empty-error');
     return;
   }
 
@@ -1240,7 +1240,7 @@ function downloadData(filename: string, data: DataType): void {
 
 async function download(filename: string, text: string, type: DownloadType): Promise<void> {
   if (!text.trim()) { // Check empty string
-    popupNotification('file-empty-error');
+    new Notification('fileEmptyError'); //popupNotification('file-empty-error');
     return;
   }
 
@@ -1296,7 +1296,7 @@ function resetSampleInfo(): void {
 }
 
 
-function popupNotification(id: string): void { // Uses Bootstrap Toasts already defined in HTML
+function legacyPopupNotification(id: string): void { // Uses Bootstrap Toasts already defined in HTML
   const toast = new (<any>window).bootstrap.Toast(document.getElementById(id));
   if (!toast.isShown()) toast.show();
 }
@@ -1654,7 +1654,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
   let result = false;
 
   if (!element.checkValidity() || !stringValue) {
-    popupNotification('setting-type');
+    new Notification('settingType'); //popupNotification('setting-type');
     return;
   }
 
@@ -1677,7 +1677,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
         result = saveJSON(name, isoListURL);
 
       } catch(e) {
-        popupNotification('setting-error');
+        new Notification('settingError'); //popupNotification('setting-error');
         console.error('Custom URL Error', e);
       }
       break;
@@ -1798,12 +1798,12 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       break;
     }
     default: {
-      popupNotification('setting-error');
+      new Notification('settingError'); //popupNotification('setting-error');
       return;
     }
   }
 
-  if (result) popupNotification('setting-success'); // Success Toast
+  if (result) new Notification('settingSuccess'); //popupNotification('setting-success'); // Success Toast
 }
 
 
@@ -1835,7 +1835,7 @@ function selectSerialType(button: HTMLInputElement): void {
 
 function serialConnect(/*event: Event*/): void {
   listSerial();
-  popupNotification('serial-connect');
+  new Notification('serialConnect'); //popupNotification('serial-connect');
 }
 
 
@@ -1844,7 +1844,7 @@ function serialDisconnect(event: Event): void {
 
   listSerial();
 
-  popupNotification('serial-disconnect');
+  new Notification('serialDisconnect'); //popupNotification('serial-disconnect');
 }
 
 
@@ -1951,7 +1951,7 @@ async function startRecord(pause = false, type: DataType): Promise<void> {
     await serRecorder?.startRecord(pause);
   } catch(err) {
     console.error('Connection Error:', err);
-    popupNotification('serial-connect-error');
+    new Notification('serialConnectError'); //popupNotification('serial-connect-error');
     return;
   }
 
@@ -2016,7 +2016,7 @@ async function disconnectPort(stop = false): Promise<void> {
   } catch(error) {
     // Sudden device disconnect can cause this
     console.error('Misc Serial Read Error:', error);
-    popupNotification('misc-ser-error');
+    new Notification('miscSerialError'); //popupNotification('misc-ser-error');
   }
 }
 
@@ -2046,7 +2046,7 @@ async function readSerial(): Promise<void> {
     await serRecorder?.showConsole();
   } catch(err) {
     console.error('Connection Error:', err);
-    popupNotification('serial-connect-error');
+    new Notification('serialConnectError'); //popupNotification('serial-connect-error');
     return;
   }
 
@@ -2062,7 +2062,7 @@ async function sendSerial(): Promise<void> {
     await serRecorder?.sendString(element.value);
   } catch (err) {
     console.error('Connection Error:', err);
-    popupNotification('serial-connect-error');
+    new Notification('serialConnectError'); //popupNotification('serial-connect-error');
     return;
   }
 
@@ -2139,7 +2139,7 @@ function refreshMeta(type: DataType): void {
 
     if (delta.getTime() >= maxRecTime && maxRecTimeEnabled) {
       disconnectPort(true);
-      popupNotification('auto-stop');
+      new Notification('autoStop'); //popupNotification('auto-stop');
     } else {
       const finishDelta = performance.now() - nowTime;
       metaTimeout = setTimeout(refreshMeta, (REFRESH_META_TIME - finishDelta > 0) ? (REFRESH_META_TIME - finishDelta) : 1, type); // Only re-schedule if still available
