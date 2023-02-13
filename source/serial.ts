@@ -22,8 +22,8 @@ export class WebUSBSerial {
   }
 
   async sendString(value: string): Promise<void> {
-     const enc = new TextEncoder(); 
-     this.port?.send(enc.encode(`${value}\n`));
+    const enc = new TextEncoder(); 
+    this.port?.send(enc.encode(`${value}\n`));
   }
 
   private buffer = new Uint8Array(102400); // Is 100kB enough?

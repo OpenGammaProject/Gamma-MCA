@@ -434,10 +434,10 @@ export class SpectrumPlot {
         //fillcolor: 'black',
         editable: false,
         line: {
-            color: 'blue',
-            width: .5,
-            dash: 'solid'
-          },
+          color: 'blue',
+          width: .5,
+          dash: 'solid'
+        },
       };
       const newAnno: Anno = {
         x: parseFloat(energy.toFixed(2)),

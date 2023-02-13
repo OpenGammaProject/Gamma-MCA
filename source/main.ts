@@ -170,7 +170,7 @@ document.body.onload = async function(): Promise<void> {
           importCal(file);
         } */
         console.warn('File could not be imported!');
-    });
+      });
   }
 
   resetPlot(); // Set up plot window
