@@ -22,9 +22,9 @@
     - ROI with stats (total counts, max, min, FWHM, range,...)
 
     - (!) Dark Mode -> Bootstrap v5.3
-    - (!) Toasts in Notification class, remove from HTML DOM
     - (!) FWHM calculation in peak finder
-    - (!) Multi-thread gauss filter for a much needed performance boost
+    - (!) Toasts in Notification class, remove from HTML DOM
+    - (!) Plot plotData func needs a performance boost, especially the Gaussian filter
 
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
