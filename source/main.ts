@@ -24,10 +24,10 @@
     - (!) Dark Mode -> Bootstrap v5.3
     - (!) FWHM calculation in peak finder
     - (!) Toasts in Notification class, remove from HTML DOM
-    - (!) Plot plotData func needs a performance boost, especially the Gaussian filter
 
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
+    - Plot: Plotly Update takes forever, but there is no real way to improve it
     - Service Worker: Somehow fetching and caching the hits tracker does not work (hits.seeyoufarm.com)
 
 */

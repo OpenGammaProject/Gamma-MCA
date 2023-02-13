@@ -934,7 +934,7 @@ export class SpectrumPlot {
       HTML export functionality
     */
     config.modeBarButtonsToAdd = [this.customModeBarButtons];
-
+    
     (<any>window).Plotly[update ? 'react' : 'newPlot'](this.plotDiv, data, layout, config);
   }
 }
