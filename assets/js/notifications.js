@@ -3,8 +3,8 @@ const notificationContents = {
         type: 'info',
         icon: 'fa-solid fa-cloud-arrow-down fa-beat notification-beat-slow',
         header: 'Installed Update',
-        body: 'An update has been found and installed. You must reload Gamma MCA for the changes to take effect.' +
-            '<p><em>You can also continue on this page without reloading for now.</em></p>'
+        body: 'An update has been found and installed. You must reload Gamma MCA for the changes to take effect. <br><br>' +
+            '<em>You can also continue on this page without reloading for now.</em>'
     },
     'fileError': {
         type: 'danger',
