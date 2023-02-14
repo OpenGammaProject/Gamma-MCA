@@ -21,6 +21,7 @@ const OFFLINE_RESOURCES = ['/',
                           '/assets/webfonts/fa-brands-400.woff2',
                           '/assets/webfonts/fa-solid-900.ttf',
                           '/assets/webfonts/fa-brands-400.ttf',
+                          '/assets/js/external/webusbserial-min.js',
                           '/assets/js/external/plotly-basic.min.js',
                           '/assets/js/external/bootstrap.min.js',
                           '/assets/js/external/ZSchema-browser-min.js',
@@ -39,18 +40,17 @@ const OFFLINE_RESOURCES = ['/',
 
 
 self.addEventListener('install', event => { // First time install of a worker
-  console.info('Installing service worker...');
-  console.info(`Installing Gamma MCA version ${APP_VERSION}...`);
+  console.info(`Installing service worker version ${APP_VERSION}...`);
 
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => async function() {
+    caches.open(CACHE_NAME).then(async cache =>  {
       /*
       for (const URL of OFFLINE_RESOURCES) { // Remove old cached files
         cache.delete(URL, {ignoreSearch: true, ignoreMethod: true});
       }
       */
       cache.keys().then(keys => { // Delete the whole cache
-        keys.forEach(async function(request) {
+        keys.forEach(async request => {
           //console.info('Clearing cache!', request);
           await cache.delete(request);
         });
