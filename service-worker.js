@@ -78,7 +78,7 @@ self.addEventListener('fetch', event => {
 
     if (cachedResponse) { // Try to load from cache first, way faster
       //console.info('Cache Response!', cachedResponse);
-      updateCache(event.request); // Always also try to update the cache, dont wait for it though
+      updateCache(event.request, cache); // Always also try to update the cache, dont wait for it though
       return cachedResponse;
     }
 
@@ -97,12 +97,11 @@ self.addEventListener('fetch', event => {
 });
 
 
-async function updateCache(request) {
+async function updateCache(request, cache) {
   try {
     const networkResponse = await fetch(request);
     checkResponse(request, networkResponse);
 
-    const cache = await caches.open(CACHE_NAME);
     cache.put(request, networkResponse.clone());
 
     //console.info('Updated Cache!', response);
