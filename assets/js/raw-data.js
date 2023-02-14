@@ -1,7 +1,7 @@
 export class RawData {
     valueIndex;
     delimiter;
-    adcChannels;
+    adcChannels = 4096;
     fileType;
     tempValIndex;
     schemaURL = '/assets/npes-1.schema.json';
@@ -9,7 +9,7 @@ export class RawData {
     constructor(valueIndex, delimiter = ',') {
         this.valueIndex = valueIndex;
         this.delimiter = delimiter;
-        this.adcChannels = 4096;
+        this.adcChannels;
         this.fileType = valueIndex;
         this.tempValIndex = valueIndex;
     }
