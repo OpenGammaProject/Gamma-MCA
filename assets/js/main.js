@@ -1176,9 +1176,6 @@ function loadSettingsStorage() {
     setting = loadJSON('serBufferSize');
     if (setting)
         SerialManager.maxSize = setting;
-    setting = loadJSON('serADC');
-    if (setting)
-        SerialManager.adcChannels = setting;
     setting = loadJSON('timeLimitBool');
     if (setting)
         maxRecTimeEnabled = setting;
