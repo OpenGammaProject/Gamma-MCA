@@ -234,8 +234,6 @@ document.body.onload = async function(): Promise<void> {
     });
   }
 
-  new Notification('githubPoll'); //popupNotification('poll-msg'); // Remove this after some time...
-
   const loadingSpinner = document.getElementById('loading')!;
   loadingSpinner.parentNode!.removeChild(loadingSpinner); // Delete Loading Thingymajig
 };

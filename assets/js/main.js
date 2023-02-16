@@ -151,7 +151,6 @@ document.body.onload = async function () {
             }
         });
     }
-    new Notification('githubPoll');
     const loadingSpinner = document.getElementById('loading');
     loadingSpinner.parentNode.removeChild(loadingSpinner);
 };
