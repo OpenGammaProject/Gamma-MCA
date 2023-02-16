@@ -15,7 +15,7 @@ export class WebUSBSerial {
   private device: any;
   isOpen = false;
   
-  static deviceFilters = [{ 'vendorId': 0x0403, 'productId': 0x6015 }]; // Filter FTDx Chips
+  static deviceFilters = [{ 'vendorId': 0x0403 }]; // Allow ALL FTDI chips //, 'productId': 0x6015 }]; // Filter FTDx Chips
 
   constructor(device: any) {
     this.device = device;

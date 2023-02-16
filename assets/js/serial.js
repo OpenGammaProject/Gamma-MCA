@@ -3,7 +3,7 @@ export class WebUSBSerial {
     port;
     device;
     isOpen = false;
-    static deviceFilters = [{ 'vendorId': 0x0403, 'productId': 0x6015 }];
+    static deviceFilters = [{ 'vendorId': 0x0403 }];
     constructor(device) {
         this.device = device;
     }
