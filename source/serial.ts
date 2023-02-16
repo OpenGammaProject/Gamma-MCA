@@ -19,6 +19,9 @@ export class WebUSBSerial {
 
   constructor(device: any) {
     this.device = device;
+
+    console.info('WebUSB product name:', device.productName);
+    console.info('WebUSB manufacturer name:', device.manufacturerName);
   }
 
   async sendString(value: string): Promise<void> {
@@ -72,7 +75,8 @@ export class WebUSBSerial {
   }
 
   getInfo(): string {
-    return 'WebUSB';
+    return this.device.productName;
+    //return 'WebUSB';
   }
 
   getPort(): any {
