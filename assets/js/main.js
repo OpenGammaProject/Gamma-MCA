@@ -1,6 +1,7 @@
 import { SpectrumPlot, SeekClosest } from './plot.js';
 import { RawData } from './raw-data.js';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
+import { Notification } from './notifications.js';
 export class SpectrumData {
     data = [];
     background = [];
@@ -42,20 +43,21 @@ let isoListURL = 'assets/isotopes_energies_min.json';
 const isoList = {};
 let checkNearIso = false;
 let maxDist = 100;
-const APP_VERSION = '2023-02-11';
+const APP_VERSION = '2023-02-16';
 let localStorageAvailable = false;
 let firstInstall = false;
 document.body.onload = async function () {
     localStorageAvailable = 'localStorage' in self;
-    if (localStorageAvailable)
+    if (localStorageAvailable) {
         loadSettingsStorage();
+    }
     if (navigator.serviceWorker) {
         const reg = await navigator.serviceWorker.register('/service-worker.js');
         if (localStorageAvailable) {
             reg.addEventListener('updatefound', () => {
                 if (firstInstall)
                     return;
-                popupNotification('update-installed');
+                new Notification('updateInstalled');
             });
         }
     }
@@ -103,7 +105,7 @@ document.body.onload = async function () {
     document.getElementById('version-tag').innerText += ` ${APP_VERSION}.`;
     if (localStorageAvailable) {
         if (loadJSON('lastVisit') <= 0) {
-            popupNotification('welcome-msg');
+            new Notification('welcomeMessage');
             firstInstall = true;
         }
         saveJSON('lastVisit', Date.now());
@@ -131,7 +133,7 @@ document.body.onload = async function () {
     else {
         const settingsSaveAlert = document.getElementById('ls-available');
         settingsSaveAlert.parentNode.removeChild(settingsSaveAlert);
-        popupNotification('welcome-msg');
+        new Notification('welcomeMessage');
     }
     loadSettingsDefault();
     sizeCheck();
@@ -149,7 +151,7 @@ document.body.onload = async function () {
             }
         });
     }
-    popupNotification('poll-msg');
+    new Notification('githubPoll');
     const loadingSpinner = document.getElementById('loading');
     loadingSpinner.parentNode.removeChild(loadingSpinner);
 };
@@ -173,7 +175,7 @@ window.addEventListener('beforeinstallprompt', (event) => {
     deferredPrompt = event;
     if (localStorageAvailable) {
         if (!loadJSON('installPrompt')) {
-            popupNotification('pwa-installer');
+            legacyPopupNotification('pwa-installer');
             saveJSON('installPrompt', true);
         }
     }
@@ -232,7 +234,7 @@ function getFileData(file, background = false) {
                         spectrumData.backgroundCps = spectrumData.background.map(val => val / meta.backgroundMt);
                 }
                 else if (!espectrum?.length && !bgspectrum?.length) {
-                    popupNotification('file-error');
+                    new Notification('fileError');
                 }
                 else {
                     const fileData = espectrum?.length ? espectrum : bgspectrum;
@@ -263,7 +265,7 @@ function getFileData(file, background = false) {
         else if (fileEnding.toLowerCase() === 'json') {
             const importData = await raw.jsonToObject(result);
             if (!importData) {
-                popupNotification('npes-error');
+                new Notification('npesError');
                 return;
             }
             document.getElementById('device-name').value = importData?.deviceData?.deviceName ?? '';
@@ -336,14 +338,14 @@ function getFileData(file, background = false) {
         updateSpectrumCounts();
         updateSpectrumTime();
         if (spectrumData.background.length !== spectrumData.data.length && spectrumData.data.length && spectrumData.background.length) {
-            popupNotification('data-error');
+            new Notification('dataError');
             removeFile(background ? 'background' : 'data');
         }
         plot.resetPlot(spectrumData);
         bindPlotEvents();
     };
     reader.onerror = () => {
-        popupNotification('file-error');
+        new Notification('fileError');
         return;
     };
 }
@@ -431,7 +433,7 @@ document.getElementById('smaVal').oninput = event => changeSma(event.target);
 function changeSma(input) {
     const parsedInput = parseInt(input.value);
     if (isNaN(parsedInput)) {
-        popupNotification('sma-error');
+        new Notification('smaError');
     }
     else {
         plot.smaLength = parsedInput;
@@ -522,7 +524,7 @@ function toggleCal(enabled) {
                     validArray.push([float1, float2]);
                 }
                 if (invalid > 1) {
-                    popupNotification('cal-error');
+                    new Notification('calibrationApplyError');
                     const checkbox = document.getElementById('apply-cal');
                     checkbox.checked = false;
                     toggleCal(checkbox.checked);
@@ -639,11 +641,11 @@ function importCal(file) {
         }
         catch (e) {
             console.error('Calibration Import Error:', e);
-            popupNotification('cal-import-error');
+            new Notification('calibrationImportError');
         }
     };
     reader.onerror = () => {
-        popupNotification('file-error');
+        new Notification('fileError');
         return;
     };
 }
@@ -660,7 +662,7 @@ function addLeadingZero(number) {
 }
 function getDateString() {
     const time = new Date();
-    return time.getFullYear() + addLeadingZero((time.getMonth() + 1).toString()) + addLeadingZero(time.getDate().toString()) + addLeadingZero(time.getHours().toString()) + addLeadingZero(time.getMinutes().toString());
+    return time.getFullYear() + '-' + addLeadingZero((time.getMonth() + 1).toString()) + '-' + addLeadingZero(time.getDate().toString()) + '_' + addLeadingZero(time.getHours().toString()) + '-' + addLeadingZero(time.getMinutes().toString());
 }
 function getDateStringMin() {
     const time = new Date();
@@ -685,7 +687,7 @@ function downloadCal() {
         delete calObj.points.cFrom;
     if (!calObj.points.cTo)
         delete calObj.points.cTo;
-    download(`calibration_${getDateString()}.json`, JSON.stringify(calObj));
+    download(`calibration_${getDateString()}.json`, JSON.stringify(calObj), 'CAL');
 }
 function makeXMLSpectrum(type, name) {
     const root = document.createElementNS(null, (type === 'data') ? 'EnergySpectrum' : 'BackgroundEnergySpectrum');
@@ -739,7 +741,7 @@ function downloadXML() {
     const formatVersion = 230124;
     const spectrumName = getDateStringMin() + ' Energy Spectrum';
     const backgroundName = getDateStringMin() + ' Background Energy Spectrum';
-    const doc = document.implementation.createDocument(null, "ResultDataFile");
+    const doc = document.implementation.createDocument(null, 'ResultDataFile');
     const pi = doc.createProcessingInstruction('xml', 'version="1.0" encoding="UTF-8"');
     doc.insertBefore(pi, doc.firstChild);
     const root = doc.documentElement;
@@ -808,7 +810,7 @@ function downloadXML() {
     const vis = document.createElementNS(null, 'Visible');
     vis.textContent = true.toString();
     rd.appendChild(vis);
-    download(filename, new XMLSerializer().serializeToString(doc));
+    download(filename, new XMLSerializer().serializeToString(doc), 'XML');
 }
 function makeJSONSpectrum(type) {
     const spec = {
@@ -868,10 +870,10 @@ function downloadNPES() {
     if (spectrumData.background.length && spectrumData.getTotalCounts('background'))
         data.resultData.backgroundEnergySpectrum = makeJSONSpectrum('background');
     if (!data.resultData.energySpectrum && !data.resultData.backgroundEnergySpectrum) {
-        popupNotification('file-empty-error');
+        new Notification('fileEmptyError');
         return;
     }
-    download(filename, JSON.stringify(data));
+    download(filename, JSON.stringify(data), 'JSON');
 }
 document.getElementById('download-spectrum-btn').onclick = () => downloadData('spectrum', 'data');
 document.getElementById('download-bg-btn').onclick = () => downloadData('background', 'background');
@@ -879,18 +881,48 @@ function downloadData(filename, data) {
     filename += `_${getDateString()}.csv`;
     let text = '';
     spectrumData[data].forEach(item => text += item + '\n');
-    download(filename, text);
+    download(filename, text, 'CSV');
 }
-function download(filename, text) {
+async function download(filename, text, type) {
     if (!text.trim()) {
-        popupNotification('file-empty-error');
+        new Notification('fileEmptyError');
         return;
     }
-    const element = document.createElement('a');
-    element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
-    element.setAttribute('download', filename);
-    element.style.display = 'none';
-    element.click();
+    if (window.FileSystemHandle) {
+        const saveFileTypes = {
+            'CAL': {
+                description: 'Calibration data file',
+                accept: { 'application/json': ['.json'] }
+            },
+            'XML': {
+                description: 'Combination file with all available data',
+                accept: { 'application/xml': ['.xml'] }
+            },
+            'JSON': {
+                description: 'Combination file (NPES) with all available data',
+                accept: { 'application/json': ['.json'] }
+            },
+            'CSV': {
+                description: 'Single spectrum file',
+                accept: { 'text/csv': ['.csv'] }
+            }
+        };
+        const saveFilePickerOptions = {
+            suggestedName: filename,
+            types: [saveFileTypes[type]]
+        };
+        const newHandle = await window.showSaveFilePicker(saveFilePickerOptions);
+        const writableStream = await newHandle.createWritable();
+        await writableStream.write(text);
+        await writableStream.close();
+    }
+    else {
+        const element = document.createElement('a');
+        element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
+        element.setAttribute('download', filename);
+        element.style.display = 'none';
+        element.click();
+    }
 }
 document.getElementById('reset-meta-values').onclick = () => resetSampleInfo();
 function resetSampleInfo() {
@@ -899,7 +931,7 @@ function resetSampleInfo() {
         element.value = '';
     }
 }
-function popupNotification(id) {
+function legacyPopupNotification(id) {
     const toast = new window.bootstrap.Toast(document.getElementById(id));
     if (!toast.isShown())
         toast.show();
@@ -1144,9 +1176,6 @@ function loadSettingsStorage() {
     setting = loadJSON('serBufferSize');
     if (setting)
         SerialManager.maxSize = setting;
-    setting = loadJSON('serADC');
-    if (setting)
-        SerialManager.adcChannels = setting;
     setting = loadJSON('timeLimitBool');
     if (setting)
         maxRecTimeEnabled = setting;
@@ -1191,7 +1220,7 @@ function changeSettings(name, element) {
     const stringValue = element.value.trim();
     let result = false;
     if (!element.checkValidity() || !stringValue) {
-        popupNotification('setting-type');
+        new Notification('settingType');
         return;
     }
     switch (name) {
@@ -1210,7 +1239,7 @@ function changeSettings(name, element) {
                 result = saveJSON(name, isoListURL);
             }
             catch (e) {
-                popupNotification('setting-error');
+                new Notification('settingError');
                 console.error('Custom URL Error', e);
             }
             break;
@@ -1315,12 +1344,12 @@ function changeSettings(name, element) {
             break;
         }
         default: {
-            popupNotification('setting-error');
+            new Notification('settingError');
             return;
         }
     }
     if (result)
-        popupNotification('setting-success');
+        new Notification('settingSuccess');
 }
 document.getElementById('reset-gamma-mca').onclick = () => resetMCA();
 function resetMCA() {
@@ -1337,13 +1366,13 @@ function selectSerialType(button) {
 }
 function serialConnect() {
     listSerial();
-    popupNotification('serial-connect');
+    new Notification('serialConnect');
 }
 function serialDisconnect(event) {
     if (serRecorder?.isThisPort(event.target))
         disconnectPort(true);
     listSerial();
-    popupNotification('serial-disconnect');
+    new Notification('serialDisconnect');
 }
 document.getElementById('serial-list-btn').onclick = () => listSerial();
 async function listSerial() {
@@ -1372,8 +1401,10 @@ async function listSerial() {
         const option = document.createElement('option');
         option.text = `Port ${index} (${portsAvail[index]?.getInfo()})`;
         portSelector.add(option, parseInt(index));
-        if (serRecorder?.isThisPort(portsAvail[index]?.getPort()))
+        if (serRecorder?.isThisPort(portsAvail[index]?.getPort())) {
             selectIndex = parseInt(index);
+            option.text = '> ' + option.text;
+        }
     }
     const serSettingsElements = document.getElementsByClassName('ser-settings');
     if (!portSelector.options.length) {
@@ -1430,7 +1461,7 @@ async function startRecord(pause = false, type) {
     }
     catch (err) {
         console.error('Connection Error:', err);
-        popupNotification('serial-connect-error');
+        new Notification('serialConnectError');
         return;
     }
     recordingType = type;
@@ -1477,7 +1508,7 @@ async function disconnectPort(stop = false) {
     }
     catch (error) {
         console.error('Misc Serial Read Error:', error);
-        popupNotification('misc-ser-error');
+        new Notification('miscSerialError');
     }
 }
 document.getElementById('clear-console-log').onclick = () => clearConsoleLog();
@@ -1500,7 +1531,7 @@ async function readSerial() {
     }
     catch (err) {
         console.error('Connection Error:', err);
-        popupNotification('serial-connect-error');
+        new Notification('serialConnectError');
         return;
     }
     refreshConsole();
@@ -1513,7 +1544,7 @@ async function sendSerial() {
     }
     catch (err) {
         console.error('Connection Error:', err);
-        popupNotification('serial-connect-error');
+        new Notification('serialConnectError');
         return;
     }
     element.value = '';
@@ -1536,7 +1567,7 @@ function refreshConsole() {
         document.getElementById('ser-output').innerText = serRecorder.getRawData();
         consoleTimeout = setTimeout(refreshConsole, CONSOLE_REFRESH);
         if (autoscrollEnabled)
-            document.getElementById('ser-output').scrollIntoView({ behavior: "smooth", block: "end" });
+            document.getElementById('ser-output').scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
 }
 function getRecordTimeStamp(time) {
@@ -1567,7 +1598,7 @@ function refreshMeta(type) {
         updateSpectrumTime();
         if (delta.getTime() >= maxRecTime && maxRecTimeEnabled) {
             disconnectPort(true);
-            popupNotification('auto-stop');
+            new Notification('autoStop');
         }
         else {
             const finishDelta = performance.now() - nowTime;

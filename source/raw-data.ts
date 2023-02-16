@@ -13,42 +13,42 @@
 import { CoeffObj } from './plot.js';
 
 export interface NPESv1 {
-  'schemaVersion': 'NPESv1',
-  'deviceData'?: NPESv1DeviceData,
-  'sampleInfo'?: NPESv1SampleInfo,
-  'resultData': NPESv1ResultData
+  schemaVersion: 'NPESv1',
+  deviceData?: NPESv1DeviceData,
+  sampleInfo?: NPESv1SampleInfo,
+  resultData: NPESv1ResultData
 }
 
 export interface NPESv1Spectrum {
-  'numberOfChannels': number,
-  'validPulseCount'?: number,
-  'measurementTime'?: number,
-  'energyCalibration'?: {
-    'polynomialOrder': number,
-    'coefficients': number[]
+  numberOfChannels: number,
+  validPulseCount?: number,
+  measurementTime?: number,
+  energyCalibration?: {
+    polynomialOrder: number,
+    coefficients: number[]
   },
-  'spectrum': number[]
+  spectrum: number[]
 }
 
 interface NPESv1ResultData {
-  'startTime'?: string,
-  'endTime'?: string,
-  'energySpectrum'?: NPESv1Spectrum,
-  'backgroundEnergySpectrum'?: NPESv1Spectrum
+  startTime?: string,
+  endTime?: string,
+  energySpectrum?: NPESv1Spectrum,
+  backgroundEnergySpectrum?: NPESv1Spectrum
 }
 
 interface NPESv1DeviceData {
-  'deviceName'?: string,
-  'softwareName': string
+  deviceName?: string,
+  softwareName: string
 }
 
 interface NPESv1SampleInfo {
-  'name'?: string,
-  'location'?: string,
-  'time'?: string,
-  'weight'?: number,
-  'volume'?: number,
-  'note'?: string
+  name?: string,
+  location?: string,
+  time?: string,
+  weight?: number,
+  volume?: number,
+  note?: string
 }
 
 interface ImportDataMeta {
@@ -75,7 +75,7 @@ interface XMLImportData {
 export class RawData {
   valueIndex: number;
   delimiter: string;
-  adcChannels: number;
+  adcChannels = 4096; // For OGD
   fileType: number;
   private tempValIndex: number;
   private schemaURL = '/assets/npes-1.schema.json';
@@ -84,8 +84,7 @@ export class RawData {
   constructor(valueIndex: number, delimiter = ',') {
     this.valueIndex = valueIndex;
     this.delimiter = delimiter;
-
-    this.adcChannels = 4096; // For OSC
+    this.adcChannels
     this.fileType = valueIndex;
     this.tempValIndex = valueIndex;
   }
@@ -107,7 +106,7 @@ export class RawData {
   private histConverter(dataArr: number[]): number[] {
     const xArray: number[] = Array(this.adcChannels).fill(0);
 
-    for(const element of dataArr) {
+    for (const element of dataArr) {
       xArray[element] += 1;
     }
     return xArray;

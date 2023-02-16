@@ -19,6 +19,11 @@ export interface CoeffObj {
 
 export type PeakModes = 'gaussian' | 'energy' | 'isotopes' | undefined;
 
+interface GaussData {
+  dataArray: number[][],
+  sigma: number
+}
+
 interface Shape {
   type: string;
   xref: string;
@@ -177,8 +182,8 @@ export class SpectrumPlot {
         opacity: 0.9,
         xref: 'paper',
         yref: 'paper',
-        xanchor: "right",
-        yanchor: "bottom",
+        xanchor: 'right',
+        yanchor: 'bottom',
         text: window.location.origin,
         showarrow: false,
         font: {
@@ -220,6 +225,11 @@ export class SpectrumPlot {
       element.style.display = 'none';
       element.click();
   }};
+  gaussValues: GaussData = {
+    dataArray: [],
+    sigma: 0
+  };
+
   /*
     Constructor
   */
@@ -434,10 +444,10 @@ export class SpectrumPlot {
         //fillcolor: 'black',
         editable: false,
         line: {
-            color: 'blue',
-            width: .5,
-            dash: 'solid'
-          },
+          color: 'blue',
+          width: .5,
+          dash: 'solid'
+        },
       };
       const newAnno: Anno = {
         x: parseFloat(energy.toFixed(2)),
@@ -488,43 +498,65 @@ export class SpectrumPlot {
   */
   toggleCalibrationChart(dataObj: SpectrumData, override: boolean): void {
     this.showCalChart = (typeof override === 'boolean') ? override : !this.showCalChart;
-    this.showCalChart ? this.plotCalibration(dataObj, true) : this.plotData(dataObj, true);
+    this.showCalChart ? this.plotCalibration(dataObj, false) : this.plotData(dataObj, false); // Needs to be false, otherwise the xaxis range won't update correctly.
+  }
+  /*
+    Compute gaussValues for the Gaussian correlation filter
+  */
+  computeGaussValues(index: number, xMin: number, xMax: number): number[] {
+    const gaussValues: number[] = [];
+    for (let k = xMin; k < xMax; k++) {
+      gaussValues.push(Math.exp(- k * k / (2 * index)));
+    }
+
+    let avg = 0;
+    for (const value of gaussValues) {
+      avg += value;
+    }
+    avg /= (xMax - xMin);
+
+    let squaredSum = 0;
+    for (const value of gaussValues) {
+      squaredSum += (value - avg) * (value - avg);
+    }
+
+    for (const index in gaussValues) {
+      gaussValues[index] = (gaussValues[index] - avg) / squaredSum;
+    }
+
+    return gaussValues;
   }
   /*
     Gaussian correlation filter using the PRA algorithm
   */
   private gaussianCorrel(data: number[], sigma = 2): number[] {
-    const correlValues: number[] = [];
+    const correlValues = Array(data.length);
+    let computeNew = false;
+
+    // Only compute values once, until other factors change
+    if (data.length !== this.gaussValues.dataArray.length || sigma !== this.gaussValues.sigma) {
+      this.gaussValues.dataArray = Array(data.length);
+      this.gaussValues.sigma = sigma;
+      computeNew = true;
+    }
 
     for (let index = 0; index < data.length; index++) {
       const std = Math.sqrt(index);
       const xMin = - Math.round(sigma * std);
       const xMax = Math.round(sigma * std);
 
-      const gaussValues: number[] = [];
-      for (let k = xMin; k < xMax; k++) {
-        gaussValues.push(Math.exp(-(k**2) / (2 * index)));
-      }
+      if (computeNew) this.gaussValues.dataArray[index] = this.computeGaussValues(index, xMin, xMax);
 
-      let avg = 0;
-      for (const value of gaussValues) {
-        avg += value;
-      }
-      avg /= xMax - xMin;
-
-      let squaredSum = 0;
-      for (const value of gaussValues) {
-        squaredSum += (value - avg)**2;
-      }
+      const gaussValues = this.gaussValues.dataArray[index];
 
       let resultVal = 0;
 
       for(let k = xMin; k < xMax; k++) {
-        resultVal += data[index + k] * (gaussValues[k - xMin] - avg) / squaredSum;
+        resultVal += data[index + k] * gaussValues[k - xMin];
       }
 
       const value = (resultVal && resultVal > 0 ) ? resultVal : 0;
-      correlValues.push(value);
+      correlValues[index] = value;
     }
 
     const scalingFactor = .8 * Math.max(...data) / Math.max(...correlValues); // Scale GCF values depending on the spectrum data
@@ -637,8 +669,8 @@ export class SpectrumPlot {
         exponentformat: 'SI',
         automargin: true
       },
-      plot_bgcolor: 'white',
-      paper_bgcolor: '#f8f9fa', // Bootstrap bg-light
+      plot_bgcolor: 'white', // Change depending on dark mode
+      paper_bgcolor: '#f8f9fa', // Bootstrap bg-light, bg-dark: 212529
       margin: {
         l: 80,
         r: 40,
@@ -664,7 +696,7 @@ export class SpectrumPlot {
     const config = {
       responsive: true,
       scrollZoom: false,
-      displayModeBar: true,
+      //displayModeBar: true,
       displaylogo: false,
       toImageButtonOptions: {
         format: this.downloadFormat,
@@ -825,8 +857,8 @@ export class SpectrumPlot {
         side: 'right'
       },
       */
-      plot_bgcolor: 'white',
-      paper_bgcolor: '#f8f9fa', // Bootstrap bg-light
+      plot_bgcolor: 'white', // Change depending on dark mode
+      paper_bgcolor: '#f8f9fa', // Bootstrap bg-light, bg-dark: 212529
       margin: {
         l: 40,
         r: 40,
@@ -877,7 +909,7 @@ export class SpectrumPlot {
     const config = {
       responsive: true,
       scrollZoom: false,
-      displayModeBar: true,
+      //displayModeBar: true,
       displaylogo: false,
       toImageButtonOptions: {
         format: this.downloadFormat,
@@ -934,7 +966,7 @@ export class SpectrumPlot {
       HTML export functionality
     */
     config.modeBarButtonsToAdd = [this.customModeBarButtons];
-
+    
     (<any>window).Plotly[update ? 'react' : 'newPlot'](this.plotDiv, data, layout, config);
   }
 }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"> <!-- data-bs-theme="dark/light" -->
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -49,14 +49,14 @@
     <script type="module" src="/assets/js/serial.js"></script>
     <script type="module" src="/assets/js/main.js"></script>
   </head>
-  <body>
+  <body class="theme-mode text-bg-white">
     <!--
 
       LOADING AND NOSCRIPT ALERT
 
     -->
     <div id="loading" class="vh-100 vw-100 fixed-top">
-      <div id="text-window" class="position-absolute top-50 start-50 translate-middle mx-auto p-4 text-center bg-light border border-3 rounded-3 border-primary">
+      <div id="text-window" class="position-absolute top-50 start-50 translate-middle mx-auto p-4 text-center text-bg-light border border-3 rounded-3 border-primary">
 
         <noscript>
           <p class="fs-3 text-bg-danger text-center">
@@ -71,7 +71,7 @@
         </div>
 
       </div>
-      <div class="vh-100 vw-100 bg-dark bg-opacity-75"></div>
+      <div class="vh-100 vw-100 text-bg-dark bg-opacity-75"></div>
     </div>
     <!--
 
@@ -79,7 +79,7 @@
 
     -->
     <div class="container-fluid flex-column d-flex vh-100 pb-1 p-1 text-dark lh-sm main" id="main"> <!-- pb-1 needed for vertical scroll bar -->
-      <div class="row border border-1 border-secondary bg-light">
+      <div class="row border border-1 border-secondary theme-mode text-bg-light">
 
         <div class="col-md-auto p-2 text-center">
 
@@ -161,7 +161,7 @@
 
                   <p>
                     <button class="btn btn-primary btn-sm" id="export-button" type="button" data-bs-toggle="modal" data-bs-target="#exportModal" title="Export data files">
-                      <i class="fas fa-file-export"></i> Export Files
+                      <i class="fas fa-file-export"></i> Save Files
                     </button>
                   </p>
 
@@ -528,7 +528,7 @@
         </div>
       </div>
 
-      <div class="row bg-light flex-grow-1 plot-div border border-top-0 border-1 border-secondary bg-light"> <!-- flex-fill -->
+      <div class="row theme-mode text-bg-light flex-grow-1 plot-div border border-top-0 border-1 border-secondary"> <!-- flex-fill -->
         <div class="col">
           <!--
             PLOT DIV
@@ -537,7 +537,7 @@
         </div>
       </div>
 
-      <div class="row border border-top-0 border-1 border-secondary bg-light p-1">
+      <div class="row border border-top-0 border-1 border-secondary theme-mode text-bg-light p-1">
 
         <div class="col-auto p-1">
           <button class="btn btn-primary btn-sm" type="button" id="reset-plot" title="Reset plot settings"> <i class="fas fa-redo"></i> Reset Plot </button>
@@ -750,7 +750,7 @@
             <div class="table-responsive"> <!-- style="max-height:70vh;" -->
               <table id="table" class="table table-hover align-middle">
                 <caption>List of gamma-ray energies of common isotopes.</caption>
-                <thead class="table-light"> <!-- style="box-shadow: inset 1px 1px #000, 0 2px #000;" -->
+                <thead class="theme-mode table-light"> <!-- style="box-shadow: inset 1px 1px #000, 0 2px #000;" -->
                   <tr>
                     <th> <input class="form-check-input" id="check-all-isos" type="checkbox" value="" title="Toggle all isotopes"> </th>
                     <th>Isotope</th>
@@ -1003,30 +1003,8 @@
       BOOTSTRAP TOASTS FOR NOTIFICATIONS
 
     -->
-    <div class="toast-container position-fixed bottom-0 end-0 p-3">
-      <div id="poll-msg" class="toast text-bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
-        <div class="toast-header">
-          <i class="fa-solid fa-bullhorn me-2"></i>
-          <strong class="me-auto">Feature Poll</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-          <p>There is currently an ongoing poll about new features on GitHub. If you want to take part and vote, head to the GitHub <a title="GitHub/Discussions" class="link-light" href="https://github.com/OpenGammaProject/Gamma-MCA/discussions" target="_blank"><small><i class="fa-solid fa-link"></i></small> Discussions thread</a>.</p>
-        </div>
-      </div>
-
-      <div id="welcome-msg" class="toast text-bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
-        <div class="toast-header">
-          <i class="fas fa-radiation me-2"></i>
-          <strong class="me-auto">Welcome!</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-          <p>Thanks for using Gamma MCA, please report any bugs or issues on <a title="GitHub/Issues" class="link-light" href="https://github.com/OpenGammaProject/Gamma-MCA/issues" target="_blank"><small><i class="fa-solid fa-link"></i></small> GitHub/Issues</a>. Thank you.</p>
-          <p>By using the website and source code, you agree to the <a  title="GitHub/License" class="link-light" href="https://github.com/OpenGammaProject/Gamma-MCA/blob/main/LICENSE" target="_blank"><small><i class="fa-solid fa-link"></i></small> license</a>.</p>
-        </div>
-      </div>
-
+    <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3">
+      
       <div id="pwa-installer" class="toast text-bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
         <div class="toast-header">
           <i class="fa-solid fa-download me-2"></i>
@@ -1040,186 +1018,6 @@
             <button type="button" class="btn btn-light btn-sm" id="install-pwa-toast-btn" title="Install Gamma MCA">Install</button>
             <button type="button" class="btn btn-primary btn-sm" title="Dismiss" data-bs-dismiss="toast">No</button>
           </div>
-        </div>
-      </div>
-
-      <div id="update-installed" class="toast text-bg-info" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
-        <div class="toast-header">
-          <i class="fa-solid fa-cloud-arrow-down me-2"></i>
-          <strong class="me-auto">Installed Update</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-          An update has been found and installed. You must reload Gamma MCA for the changes to take effect.
-          <em>You can also continue on this page without reloading for now.</em>
-        </div>
-      </div>
-
-      <div id="file-error" class="toast text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
-        <div class="toast-header">
-          <i class="fas fa-exclamation-triangle me-2"></i>
-          <strong class="me-auto">File Error</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-          Something went wrong, please reload and try again or report this issue.
-        </div>
-      </div>
-
-      <div id="npes-error" class="toast text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
-        <div class="toast-header">
-          <i class="fas fa-exclamation-triangle me-2"></i>
-          <strong class="me-auto">JSON Import Error</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-          The file you uploaded is not formatted correctly. It does not validate the NPES JSON Schema!
-          For more information, please head to <a title="GitHub/NPES-JSON" class="link-light" href="https://github.com/OpenGammaProject/NPES-JSON" target="_blank">NPES-JSON</a>.
-          <br> <br>
-          <em>Tip: You can open the console to look at the exact errors.</em>
-        </div>
-      </div>
-
-      <div id="data-error" class="toast text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
-        <div class="toast-header">
-          <i class="fas fa-exclamation-triangle me-2"></i>
-          <strong class="me-auto">File Error</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-          Background and spectrum have a different number of channels. They must be same for this to work.
-        </div>
-      </div>
-
-      <div id="file-empty-error" class="toast text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
-        <div class="toast-header">
-          <i class="fas fa-exclamation-triangle me-2"></i>
-          <strong class="me-auto">No Data</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-          You are trying to export a file, but there is not data to export. Please try again when there is data to export.
-        </div>
-      </div>
-
-      <div id="sma-error" class="toast text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
-        <div class="toast-header">
-          <i class="fas fa-exclamation-triangle me-2"></i>
-          <strong class="me-auto">SMA Error</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-          SMA input is invalid. Input must be an <em>integer</em>!
-        </div>
-      </div>
-
-      <div id="cal-error" class="toast text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
-        <div class="toast-header">
-          <i class="fas fa-exclamation-triangle me-2"></i>
-          <strong class="me-auto">Calibration Error</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-          Cannot calibrate. Need at least two calibration points with valid numbers!
-        </div>
-      </div>
-
-      <div id="cal-import-error" class="toast text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="6000">
-        <div class="toast-header">
-          <i class="fas fa-exclamation-triangle me-2"></i>
-          <strong class="me-auto">Calibration Import Error</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-          Something went wrong when importing the calibration. Please reload and try again or report this issue.
-        </div>
-      </div>
-
-      <div id="serial-connect" class="toast text-bg-info" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
-        <div class="toast-header">
-          <i class="fas fa-info-circle me-2"></i>
-          <strong class="me-auto">Serial Connect</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-          Detected a new serial device.
-        </div>
-      </div>
-
-      <div id="auto-stop" class="toast text-bg-info" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
-        <div class="toast-header">
-          <i class="fas fa-info-circle me-2"></i>
-          <strong class="me-auto">Recording Stopped</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-          Your set time-limit has run out. The recording has been automatically stopped. Changing this limit can be done in the settings.
-        </div>
-      </div>
-
-      <div id="serial-disconnect" class="toast text-bg-info" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
-        <div class="toast-header">
-          <i class="fas fa-info-circle me-2"></i>
-          <strong class="me-auto">Serial Disconnect</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-          A serial device was removed.
-        </div>
-      </div>
-
-      <div id="misc-ser-error" class="toast text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="8000">
-        <div class="toast-header">
-          <i class="fas fa-exclamation-triangle me-2"></i>
-          <strong class="me-auto">Serial Error</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-          Something went terribly wrong when trying to read from the serial port! Did you disconnect the device? Please try again.
-        </div>
-      </div>
-
-      <div id="serial-connect-error" class="toast text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="8000">
-        <div class="toast-header">
-          <i class="fas fa-exclamation-triangle me-2"></i>
-          <strong class="me-auto">Serial Connection Error</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-          Could not connect to the serial device. Maybe the port is already in use?
-        </div>
-      </div>
-
-      <div id="setting-success" class="toast text-bg-success" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
-        <div class="toast-header">
-          <i class="fas fa-check-circle me-2"></i>
-          <strong class="me-auto">Changed Setting</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-          A settings value has been changed successfully.
-        </div>
-      </div>
-
-      <div id="setting-type" class="toast text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
-        <div class="toast-header">
-          <i class="fas fa-exclamation-triangle me-2"></i>
-          <strong class="me-auto">Wrong Datatype</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-          A settings value cannot be changed because the input value datatype is not correct.
-        </div>
-      </div>
-
-      <div id="setting-error" class="toast text-bg-danger" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="4000">
-        <div class="toast-header">
-          <i class="fas fa-exclamation-triangle me-2"></i>
-          <strong class="me-auto">Settings Error</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-          Something went wrong when trying to change a settings value, please reload and try again or report this issue.
         </div>
       </div>
 

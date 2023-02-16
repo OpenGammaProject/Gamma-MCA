@@ -34,7 +34,7 @@ export class WebUSBSerial {
             this.buffer.set(data, this.pos);
             this.pos += data.length;
         }, error => {
-            console.error("Error receiving data!" + error);
+            console.error('Error receiving data!' + error);
             this.isOpen = false;
         });
         this.isOpen = true;
@@ -49,7 +49,7 @@ export class WebUSBSerial {
         return (this.device === port);
     }
     getInfo() {
-        return "WebUSB";
+        return 'WebUSB';
     }
     getPort() {
         return this.device;
@@ -209,7 +209,7 @@ export class SerialManager {
         await this.port.close();
     }
     addRaw(uintArray) {
-        const string = new TextDecoder("utf-8").decode(uintArray);
+        const string = new TextDecoder('utf-8').decode(uintArray);
         this.rawConsoleData += string;
         if (this.rawConsoleData.length > this.consoleMemory) {
             this.rawConsoleData = this.rawConsoleData.slice(this.rawConsoleData.length - this.consoleMemory);

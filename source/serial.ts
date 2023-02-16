@@ -22,8 +22,8 @@ export class WebUSBSerial {
   }
 
   async sendString(value: string): Promise<void> {
-     const enc = new TextEncoder(); 
-     this.port?.send(enc.encode(`${value}\n`));
+    const enc = new TextEncoder(); 
+    this.port?.send(enc.encode(`${value}\n`));
   }
 
   private buffer = new Uint8Array(102400); // Is 100kB enough?
@@ -55,7 +55,7 @@ export class WebUSBSerial {
       this.buffer.set(data,this.pos);
       this.pos += data.length;
     }, error => {
-      console.error("Error receiving data!" + error)
+      console.error('Error receiving data!' + error)
       this.isOpen = false;
     });
     this.isOpen = true;
@@ -72,7 +72,7 @@ export class WebUSBSerial {
   }
 
   getInfo(): string {
-    return "WebUSB";
+    return 'WebUSB';
   }
 
   getPort(): any {
@@ -282,7 +282,7 @@ export class SerialManager {
 
   */
   private addRaw(uintArray: Uint8Array): void {
-    const string = new TextDecoder("utf-8").decode(uintArray); //String.fromCharCode(...uintArray);
+    const string = new TextDecoder('utf-8').decode(uintArray); //String.fromCharCode(...uintArray);
     this.rawConsoleData += string;
 
     if (this.rawConsoleData.length > this.consoleMemory) {

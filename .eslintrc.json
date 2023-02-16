@@ -1,7 +1,8 @@
 {
     "env": {
         "browser": true,
-        "es2021": true
+        "es2022": true,
+        "serviceworker": false
     },
     "extends": [
         "eslint:recommended",
@@ -11,12 +12,20 @@
     ],
     "parser": "@typescript-eslint/parser",
     "parserOptions": {
-        "ecmaVersion": "latest",
+        "ecmaVersion": 13, // ES2022
         "sourceType": "module"
     },
     "plugins": [
         "@typescript-eslint"
     ],
     "rules": {
+        "eqeqeq": "error",
+        "quotes": ["warn", "single"],
+        "no-unused-private-class-members": "warn",
+        "no-unreachable-loop": "error",
+        "no-template-curly-in-string": "error",
+        "no-self-compare": "error",
+        "no-duplicate-imports": "error",
+        "no-await-in-loop": "warn"
     }
 }

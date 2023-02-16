@@ -7,7 +7,7 @@
   https://nuclearphoenix.xyz
 
 */
-const APP_VERSION = '2023-02-11';
+const APP_VERSION = '2023-02-16';
 const CACHE_NAME = 'gamma-static'; // A random name for the cache
 
 const OFFLINE_RESOURCES = ['/',
@@ -21,6 +21,7 @@ const OFFLINE_RESOURCES = ['/',
                           '/assets/webfonts/fa-brands-400.woff2',
                           '/assets/webfonts/fa-solid-900.ttf',
                           '/assets/webfonts/fa-brands-400.ttf',
+                          '/assets/js/external/webusbserial-min.js',
                           '/assets/js/external/plotly-basic.min.js',
                           '/assets/js/external/bootstrap.min.js',
                           '/assets/js/external/ZSchema-browser-min.js',
@@ -38,19 +39,18 @@ const OFFLINE_RESOURCES = ['/',
                           '/assets/npes-1.schema.json'];
 
 
-self.addEventListener("install", event => { // First time install of a worker
-  console.info('Installing service worker...');
-  console.info(`Installing Gamma MCA version ${APP_VERSION}...`);
+self.addEventListener('install', event => { // First time install of a worker
+  console.info(`Installing service worker version ${APP_VERSION}...`);
 
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => async function() {
+    caches.open(CACHE_NAME).then(async cache =>  {
       /*
       for (const URL of OFFLINE_RESOURCES) { // Remove old cached files
         cache.delete(URL, {ignoreSearch: true, ignoreMethod: true});
       }
       */
       cache.keys().then(keys => { // Delete the whole cache
-        keys.forEach(async function(request) {
+        keys.forEach(async request => {
           //console.info('Clearing cache!', request);
           await cache.delete(request);
         });
@@ -63,13 +63,13 @@ self.addEventListener("install", event => { // First time install of a worker
 });
 
 
-self.addEventListener("activate", () => { // New worker takes over
+self.addEventListener('activate', () => { // New worker takes over
   console.info('Activating service worker...');
   self.clients.claim(); // Allows an active service worker to set itself as the controller for all clients within its scope
 });
 
 
-self.addEventListener("fetch", event => {
+self.addEventListener('fetch', event => {
   //console.info('mode', event.request);
 
   event.respondWith(async function() {
@@ -78,7 +78,7 @@ self.addEventListener("fetch", event => {
 
     if (cachedResponse) { // Try to load from cache first, way faster
       //console.info('Cache Response!', cachedResponse);
-      updateCache(event.request); // Always also try to update the cache, dont wait for it though
+      updateCache(event.request, cache); // Always also try to update the cache, dont wait for it though
       return cachedResponse;
     }
 
@@ -97,12 +97,11 @@ self.addEventListener("fetch", event => {
 });
 
 
-async function updateCache(request) {
+async function updateCache(request, cache) {
   try {
     const networkResponse = await fetch(request);
     checkResponse(request, networkResponse);
 
-    const cache = await caches.open(CACHE_NAME);
     cache.put(request, networkResponse.clone());
 
     //console.info('Updated Cache!', response);

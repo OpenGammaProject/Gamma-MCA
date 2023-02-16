@@ -5,7 +5,7 @@
 
 body {
   font-size: 14px;
-  background-color: #ffffff; /*#f6bd16;*/
+  /*background-color: #ffffff;*/ /*#f6bd16;*/
 }
 
 .main {
@@ -29,6 +29,10 @@ body {
 
 .file-import-success {
   --fa-animation-duration: 5s;
+}
+
+.notification-beat-slow {
+  --fa-animation-duration: 2s;
 }
 
 .logo {
