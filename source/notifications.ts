@@ -136,13 +136,6 @@ const notificationContents: NotificationStorage = {
 		header: 'Serial Connect',
 		body: 'Detected a new serial device.'
 	},
-	'githubPoll': {
-		type: 'primary',
-		icon: 'fa-solid fa-bullhorn fa-beat notification-beat-slow',
-		header: 'Feature Poll',
-		body: '<p>There is currently an ongoing poll about new features on GitHub. If you want to take part and vote, head to the GitHub ' + 
-				'<a title="GitHub/Discussions" class="link-light" href="https://github.com/OpenGammaProject/Gamma-MCA/discussions" target="_blank"><small><i class="fa-solid fa-link"></i></small> Discussions thread</a>.</p>'
-	},
 	'welcomeMessage': {
 		type: 'primary',
 		icon: 'fas fa-radiation fa-beat notification-beat-slow',

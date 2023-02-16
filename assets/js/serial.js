@@ -3,9 +3,11 @@ export class WebUSBSerial {
     port;
     device;
     isOpen = false;
-    static deviceFilters = [{ 'vendorId': 0x0403, 'productId': 0x6015 }];
+    static deviceFilters = [{ 'vendorId': 0x0403 }];
     constructor(device) {
         this.device = device;
+        console.info('WebUSB product name:', device.productName);
+        console.info('WebUSB manufacturer name:', device.manufacturerName);
     }
     async sendString(value) {
         const enc = new TextEncoder();
@@ -49,7 +51,7 @@ export class WebUSBSerial {
         return (this.device === port);
     }
     getInfo() {
-        return 'WebUSB';
+        return this.device.productName;
     }
     getPort() {
         return this.device;
