@@ -191,22 +191,23 @@ window.addEventListener('onappinstalled', () => {
     hideNotification('pwa-installer');
     document.getElementById('manual-install').classList.add('d-none');
 });
-document.getElementById('data').onclick = event => clickFileInput(event, 'data');
-document.getElementById('background').onclick = event => clickFileInput(event, 'background');
+document.getElementById('data').onclick = event => clickFileInput(event, false);
+document.getElementById('background').onclick = event => clickFileInput(event, true);
 let dataFileHandle;
 let backgroundFileHandle;
-async function clickFileInput(event, dataType) {
+async function clickFileInput(event, background) {
     if (window.FileSystemHandle && window.showOpenFilePicker) {
         event.preventDefault();
-        if (dataType === 'data') {
-            [dataFileHandle] = await window.showOpenFilePicker();
-            const file = await dataFileHandle.getFile();
-            getFileData(file, false);
-        }
-        else if (dataType === 'background') {
-            [backgroundFileHandle] = await window.showOpenFilePicker();
-            const file = await backgroundFileHandle.getFile();
+        let fileHandle;
+        [fileHandle] = await window.showOpenFilePicker();
+        const file = await fileHandle.getFile();
+        if (background) {
+            backgroundFileHandle = fileHandle;
             getFileData(file, true);
+        }
+        else {
+            dataFileHandle = fileHandle;
+            getFileData(file, false);
         }
     }
 }
@@ -380,6 +381,8 @@ function removeFile(id) {
     spectrumData[`${id}Time`] = 0;
     document.getElementById(id).value = '';
     document.getElementById(`${id}-form-label`).innerText = 'No File Chosen';
+    dataFileHandle = undefined;
+    backgroundFileHandle = undefined;
     updateSpectrumCounts();
     updateSpectrumTime();
     document.getElementById(id + '-icon').classList.add('d-none');

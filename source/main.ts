@@ -344,28 +344,29 @@ document.onkeydown = async function(event) {
 */
 
 
-document.getElementById('data')!.onclick = event => clickFileInput(event, 'data');
-document.getElementById('background')!.onclick = event => clickFileInput(event, 'background');
+document.getElementById('data')!.onclick = event => clickFileInput(event, false);
+document.getElementById('background')!.onclick = event => clickFileInput(event, true);
 
 let dataFileHandle: FileSystemFileHandle | undefined;
 let backgroundFileHandle: FileSystemFileHandle | undefined;
 
-async function clickFileInput(event: MouseEvent, dataType: DataType): Promise<void> {
+async function clickFileInput(event: MouseEvent, background: boolean): Promise<void> {
   //(<HTMLInputElement>event.target).value = ''; // No longer necessary?
 
   if (window.FileSystemHandle && window.showOpenFilePicker) { // Try to use the File System Access API if possible
     event.preventDefault(); // Don't show the "standard" HTML file picker...
 
-    if (dataType === 'data') {
-      [dataFileHandle] = await window.showOpenFilePicker(); // ...instead show a File System Access API picker
-      const file = await dataFileHandle.getFile();
-      
-      getFileData(file, false);
-    } else if (dataType === 'background') {
-      [backgroundFileHandle] = await window.showOpenFilePicker();
-      const file = await backgroundFileHandle.getFile();
+    let fileHandle: FileSystemFileHandle;
+    // eslint-disable-next-line prefer-const
+    [fileHandle] = await window.showOpenFilePicker(); // ...instead show a File System Access API picker
+    const file = await fileHandle.getFile();
 
+    if (background) {
+      backgroundFileHandle = fileHandle;
       getFileData(file, true);
+    } else {
+      dataFileHandle = fileHandle;
+      getFileData(file, false);
     }
   }
 }
@@ -578,6 +579,9 @@ function removeFile(id: DataType): void {
   spectrumData[`${id}Time`] = 0;
   (<HTMLInputElement>document.getElementById(id)).value = '';
   document.getElementById(`${id}-form-label`)!.innerText = 'No File Chosen';
+
+  dataFileHandle = undefined; // Reset File System Access API handlers
+  backgroundFileHandle = undefined;
 
   updateSpectrumCounts();
   updateSpectrumTime();
