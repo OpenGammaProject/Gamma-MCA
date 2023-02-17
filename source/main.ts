@@ -23,7 +23,7 @@
     - (!) Sorting isotope list
     - (!) Dark Mode -> Bootstrap v5.3
     - (!) FWHM calculation in peak finder
-    - (!) Add "save" and "save as" buttons with the File Handlers
+    - (!) Save Button: Generate content depending on file extension
 
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
@@ -40,6 +40,13 @@ import { Notification } from './notifications.js';
 
 export interface IsotopeList {
   [key: number]: string | undefined;
+}
+
+interface OpenPickerAcceptType {
+  description: string,
+  accept: {
+    [key: string]: string[]
+  }
 }
 
 export type DataOrder = 'hist' | 'chron';
@@ -102,6 +109,7 @@ let maxDist = 100; // Max energy distance to highlight
 
 const APP_VERSION = '2023-02-16';
 let localStorageAvailable = false;
+let fileSystemWritableAvail = false;
 let firstInstall = false;
 
 /*
@@ -172,6 +180,10 @@ document.body.onload = async function(): Promise<void> {
         } */
         console.warn('File could not be imported!');
       });
+  }
+
+  if (window.FileSystemHandle && 'createWritable' in FileSystemFileHandle.prototype) {
+    fileSystemWritableAvail = true;
   }
 
   resetPlot(); // Set up plot window
@@ -347,6 +359,23 @@ document.onkeydown = async function(event) {
 document.getElementById('data')!.onclick = event => clickFileInput(event, false);
 document.getElementById('background')!.onclick = event => clickFileInput(event, true);
 
+const openFileTypes: OpenPickerAcceptType[] = [
+  {
+    description: 'Combination Files',
+    accept: {
+      'application/json': ['.json'],
+      'application/xml': ['.xml']
+    }
+  },
+  {
+    description: 'Single Spectrum Files',
+    accept: {
+      'text/csv': ['.csv'],
+      'text/txt': ['.txt'],
+      'text/TKA': ['.TKA']
+    }
+  }
+];
 let dataFileHandle: FileSystemFileHandle | undefined;
 let backgroundFileHandle: FileSystemFileHandle | undefined;
 
@@ -356,9 +385,20 @@ async function clickFileInput(event: MouseEvent, background: boolean): Promise<v
   if (window.FileSystemHandle && window.showOpenFilePicker) { // Try to use the File System Access API if possible
     event.preventDefault(); // Don't show the "standard" HTML file picker...
 
+    const openFilePickerOptions = {
+      types: openFileTypes,
+      multiple: false
+    };
+
     let fileHandle: FileSystemFileHandle;
-    // eslint-disable-next-line prefer-const
-    [fileHandle] = await window.showOpenFilePicker(); // ...instead show a File System Access API picker
+
+    try {
+      [fileHandle] = await window.showOpenFilePicker(openFilePickerOptions); // ...instead show a File System Access API picker
+    } catch (error) {
+      console.warn('File Picker error:', error);
+      return;
+    }
+    
     const file = await fileHandle.getFile();
 
     if (background) {
@@ -367,6 +407,10 @@ async function clickFileInput(event: MouseEvent, background: boolean): Promise<v
     } else {
       dataFileHandle = fileHandle;
       getFileData(file, false);
+    }
+
+    if (fileSystemWritableAvail) { // Only enable if it can be used
+      (<HTMLButtonElement>document.getElementById('overwrite-button')).disabled = false;
     }
   }
 }
@@ -580,8 +624,11 @@ function removeFile(id: DataType): void {
   (<HTMLInputElement>document.getElementById(id)).value = '';
   document.getElementById(`${id}-form-label`)!.innerText = 'No File Chosen';
 
-  dataFileHandle = undefined; // Reset File System Access API handlers
-  backgroundFileHandle = undefined;
+  if (id === 'data') dataFileHandle = undefined; // Reset File System Access API handlers
+  if (id === 'background') backgroundFileHandle = undefined;
+  if (!dataFileHandle && !backgroundFileHandle && fileSystemWritableAvail) {
+    (<HTMLButtonElement>document.getElementById('overwrite-button')).disabled = true; // Disable save button again, if it could be used
+  }
 
   updateSpectrumCounts();
   updateSpectrumTime();
@@ -1269,6 +1316,58 @@ function downloadData(filename: string, data: DataType): void {
 }
 
 
+document.getElementById('overwrite-button')!.onclick = () => overwriteFile();
+
+async function overwriteFile(): Promise<void> {
+  if (dataFileHandle && backgroundFileHandle) {
+    new Notification('saveMultipleAtOnce');
+    return;
+  }
+
+  if (!dataFileHandle && !backgroundFileHandle) {
+    console.error('No file handlers found to save to!');
+    return;
+  } 
+
+  const handler = (dataFileHandle ?? backgroundFileHandle)!; // CANNOT be undefined, since I checked above, ugh...
+
+  const writable = await handler.createWritable(); // Create a FileSystemWritableFileStream to write to.
+
+  // TODO: Generate contents!
+  //await writable.write(contents); // Write the contents of the file to the stream.
+
+  await writable.close(); // Close the file and write the contents to disk.
+  console.log('saved for handler', handler);
+}
+
+
+const saveFileTypes = {
+  'CAL': {
+    description: 'Calibration Data File',
+    accept: {
+      'application/json': ['.json']
+    }
+  },
+  'XML': {
+    description: 'Combination Data File',
+    accept: {
+      'application/xml': ['.xml']
+    }
+  },
+  'JSON': {
+    description: 'Combination Data File (NPES)',
+    accept: {
+      'application/json': ['.json']
+    }
+  },
+  'CSV': {
+    description: 'Single Spectrum File',
+    accept: {
+      'text/csv': ['.csv']
+    }
+  }
+};
+
 async function download(filename: string, text: string, type: DownloadType): Promise<void> {
   if (!text.trim()) { // Check empty string
     new Notification('fileEmptyError'); //popupNotification('file-empty-error');
@@ -1276,29 +1375,10 @@ async function download(filename: string, text: string, type: DownloadType): Pro
   }
 
   if (window.FileSystemHandle && window.showSaveFilePicker) { // Try to use File System Access API
-    const saveFileTypes = {
-      'CAL': {
-        description: 'Calibration data file',
-        accept: {'application/json': ['.json']}
-      },
-      'XML': {
-        description: 'Combination file with all available data',
-        accept: {'application/xml': ['.xml']}
-      },
-      'JSON': {
-        description: 'Combination file (NPES) with all available data',
-        accept: {'application/json': ['.json']}
-      },
-      'CSV': {
-        description: 'Single spectrum file',
-        accept: {'text/csv': ['.csv']}
-      }
-    }
-
     const saveFilePickerOptions = {
       suggestedName: filename,
       types: [saveFileTypes[type]]
-    }
+    };
 
     const newHandle = await window.showSaveFilePicker(saveFilePickerOptions); // Create a new handle
     const writableStream = await newHandle.createWritable(); // Create a FileSystemWritableFileStream to write to

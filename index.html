@@ -166,8 +166,12 @@
                   <hr>
 
                   <p>
-                    <button class="btn btn-primary btn-sm" id="export-button" type="button" data-bs-toggle="modal" data-bs-target="#exportModal" title="Export data files">
-                      <i class="fas fa-file-export"></i> Save Files
+                    <button class="btn btn-primary btn-sm" id="export-button" type="button" data-bs-toggle="modal" data-bs-target="#exportModal" title="Save file as ...">
+                      <i class="fas fa-file-export"></i> Save As
+                    </button>
+
+                    <button class="btn btn-primary btn-sm" id="overwrite-button" type="button" title="Save file: Overwrite file(s)!" disabled>
+                      <i class="fas fa-file-export"></i> Save
                     </button>
                   </p>
 
@@ -657,11 +661,11 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h3 class="modal-title h4">Export File</h3>
+            <h3 class="modal-title h4">Save File</h3>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <p><strong>What do you want to export?</strong></p>
+            <p><strong>What do you want to save?</strong></p>
             <p>You can either choose to use one of the combined file types (JSON, XML) or just plain CSVs for the spectrum or background spectrum.</p>
           </div>
           <div class="modal-footer">
