@@ -23,8 +23,7 @@
     - (!) Sorting isotope list
     - (!) Dark Mode -> Bootstrap v5.3
     - (!) FWHM calculation in peak finder
-    - (!) Show File Name on HTML Input Elements when FileSystemAccess API is used
-    - (!) Do something with the File Handlers
+    - (!) Add "save" and "save as" buttons with the File Handlers
 
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
