@@ -887,7 +887,7 @@ async function download(filename, text, type) {
         new Notification('fileEmptyError');
         return;
     }
-    if (window.FileSystemHandle) {
+    if (window.FileSystemHandle && window.showSaveFilePicker) {
         const saveFileTypes = {
             'CAL': {
                 description: 'Calibration data file',
