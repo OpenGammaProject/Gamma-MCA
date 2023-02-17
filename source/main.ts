@@ -23,6 +23,8 @@
     - (!) Sorting isotope list
     - (!) Dark Mode -> Bootstrap v5.3
     - (!) FWHM calculation in peak finder
+    - (!) Show File Name on HTML Input Elements when FileSystemAccess API is used
+    - (!) Do something with the File Handlers
 
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
@@ -342,8 +344,33 @@ document.onkeydown = async function(event) {
 };
 */
 
-document.getElementById('data')!.onclick = event => {(<HTMLInputElement>event.target).value = ''};
-document.getElementById('background')!.onclick = event => {(<HTMLInputElement>event.target).value = ''};
+
+document.getElementById('data')!.onclick = event => clickFileInput(event, 'data');
+document.getElementById('background')!.onclick = event => clickFileInput(event, 'background');
+
+let dataFileHandle: FileSystemFileHandle | undefined;
+let backgroundFileHandle: FileSystemFileHandle | undefined;
+
+async function clickFileInput(event: MouseEvent, dataType: DataType): Promise<void> {
+  //const element = <HTMLInputElement>event.target;
+
+  if (window.FileSystemHandle && window.showOpenFilePicker) { // Try to use the File System Access API if possible
+    event.preventDefault(); // Don't show the "standard" HTML file picker...
+
+    if (dataType === 'data') {
+      [dataFileHandle] = await window.showOpenFilePicker(); // ...instead show a File System Access API picker
+      const file = await dataFileHandle.getFile();
+      
+      getFileData(file, false);
+    } else if (dataType === 'background') {
+      [backgroundFileHandle] = await window.showOpenFilePicker();
+      const file = await backgroundFileHandle.getFile();
+
+      getFileData(file, true);
+    }
+  }
+}
+
 
 document.getElementById('data')!.onchange = event => importFile(<HTMLInputElement>event.target);
 document.getElementById('background')!.onchange = event => importFile(<HTMLInputElement>event.target, true);

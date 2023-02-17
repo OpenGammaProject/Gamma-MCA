@@ -191,8 +191,25 @@ window.addEventListener('onappinstalled', () => {
     hideNotification('pwa-installer');
     document.getElementById('manual-install').classList.add('d-none');
 });
-document.getElementById('data').onclick = event => { event.target.value = ''; };
-document.getElementById('background').onclick = event => { event.target.value = ''; };
+document.getElementById('data').onclick = event => clickFileInput(event, 'data');
+document.getElementById('background').onclick = event => clickFileInput(event, 'background');
+let dataFileHandle;
+let backgroundFileHandle;
+async function clickFileInput(event, dataType) {
+    if (window.FileSystemHandle && window.showOpenFilePicker) {
+        event.preventDefault();
+        if (dataType === 'data') {
+            [dataFileHandle] = await window.showOpenFilePicker();
+            const file = await dataFileHandle.getFile();
+            getFileData(file, false);
+        }
+        else if (dataType === 'background') {
+            [backgroundFileHandle] = await window.showOpenFilePicker();
+            const file = await backgroundFileHandle.getFile();
+            getFileData(file, true);
+        }
+    }
+}
 document.getElementById('data').onchange = event => importFile(event.target);
 document.getElementById('background').onchange = event => importFile(event.target, true);
 function importFile(input, background = false) {
