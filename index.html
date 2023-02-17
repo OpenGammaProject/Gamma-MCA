@@ -142,9 +142,12 @@
                   </p>
 
                   <div class="input-group input-group-sm">
-                    <input class="form-control form-control-sm" type="file" id="data" accept=".csv, .tka, .xml, .txt, .json">
+                    <label for="data" class="btn btn-sm btn-primary" title="Import a file"> <i class="fas fa-file-import"></i> Open File </label>
+                    <label class="form-control" role="button" for="data" id="data-form-label">No File Chosen</label>
+
                     <button class="btn btn-primary btn-sm" type="button" id="clear-data" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
                   </div>
+                  <input class="d-none" type="file" id="data" accept=".csv, .tka, .xml, .txt, .json">
 
                   <br>
 
@@ -153,9 +156,12 @@
                   </p>
 
                   <div class="input-group input-group-sm">
-                    <input class="form-control form-control-sm" type="file" id="background" accept=".csv, .tka, .xml, .txt, .json">
+                    <label for="background" class="btn btn-sm btn-primary" title="Import a file"> <i class="fas fa-file-import"></i> Open File </label>
+                    <label class="form-control" role="button" for="background" id="background-form-label">No File Chosen</label>
+
                     <button class="btn btn-primary btn-sm" type="button" id="clear-bg" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
                   </div>
+                  <input class="d-none" type="file" id="background" accept=".csv, .tka, .xml, .txt, .json">
 
                   <hr>
 

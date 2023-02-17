@@ -352,7 +352,7 @@ let dataFileHandle: FileSystemFileHandle | undefined;
 let backgroundFileHandle: FileSystemFileHandle | undefined;
 
 async function clickFileInput(event: MouseEvent, dataType: DataType): Promise<void> {
-  //const element = <HTMLInputElement>event.target;
+  //(<HTMLInputElement>event.target).value = ''; // No longer necessary?
 
   if (window.FileSystemHandle && window.showOpenFilePicker) { // Try to use the File System Access API if possible
     event.preventDefault(); // Don't show the "standard" HTML file picker...
@@ -385,6 +385,8 @@ function getFileData(file: File, background = false): void { // Gets called when
   const reader = new FileReader();
 
   const fileEnding = file.name.split('.')[1];
+
+  document.getElementById(`${background ? 'background' : 'data'}-form-label`)!.innerText = file.name; // Set file name
 
   reader.readAsText(file);
 
@@ -576,6 +578,7 @@ function removeFile(id: DataType): void {
   spectrumData[id] = [];
   spectrumData[`${id}Time`] = 0;
   (<HTMLInputElement>document.getElementById(id)).value = '';
+  document.getElementById(`${id}-form-label`)!.innerText = 'No File Chosen';
 
   updateSpectrumCounts();
   updateSpectrumTime();

@@ -220,6 +220,7 @@ function importFile(input, background = false) {
 function getFileData(file, background = false) {
     const reader = new FileReader();
     const fileEnding = file.name.split('.')[1];
+    document.getElementById(`${background ? 'background' : 'data'}-form-label`).innerText = file.name;
     reader.readAsText(file);
     reader.onload = async () => {
         const result = reader.result.trim();
@@ -378,6 +379,7 @@ function removeFile(id) {
     spectrumData[id] = [];
     spectrumData[`${id}Time`] = 0;
     document.getElementById(id).value = '';
+    document.getElementById(`${id}-form-label`).innerText = 'No File Chosen';
     updateSpectrumCounts();
     updateSpectrumTime();
     document.getElementById(id + '-icon').classList.add('d-none');
