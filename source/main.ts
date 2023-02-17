@@ -1242,7 +1242,7 @@ async function download(filename: string, text: string, type: DownloadType): Pro
     return;
   }
 
-  if (window.FileSystemHandle) { // Try to use File System Access API
+  if (window.FileSystemHandle && window.showSaveFilePicker) { // Try to use File System Access API
     const saveFileTypes = {
       'CAL': {
         description: 'Calibration data file',
