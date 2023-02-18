@@ -43,8 +43,9 @@ let isoListURL = 'assets/isotopes_energies_min.json';
 const isoList = {};
 let checkNearIso = false;
 let maxDist = 100;
-const APP_VERSION = '2023-02-16';
+const APP_VERSION = '2023-02-18';
 let localStorageAvailable = false;
+let fileSystemWritableAvail = false;
 let firstInstall = false;
 document.body.onload = async function () {
     localStorageAvailable = 'localStorage' in self;
@@ -100,6 +101,9 @@ document.body.onload = async function () {
                 getFileData(file);
             console.warn('File could not be imported!');
         });
+    }
+    if (window.FileSystemHandle && 'createWritable' in FileSystemFileHandle.prototype) {
+        fileSystemWritableAvail = true;
     }
     resetPlot();
     document.getElementById('version-tag').innerText += ` ${APP_VERSION}.`;
@@ -191,8 +195,64 @@ window.addEventListener('onappinstalled', () => {
     hideNotification('pwa-installer');
     document.getElementById('manual-install').classList.add('d-none');
 });
-document.getElementById('data').onclick = event => { event.target.value = ''; };
-document.getElementById('background').onclick = event => { event.target.value = ''; };
+document.getElementById('data').onclick = event => clickFileInput(event, false);
+document.getElementById('background').onclick = event => clickFileInput(event, true);
+const openFileTypes = [
+    {
+        description: 'Combination Files',
+        accept: {
+            'application/json': ['.json'],
+            'application/xml': ['.xml']
+        }
+    },
+    {
+        description: 'Single Spectrum Files',
+        accept: {
+            'text/csv': ['.csv'],
+            'text/txt': ['.txt'],
+            'text/TKA': ['.TKA']
+        }
+    }
+];
+let dataFileHandle;
+let backgroundFileHandle;
+async function clickFileInput(event, background) {
+    if (window.FileSystemHandle && window.showOpenFilePicker) {
+        event.preventDefault();
+        const openFilePickerOptions = {
+            types: openFileTypes,
+            multiple: false
+        };
+        let fileHandle;
+        try {
+            [fileHandle] = await window.showOpenFilePicker(openFilePickerOptions);
+        }
+        catch (error) {
+            console.warn('File Picker error:', error);
+            return;
+        }
+        const file = await fileHandle.getFile();
+        if (background) {
+            getFileData(file, true);
+        }
+        else {
+            getFileData(file, false);
+        }
+        const fileExtension = file.name.split('.')[1].toLowerCase();
+        if (fileExtension !== 'json' && fileExtension !== 'xml') {
+            return;
+        }
+        if (background) {
+            backgroundFileHandle = fileHandle;
+        }
+        else {
+            dataFileHandle = fileHandle;
+        }
+        if (fileSystemWritableAvail) {
+            document.getElementById('overwrite-button').disabled = false;
+        }
+    }
+}
 document.getElementById('data').onchange = event => importFile(event.target);
 document.getElementById('background').onchange = event => importFile(event.target, true);
 function importFile(input, background = false) {
@@ -203,6 +263,7 @@ function importFile(input, background = false) {
 function getFileData(file, background = false) {
     const reader = new FileReader();
     const fileEnding = file.name.split('.')[1];
+    document.getElementById(`${background ? 'background' : 'data'}-form-label`).innerText = file.name;
     reader.readAsText(file);
     reader.onload = async () => {
         const result = reader.result.trim();
@@ -361,6 +422,14 @@ function removeFile(id) {
     spectrumData[id] = [];
     spectrumData[`${id}Time`] = 0;
     document.getElementById(id).value = '';
+    document.getElementById(`${id}-form-label`).innerText = 'No File Chosen';
+    if (id === 'data')
+        dataFileHandle = undefined;
+    if (id === 'background')
+        backgroundFileHandle = undefined;
+    if (!dataFileHandle && !backgroundFileHandle && fileSystemWritableAvail) {
+        document.getElementById('overwrite-button').disabled = true;
+    }
     updateSpectrumCounts();
     updateSpectrumTime();
     document.getElementById(id + '-icon').classList.add('d-none');
@@ -688,6 +757,12 @@ function downloadCal() {
         delete calObj.points.cTo;
     download(`calibration_${getDateString()}.json`, JSON.stringify(calObj), 'CAL');
 }
+document.getElementById('xml-export-btn').onclick = () => downloadXML();
+function downloadXML() {
+    const filename = `spectrum_${getDateString()}.xml`;
+    const content = generateXML();
+    download(filename, content, 'XML');
+}
 function makeXMLSpectrum(type, name) {
     const root = document.createElementNS(null, (type === 'data') ? 'EnergySpectrum' : 'BackgroundEnergySpectrum');
     const noc = document.createElementNS(null, 'NumberOfChannels');
@@ -734,9 +809,7 @@ function makeXMLSpectrum(type, name) {
     }
     return root;
 }
-document.getElementById('xml-export-btn').onclick = () => downloadXML();
-function downloadXML() {
-    const filename = `spectrum_${getDateString()}.xml`;
+function generateXML() {
     const formatVersion = 230124;
     const spectrumName = getDateStringMin() + ' Energy Spectrum';
     const backgroundName = getDateStringMin() + ' Background Energy Spectrum';
@@ -809,7 +882,13 @@ function downloadXML() {
     const vis = document.createElementNS(null, 'Visible');
     vis.textContent = true.toString();
     rd.appendChild(vis);
-    download(filename, new XMLSerializer().serializeToString(doc), 'XML');
+    return new XMLSerializer().serializeToString(doc);
+}
+document.getElementById('npes-export-btn').onclick = () => downloadNPES();
+function downloadNPES() {
+    const filename = `spectrum_${getDateString()}.json`;
+    const data = generateNPES();
+    download(filename, JSON.stringify(data), 'JSON');
 }
 function makeJSONSpectrum(type) {
     const spec = {
@@ -830,9 +909,7 @@ function makeJSONSpectrum(type) {
     }
     return spec;
 }
-document.getElementById('npes-export-btn').onclick = () => downloadNPES();
-function downloadNPES() {
-    const filename = `spectrum_${getDateString()}.json`;
+function generateNPES() {
     const data = {
         'schemaVersion': 'NPESv1',
         'deviceData': {
@@ -869,10 +946,9 @@ function downloadNPES() {
     if (spectrumData.background.length && spectrumData.getTotalCounts('background'))
         data.resultData.backgroundEnergySpectrum = makeJSONSpectrum('background');
     if (!data.resultData.energySpectrum && !data.resultData.backgroundEnergySpectrum) {
-        new Notification('fileEmptyError');
-        return;
+        return undefined;
     }
-    download(filename, JSON.stringify(data), 'JSON');
+    return JSON.stringify(data);
 }
 document.getElementById('download-spectrum-btn').onclick = () => downloadData('spectrum', 'data');
 document.getElementById('download-bg-btn').onclick = () => downloadData('background', 'background');
@@ -882,35 +958,78 @@ function downloadData(filename, data) {
     spectrumData[data].forEach(item => text += item + '\n');
     download(filename, text, 'CSV');
 }
+document.getElementById('overwrite-button').onclick = () => overwriteFile();
+async function overwriteFile() {
+    if (dataFileHandle && backgroundFileHandle) {
+        new Notification('saveMultipleAtOnce');
+        return;
+    }
+    if (!dataFileHandle && !backgroundFileHandle) {
+        console.error('No file handlers found to save to!');
+        return;
+    }
+    const handler = (dataFileHandle ?? backgroundFileHandle);
+    const writable = await handler.createWritable();
+    const file = await handler.getFile();
+    const fileExtension = file.name.split('.')[1].toLowerCase();
+    let content;
+    if (fileExtension === 'xml') {
+        content = generateXML();
+    }
+    else {
+        content = generateNPES();
+    }
+    if (!content?.trim()) {
+        new Notification('fileEmptyError');
+        return;
+    }
+    await writable.write(content);
+    await writable.close();
+}
+const saveFileTypes = {
+    'CAL': {
+        description: 'Calibration Data File',
+        accept: {
+            'application/json': ['.json']
+        }
+    },
+    'XML': {
+        description: 'Combination Data File',
+        accept: {
+            'application/xml': ['.xml']
+        }
+    },
+    'JSON': {
+        description: 'Combination Data File (NPES)',
+        accept: {
+            'application/json': ['.json']
+        }
+    },
+    'CSV': {
+        description: 'Single Spectrum File',
+        accept: {
+            'text/csv': ['.csv']
+        }
+    }
+};
 async function download(filename, text, type) {
-    if (!text.trim()) {
+    if (!text?.trim()) {
         new Notification('fileEmptyError');
         return;
     }
     if (window.FileSystemHandle && window.showSaveFilePicker) {
-        const saveFileTypes = {
-            'CAL': {
-                description: 'Calibration data file',
-                accept: { 'application/json': ['.json'] }
-            },
-            'XML': {
-                description: 'Combination file with all available data',
-                accept: { 'application/xml': ['.xml'] }
-            },
-            'JSON': {
-                description: 'Combination file (NPES) with all available data',
-                accept: { 'application/json': ['.json'] }
-            },
-            'CSV': {
-                description: 'Single spectrum file',
-                accept: { 'text/csv': ['.csv'] }
-            }
-        };
         const saveFilePickerOptions = {
             suggestedName: filename,
             types: [saveFileTypes[type]]
         };
-        const newHandle = await window.showSaveFilePicker(saveFilePickerOptions);
+        let newHandle;
+        try {
+            newHandle = await window.showSaveFilePicker(saveFilePickerOptions);
+        }
+        catch (error) {
+            console.warn('File SaveAs error:', error);
+            return;
+        }
         const writableStream = await newHandle.createWritable();
         await writableStream.write(text);
         await writableStream.close();

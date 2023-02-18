@@ -27,6 +27,10 @@ body {
 
 }
 
+.file-import-selector {
+  cursor: pointer;
+}
+
 .file-import-success {
   --fa-animation-duration: 5s;
 }

@@ -142,9 +142,12 @@
                   </p>
 
                   <div class="input-group input-group-sm">
-                    <input class="form-control form-control-sm" type="file" id="data" accept=".csv, .tka, .xml, .txt, .json">
+                    <label for="data" class="btn btn-sm btn-primary" title="Import a file"> <i class="fas fa-file-import"></i> Open File </label>
+                    <label class="file-import-selector form-control text-truncate" for="data" id="data-form-label">No File Chosen</label>
+
                     <button class="btn btn-primary btn-sm" type="button" id="clear-data" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
                   </div>
+                  <input class="d-none" type="file" id="data" accept=".csv, .tka, .xml, .txt, .json">
 
                   <br>
 
@@ -153,15 +156,22 @@
                   </p>
 
                   <div class="input-group input-group-sm">
-                    <input class="form-control form-control-sm" type="file" id="background" accept=".csv, .tka, .xml, .txt, .json">
+                    <label for="background" class="btn btn-sm btn-primary" title="Import a file"> <i class="fas fa-file-import"></i> Open File </label>
+                    <label class="file-import-selector form-control text-truncate" for="background" id="background-form-label">No File Chosen</label>
+
                     <button class="btn btn-primary btn-sm" type="button" id="clear-bg" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
                   </div>
+                  <input class="d-none" type="file" id="background" accept=".csv, .tka, .xml, .txt, .json">
 
                   <hr>
 
                   <p>
-                    <button class="btn btn-primary btn-sm" id="export-button" type="button" data-bs-toggle="modal" data-bs-target="#exportModal" title="Export data files">
-                      <i class="fas fa-file-export"></i> Save Files
+                    <button class="btn btn-primary btn-sm" id="export-button" type="button" data-bs-toggle="modal" data-bs-target="#exportModal" title="Save file as ...">
+                      <i class="fas fa-file-export"></i> Save As
+                    </button>
+
+                    <button class="btn btn-primary btn-sm" id="overwrite-button" type="button" title="Save file: Overwrite file(s)!" disabled>
+                      <i class="fas fa-file-export"></i> Save
                     </button>
                   </p>
 
@@ -201,8 +211,11 @@
                #####################
               -->
               <div class="alert alert-warning" role="alert" id="serial-error">
-                <p>Looks like the Web Serial API is not supported. Please switch to the latest Chromium-based browser (e.g. Chrome, Edge, Opera, ...) or enable the Web Serial API in your browser's settings to use serial connections.</p>
-                <p>Reload this page after you enabled the Web Serial API or have a look at the browser compatability on the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API#browser_compatibility" target="_blank" title="Web Serial API MDN">MDN Web Docs</a>.</p>
+                <p>Oh no! Looks like neither the <a href="https://caniuse.com/web-serial" target="_blank" title="CanIUse? Web Serial API"> Web Serial API</a>, 
+                  nor <a href="https://caniuse.com/webusb" target="_blank" title="CanIUse? WebUSB">WebUSB</a> are not supported in your browser.</p>
+                
+                <p>Please switch to the latest Chromium-based browser (e.g. Chrome, Edge, etc.) or enable one of the features in your browser's settings if possible.
+                  Otherwise you cannot use any serial devices.</p>
               </div>
 
               <div id="serial-div" class="h-100">
@@ -651,11 +664,11 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h3 class="modal-title h4">Export File</h3>
+            <h3 class="modal-title h4">Save File</h3>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <p><strong>What do you want to export?</strong></p>
+            <p><strong>What do you want to save?</strong></p>
             <p>You can either choose to use one of the combined file types (JSON, XML) or just plain CSVs for the spectrum or background spectrum.</p>
           </div>
           <div class="modal-footer">
@@ -917,7 +930,7 @@
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="gauss-sigma">Gaussian Filter &sigma;</label>
-                      <input type="number" class="form-control" id="gauss-sigma" min="1", step="1">
+                      <input type="number" class="form-control" id="gauss-sigma" min="1" step="1">
                       <button class="btn btn-primary" type="button" id="gauss-sigma-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <p><small>Defines how many standard deviations of the peak the Gaussian shape is covering. 2 equals 95% coverage. Any positive integer is valid.</small></p>

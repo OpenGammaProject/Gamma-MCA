@@ -119,6 +119,14 @@ const notificationContents = {
         header: 'Welcome!',
         body: '<p>Thanks for using Gamma MCA, please report any bugs or issues on <a title="GitHub/Issues" class="link-light" href="https://github.com/OpenGammaProject/Gamma-MCA/issues" target="_blank"><small><i class="fa-solid fa-link"></i></small> GitHub/Issues</a>. Thank you.</p>' +
             '<p>By using the website and source code, you agree to the <a  title="GitHub/License" class="link-light" href="https://github.com/OpenGammaProject/Gamma-MCA/blob/main/LICENSE" target="_blank"><small><i class="fa-solid fa-link"></i></small> license</a>.</p>'
+    },
+    'saveMultipleAtOnce': {
+        type: 'warning',
+        delay: 8000,
+        icon: 'fas fa-exclamation-triangle fa-shake',
+        header: 'File Save Error',
+        body: '<p>You tried to save (overwrite) multiple files at once. This is not supported due to the risk of data loss.</p>' +
+            '<p>If you want to combine and save data from different files, please use the <code>Save As</code> function.</p>'
     }
 };
 export class Notification {
