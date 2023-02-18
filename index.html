@@ -211,8 +211,11 @@
                #####################
               -->
               <div class="alert alert-warning" role="alert" id="serial-error">
-                <p>Looks like the Web Serial API is not supported. Please switch to the latest Chromium-based browser (e.g. Chrome, Edge, Opera, ...) or enable the Web Serial API in your browser's settings to use serial connections.</p>
-                <p>Reload this page after you enabled the Web Serial API or have a look at the browser compatability on the <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API#browser_compatibility" target="_blank" title="Web Serial API MDN">MDN Web Docs</a>.</p>
+                <p>Oh no! Looks like neither the <a href="https://caniuse.com/web-serial" target="_blank" title="CanIUse? Web Serial API"> Web Serial API</a>, 
+                  nor <a href="https://caniuse.com/webusb" target="_blank" title="CanIUse? WebUSB">WebUSB</a> are not supported in your browser.</p>
+                
+                <p>Please switch to the latest Chromium-based browser (e.g. Chrome, Edge, etc.) or enable one of the features in your browser's settings if possible.
+                  Otherwise you cannot use any serial devices.</p>
               </div>
 
               <div id="serial-div" class="h-100">
