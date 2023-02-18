@@ -642,7 +642,8 @@ function toggleCal(enabled) {
     bindPlotEvents();
 }
 function displayCoeffs() {
-    for (const elem of ['c1', 'c2', 'c3']) {
+    const arr = ['c1', 'c2', 'c3'];
+    for (const elem of arr) {
         document.getElementById(`${elem}-coeff`).innerText = plot.calibration.coeff[elem].toString();
     }
 }
@@ -824,7 +825,8 @@ function makeXMLSpectrum(type, name) {
     root.appendChild(mt);
     const s = document.createElementNS(null, 'Spectrum');
     root.appendChild(s);
-    for (const datapoint of spectrumData[type]) {
+    const data = spectrumData[type];
+    for (const datapoint of data) {
         const d = document.createElementNS(null, 'DataPoint');
         d.textContent = datapoint.toString();
         s.appendChild(d);

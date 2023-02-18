@@ -242,7 +242,7 @@ export class SpectrumPlot {
   */
   private getXAxis(len: number): number[] {
     const xArray: number[] = [];
-    for(let i = 0; i < len; i++) {
+    for (let i = 0; i < len; i++) {
       xArray.push(i);
     }
     return xArray;
@@ -304,7 +304,7 @@ export class SpectrumPlot {
     const k = this.calibration.coeff.c2;
     const d = this.calibration.coeff.c3;
 
-    for(let i = 0; i < len; i++) {
+    for (let i = 0; i < len; i++) {
       calArray.push(parseFloat((a * i**2 + k * i + d).toFixed(2)));
     }
 
@@ -317,7 +317,7 @@ export class SpectrumPlot {
     const newData: number[] = Array(target.length);
     const half = Math.round(length/2);
 
-    for(let i = 0; i < newData.length; i++) { // Compute the central moving average
+    for (let i = 0; i < newData.length; i++) { // Compute the central moving average
       if (i >= half && i <= target.length - half - 1) { // Shortcut
         const remainderIndexFactor = length % 2;
 
@@ -331,7 +331,7 @@ export class SpectrumPlot {
       let val = 0;
       let divider = 0;
 
-      for(let j = 0; j < length; j++) { // Slightly asymetrical to the right with even numbers of smaLength
+      for (let j = 0; j < length; j++) { // Slightly asymetrical to the right with even numbers of smaLength
         if (j < half) {
           if ((i - j) >= 0) {
             val += target[i - j];
@@ -551,7 +551,7 @@ export class SpectrumPlot {
 
       let resultVal = 0;
 
-      for(let k = xMin; k < xMax; k++) {
+      for (let k = xMin; k < xMax; k++) {
         resultVal += data[index + k] * gaussValues[k - xMin];
       }
 

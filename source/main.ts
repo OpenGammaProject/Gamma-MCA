@@ -22,7 +22,6 @@
 
     - (!) Dark Mode -> Bootstrap v5.3
     - (!) FWHM calculation in peak finder
-    - (!) Switch some for loops to for each
 
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
@@ -67,7 +66,7 @@ export class SpectrumData { // Will hold the measurement data globally.
   }
 
   addPulseData(type: DataType, newDataArr: number[], adcChannels: number): void {
-    if(!this[type].length) this[type] = Array(adcChannels).fill(0);
+    if (!this[type].length) this[type] = Array(adcChannels).fill(0);
 
     for (const value of newDataArr) {
       this[type][value] += 1;
@@ -75,7 +74,7 @@ export class SpectrumData { // Will hold the measurement data globally.
   }
 
   addHist(type: DataType, newHistArr: number[]): void {
-    if(!this[type].length) this[type] = newHistArr;
+    if (!this[type].length) this[type] = newHistArr;
 
     for (const index in newHistArr) {
       this[type][index] += newHistArr[index];
@@ -911,7 +910,8 @@ function toggleCal(enabled: boolean): void {
 
 
 function displayCoeffs(): void {
-  for (const elem of ['c1','c2','c3']) {
+  const arr = ['c1','c2','c3'];
+  for (const elem of arr) {
     document.getElementById(`${elem}-coeff`)!.innerText = plot.calibration.coeff[elem].toString();
   }
 }
@@ -1163,7 +1163,8 @@ function makeXMLSpectrum(type: DataType, name: string): Element {
   const s = document.createElementNS(null, 'Spectrum');
   root.appendChild(s);
 
-  for (const datapoint of spectrumData[type]) {
+  const data = spectrumData[type];
+  for (const datapoint of data) {
     const d = document.createElementNS(null, 'DataPoint');
     d.textContent = datapoint.toString();
     s.appendChild(d);
@@ -1616,7 +1617,7 @@ function toggleIsoHover(): void {
 
 
 async function closestIso(value: number): Promise<void> {
-  if(!await loadIsotopes()) return; // User has not yet opened the settings panel
+  if (!await loadIsotopes()) return; // User has not yet opened the settings panel
 
   const { energy, name } = new SeekClosest(isoList).seek(value, maxDist);
 
@@ -1647,7 +1648,7 @@ function plotIsotope(checkbox: HTMLInputElement): void {
 document.getElementById('check-all-isos')!.onclick = (event) => selectAll(<HTMLInputElement>event.target);
 
 function selectAll(selectBox: HTMLInputElement): void {
-  const tableRows = (<HTMLTableElement>document.getElementById('table')).tBodies[0].rows; 
+  const tableRows = (<HTMLTableElement>document.getElementById('table')).tBodies[0].rows;
 
   for (const row of tableRows) {
     const checkBox = <HTMLInputElement>row.cells[0].firstChild;
