@@ -20,9 +20,9 @@
     - Calibration n-polynomial regression
     - ROI with stats (total counts, max, min, FWHM, range,...)
 
-    - (!) Sorting isotope list
     - (!) Dark Mode -> Bootstrap v5.3
     - (!) FWHM calculation in peak finder
+    - (!) Sorting isotope list
 
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
