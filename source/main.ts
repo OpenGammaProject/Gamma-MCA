@@ -1493,11 +1493,9 @@ async function loadIsotopes(reload = false): Promise<boolean> { // Load Isotope 
 
       const tableElement = <HTMLTableElement>document.getElementById('iso-table');
       tableElement.innerHTML = ''; // Delete old table
-      plot.clearAnnos(); // Delete all isotope lines
-      plot.updatePlot(spectrumData);
 
       const intKeys = Object.keys(json);
-      intKeys.sort((a, b) => parseFloat(a) - parseFloat(b)); // Sort Energies numerically
+      intKeys.sort((a, b) => parseFloat(a) - parseFloat(b)); // Sort Energies numerically, ascending
 
       let index = 0; // Index used to avoid HTML id duplicates
 
@@ -1532,6 +1530,9 @@ async function loadIsotopes(reload = false): Promise<boolean> { // Load Isotope 
 
         cell2.innerHTML = `<sup>${strArr[1]}</sup>${strArr[0]}`; //`<label for="${name}"><sup>${strArr[1]}</sup>${strArr[0]}</label>`;
       }
+
+      plot.clearAnnos(); // Delete all isotope lines
+      plot.updatePlot(spectrumData);
       plot.isoList = isoList; // Copy list to plot object
     } else {
       isoError.innerText = `Could not load isotope list! HTTP Error: ${response.status}. Please try again.`;

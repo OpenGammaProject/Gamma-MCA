@@ -1083,8 +1083,6 @@ async function loadIsotopes(reload = false) {
             loadedIsos = true;
             const tableElement = document.getElementById('iso-table');
             tableElement.innerHTML = '';
-            plot.clearAnnos();
-            plot.updatePlot(spectrumData);
             const intKeys = Object.keys(json);
             intKeys.sort((a, b) => parseFloat(a) - parseFloat(b));
             let index = 0;
@@ -1111,6 +1109,8 @@ async function loadIsotopes(reload = false) {
                 const strArr = name.split('-');
                 cell2.innerHTML = `<sup>${strArr[1]}</sup>${strArr[0]}`;
             }
+            plot.clearAnnos();
+            plot.updatePlot(spectrumData);
             plot.isoList = isoList;
         }
         else {
