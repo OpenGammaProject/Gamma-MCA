@@ -23,7 +23,6 @@
     - (!) Sorting isotope list
     - (!) Dark Mode -> Bootstrap v5.3
     - (!) FWHM calculation in peak finder
-    - (!) Save Button: Generate content depending on file extension
 
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
@@ -402,11 +401,23 @@ async function clickFileInput(event: MouseEvent, background: boolean): Promise<v
     const file = await fileHandle.getFile();
 
     if (background) {
-      backgroundFileHandle = fileHandle;
       getFileData(file, true);
     } else {
-      dataFileHandle = fileHandle;
       getFileData(file, false);
+    }
+
+    const fileExtension = file.name.split('.')[1].toLowerCase();
+
+    if (fileExtension !== 'json' && fileExtension !== 'xml') {
+      //console.info('The "Save" action is not supported on the imported file.');
+      return;
+    }
+
+    // File System Access API specific stuff
+    if (background) {
+      backgroundFileHandle = fileHandle;
+    } else {
+      dataFileHandle = fileHandle;
     }
 
     if (fileSystemWritableAvail) { // Only enable if it can be used
@@ -1053,6 +1064,15 @@ function downloadCal(): void {
 }
 
 
+document.getElementById('xml-export-btn')!.onclick = () => downloadXML();
+
+function downloadXML(): void {
+  const filename = `spectrum_${getDateString()}.xml`;
+  const content = generateXML();
+  download(filename, content, 'XML');
+}
+
+
 function makeXMLSpectrum(type: DataType, name: string): Element {
   const root = document.createElementNS(null, (type === 'data') ? 'EnergySpectrum' : 'BackgroundEnergySpectrum');
   const noc = document.createElementNS(null, 'NumberOfChannels');
@@ -1122,10 +1142,7 @@ function makeXMLSpectrum(type: DataType, name: string): Element {
 }
 
 
-document.getElementById('xml-export-btn')!.onclick = () => downloadXML();
-
-function downloadXML(): void {
-  const filename = `spectrum_${getDateString()}.xml`;
+function generateXML(): string {
   const formatVersion = 230124;
 
   const spectrumName = getDateStringMin() + ' Energy Spectrum';
@@ -1225,7 +1242,16 @@ function downloadXML(): void {
   vis.textContent = true.toString();
   rd.appendChild(vis);
 
-  download(filename, new XMLSerializer().serializeToString(doc), 'XML');
+  return new XMLSerializer().serializeToString(doc);
+}
+
+
+document.getElementById('npes-export-btn')!.onclick = () => downloadNPES();
+
+function downloadNPES(): void {
+  const filename = `spectrum_${getDateString()}.json`;
+  const data = generateNPES();
+  download(filename, JSON.stringify(data), 'JSON');
 }
 
 
@@ -1252,11 +1278,7 @@ function makeJSONSpectrum(type: DataType): NPESv1Spectrum {
 }
 
 
-document.getElementById('npes-export-btn')!.onclick = () => downloadNPES();
-
-function downloadNPES(): void {
-  const filename = `spectrum_${getDateString()}.json`;
-
+function generateNPES(): string | undefined {
   const data: NPESv1 = {
     'schemaVersion': 'NPESv1',
     'deviceData': {
@@ -1295,11 +1317,11 @@ function downloadNPES(): void {
 
   // Additionally validate the JSON Schema?
   if (!data.resultData.energySpectrum && !data.resultData.backgroundEnergySpectrum) {
-    new Notification('fileEmptyError'); //popupNotification('file-empty-error');
-    return;
+    //new Notification('fileEmptyError'); //popupNotification('file-empty-error');
+    return undefined;
   }
 
-  download(filename, JSON.stringify(data), 'JSON');
+  return JSON.stringify(data);
 }
 
 
@@ -1330,14 +1352,25 @@ async function overwriteFile(): Promise<void> {
   } 
 
   const handler = (dataFileHandle ?? backgroundFileHandle)!; // CANNOT be undefined, since I checked above, ugh...
-
   const writable = await handler.createWritable(); // Create a FileSystemWritableFileStream to write to.
 
-  // TODO: Generate contents!
-  //await writable.write(contents); // Write the contents of the file to the stream.
+  const file = await handler.getFile();
+  const fileExtension = file.name.split('.')[1].toLowerCase();
+  let content: string | undefined;
 
+  if (fileExtension === 'xml') {
+    content = generateXML();
+  } else {
+    content = generateNPES();
+  }
+
+  if (!content?.trim()) { // Check empty string
+    new Notification('fileEmptyError'); //popupNotification('file-empty-error');
+    return;
+  }
+
+  await writable.write(content); // Write the contents of the file to the stream.
   await writable.close(); // Close the file and write the contents to disk.
-  console.log('saved for handler', handler);
 }
 
 
@@ -1369,7 +1402,7 @@ const saveFileTypes = {
 };
 
 async function download(filename: string, text: string, type: DownloadType): Promise<void> {
-  if (!text.trim()) { // Check empty string
+  if (!text?.trim()) { // Check empty string
     new Notification('fileEmptyError'); //popupNotification('file-empty-error');
     return;
   }
@@ -1380,7 +1413,15 @@ async function download(filename: string, text: string, type: DownloadType): Pro
       types: [saveFileTypes[type]]
     };
 
-    const newHandle = await window.showSaveFilePicker(saveFilePickerOptions); // Create a new handle
+    let newHandle: FileSystemFileHandle;
+
+    try {
+      newHandle = await window.showSaveFilePicker(saveFilePickerOptions); // Create a new handle
+    } catch(error) {
+      console.warn('File SaveAs error:', error);
+      return;
+    }
+    
     const writableStream = await newHandle.createWritable(); // Create a FileSystemWritableFileStream to write to
 
     await writableStream.write(text); // Write our file

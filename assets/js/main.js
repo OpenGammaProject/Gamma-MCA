@@ -233,12 +233,20 @@ async function clickFileInput(event, background) {
         }
         const file = await fileHandle.getFile();
         if (background) {
-            backgroundFileHandle = fileHandle;
             getFileData(file, true);
         }
         else {
-            dataFileHandle = fileHandle;
             getFileData(file, false);
+        }
+        const fileExtension = file.name.split('.')[1].toLowerCase();
+        if (fileExtension !== 'json' && fileExtension !== 'xml') {
+            return;
+        }
+        if (background) {
+            backgroundFileHandle = fileHandle;
+        }
+        else {
+            dataFileHandle = fileHandle;
         }
         if (fileSystemWritableAvail) {
             document.getElementById('overwrite-button').disabled = false;
@@ -749,6 +757,12 @@ function downloadCal() {
         delete calObj.points.cTo;
     download(`calibration_${getDateString()}.json`, JSON.stringify(calObj), 'CAL');
 }
+document.getElementById('xml-export-btn').onclick = () => downloadXML();
+function downloadXML() {
+    const filename = `spectrum_${getDateString()}.xml`;
+    const content = generateXML();
+    download(filename, content, 'XML');
+}
 function makeXMLSpectrum(type, name) {
     const root = document.createElementNS(null, (type === 'data') ? 'EnergySpectrum' : 'BackgroundEnergySpectrum');
     const noc = document.createElementNS(null, 'NumberOfChannels');
@@ -795,9 +809,7 @@ function makeXMLSpectrum(type, name) {
     }
     return root;
 }
-document.getElementById('xml-export-btn').onclick = () => downloadXML();
-function downloadXML() {
-    const filename = `spectrum_${getDateString()}.xml`;
+function generateXML() {
     const formatVersion = 230124;
     const spectrumName = getDateStringMin() + ' Energy Spectrum';
     const backgroundName = getDateStringMin() + ' Background Energy Spectrum';
@@ -870,7 +882,13 @@ function downloadXML() {
     const vis = document.createElementNS(null, 'Visible');
     vis.textContent = true.toString();
     rd.appendChild(vis);
-    download(filename, new XMLSerializer().serializeToString(doc), 'XML');
+    return new XMLSerializer().serializeToString(doc);
+}
+document.getElementById('npes-export-btn').onclick = () => downloadNPES();
+function downloadNPES() {
+    const filename = `spectrum_${getDateString()}.json`;
+    const data = generateNPES();
+    download(filename, JSON.stringify(data), 'JSON');
 }
 function makeJSONSpectrum(type) {
     const spec = {
@@ -891,9 +909,7 @@ function makeJSONSpectrum(type) {
     }
     return spec;
 }
-document.getElementById('npes-export-btn').onclick = () => downloadNPES();
-function downloadNPES() {
-    const filename = `spectrum_${getDateString()}.json`;
+function generateNPES() {
     const data = {
         'schemaVersion': 'NPESv1',
         'deviceData': {
@@ -930,10 +946,9 @@ function downloadNPES() {
     if (spectrumData.background.length && spectrumData.getTotalCounts('background'))
         data.resultData.backgroundEnergySpectrum = makeJSONSpectrum('background');
     if (!data.resultData.energySpectrum && !data.resultData.backgroundEnergySpectrum) {
-        new Notification('fileEmptyError');
-        return;
+        return undefined;
     }
-    download(filename, JSON.stringify(data), 'JSON');
+    return JSON.stringify(data);
 }
 document.getElementById('download-spectrum-btn').onclick = () => downloadData('spectrum', 'data');
 document.getElementById('download-bg-btn').onclick = () => downloadData('background', 'background');
@@ -955,8 +970,21 @@ async function overwriteFile() {
     }
     const handler = (dataFileHandle ?? backgroundFileHandle);
     const writable = await handler.createWritable();
+    const file = await handler.getFile();
+    const fileExtension = file.name.split('.')[1].toLowerCase();
+    let content;
+    if (fileExtension === 'xml') {
+        content = generateXML();
+    }
+    else {
+        content = generateNPES();
+    }
+    if (!content?.trim()) {
+        new Notification('fileEmptyError');
+        return;
+    }
+    await writable.write(content);
     await writable.close();
-    console.log('saved for handler', handler);
 }
 const saveFileTypes = {
     'CAL': {
@@ -985,7 +1013,7 @@ const saveFileTypes = {
     }
 };
 async function download(filename, text, type) {
-    if (!text.trim()) {
+    if (!text?.trim()) {
         new Notification('fileEmptyError');
         return;
     }
@@ -994,7 +1022,14 @@ async function download(filename, text, type) {
             suggestedName: filename,
             types: [saveFileTypes[type]]
         };
-        const newHandle = await window.showSaveFilePicker(saveFilePickerOptions);
+        let newHandle;
+        try {
+            newHandle = await window.showSaveFilePicker(saveFilePickerOptions);
+        }
+        catch (error) {
+            console.warn('File SaveAs error:', error);
+            return;
+        }
         const writableStream = await newHandle.createWritable();
         await writableStream.write(text);
         await writableStream.close();
