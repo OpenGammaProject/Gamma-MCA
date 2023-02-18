@@ -143,7 +143,7 @@
 
                   <div class="input-group input-group-sm">
                     <label for="data" class="btn btn-sm btn-primary" title="Import a file"> <i class="fas fa-file-import"></i> Open File </label>
-                    <label class="file-import-selector form-control text-truncate" for="data" id="data-form-label">No File Chosen</label>
+                    <label class="cursor-pointer form-control text-truncate" for="data" id="data-form-label">No File Chosen</label>
 
                     <button class="btn btn-primary btn-sm" type="button" id="clear-data" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
                   </div>
@@ -157,7 +157,7 @@
 
                   <div class="input-group input-group-sm">
                     <label for="background" class="btn btn-sm btn-primary" title="Import a file"> <i class="fas fa-file-import"></i> Open File </label>
-                    <label class="file-import-selector form-control text-truncate" for="background" id="background-form-label">No File Chosen</label>
+                    <label class="cursor-pointer form-control text-truncate" for="background" id="background-form-label">No File Chosen</label>
 
                     <button class="btn btn-primary btn-sm" type="button" id="clear-bg" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
                   </div>
@@ -766,8 +766,8 @@
                 <thead class="theme-mode table-light"> <!-- style="box-shadow: inset 1px 1px #000, 0 2px #000;" -->
                   <tr>
                     <th> <input class="form-check-input" id="check-all-isos" type="checkbox" value="" title="Toggle all isotopes"> </th>
-                    <th>Isotope</th>
-                    <th>Energy [keV]</th>
+                    <th class="cursor-pointer" data-sort-by="1">Isotope <i class="fa-solid fa-sort"></i></th>
+                    <th class="cursor-pointer" data-sort-by="2">Energy [keV] <i class="fa-solid fa-sort-up"></i></th>
                   </tr>
                 </thead>
 

@@ -22,7 +22,7 @@
 
     - (!) Dark Mode -> Bootstrap v5.3
     - (!) FWHM calculation in peak finder
-    - (!) Sorting isotope list
+    - (!) Switch some for loops to for each
 
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
@@ -110,6 +110,14 @@ const APP_VERSION = '2023-02-18';
 let localStorageAvailable = false;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
+
+// Isotope table variables
+const isoTableSortDirections = ['none', 'none', 'asc'];
+const faSortClasses: {[key: string]: string} = {
+  none: 'fa-sort',
+  asc: 'fa-sort-up',
+  desc: 'fa-sort-down'
+};
 
 /*
   Startup of the page
@@ -245,6 +253,29 @@ document.body.onload = async function(): Promise<void> {
       }
     });
   }
+
+  const isoTable = <HTMLTableElement>document.getElementById('table');
+  
+  const thList = <NodeListOf<HTMLTableCellElement>>isoTable.querySelectorAll('th[data-sort-by]'); // Add click event listeners to table header cells
+  thList.forEach(th => {
+    th.addEventListener('click', () => {
+      const columnIndex = Number(th.dataset.sortBy);
+      const sortDirection = isoTableSortDirections[columnIndex];
+
+      // Toggle the sort direction
+      isoTableSortDirections.fill('none');
+      isoTableSortDirections[columnIndex] = sortDirection === 'asc' ? 'desc' : 'asc';
+
+      thList.forEach((loopTableHeader, index) => {
+        const sortIcon = <HTMLElement>loopTableHeader.querySelector('.fa-solid');
+
+        sortIcon.classList.remove(...Object.values(faSortClasses)); // Remove all old icons
+        sortIcon.classList.add(faSortClasses[isoTableSortDirections[index+1]]); // Set new icons
+      });
+
+      sortTableByColumn(isoTable, columnIndex, isoTableSortDirections[columnIndex]); // Actually sort the table rows
+    });
+  });
 
   const loadingSpinner = document.getElementById('loading')!;
   loadingSpinner.parentNode!.removeChild(loadingSpinner); // Delete Loading Thingymajig
@@ -1457,6 +1488,30 @@ function legacyPopupNotification(id: string): void { // Uses Bootstrap Toasts al
 function hideNotification(id: string): void {
   const toast = new (<any>window).bootstrap.Toast(document.getElementById(id));
   if (toast.isShown()) toast.hide();
+}
+
+
+function sortTableByColumn(table: HTMLTableElement, columnIndex: number, sortDirection: string) {
+  const tbody = table.tBodies[0];
+  const rows = Array.from(tbody.rows);
+
+  rows.sort((a, b) => {
+    const aCellValue = a.cells[columnIndex].textContent?.trim() ?? '';
+    const bCellValue = b.cells[columnIndex].textContent?.trim() ?? '';
+
+    const aNumValue = parseFloat(aCellValue.replace(/[^\d.-]/g, '')); // Get the mass number of the isotope
+    const bNumValue = parseFloat(bCellValue.replace(/[^\d.-]/g, ''));
+
+    if (isNaN(aNumValue) || isNaN(bNumValue)) {
+      return aCellValue.localeCompare(bCellValue);
+    }
+
+    const comparison = aNumValue - bNumValue;
+
+    return sortDirection === 'asc' ? comparison : -comparison;
+  });
+
+  tbody.append(...rows);
 }
 
 

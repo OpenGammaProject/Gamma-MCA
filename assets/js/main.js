@@ -47,6 +47,12 @@ const APP_VERSION = '2023-02-18';
 let localStorageAvailable = false;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
+const isoTableSortDirections = ['none', 'none', 'asc'];
+const faSortClasses = {
+    none: 'fa-sort',
+    asc: 'fa-sort-up',
+    desc: 'fa-sort-down'
+};
 document.body.onload = async function () {
     localStorageAvailable = 'localStorage' in self;
     if (localStorageAvailable) {
@@ -155,6 +161,22 @@ document.body.onload = async function () {
             }
         });
     }
+    const isoTable = document.getElementById('table');
+    const thList = isoTable.querySelectorAll('th[data-sort-by]');
+    thList.forEach(th => {
+        th.addEventListener('click', () => {
+            const columnIndex = Number(th.dataset.sortBy);
+            const sortDirection = isoTableSortDirections[columnIndex];
+            isoTableSortDirections.fill('none');
+            isoTableSortDirections[columnIndex] = sortDirection === 'asc' ? 'desc' : 'asc';
+            thList.forEach((loopTableHeader, index) => {
+                const sortIcon = loopTableHeader.querySelector('.fa-solid');
+                sortIcon.classList.remove(...Object.values(faSortClasses));
+                sortIcon.classList.add(faSortClasses[isoTableSortDirections[index + 1]]);
+            });
+            sortTableByColumn(isoTable, columnIndex, isoTableSortDirections[columnIndex]);
+        });
+    });
     const loadingSpinner = document.getElementById('loading');
     loadingSpinner.parentNode.removeChild(loadingSpinner);
 };
@@ -1058,6 +1080,22 @@ function hideNotification(id) {
     const toast = new window.bootstrap.Toast(document.getElementById(id));
     if (toast.isShown())
         toast.hide();
+}
+function sortTableByColumn(table, columnIndex, sortDirection) {
+    const tbody = table.tBodies[0];
+    const rows = Array.from(tbody.rows);
+    rows.sort((a, b) => {
+        const aCellValue = a.cells[columnIndex].textContent?.trim() ?? '';
+        const bCellValue = b.cells[columnIndex].textContent?.trim() ?? '';
+        const aNumValue = parseFloat(aCellValue.replace(/[^\d.-]/g, ''));
+        const bNumValue = parseFloat(bCellValue.replace(/[^\d.-]/g, ''));
+        if (isNaN(aNumValue) || isNaN(bNumValue)) {
+            return aCellValue.localeCompare(bCellValue);
+        }
+        const comparison = aNumValue - bNumValue;
+        return sortDirection === 'asc' ? comparison : -comparison;
+    });
+    tbody.append(...rows);
 }
 document.getElementById('toggle-menu').onclick = () => loadIsotopes();
 document.getElementById('reload-isos-btn').onclick = () => loadIsotopes(true);
