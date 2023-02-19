@@ -542,6 +542,7 @@ function bindPlotEvents() {
     myPlot.addEventListener('contextmenu', (event) => {
         event.preventDefault();
     });
+    myPlot.on('plotly_selected', selectEvent);
 }
 function hoverEvent(data) {
     for (const key in calClick) {
@@ -584,6 +585,9 @@ function clickEvent(data) {
         prevClickLine = undefined;
     }
     plot.updatePlot(spectrumData);
+}
+function selectEvent(data) {
+    console.log(data);
 }
 function webGLcontextLoss() {
     console.error('Lost WebGL context for Plotly.js! Falling back to default SVG render mode...');

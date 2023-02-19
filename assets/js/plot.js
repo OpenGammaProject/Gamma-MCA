@@ -57,8 +57,9 @@ export class SpectrumPlot {
         lines: []
     };
     gaussSigma = 2;
-    customModeBarButtons = {
-        name: 'Download plot as HTML',
+    customDownloadModeBar = {
+        name: 'downloadPlot',
+        title: 'Download plot as HTML',
         icon: window.Plotly.Icons['disk'],
         direction: 'up',
         click: (plotElement) => {
@@ -496,9 +497,14 @@ export class SpectrumPlot {
                 filename: 'gamma_mca_calibration',
             },
             editable: this.editableMode,
-            modeBarButtonsToAdd: [],
+            modeBarButtons: [
+                ['zoom2d'],
+                ['zoomIn2d', 'zoomOut2d'],
+                ['autoScale2d', 'resetScale2d'],
+                ['toImage'],
+                [this.customDownloadModeBar]
+            ]
         };
-        config.modeBarButtonsToAdd = [this.customModeBarButtons];
         window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, markersTrace], layout, config);
     }
     plotData(dataObj, update) {
@@ -573,7 +579,18 @@ export class SpectrumPlot {
                 orientation: 'h',
                 y: -0.35,
             },
-            barmode: 'stack',
+            selectdirection: 'h',
+            activeselection: {
+                fillcolor: 'blue',
+                opacity: 0.01
+            },
+            newselection: {
+                line: {
+                    color: 'blue',
+                    width: 1,
+                    dash: 'solid'
+                }
+            },
             xaxis: {
                 title: 'Bin [1]',
                 mirror: true,
@@ -662,7 +679,14 @@ export class SpectrumPlot {
                 filename: 'gamma_mca_spectrum',
             },
             editable: this.editableMode,
-            modeBarButtonsToAdd: [],
+            modeBarButtons: [
+                ['select2d'],
+                ['zoom2d'],
+                ['zoomIn2d', 'zoomOut2d'],
+                ['autoScale2d', 'resetScale2d'],
+                ['toImage'],
+                [this.customDownloadModeBar]
+            ]
         };
         if (this.peakConfig.enabled && data.length) {
             const gaussData = this.gaussianCorrel(data[0].y, this.gaussSigma);
@@ -693,7 +717,6 @@ export class SpectrumPlot {
                 anno.hovertext += layout.xaxis.ticksuffix;
             }
         }
-        config.modeBarButtonsToAdd = [this.customModeBarButtons];
         window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, data, layout, config);
     }
 }

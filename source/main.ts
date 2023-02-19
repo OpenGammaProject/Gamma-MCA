@@ -781,6 +781,7 @@ function bindPlotEvents(): void {
   myPlot.addEventListener('contextmenu', (event: PointerEvent) => {
     event.preventDefault(); // Prevent the context menu from opening inside the plot!
   });
+  myPlot.on('plotly_selected', selectEvent);
 }
 
 
@@ -832,6 +833,11 @@ function clickEvent(data: any): void {
     prevClickLine = undefined;
   }
   plot.updatePlot(spectrumData);
+}
+
+
+function selectEvent(data: any): void {
+  console.log(data);
 }
 
 
