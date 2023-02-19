@@ -391,13 +391,8 @@ export class SpectrumPlot {
             mode: 'markers+text',
             type: this.fallbackGL ? 'scatter' : 'scattergl',
             marker: {
-                symbol: 'cross-thin',
-                size: 10,
-                color: 'black',
-                line: {
-                    color: 'black',
-                    width: 2
-                }
+                size: 8,
+                color: '#444444',
             },
             text: [],
             textposition: 'top',

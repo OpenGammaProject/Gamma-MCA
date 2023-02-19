@@ -595,13 +595,13 @@ export class SpectrumPlot {
       mode: 'markers+text',
       type: this.fallbackGL ? 'scatter' : 'scattergl', // 'scatter' for SVG, 'scattergl' for WebGL
       marker: {
-        symbol: 'cross-thin',
-        size: 10,
-        color: 'black',
-        line: {
-          color: 'black',
-          width: 2
-        }
+        //symbol: 'cross-thin',
+        size: 8,
+        color: '#444444',
+        //line: {
+        //  color: 'black',
+        //  width: 2
+        //}
       },
       text: <string[]>[],
       textposition: 'top',
