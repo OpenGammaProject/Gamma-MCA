@@ -580,13 +580,9 @@ export class SpectrumPlot {
                 y: -0.35,
             },
             selectdirection: 'h',
-            activeselection: {
-                fillcolor: 'blue',
-                opacity: 0.01
-            },
             newselection: {
                 line: {
-                    color: 'blue',
+                    color: 'red',
                     width: 1,
                     dash: 'solid'
                 }

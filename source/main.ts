@@ -18,10 +18,10 @@
     - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with one click
 
     - Calibration n-polynomial regression
+    
+    - Dark Mode -> Bootstrap v5.3
+    - FWHM calculation in peak finder
     - ROI with stats (total counts, max, min, FWHM, range,...)
-
-    - (!) Dark Mode -> Bootstrap v5.3
-    - (!) FWHM calculation in peak finder
 
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
@@ -837,6 +837,10 @@ function clickEvent(data: any): void {
 
 
 function selectEvent(data: any): void {
+  if (!data) return; // undefined, no selection
+
+  // TODO: Hightlight selected lines
+  // TODO: Add stats-window to plot
   console.log(data);
 }
 

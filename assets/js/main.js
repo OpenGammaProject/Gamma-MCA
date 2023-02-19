@@ -587,6 +587,8 @@ function clickEvent(data) {
     plot.updatePlot(spectrumData);
 }
 function selectEvent(data) {
+    if (!data)
+        return;
     console.log(data);
 }
 function webGLcontextLoss() {
