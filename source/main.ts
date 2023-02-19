@@ -855,7 +855,7 @@ function webGLcontextLoss(): void {
 
 document.getElementById('apply-cal')!.onclick = event => toggleCal((<HTMLInputElement>event.target).checked);
 
-function toggleCal(enabled: boolean): void {
+async function toggleCal(enabled: boolean): Promise<void> {
   const button = document.getElementById('calibration-label')!;
 
   button.innerHTML = enabled ? '<i class="fa-solid fa-rotate-left"></i> Reset' : '<i class="fa-solid fa-check"></i> Calibrate';
@@ -908,7 +908,7 @@ function toggleCal(enabled: boolean): void {
         delete plot.calibration.points.cFrom;
       }
 
-      plot.computeCoefficients();
+      await plot.computeCoefficients();
     }
   }
   displayCoeffs();

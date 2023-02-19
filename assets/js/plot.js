@@ -139,26 +139,29 @@ export class SpectrumPlot {
         };
         this.calibration.imported = false;
     }
-    computeCoefficients() {
-        const aF = this.calibration.points.aFrom;
-        const bF = this.calibration.points.bFrom;
-        const cF = this.calibration.points.cFrom ?? -1;
-        const aT = this.calibration.points.aTo;
-        const bT = this.calibration.points.bTo;
-        const cT = this.calibration.points.cTo ?? -1;
-        if (cT >= 0 && cF >= 0) {
-            const denom = (aF - bF) * (aF - cF) * (bF - cF);
-            this.calibration.coeff.c1 = (cF * (bT - aT) + bF * (aT - cT) + aF * (cT - bT)) / denom;
-            this.calibration.coeff.c2 = (cF ** 2 * (aT - bT) + aF ** 2 * (bT - cT) + bF ** 2 * (cT - aT)) / denom;
-            this.calibration.coeff.c3 = (bF * (bF - cF) * cF * aT + aF * cF * (cF - aF) * bT + aF * (aF - bF) * bF * cT) / denom;
+    async computeCoefficients() {
+        const { default: PolynomialRegression } = await import('./external/regression/PolynomialRegression.min.js');
+        const data = [
+            {
+                x: this.calibration.points.aFrom,
+                y: this.calibration.points.aTo
+            },
+            {
+                x: this.calibration.points.bFrom,
+                y: this.calibration.points.bTo
+            }
+        ];
+        if (this.calibration.points.cFrom && this.calibration.points.cTo) {
+            data.push({
+                x: this.calibration.points.cFrom,
+                y: this.calibration.points.cTo
+            });
         }
-        else {
-            const k = (aT - bT) / (aF - bF);
-            const d = aT - k * aF;
-            this.calibration.coeff.c1 = 0;
-            this.calibration.coeff.c2 = k;
-            this.calibration.coeff.c3 = d;
-        }
+        const model = PolynomialRegression.read(data, data.length - 1);
+        const terms = model.getTerms();
+        this.calibration.coeff.c1 = terms[2] ?? 0;
+        this.calibration.coeff.c2 = terms[1];
+        this.calibration.coeff.c3 = terms[0];
     }
     getCalAxis(len) {
         const calArray = [];
