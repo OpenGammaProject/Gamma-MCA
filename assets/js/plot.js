@@ -445,7 +445,7 @@ export class SpectrumPlot {
                 showspikes: true,
                 spikethickness: 1,
                 spikedash: 'solid',
-                spikecolor: 'black',
+                spikecolor: 'blue',
                 spikemode: 'across',
                 ticksuffix: '',
                 exponentformat: 'SI',
@@ -461,7 +461,7 @@ export class SpectrumPlot {
                 showspikes: true,
                 spikethickness: 1,
                 spikedash: 'solid',
-                spikecolor: 'black',
+                spikecolor: 'blue',
                 spikemode: 'across',
                 showticksuffix: 'last',
                 ticksuffix: ' keV',
@@ -585,7 +585,7 @@ export class SpectrumPlot {
             selectdirection: 'h',
             newselection: {
                 line: {
-                    color: 'red',
+                    color: 'blue',
                     width: 1,
                     dash: 'solid'
                 }
@@ -606,7 +606,7 @@ export class SpectrumPlot {
                 showspikes: true,
                 spikethickness: 1,
                 spikedash: 'solid',
-                spikecolor: 'black',
+                spikecolor: 'blue',
                 spikemode: 'across',
                 ticksuffix: '',
                 exponentformat: 'SI',
@@ -622,7 +622,7 @@ export class SpectrumPlot {
                 showspikes: true,
                 spikethickness: 1,
                 spikedash: 'solid',
-                spikecolor: 'black',
+                spikecolor: 'blue',
                 spikemode: 'across',
                 showticksuffix: 'last',
                 ticksuffix: ' cts',
