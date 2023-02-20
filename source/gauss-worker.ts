@@ -38,7 +38,7 @@ function gaussianCorrel(data: number[], sigma = 2): number[] {
 
     let resultVal = 0;
 
-    for(let k = xMin; k < xMax; k++) {
+    for (let k = xMin; k < xMax; k++) {
       resultVal += data[index + k] * (gaussValues[k - xMin] - avg) / squaredSum;
     }
 
