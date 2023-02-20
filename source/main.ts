@@ -22,6 +22,7 @@
     
     - Dark Mode -> Bootstrap v5.3
     - FWHM calculation in peak finder
+    - Styling for toggleLine in plot
     - ROI with stats (total counts, max, min, FWHM, range,...)
     - Autoswitch CPS to CPM if too low count rate
 
