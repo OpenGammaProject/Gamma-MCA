@@ -41,6 +41,7 @@ interface Shape {
       width: number;
       dash: string;
   };
+  opacity?: number;
 }
 
 interface Anno {
@@ -407,13 +408,15 @@ export class SpectrumPlot {
           size = this.peakConfig.seekWidth * (Math.max(...values) - Math.min(...values));
         }
 
+        //const height = yAxis[Math.round(result)];
+
         if (this.peakConfig.mode === 'energy') {
-          this.toggleLine(result, result.toFixed(2));
+          this.toggleLine(result, Math.round(result).toString()); //, true, height);
           this.peakConfig.lines.push(result);
         } else if (this.peakConfig.mode === 'isotopes') { // Isotope Mode
           const { energy, name } = new SeekClosest(this.isoList).seek(result, size);
           if (energy && name) {
-            this.toggleLine(energy, name);
+            this.toggleLine(energy, name); //, true, height);
             this.peakConfig.lines.push(energy);
           }
         }
@@ -437,7 +440,7 @@ export class SpectrumPlot {
   /*
     Add a line
   */
-  toggleLine(energy: number, name: string, enabled = true): void {
+  toggleLine(energy: number, name: string, enabled = true/*, height = 0*/): void {
     name = name.replaceAll('-',''); // Remove - to save space
     if (enabled) {
       const newLine: Shape = {
@@ -452,9 +455,10 @@ export class SpectrumPlot {
         editable: false,
         line: {
           color: 'blue',
-          width: .5,
-          dash: 'solid'
+          width: 1,
+          dash: 'dot'
         },
+        opacity: 0.66
       };
       const newAnno: Anno = {
         x: parseFloat(energy.toFixed(2)),
@@ -472,6 +476,21 @@ export class SpectrumPlot {
           size: 11,
         },
       };
+
+      /*
+      if (height > 0) {
+        newLine.yref = 'y';
+        newLine.y0 = 0;
+        newLine.y1 = height;
+        //newLine.line.dash = 'dashdot';
+        newLine.line.width = 2; 
+
+        newAnno.yref = 'y';
+        newAnno.y = height + 5;
+        newAnno.arrowhead = 3;
+        newAnno.ay = -30;
+      }
+      */
 
       for (const shape of this.shapes) {
         if (shape.x0 === newLine.x0) return;

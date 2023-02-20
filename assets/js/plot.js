@@ -243,7 +243,7 @@ export class SpectrumPlot {
                     size = this.peakConfig.seekWidth * (Math.max(...values) - Math.min(...values));
                 }
                 if (this.peakConfig.mode === 'energy') {
-                    this.toggleLine(result, result.toFixed(2));
+                    this.toggleLine(result, Math.round(result).toString());
                     this.peakConfig.lines.push(result);
                 }
                 else if (this.peakConfig.mode === 'isotopes') {
@@ -277,9 +277,10 @@ export class SpectrumPlot {
                 editable: false,
                 line: {
                     color: 'blue',
-                    width: .5,
-                    dash: 'solid'
+                    width: 1,
+                    dash: 'dot'
                 },
+                opacity: 0.66
             };
             const newAnno = {
                 x: parseFloat(energy.toFixed(2)),
