@@ -744,7 +744,7 @@ export class SpectrumPlot {
         //opacity: 0.8,
         line: {
           color: 'orangered',
-          width: .5,
+          width: 1,
           shape: this.linePlot ? 'linear' : 'hvh',
         }
       };
@@ -770,7 +770,7 @@ export class SpectrumPlot {
         //opacity: 1,
         line: {
           color: 'slategrey',
-          width: .5,
+          width: 1,
           shape: this.linePlot ? 'linear' : 'hvh',
         }
       };

@@ -522,7 +522,7 @@ export class SpectrumPlot {
                 fill: 'tozeroy',
                 line: {
                     color: 'orangered',
-                    width: .5,
+                    width: 1,
                     shape: this.linePlot ? 'linear' : 'hvh',
                 }
             };
@@ -542,7 +542,7 @@ export class SpectrumPlot {
                 fill: 'tozeroy',
                 line: {
                     color: 'slategrey',
-                    width: .5,
+                    width: 1,
                     shape: this.linePlot ? 'linear' : 'hvh',
                 }
             };
