@@ -8,6 +8,7 @@
 
 */
 
+import PolynomialRegression from './external/regression/PolynomialRegression.min.js';
 import { SpectrumData, IsotopeList } from './main.js';
 
 export interface CoeffObj {
@@ -271,11 +272,6 @@ export class SpectrumPlot {
     Compute the coefficients used for calibration
   */
   async computeCoefficients(): Promise<void> {
-    // Use PolynomialRegression lib to compute the coefficients
-    const {
-      default: PolynomialRegression // @ts-expect-error The path is all fine, TS is just confused lol
-    } = await import('./external/regression/PolynomialRegression.min.js');
-
     const data = [
       {
         x: this.calibration.points.aFrom,

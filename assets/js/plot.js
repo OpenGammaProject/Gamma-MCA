@@ -1,3 +1,4 @@
+import PolynomialRegression from './external/regression/PolynomialRegression.min.js';
 export class SeekClosest {
     isoList;
     constructor(list) {
@@ -140,7 +141,6 @@ export class SpectrumPlot {
         this.calibration.imported = false;
     }
     async computeCoefficients() {
-        const { default: PolynomialRegression } = await import('./external/regression/PolynomialRegression.min.js');
         const data = [
             {
                 x: this.calibration.points.aFrom,
