@@ -378,6 +378,7 @@ export class SpectrumPlot {
             x: this.getXAxis(dataObj.data.length),
             y: this.getCalAxis(dataObj.data.length),
             mode: 'lines',
+            type: (this.fallbackGL ? 'scatter' : 'scattergl'),
             fill: 'tozeroy',
             line: {
                 color: 'orangered',
@@ -388,14 +389,14 @@ export class SpectrumPlot {
             name: 'Calibration Points',
             x: [],
             y: [],
-            mode: 'markers+text',
+            mode: 'text+markers',
             type: this.fallbackGL ? 'scatter' : 'scattergl',
             marker: {
                 size: 8,
                 color: '#444444',
             },
             text: [],
-            textposition: 'top',
+            textposition: 'top center',
         };
         if (this.calibration.points) {
             const charArr = ['a', 'b', 'c'];
@@ -409,7 +410,7 @@ export class SpectrumPlot {
                     if (fromVal && toVal) {
                         markersTrace.x.push(fromVal);
                         markersTrace.y.push(toVal);
-                        markersTrace.text.push('Point ' + (parseInt(index) + 1).toString());
+                        markersTrace.text?.push('Point ' + (parseInt(index) + 1).toString());
                     }
                 }
             }

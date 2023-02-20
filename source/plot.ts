@@ -19,6 +19,7 @@ export interface CoeffObj {
 }
 
 export type PeakModes = 'gaussian' | 'energy' | 'isotopes' | undefined;
+export type DownloadFormat = 'svg' | 'png' | 'jpeg' | 'webp';
 
 interface GaussData {
   dataArray: number[][],
@@ -84,7 +85,7 @@ interface Trace {
   y: number[],
   type: 'scatter' | 'scattergl',
   yaxis?: string,
-  mode: 'lines' | 'markers' | 'lines+markers',
+  mode: 'lines' | 'markers' | 'lines+markers' | 'text+markers',
   fill?: string,
   opacity?: number,
   line?: {
@@ -94,8 +95,12 @@ interface Trace {
   },
   marker?: {
     color?: string,
+    size?: number
+    
   },
-  width?: number
+  width?: number,
+  text?: string[],
+  textposition?: string,
 }
 
 /*
@@ -133,7 +138,7 @@ export class SpectrumPlot {
   xAxis: 'linear' | 'log' = 'linear';
   yAxis: 'linear' | 'log' = 'linear';
   linePlot = false; // 'linear', 'hvh' for 'lines' or 'bar
-  downloadFormat = 'png'; // one of png, svg, jpeg, webp
+  downloadFormat: DownloadFormat = 'png';
   sma = false; // Simple Moving Average
   smaLength = 8;
   calibration = {
@@ -237,7 +242,6 @@ export class SpectrumPlot {
   */
   constructor(divId: string) {
     this.plotDiv = document.getElementById(divId);
-    //console.info('Plotly.js version: ' + (<any>window).Plotly.version);
   }
   /*
     Get An Array with Length == Data.length containing ascending numbers
@@ -571,11 +575,12 @@ export class SpectrumPlot {
     Plot Calibration Chart
   */
   private plotCalibration(dataObj: SpectrumData, update: boolean): void {
-    const trace = {
+    const trace: Trace = {
       name: 'Calibration',
       x: this.getXAxis(dataObj.data.length),
       y: this.getCalAxis(dataObj.data.length),
       mode: 'lines', // Remove lines, "lines", "none"
+      type: (this.fallbackGL ? 'scatter' : 'scattergl'), // 'scatter' for SVG, 'scattergl' for WebGL
       fill: 'tozeroy',
       //opacity: 0.8,
       line: {
@@ -584,11 +589,11 @@ export class SpectrumPlot {
       }
     };
 
-    const markersTrace = {
+    const markersTrace: Trace = {
       name: 'Calibration Points',
-      x: <number[]>[],
-      y: <number[]>[],
-      mode: 'markers+text',
+      x: [],
+      y: [],
+      mode: 'text+markers',
       type: this.fallbackGL ? 'scatter' : 'scattergl', // 'scatter' for SVG, 'scattergl' for WebGL
       marker: {
         //symbol: 'cross-thin',
@@ -599,8 +604,8 @@ export class SpectrumPlot {
         //  width: 2
         //}
       },
-      text: <string[]>[],
-      textposition: 'top',
+      text: [],
+      textposition: 'top center',
     };
 
     if (this.calibration.points) {
@@ -615,7 +620,7 @@ export class SpectrumPlot {
           if (fromVal && toVal) {
             markersTrace.x.push(fromVal);
             markersTrace.y.push(toVal);
-            markersTrace.text.push('Point ' + (parseInt(index)+1).toString());
+            markersTrace.text?.push('Point ' + (parseInt(index)+1).toString());
           }
         }
       }
