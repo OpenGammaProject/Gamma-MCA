@@ -23,6 +23,7 @@
     - Dark Mode -> Bootstrap v5.3
     - FWHM calculation in peak finder
     - ROI with stats (total counts, max, min, FWHM, range,...)
+    - Autoswitch CPS to CPM if too low count rate
 
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
