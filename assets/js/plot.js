@@ -19,7 +19,6 @@ export class SeekClosest {
 export class SpectrumPlot {
     plotDiv;
     showCalChart = false;
-    fallbackGL = false;
     xAxis = 'linear';
     yAxis = 'linear';
     linePlot = false;
@@ -379,7 +378,7 @@ export class SpectrumPlot {
             x: this.getXAxis(dataObj.data.length),
             y: this.getCalAxis(dataObj.data.length),
             mode: 'lines',
-            type: (this.fallbackGL ? 'scatter' : 'scattergl'),
+            type: 'scatter',
             fill: 'tozeroy',
             line: {
                 color: 'orangered',
@@ -391,7 +390,7 @@ export class SpectrumPlot {
             x: [],
             y: [],
             mode: 'text+markers',
-            type: this.fallbackGL ? 'scatter' : 'scattergl',
+            type: 'scatter',
             marker: {
                 size: 8,
                 color: '#444444',
@@ -518,7 +517,7 @@ export class SpectrumPlot {
                 stackgroup: 'data',
                 x: this.getXAxis(dataObj.data.length),
                 y: dataObj.data,
-                type: this.fallbackGL ? 'scatter' : 'scattergl',
+                type: 'scatter',
                 mode: 'lines',
                 fill: 'tozeroy',
                 line: {
@@ -538,7 +537,7 @@ export class SpectrumPlot {
                 stackgroup: 'data',
                 x: this.getXAxis(dataObj.background.length),
                 y: dataObj.background,
-                type: this.fallbackGL ? 'scatter' : 'scattergl',
+                type: 'scatter',
                 mode: 'lines',
                 fill: 'tozeroy',
                 line: {
@@ -690,7 +689,7 @@ export class SpectrumPlot {
                 name: 'Gaussian Correlation',
                 x: data[0].x,
                 y: gaussData,
-                type: this.fallbackGL ? 'scatter' : 'scattergl',
+                type: 'scatter',
                 mode: 'lines',
                 line: {
                     color: 'black',

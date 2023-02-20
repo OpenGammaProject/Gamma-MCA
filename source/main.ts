@@ -783,11 +783,10 @@ function bindPlotEvents(): void {
   myPlot.on('plotly_hover', hoverEvent);
   myPlot.on('plotly_unhover', unHover);
   myPlot.on('plotly_click', clickEvent);
-  myPlot.on('plotly_webglcontextlost', webGLcontextLoss);
+  myPlot.on('plotly_selected', selectEvent);
   myPlot.addEventListener('contextmenu', (event: PointerEvent) => {
     event.preventDefault(); // Prevent the context menu from opening inside the plot!
   });
-  myPlot.on('plotly_selected', selectEvent);
 }
 
 
@@ -875,14 +874,6 @@ function selectEvent(data: any): void {
   document.getElementById('bg-counts')!.innerText = bg.toString();
 
   //const roiResolutionEle = document.getElementById('roi-res')!;
-}
-
-
-function webGLcontextLoss(): void {
-  console.error('Lost WebGL context for Plotly.js! Falling back to default SVG render mode...');
-  plot.fallbackGL = true;
-  plot.resetPlot(spectrumData);
-  bindPlotEvents();
 }
 
 

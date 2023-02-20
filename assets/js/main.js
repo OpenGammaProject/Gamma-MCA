@@ -542,11 +542,10 @@ function bindPlotEvents() {
     myPlot.on('plotly_hover', hoverEvent);
     myPlot.on('plotly_unhover', unHover);
     myPlot.on('plotly_click', clickEvent);
-    myPlot.on('plotly_webglcontextlost', webGLcontextLoss);
+    myPlot.on('plotly_selected', selectEvent);
     myPlot.addEventListener('contextmenu', (event) => {
         event.preventDefault();
     });
-    myPlot.on('plotly_selected', selectEvent);
 }
 function hoverEvent(data) {
     for (const key in calClick) {
@@ -613,12 +612,6 @@ function selectEvent(data) {
     document.getElementById('total-counts').innerText = total.toString();
     document.getElementById('net-counts').innerText = net.toString();
     document.getElementById('bg-counts').innerText = bg.toString();
-}
-function webGLcontextLoss() {
-    console.error('Lost WebGL context for Plotly.js! Falling back to default SVG render mode...');
-    plot.fallbackGL = true;
-    plot.resetPlot(spectrumData);
-    bindPlotEvents();
 }
 document.getElementById('apply-cal').onclick = event => toggleCal(event.target.checked);
 async function toggleCal(enabled) {

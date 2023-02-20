@@ -84,7 +84,7 @@ interface Trace {
   stackgroup?: string,
   x: number[],
   y: number[],
-  type: 'scatter' | 'scattergl',
+  type: 'scatter',
   yaxis?: string,
   mode: 'lines' | 'markers' | 'lines+markers' | 'text+markers',
   fill?: string,
@@ -135,7 +135,6 @@ export class SeekClosest {
 export class SpectrumPlot {
   readonly plotDiv: HTMLElement | null;
   private showCalChart = false;
-  fallbackGL = false;
   xAxis: 'linear' | 'log' = 'linear';
   yAxis: 'linear' | 'log' = 'linear';
   linePlot = false; // 'linear', 'hvh' for 'lines' or 'bar
@@ -599,7 +598,7 @@ export class SpectrumPlot {
       x: this.getXAxis(dataObj.data.length),
       y: this.getCalAxis(dataObj.data.length),
       mode: 'lines', // Remove lines, "lines", "none"
-      type: (this.fallbackGL ? 'scatter' : 'scattergl'), // 'scatter' for SVG, 'scattergl' for WebGL
+      type: 'scatter',
       fill: 'tozeroy',
       //opacity: 0.8,
       line: {
@@ -613,7 +612,7 @@ export class SpectrumPlot {
       x: [],
       y: [],
       mode: 'text+markers',
-      type: this.fallbackGL ? 'scatter' : 'scattergl', // 'scatter' for SVG, 'scattergl' for WebGL
+      type: 'scatter',
       marker: {
         //symbol: 'cross-thin',
         size: 8,
@@ -757,7 +756,7 @@ export class SpectrumPlot {
 
         x: this.getXAxis(dataObj.data.length),
         y: dataObj.data,
-        type: this.fallbackGL ? 'scatter' : 'scattergl', // 'scatter' for SVG, 'scattergl' for WebGL
+        type: 'scatter',
         mode: 'lines', // Remove lines, "lines", "none"
         fill: 'tozeroy',
         //opacity: 0.8,
@@ -783,7 +782,7 @@ export class SpectrumPlot {
 
         x: this.getXAxis(dataObj.background.length),
         y: dataObj.background,
-        type: this.fallbackGL ? 'scatter' : 'scattergl', // 'scatter' for SVG, 'scattergl' for WebGL
+        type: 'scatter',
         mode: 'lines', // Remove lines, "lines", "none"
         fill: 'tozeroy',
         //opacity: 1,
@@ -982,7 +981,7 @@ export class SpectrumPlot {
         x: data[0].x,
         y: gaussData,
         //yaxis: 'y2',
-        type: this.fallbackGL ? 'scatter' : 'scattergl', // 'scatter' for SVG, 'scattergl' for WebGL
+        type: 'scatter',
         mode: 'lines', // Remove lines, "lines", "none"
         //fill: 'tozeroy',
         //opacity: 0.8,
