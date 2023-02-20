@@ -47,7 +47,7 @@ let isoListURL = 'assets/isotopes_energies_min.json';
 const isoList = {};
 let checkNearIso = false;
 let maxDist = 100;
-const APP_VERSION = '2023-02-18';
+const APP_VERSION = '2023-02-20';
 let localStorageAvailable = false;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
@@ -934,20 +934,20 @@ document.getElementById('npes-export-btn').onclick = () => downloadNPES();
 function downloadNPES() {
     const filename = `spectrum_${getDateString()}.json`;
     const data = generateNPES();
-    download(filename, JSON.stringify(data), 'JSON');
+    download(filename, data, 'JSON');
 }
 function makeJSONSpectrum(type) {
     const spec = {
-        'numberOfChannels': spectrumData[type].length,
-        'validPulseCount': spectrumData.getTotalCounts(type),
-        'measurementTime': 0,
-        'spectrum': spectrumData[type]
+        numberOfChannels: spectrumData[type].length,
+        validPulseCount: spectrumData.getTotalCounts(type),
+        measurementTime: 0,
+        spectrum: spectrumData[type]
     };
     spec.measurementTime = Math.round(spectrumData[`${type}Time`] / 1000);
     if (plot.calibration.enabled) {
         const calObj = {
-            'polynomialOrder': 0,
-            'coefficients': []
+            polynomialOrder: 0,
+            coefficients: []
         };
         calObj.polynomialOrder = 2;
         calObj.coefficients = [plot.calibration.coeff.c3, plot.calibration.coeff.c2, plot.calibration.coeff.c1];
@@ -957,17 +957,17 @@ function makeJSONSpectrum(type) {
 }
 function generateNPES() {
     const data = {
-        'schemaVersion': 'NPESv1',
-        'deviceData': {
-            'softwareName': 'Gamma MCA, ' + APP_VERSION,
-            'deviceName': document.getElementById('device-name').value.trim()
+        schemaVersion: 'NPESv1',
+        deviceData: {
+            softwareName: 'Gamma MCA, ' + APP_VERSION,
+            deviceName: document.getElementById('device-name').value.trim()
         },
-        'sampleInfo': {
-            'name': document.getElementById('sample-name').value.trim(),
-            'location': document.getElementById('sample-loc').value.trim(),
-            'note': document.getElementById('add-notes').value.trim()
+        sampleInfo: {
+            name: document.getElementById('sample-name').value.trim(),
+            location: document.getElementById('sample-loc').value.trim(),
+            note: document.getElementById('add-notes').value.trim()
         },
-        'resultData': {}
+        resultData: {}
     };
     let val = parseFloat(document.getElementById('sample-weight').value.trim());
     if (val)
@@ -1087,6 +1087,9 @@ async function download(filename, text, type) {
         element.style.display = 'none';
         element.click();
     }
+    const exportModalElement = document.getElementById('exportModal');
+    const closeButton = exportModalElement.querySelector('.btn-close');
+    closeButton.click();
 }
 document.getElementById('reset-meta-values').onclick = () => resetSampleInfo();
 function resetSampleInfo() {
