@@ -9,8 +9,12 @@ export class SpectrumData {
     backgroundCps = [];
     dataTime = 1000;
     backgroundTime = 1000;
-    getTotalCounts(type) {
-        return this[type].reduce((acc, curr) => acc + curr, 0);
+    getTotalCounts(type, start = 0, end = this[type].length - 1) {
+        let sum = 0;
+        for (let i = start; i <= end; i++) {
+            sum += this[type][i];
+        }
+        return sum;
     }
     addPulseData(type, newDataArr, adcChannels) {
         if (!this[type].length)
@@ -464,8 +468,8 @@ function addImportLabel() {
 function updateSpectrumCounts() {
     const sCounts = spectrumData.getTotalCounts('data');
     const bgCounts = spectrumData.getTotalCounts('background');
-    document.getElementById('total-spec-cts').innerText = sCounts.toString() + ' cts';
-    document.getElementById('total-bg-cts').innerText = bgCounts.toString() + ' cts';
+    document.getElementById('total-spec-cts').innerText = sCounts.toString();
+    document.getElementById('total-bg-cts').innerText = bgCounts.toString();
     if (sCounts)
         document.getElementById('data-icon').classList.remove('d-none');
     if (bgCounts)
@@ -587,9 +591,28 @@ function clickEvent(data) {
     plot.updatePlot(spectrumData);
 }
 function selectEvent(data) {
-    if (!data)
+    const roiElement = document.getElementById('roi-info');
+    const infoElement = document.getElementById('static-info');
+    if (!data?.range?.x.length) {
+        roiElement.classList.add('d-none');
+        infoElement.classList.remove('d-none');
         return;
+    }
     console.log(data);
+    roiElement.classList.remove('d-none');
+    infoElement.classList.add('d-none');
+    let range = data.range.x;
+    range = range.map(value => Math.round(value));
+    const start = range[0];
+    const end = range[1];
+    document.getElementById('roi-range').innerText = `${start.toString()} - ${end.toString()}`;
+    document.getElementById('roi-range-unit').innerText = plot.calibration.enabled ? ' keV' : '';
+    const net = spectrumData.getTotalCounts('data', start, end);
+    const bg = spectrumData.getTotalCounts('background', start, end);
+    const total = net + bg;
+    document.getElementById('total-counts').innerText = total.toString();
+    document.getElementById('net-counts').innerText = net.toString();
+    document.getElementById('bg-counts').innerText = bg.toString();
 }
 function webGLcontextLoss() {
     console.error('Lost WebGL context for Plotly.js! Falling back to default SVG render mode...');

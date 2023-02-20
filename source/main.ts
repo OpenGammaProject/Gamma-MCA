@@ -18,6 +18,7 @@
     - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with one click
 
     - Calibration n-polynomial regression
+    - Highlight plot lines in ROI selection
     
     - Dark Mode -> Bootstrap v5.3
     - FWHM calculation in peak finder
@@ -30,7 +31,7 @@
 
 */
 
-import { SpectrumPlot, SeekClosest } from './plot.js';
+import { SpectrumPlot, SeekClosest, DownloadFormat } from './plot.js';
 import { RawData, NPESv1, NPESv1Spectrum } from './raw-data.js';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
 import { WebUSBSerialPort } from './external/webusbserial-min.js'
@@ -61,8 +62,13 @@ export class SpectrumData { // Will hold the measurement data globally.
   dataTime = 1000; // Measurement time in ms
   backgroundTime = 1000; // Measurement time in ms
 
-  getTotalCounts(type: DataType): number {
-    return this[type].reduce((acc,curr) => acc + curr, 0);
+  getTotalCounts(type: DataType, start = 0, end = this[type].length - 1): number {
+    //return this[type].reduce((acc,curr) => acc + curr, 0);
+    let sum = 0;
+    for (let i = start; i <= end; i++) {
+      sum += this[type][i];
+    }
+    return sum;
   }
 
   addPulseData(type: DataType, newDataArr: number[], adcChannels: number): void {
@@ -690,8 +696,8 @@ function updateSpectrumCounts() {
   const sCounts = spectrumData.getTotalCounts('data');
   const bgCounts = spectrumData.getTotalCounts('background');
 
-  document.getElementById('total-spec-cts')!.innerText = sCounts.toString() + ' cts';
-  document.getElementById('total-bg-cts')!.innerText = bgCounts.toString() + ' cts';
+  document.getElementById('total-spec-cts')!.innerText = sCounts.toString();
+  document.getElementById('total-bg-cts')!.innerText = bgCounts.toString();
 
   if (sCounts) document.getElementById('data-icon')!.classList.remove('d-none');
   if (bgCounts) document.getElementById('background-icon')!.classList.remove('d-none');
@@ -837,11 +843,38 @@ function clickEvent(data: any): void {
 
 
 function selectEvent(data: any): void {
-  if (!data) return; // undefined, no selection
+  const roiElement = document.getElementById('roi-info')!;
+  const infoElement = document.getElementById('static-info')!;
 
-  // TODO: Hightlight selected lines
-  // TODO: Add stats-window to plot
+  if (!data?.range?.x.length) { // De-select: data undefined or empty
+    roiElement.classList.add('d-none');
+    infoElement.classList.remove('d-none');
+    return;
+  }
+
   console.log(data);
+
+  roiElement.classList.remove('d-none');
+  infoElement.classList.add('d-none');
+
+  let range: number[] = data.range.x;
+  range = range.map(value => Math.round(value));
+
+  const start = range[0];
+  const end = range[1];
+
+  document.getElementById('roi-range')!.innerText = `${start.toString()} - ${end.toString()}`;
+  document.getElementById('roi-range-unit')!.innerText = plot.calibration.enabled ? ' keV' : '';
+  
+  const net = spectrumData.getTotalCounts('data', start, end); // ONLY WORKS FOR BINS! CONVERT BACK ENERGY INTO BINS!
+  const bg = spectrumData.getTotalCounts('background', start, end);
+  const total = net + bg;
+
+  document.getElementById('total-counts')!.innerText = total.toString();
+  document.getElementById('net-counts')!.innerText = net.toString();
+  document.getElementById('bg-counts')!.innerText = bg.toString();
+
+  //const roiResolutionEle = document.getElementById('roi-res')!;
 }
 
 
@@ -1999,7 +2032,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       break;
     }
     case 'plotDownload': {
-      plot.downloadFormat = stringValue;
+      plot.downloadFormat = <DownloadFormat>stringValue // Cast to DownloadFormat
       plot.updatePlot(spectrumData);
 
       result = saveJSON(name, stringValue);
