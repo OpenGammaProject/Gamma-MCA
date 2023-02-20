@@ -1251,23 +1251,23 @@ document.getElementById('npes-export-btn')!.onclick = () => downloadNPES();
 function downloadNPES(): void {
   const filename = `spectrum_${getDateString()}.json`;
   const data = generateNPES();
-  download(filename, JSON.stringify(data), 'JSON');
+  download(filename, data, 'JSON');
 }
 
 
 function makeJSONSpectrum(type: DataType): NPESv1Spectrum {
   const spec: NPESv1Spectrum = {
-    'numberOfChannels': spectrumData[type].length,
-    'validPulseCount': spectrumData.getTotalCounts(type),
-    'measurementTime': 0,
-    'spectrum': spectrumData[type]
+    numberOfChannels: spectrumData[type].length,
+    validPulseCount: spectrumData.getTotalCounts(type),
+    measurementTime: 0,
+    spectrum: spectrumData[type]
   }
   spec.measurementTime = Math.round(spectrumData[`${type}Time`]/1000);
 
   if (plot.calibration.enabled) {
     const calObj = {
-      'polynomialOrder': 0,
-      'coefficients': <number[]>[]
+      polynomialOrder: 0,
+      coefficients: <number[]>[]
     }
     calObj.polynomialOrder = 2;
     calObj.coefficients = [plot.calibration.coeff.c3, plot.calibration.coeff.c2, plot.calibration.coeff.c1];
@@ -1280,17 +1280,17 @@ function makeJSONSpectrum(type: DataType): NPESv1Spectrum {
 
 function generateNPES(): string | undefined {
   const data: NPESv1 = {
-    'schemaVersion': 'NPESv1',
-    'deviceData': {
-      'softwareName': 'Gamma MCA, ' + APP_VERSION,
-      'deviceName': (<HTMLInputElement>document.getElementById('device-name')).value.trim()
+    schemaVersion: 'NPESv1',
+    deviceData: {
+      softwareName: 'Gamma MCA, ' + APP_VERSION,
+      deviceName: (<HTMLInputElement>document.getElementById('device-name')).value.trim()
     },
-    'sampleInfo': {
-      'name': (<HTMLInputElement>document.getElementById('sample-name')).value.trim(),
-      'location': (<HTMLInputElement>document.getElementById('sample-loc')).value.trim(),
-      'note': (<HTMLInputElement>document.getElementById('add-notes')).value.trim()
+    sampleInfo: {
+      name: (<HTMLInputElement>document.getElementById('sample-name')).value.trim(),
+      location: (<HTMLInputElement>document.getElementById('sample-loc')).value.trim(),
+      note: (<HTMLInputElement>document.getElementById('add-notes')).value.trim()
     },
-    'resultData': {}
+    resultData: {}
   }
 
   let val = parseFloat((<HTMLInputElement>document.getElementById('sample-weight')).value.trim());
@@ -1401,7 +1401,7 @@ const saveFileTypes = {
   }
 };
 
-async function download(filename: string, text: string, type: DownloadType): Promise<void> {
+async function download(filename: string, text: string | undefined, type: DownloadType): Promise<void> {
   if (!text?.trim()) { // Check empty string
     new Notification('fileEmptyError'); //popupNotification('file-empty-error');
     return;
@@ -1435,6 +1435,10 @@ async function download(filename: string, text: string, type: DownloadType): Pro
     element.style.display = 'none';
     element.click();
   }
+
+  const exportModalElement = document.getElementById('exportModal')!; // Close the modal if the file saving has been successful
+  const closeButton = <HTMLButtonElement>exportModalElement.querySelector('.btn-close'); // Find some close button
+  closeButton.click();
 }
 
 
