@@ -9,12 +9,8 @@ export class SpectrumData {
     backgroundCps = [];
     dataTime = 1000;
     backgroundTime = 1000;
-    getTotalCounts(type, start = 0, end = this[type].length - 1) {
-        let sum = 0;
-        for (let i = start; i <= end; i++) {
-            sum += this[type][i];
-        }
-        return sum;
+    getTotalCounts(type) {
+        return this[type].reduce((acc, curr) => acc + curr, 0);
     }
     addPulseData(type, newDataArr, adcChannels) {
         if (!this[type].length)
@@ -51,12 +47,6 @@ const APP_VERSION = '2023-02-20';
 let localStorageAvailable = false;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
-const isoTableSortDirections = ['none', 'none', 'asc'];
-const faSortClasses = {
-    none: 'fa-sort',
-    asc: 'fa-sort-up',
-    desc: 'fa-sort-down'
-};
 document.body.onload = async function () {
     localStorageAvailable = 'localStorage' in self;
     if (localStorageAvailable) {
@@ -165,22 +155,6 @@ document.body.onload = async function () {
             }
         });
     }
-    const isoTable = document.getElementById('table');
-    const thList = isoTable.querySelectorAll('th[data-sort-by]');
-    thList.forEach(th => {
-        th.addEventListener('click', () => {
-            const columnIndex = Number(th.dataset.sortBy);
-            const sortDirection = isoTableSortDirections[columnIndex];
-            isoTableSortDirections.fill('none');
-            isoTableSortDirections[columnIndex] = sortDirection === 'asc' ? 'desc' : 'asc';
-            thList.forEach((loopTableHeader, index) => {
-                const sortIcon = loopTableHeader.querySelector('.fa-solid');
-                sortIcon.classList.remove(...Object.values(faSortClasses));
-                sortIcon.classList.add(faSortClasses[isoTableSortDirections[index + 1]]);
-            });
-            sortTableByColumn(isoTable, columnIndex, isoTableSortDirections[columnIndex]);
-        });
-    });
     const loadingSpinner = document.getElementById('loading');
     loadingSpinner.parentNode.removeChild(loadingSpinner);
 };
@@ -468,8 +442,8 @@ function addImportLabel() {
 function updateSpectrumCounts() {
     const sCounts = spectrumData.getTotalCounts('data');
     const bgCounts = spectrumData.getTotalCounts('background');
-    document.getElementById('total-spec-cts').innerText = sCounts.toString();
-    document.getElementById('total-bg-cts').innerText = bgCounts.toString();
+    document.getElementById('total-spec-cts').innerText = sCounts.toString() + ' cts';
+    document.getElementById('total-bg-cts').innerText = bgCounts.toString() + ' cts';
     if (sCounts)
         document.getElementById('data-icon').classList.remove('d-none');
     if (bgCounts)
@@ -542,7 +516,7 @@ function bindPlotEvents() {
     myPlot.on('plotly_hover', hoverEvent);
     myPlot.on('plotly_unhover', unHover);
     myPlot.on('plotly_click', clickEvent);
-    myPlot.on('plotly_selected', selectEvent);
+    myPlot.on('plotly_webglcontextlost', webGLcontextLoss);
     myPlot.addEventListener('contextmenu', (event) => {
         event.preventDefault();
     });
@@ -589,32 +563,14 @@ function clickEvent(data) {
     }
     plot.updatePlot(spectrumData);
 }
-function selectEvent(data) {
-    const roiElement = document.getElementById('roi-info');
-    const infoElement = document.getElementById('static-info');
-    if (!data?.range?.x.length) {
-        roiElement.classList.add('d-none');
-        infoElement.classList.remove('d-none');
-        return;
-    }
-    console.log(data);
-    roiElement.classList.remove('d-none');
-    infoElement.classList.add('d-none');
-    let range = data.range.x;
-    range = range.map(value => Math.round(value));
-    const start = range[0];
-    const end = range[1];
-    document.getElementById('roi-range').innerText = `${start.toString()} - ${end.toString()}`;
-    document.getElementById('roi-range-unit').innerText = plot.calibration.enabled ? ' keV' : '';
-    const net = spectrumData.getTotalCounts('data', start, end);
-    const bg = spectrumData.getTotalCounts('background', start, end);
-    const total = net + bg;
-    document.getElementById('total-counts').innerText = total.toString();
-    document.getElementById('net-counts').innerText = net.toString();
-    document.getElementById('bg-counts').innerText = bg.toString();
+function webGLcontextLoss() {
+    console.error('Lost WebGL context for Plotly.js! Falling back to default SVG render mode...');
+    plot.fallbackGL = true;
+    plot.resetPlot(spectrumData);
+    bindPlotEvents();
 }
 document.getElementById('apply-cal').onclick = event => toggleCal(event.target.checked);
-async function toggleCal(enabled) {
+function toggleCal(enabled) {
     const button = document.getElementById('calibration-label');
     button.innerHTML = enabled ? '<i class="fa-solid fa-rotate-left"></i> Reset' : '<i class="fa-solid fa-check"></i> Calibrate';
     if (enabled) {
@@ -655,7 +611,7 @@ async function toggleCal(enabled) {
                 delete plot.calibration.points.cTo;
                 delete plot.calibration.points.cFrom;
             }
-            await plot.computeCoefficients();
+            plot.computeCoefficients();
         }
     }
     displayCoeffs();
@@ -664,8 +620,7 @@ async function toggleCal(enabled) {
     bindPlotEvents();
 }
 function displayCoeffs() {
-    const arr = ['c1', 'c2', 'c3'];
-    for (const elem of arr) {
+    for (const elem of ['c1', 'c2', 'c3']) {
         document.getElementById(`${elem}-coeff`).innerText = plot.calibration.coeff[elem].toString();
     }
 }
@@ -847,8 +802,7 @@ function makeXMLSpectrum(type, name) {
     root.appendChild(mt);
     const s = document.createElementNS(null, 'Spectrum');
     root.appendChild(s);
-    const data = spectrumData[type];
-    for (const datapoint of data) {
+    for (const datapoint of spectrumData[type]) {
         const d = document.createElementNS(null, 'DataPoint');
         d.textContent = datapoint.toString();
         s.appendChild(d);
@@ -1108,22 +1062,6 @@ function hideNotification(id) {
     if (toast.isShown())
         toast.hide();
 }
-function sortTableByColumn(table, columnIndex, sortDirection) {
-    const tbody = table.tBodies[0];
-    const rows = Array.from(tbody.rows);
-    rows.sort((a, b) => {
-        const aCellValue = a.cells[columnIndex].textContent?.trim() ?? '';
-        const bCellValue = b.cells[columnIndex].textContent?.trim() ?? '';
-        const aNumValue = parseFloat(aCellValue.replace(/[^\d.-]/g, ''));
-        const bNumValue = parseFloat(bCellValue.replace(/[^\d.-]/g, ''));
-        if (isNaN(aNumValue) || isNaN(bNumValue)) {
-            return aCellValue.localeCompare(bCellValue);
-        }
-        const comparison = aNumValue - bNumValue;
-        return sortDirection === 'asc' ? comparison : -comparison;
-    });
-    tbody.append(...rows);
-}
 document.getElementById('toggle-menu').onclick = () => loadIsotopes();
 document.getElementById('reload-isos-btn').onclick = () => loadIsotopes(true);
 let loadedIsos = false;
@@ -1148,6 +1086,8 @@ async function loadIsotopes(reload = false) {
             loadedIsos = true;
             const tableElement = document.getElementById('iso-table');
             tableElement.innerHTML = '';
+            plot.clearAnnos();
+            plot.updatePlot(spectrumData);
             const intKeys = Object.keys(json);
             intKeys.sort((a, b) => parseFloat(a) - parseFloat(b));
             let index = 0;
@@ -1174,8 +1114,6 @@ async function loadIsotopes(reload = false) {
                 const strArr = name.split('-');
                 cell2.innerHTML = `<sup>${strArr[1]}</sup>${strArr[0]}`;
             }
-            plot.clearAnnos();
-            plot.updatePlot(spectrumData);
             plot.isoList = isoList;
         }
         else {

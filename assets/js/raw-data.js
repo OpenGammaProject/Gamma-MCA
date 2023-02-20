@@ -1,4 +1,3 @@
-import './external/ZSchema-browser-min.js';
 export class RawData {
     valueIndex;
     delimiter;
@@ -127,6 +126,7 @@ export class RawData {
                     throw 'Could not load the schema file!';
                 }
             }
+            await import('./external/ZSchema-browser-min.js');
             const validator = new window.ZSchema();
             validator.validate(json, this.jsonSchema);
             const errors = validator.getLastErrors();
