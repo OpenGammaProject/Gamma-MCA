@@ -1,3 +1,4 @@
+import PolynomialRegression from './external/regression/PolynomialRegression.min.js';
 export class SeekClosest {
     isoList;
     constructor(list) {
@@ -18,7 +19,6 @@ export class SeekClosest {
 export class SpectrumPlot {
     plotDiv;
     showCalChart = false;
-    fallbackGL = false;
     xAxis = 'linear';
     yAxis = 'linear';
     linePlot = false;
@@ -57,8 +57,9 @@ export class SpectrumPlot {
         lines: []
     };
     gaussSigma = 2;
-    customModeBarButtons = {
-        name: 'Download plot as HTML',
+    customDownloadModeBar = {
+        name: 'downloadPlot',
+        title: 'Download plot as HTML',
         icon: window.Plotly.Icons['disk'],
         direction: 'up',
         click: (plotElement) => {
@@ -138,26 +139,28 @@ export class SpectrumPlot {
         };
         this.calibration.imported = false;
     }
-    computeCoefficients() {
-        const aF = this.calibration.points.aFrom;
-        const bF = this.calibration.points.bFrom;
-        const cF = this.calibration.points.cFrom ?? -1;
-        const aT = this.calibration.points.aTo;
-        const bT = this.calibration.points.bTo;
-        const cT = this.calibration.points.cTo ?? -1;
-        if (cT >= 0 && cF >= 0) {
-            const denom = (aF - bF) * (aF - cF) * (bF - cF);
-            this.calibration.coeff.c1 = (cF * (bT - aT) + bF * (aT - cT) + aF * (cT - bT)) / denom;
-            this.calibration.coeff.c2 = (cF ** 2 * (aT - bT) + aF ** 2 * (bT - cT) + bF ** 2 * (cT - aT)) / denom;
-            this.calibration.coeff.c3 = (bF * (bF - cF) * cF * aT + aF * cF * (cF - aF) * bT + aF * (aF - bF) * bF * cT) / denom;
+    async computeCoefficients() {
+        const data = [
+            {
+                x: this.calibration.points.aFrom,
+                y: this.calibration.points.aTo
+            },
+            {
+                x: this.calibration.points.bFrom,
+                y: this.calibration.points.bTo
+            }
+        ];
+        if (this.calibration.points.cFrom && this.calibration.points.cTo) {
+            data.push({
+                x: this.calibration.points.cFrom,
+                y: this.calibration.points.cTo
+            });
         }
-        else {
-            const k = (aT - bT) / (aF - bF);
-            const d = aT - k * aF;
-            this.calibration.coeff.c1 = 0;
-            this.calibration.coeff.c2 = k;
-            this.calibration.coeff.c3 = d;
-        }
+        const model = PolynomialRegression.read(data, data.length - 1);
+        const terms = model.getTerms();
+        this.calibration.coeff.c1 = terms[2] ?? 0;
+        this.calibration.coeff.c2 = terms[1];
+        this.calibration.coeff.c3 = terms[0];
     }
     getCalAxis(len) {
         const calArray = [];
@@ -239,7 +242,7 @@ export class SpectrumPlot {
                     size = this.peakConfig.seekWidth * (Math.max(...values) - Math.min(...values));
                 }
                 if (this.peakConfig.mode === 'energy') {
-                    this.toggleLine(result, result.toFixed(2));
+                    this.toggleLine(result, Math.round(result).toString());
                     this.peakConfig.lines.push(result);
                 }
                 else if (this.peakConfig.mode === 'isotopes') {
@@ -273,9 +276,10 @@ export class SpectrumPlot {
                 editable: false,
                 line: {
                     color: 'blue',
-                    width: .5,
-                    dash: 'solid'
+                    width: 1,
+                    dash: 'dot'
                 },
+                opacity: 0.66
             };
             const newAnno = {
                 x: parseFloat(energy.toFixed(2)),
@@ -374,6 +378,7 @@ export class SpectrumPlot {
             x: this.getXAxis(dataObj.data.length),
             y: this.getCalAxis(dataObj.data.length),
             mode: 'lines',
+            type: 'scatter',
             fill: 'tozeroy',
             line: {
                 color: 'orangered',
@@ -384,19 +389,14 @@ export class SpectrumPlot {
             name: 'Calibration Points',
             x: [],
             y: [],
-            mode: 'markers+text',
-            type: this.fallbackGL ? 'scatter' : 'scattergl',
+            mode: 'text+markers',
+            type: 'scatter',
             marker: {
-                symbol: 'cross-thin',
-                size: 10,
-                color: 'black',
-                line: {
-                    color: 'black',
-                    width: 2
-                }
+                size: 8,
+                color: '#444444',
             },
             text: [],
-            textposition: 'top',
+            textposition: 'top center',
         };
         if (this.calibration.points) {
             const charArr = ['a', 'b', 'c'];
@@ -410,7 +410,7 @@ export class SpectrumPlot {
                     if (fromVal && toVal) {
                         markersTrace.x.push(fromVal);
                         markersTrace.y.push(toVal);
-                        markersTrace.text.push('Point ' + (parseInt(index) + 1).toString());
+                        markersTrace.text?.push('Point ' + (parseInt(index) + 1).toString());
                     }
                 }
             }
@@ -441,7 +441,7 @@ export class SpectrumPlot {
                 showspikes: true,
                 spikethickness: 1,
                 spikedash: 'solid',
-                spikecolor: 'black',
+                spikecolor: 'blue',
                 spikemode: 'across',
                 ticksuffix: '',
                 exponentformat: 'SI',
@@ -457,7 +457,7 @@ export class SpectrumPlot {
                 showspikes: true,
                 spikethickness: 1,
                 spikedash: 'solid',
-                spikecolor: 'black',
+                spikecolor: 'blue',
                 spikemode: 'across',
                 showticksuffix: 'last',
                 ticksuffix: ' keV',
@@ -496,9 +496,14 @@ export class SpectrumPlot {
                 filename: 'gamma_mca_calibration',
             },
             editable: this.editableMode,
-            modeBarButtonsToAdd: [],
+            modeBarButtons: [
+                ['zoom2d'],
+                ['zoomIn2d', 'zoomOut2d'],
+                ['autoScale2d', 'resetScale2d'],
+                ['toImage'],
+                [this.customDownloadModeBar]
+            ]
         };
-        config.modeBarButtonsToAdd = [this.customModeBarButtons];
         window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, markersTrace], layout, config);
     }
     plotData(dataObj, update) {
@@ -512,12 +517,12 @@ export class SpectrumPlot {
                 stackgroup: 'data',
                 x: this.getXAxis(dataObj.data.length),
                 y: dataObj.data,
-                type: this.fallbackGL ? 'scatter' : 'scattergl',
+                type: 'scatter',
                 mode: 'lines',
                 fill: 'tozeroy',
                 line: {
                     color: 'orangered',
-                    width: .5,
+                    width: 1,
                     shape: this.linePlot ? 'linear' : 'hvh',
                 }
             };
@@ -532,12 +537,12 @@ export class SpectrumPlot {
                 stackgroup: 'data',
                 x: this.getXAxis(dataObj.background.length),
                 y: dataObj.background,
-                type: this.fallbackGL ? 'scatter' : 'scattergl',
+                type: 'scatter',
                 mode: 'lines',
                 fill: 'tozeroy',
                 line: {
                     color: 'slategrey',
-                    width: .5,
+                    width: 1,
                     shape: this.linePlot ? 'linear' : 'hvh',
                 }
             };
@@ -573,7 +578,14 @@ export class SpectrumPlot {
                 orientation: 'h',
                 y: -0.35,
             },
-            barmode: 'stack',
+            selectdirection: 'h',
+            newselection: {
+                line: {
+                    color: 'blue',
+                    width: 1,
+                    dash: 'solid'
+                }
+            },
             xaxis: {
                 title: 'Bin [1]',
                 mirror: true,
@@ -590,7 +602,7 @@ export class SpectrumPlot {
                 showspikes: true,
                 spikethickness: 1,
                 spikedash: 'solid',
-                spikecolor: 'black',
+                spikecolor: 'blue',
                 spikemode: 'across',
                 ticksuffix: '',
                 exponentformat: 'SI',
@@ -606,7 +618,7 @@ export class SpectrumPlot {
                 showspikes: true,
                 spikethickness: 1,
                 spikedash: 'solid',
-                spikecolor: 'black',
+                spikecolor: 'blue',
                 spikemode: 'across',
                 showticksuffix: 'last',
                 ticksuffix: ' cts',
@@ -662,7 +674,14 @@ export class SpectrumPlot {
                 filename: 'gamma_mca_spectrum',
             },
             editable: this.editableMode,
-            modeBarButtonsToAdd: [],
+            modeBarButtons: [
+                ['select2d'],
+                ['zoom2d'],
+                ['zoomIn2d', 'zoomOut2d'],
+                ['autoScale2d', 'resetScale2d'],
+                ['toImage'],
+                [this.customDownloadModeBar]
+            ]
         };
         if (this.peakConfig.enabled && data.length) {
             const gaussData = this.gaussianCorrel(data[0].y, this.gaussSigma);
@@ -670,7 +689,7 @@ export class SpectrumPlot {
                 name: 'Gaussian Correlation',
                 x: data[0].x,
                 y: gaussData,
-                type: this.fallbackGL ? 'scatter' : 'scattergl',
+                type: 'scatter',
                 mode: 'lines',
                 line: {
                     color: 'black',
@@ -693,7 +712,6 @@ export class SpectrumPlot {
                 anno.hovertext += layout.xaxis.ticksuffix;
             }
         }
-        config.modeBarButtonsToAdd = [this.customModeBarButtons];
         window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, data, layout, config);
     }
 }

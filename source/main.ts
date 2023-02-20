@@ -18,11 +18,12 @@
     - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with one click
 
     - Calibration n-polynomial regression
+    - Highlight plot lines in ROI selection
+    
+    - Dark Mode -> Bootstrap v5.3
+    - FWHM calculation in peak finder
     - ROI with stats (total counts, max, min, FWHM, range,...)
-
-    - (!) Sorting isotope list
-    - (!) Dark Mode -> Bootstrap v5.3
-    - (!) FWHM calculation in peak finder
+    - Autoswitch CPS to CPM if too low count rate
 
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
@@ -31,7 +32,7 @@
 
 */
 
-import { SpectrumPlot, SeekClosest } from './plot.js';
+import { SpectrumPlot, SeekClosest, DownloadFormat } from './plot.js';
 import { RawData, NPESv1, NPESv1Spectrum } from './raw-data.js';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
 import { WebUSBSerialPort } from './external/webusbserial-min.js'
@@ -62,12 +63,17 @@ export class SpectrumData { // Will hold the measurement data globally.
   dataTime = 1000; // Measurement time in ms
   backgroundTime = 1000; // Measurement time in ms
 
-  getTotalCounts(type: DataType): number {
-    return this[type].reduce((acc,curr) => acc + curr, 0);
+  getTotalCounts(type: DataType, start = 0, end = this[type].length - 1): number {
+    //return this[type].reduce((acc,curr) => acc + curr, 0);
+    let sum = 0;
+    for (let i = start; i <= end; i++) {
+      sum += this[type][i];
+    }
+    return sum;
   }
 
   addPulseData(type: DataType, newDataArr: number[], adcChannels: number): void {
-    if(!this[type].length) this[type] = Array(adcChannels).fill(0);
+    if (!this[type].length) this[type] = Array(adcChannels).fill(0);
 
     for (const value of newDataArr) {
       this[type][value] += 1;
@@ -75,7 +81,7 @@ export class SpectrumData { // Will hold the measurement data globally.
   }
 
   addHist(type: DataType, newHistArr: number[]): void {
-    if(!this[type].length) this[type] = newHistArr;
+    if (!this[type].length) this[type] = newHistArr;
 
     for (const index in newHistArr) {
       this[type][index] += newHistArr[index];
@@ -110,6 +116,14 @@ const APP_VERSION = '2023-02-20';
 let localStorageAvailable = false;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
+
+// Isotope table variables
+const isoTableSortDirections = ['none', 'none', 'asc'];
+const faSortClasses: {[key: string]: string} = {
+  none: 'fa-sort',
+  asc: 'fa-sort-up',
+  desc: 'fa-sort-down'
+};
 
 /*
   Startup of the page
@@ -245,6 +259,29 @@ document.body.onload = async function(): Promise<void> {
       }
     });
   }
+
+  const isoTable = <HTMLTableElement>document.getElementById('table');
+  
+  const thList = <NodeListOf<HTMLTableCellElement>>isoTable.querySelectorAll('th[data-sort-by]'); // Add click event listeners to table header cells
+  thList.forEach(th => {
+    th.addEventListener('click', () => {
+      const columnIndex = Number(th.dataset.sortBy);
+      const sortDirection = isoTableSortDirections[columnIndex];
+
+      // Toggle the sort direction
+      isoTableSortDirections.fill('none');
+      isoTableSortDirections[columnIndex] = sortDirection === 'asc' ? 'desc' : 'asc';
+
+      thList.forEach((loopTableHeader, index) => {
+        const sortIcon = <HTMLElement>loopTableHeader.querySelector('.fa-solid');
+
+        sortIcon.classList.remove(...Object.values(faSortClasses)); // Remove all old icons
+        sortIcon.classList.add(faSortClasses[isoTableSortDirections[index+1]]); // Set new icons
+      });
+
+      sortTableByColumn(isoTable, columnIndex, isoTableSortDirections[columnIndex]); // Actually sort the table rows
+    });
+  });
 
   const loadingSpinner = document.getElementById('loading')!;
   loadingSpinner.parentNode!.removeChild(loadingSpinner); // Delete Loading Thingymajig
@@ -660,8 +697,8 @@ function updateSpectrumCounts() {
   const sCounts = spectrumData.getTotalCounts('data');
   const bgCounts = spectrumData.getTotalCounts('background');
 
-  document.getElementById('total-spec-cts')!.innerText = sCounts.toString() + ' cts';
-  document.getElementById('total-bg-cts')!.innerText = bgCounts.toString() + ' cts';
+  document.getElementById('total-spec-cts')!.innerText = sCounts.toString();
+  document.getElementById('total-bg-cts')!.innerText = bgCounts.toString();
 
   if (sCounts) document.getElementById('data-icon')!.classList.remove('d-none');
   if (bgCounts) document.getElementById('background-icon')!.classList.remove('d-none');
@@ -747,7 +784,7 @@ function bindPlotEvents(): void {
   myPlot.on('plotly_hover', hoverEvent);
   myPlot.on('plotly_unhover', unHover);
   myPlot.on('plotly_click', clickEvent);
-  myPlot.on('plotly_webglcontextlost', webGLcontextLoss);
+  myPlot.on('plotly_selected', selectEvent);
   myPlot.addEventListener('contextmenu', (event: PointerEvent) => {
     event.preventDefault(); // Prevent the context menu from opening inside the plot!
   });
@@ -805,17 +842,45 @@ function clickEvent(data: any): void {
 }
 
 
-function webGLcontextLoss(): void {
-  console.error('Lost WebGL context for Plotly.js! Falling back to default SVG render mode...');
-  plot.fallbackGL = true;
-  plot.resetPlot(spectrumData);
-  bindPlotEvents();
+function selectEvent(data: any): void {
+  const roiElement = document.getElementById('roi-info')!;
+  const infoElement = document.getElementById('static-info')!;
+
+  if (!data?.range?.x.length) { // De-select: data undefined or empty
+    roiElement.classList.add('d-none');
+    infoElement.classList.remove('d-none');
+    return;
+  }
+
+  console.log(data);
+
+  roiElement.classList.remove('d-none');
+  infoElement.classList.add('d-none');
+
+  let range: number[] = data.range.x;
+  range = range.map(value => Math.round(value));
+
+  const start = range[0];
+  const end = range[1];
+
+  document.getElementById('roi-range')!.innerText = `${start.toString()} - ${end.toString()}`;
+  document.getElementById('roi-range-unit')!.innerText = plot.calibration.enabled ? ' keV' : '';
+  
+  const net = spectrumData.getTotalCounts('data', start, end); // ONLY WORKS FOR BINS! CONVERT BACK ENERGY INTO BINS!
+  const bg = spectrumData.getTotalCounts('background', start, end);
+  const total = net + bg;
+
+  document.getElementById('total-counts')!.innerText = total.toString();
+  document.getElementById('net-counts')!.innerText = net.toString();
+  document.getElementById('bg-counts')!.innerText = bg.toString();
+
+  //const roiResolutionEle = document.getElementById('roi-res')!;
 }
 
 
 document.getElementById('apply-cal')!.onclick = event => toggleCal((<HTMLInputElement>event.target).checked);
 
-function toggleCal(enabled: boolean): void {
+async function toggleCal(enabled: boolean): Promise<void> {
   const button = document.getElementById('calibration-label')!;
 
   button.innerHTML = enabled ? '<i class="fa-solid fa-rotate-left"></i> Reset' : '<i class="fa-solid fa-check"></i> Calibrate';
@@ -868,7 +933,7 @@ function toggleCal(enabled: boolean): void {
         delete plot.calibration.points.cFrom;
       }
 
-      plot.computeCoefficients();
+      await plot.computeCoefficients();
     }
   }
   displayCoeffs();
@@ -880,7 +945,8 @@ function toggleCal(enabled: boolean): void {
 
 
 function displayCoeffs(): void {
-  for (const elem of ['c1','c2','c3']) {
+  const arr = ['c1','c2','c3'];
+  for (const elem of arr) {
     document.getElementById(`${elem}-coeff`)!.innerText = plot.calibration.coeff[elem].toString();
   }
 }
@@ -1132,7 +1198,8 @@ function makeXMLSpectrum(type: DataType, name: string): Element {
   const s = document.createElementNS(null, 'Spectrum');
   root.appendChild(s);
 
-  for (const datapoint of spectrumData[type]) {
+  const data = spectrumData[type];
+  for (const datapoint of data) {
     const d = document.createElementNS(null, 'DataPoint');
     d.textContent = datapoint.toString();
     s.appendChild(d);
@@ -1464,6 +1531,30 @@ function hideNotification(id: string): void {
 }
 
 
+function sortTableByColumn(table: HTMLTableElement, columnIndex: number, sortDirection: string) {
+  const tbody = table.tBodies[0];
+  const rows = Array.from(tbody.rows);
+
+  rows.sort((a, b) => {
+    const aCellValue = a.cells[columnIndex].textContent?.trim() ?? '';
+    const bCellValue = b.cells[columnIndex].textContent?.trim() ?? '';
+
+    const aNumValue = parseFloat(aCellValue.replace(/[^\d.-]/g, '')); // Get the mass number of the isotope
+    const bNumValue = parseFloat(bCellValue.replace(/[^\d.-]/g, ''));
+
+    if (isNaN(aNumValue) || isNaN(bNumValue)) {
+      return aCellValue.localeCompare(bCellValue);
+    }
+
+    const comparison = aNumValue - bNumValue;
+
+    return sortDirection === 'asc' ? comparison : -comparison;
+  });
+
+  tbody.append(...rows);
+}
+
+
 document.getElementById('toggle-menu')!.onclick = () => loadIsotopes();
 document.getElementById('reload-isos-btn')!.onclick = () => loadIsotopes(true);
 
@@ -1497,11 +1588,9 @@ async function loadIsotopes(reload = false): Promise<boolean> { // Load Isotope 
 
       const tableElement = <HTMLTableElement>document.getElementById('iso-table');
       tableElement.innerHTML = ''; // Delete old table
-      plot.clearAnnos(); // Delete all isotope lines
-      plot.updatePlot(spectrumData);
 
       const intKeys = Object.keys(json);
-      intKeys.sort((a, b) => parseFloat(a) - parseFloat(b)); // Sort Energies numerically
+      intKeys.sort((a, b) => parseFloat(a) - parseFloat(b)); // Sort Energies numerically, ascending
 
       let index = 0; // Index used to avoid HTML id duplicates
 
@@ -1536,6 +1625,9 @@ async function loadIsotopes(reload = false): Promise<boolean> { // Load Isotope 
 
         cell2.innerHTML = `<sup>${strArr[1]}</sup>${strArr[0]}`; //`<label for="${name}"><sup>${strArr[1]}</sup>${strArr[0]}</label>`;
       }
+
+      plot.clearAnnos(); // Delete all isotope lines
+      plot.updatePlot(spectrumData);
       plot.isoList = isoList; // Copy list to plot object
     } else {
       isoError.innerText = `Could not load isotope list! HTTP Error: ${response.status}. Please try again.`;
@@ -1564,7 +1656,7 @@ function toggleIsoHover(): void {
 
 
 async function closestIso(value: number): Promise<void> {
-  if(!await loadIsotopes()) return; // User has not yet opened the settings panel
+  if (!await loadIsotopes()) return; // User has not yet opened the settings panel
 
   const { energy, name } = new SeekClosest(isoList).seek(value, maxDist);
 
@@ -1595,7 +1687,7 @@ function plotIsotope(checkbox: HTMLInputElement): void {
 document.getElementById('check-all-isos')!.onclick = (event) => selectAll(<HTMLInputElement>event.target);
 
 function selectAll(selectBox: HTMLInputElement): void {
-  const tableRows = (<HTMLTableElement>document.getElementById('table')).tBodies[0].rows; 
+  const tableRows = (<HTMLTableElement>document.getElementById('table')).tBodies[0].rows;
 
   for (const row of tableRows) {
     const checkBox = <HTMLInputElement>row.cells[0].firstChild;
@@ -1936,7 +2028,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       break;
     }
     case 'plotDownload': {
-      plot.downloadFormat = stringValue;
+      plot.downloadFormat = <DownloadFormat>stringValue // Cast to DownloadFormat
       plot.updatePlot(spectrumData);
 
       result = saveJSON(name, stringValue);

@@ -143,7 +143,7 @@
 
                   <div class="input-group input-group-sm">
                     <label for="data" class="btn btn-sm btn-primary" title="Import a file"> <i class="fas fa-file-import"></i> Open File </label>
-                    <label class="file-import-selector form-control text-truncate" for="data" id="data-form-label">No File Chosen</label>
+                    <label class="cursor-pointer form-control text-truncate" for="data" id="data-form-label">No File Chosen</label>
 
                     <button class="btn btn-primary btn-sm" type="button" id="clear-data" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
                   </div>
@@ -157,7 +157,7 @@
 
                   <div class="input-group input-group-sm">
                     <label for="background" class="btn btn-sm btn-primary" title="Import a file"> <i class="fas fa-file-import"></i> Open File </label>
-                    <label class="file-import-selector form-control text-truncate" for="background" id="background-form-label">No File Chosen</label>
+                    <label class="cursor-pointer form-control text-truncate" for="background" id="background-form-label">No File Chosen</label>
 
                     <button class="btn btn-primary btn-sm" type="button" id="clear-bg" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
                   </div>
@@ -523,20 +523,37 @@
 
         <div class="col-md-2 p-2">
 
-          <h2 class="fs-4">Information</h2>
+          <div id="static-info">
+            <h2 class="fs-4">Information</h2>
 
-          <strong>Click Position:</strong>
-          <p><span id="click-data">None</span></p>
+            <strong>Click Position:</strong>
+            <p><span id="click-data">None</span></p>
 
-          <hr>
+            <hr>
 
-          <strong>Spectrum:</strong>
-          <p class="mb-1"><span id="total-spec-cts">0 cts</span></p>
-          <p class="mt-1 mb-2"><span id="spec-time">00:00:00</span></p>
+            <strong>Spectrum:</strong>
+            <p class="mb-1"><span id="total-spec-cts">0</span> cts</p>
+            <p class="mt-1 mb-2"><span id="spec-time">00:00:00</span></p>
 
-          <strong>Background:</strong>
-          <p class="mb-1"><span id="total-bg-cts">0 cts</span></p>
-          <p class="mt-1 mb-2"><span id="bg-time">00:00:00</span></p>
+            <strong>Background:</strong>
+            <p class="mb-1"><span id="total-bg-cts">0</span> cts</p>
+            <p class="mt-1 mb-2"><span id="bg-time">00:00:00</span></p>
+          </div>
+
+          <div id="roi-info" class="d-none">
+            <h2 class="fs-4">ROI</h2>
+
+            <strong>Range:</strong>
+            <p class="mt-1 mb-3"><span id="roi-range">N/A</span> <span id="roi-range-unit">N/A</span></p>
+
+            <strong>Counts:</strong>
+            <p class="mb-1">Total: <span id="total-counts">N/A</span> cts</p>
+            <p class="mb-1">Net: <span id="net-counts">N/A</span> cts</p>
+            <p class="mt-1 mb-3">Background: <span id="bg-counts">N/A</span> cts</p>
+
+            <strong>Peak:</strong>
+            <p class="mt-1 mb-3">Resolution: <span id="roi-res">N/A</span> %</p>
+          </div>
 
         </div>
       </div>
@@ -766,12 +783,12 @@
                 <thead class="theme-mode table-light"> <!-- style="box-shadow: inset 1px 1px #000, 0 2px #000;" -->
                   <tr>
                     <th> <input class="form-check-input" id="check-all-isos" type="checkbox" value="" title="Toggle all isotopes"> </th>
-                    <th>Isotope</th>
-                    <th>Energy [keV]</th>
+                    <th class="cursor-pointer" data-sort-by="1">Isotope <i class="fa-solid fa-sort"></i></th>
+                    <th class="cursor-pointer" data-sort-by="2">Energy [keV] <i class="fa-solid fa-sort-up"></i></th>
                   </tr>
                 </thead>
 
-                <tbody id="iso-table"></tbody>
+                <tbody class="table-group-divider" id="iso-table"></tbody>
 
               </table>
             </div>
