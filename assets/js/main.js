@@ -10,9 +10,14 @@ export class SpectrumData {
     dataTime = 1000;
     backgroundTime = 1000;
     getTotalCounts(type, start = 0, end = this[type].length - 1) {
+        const dataArr = this[type];
         let sum = 0;
+        if (start < 0 || start >= dataArr.length || end < 0 || end >= dataArr.length || start > end) {
+            console.error('Invalid sum range! Return default 0.');
+            return sum;
+        }
         for (let i = start; i <= end; i++) {
-            sum += this[type][i];
+            sum += dataArr[i];
         }
         return sum;
     }
