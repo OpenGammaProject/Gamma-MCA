@@ -575,14 +575,14 @@ function clickEvent(data) {
             document.getElementById(`select-${castKey}`).checked = calClick[key];
         }
     }
-    if (data.event.which === 1) {
+    if (data.event.button === 0) {
         if (prevClickLine)
             plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
         const newLine = Math.round(data.points[0].x);
         plot.toggleLine(newLine, newLine.toString(), true);
         prevClickLine = newLine;
     }
-    else if (data.event.which === 3) {
+    else if (data.event.button === 2) {
         if (prevClickLine)
             plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
         prevClickLine = undefined;

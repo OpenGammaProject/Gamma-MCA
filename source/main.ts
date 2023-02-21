@@ -830,12 +830,12 @@ function clickEvent(data: any): void {
     }
   }
 
-  if (data.event.which === 1) { // Left-click. spawn a line in the plot and delete the last line
+  if (data.event.button === 0) { // Left-click. spawn a line in the plot and delete the last line
     if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
     const newLine: number = Math.round(data.points[0].x);
     plot.toggleLine(newLine, newLine.toString(), true);
     prevClickLine = newLine;
-  } else if (data.event.which === 3) { // Right-click, delete all clicked lines
+  } else if (data.event.button === 2) { // Right-click, delete all clicked lines
     if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
     prevClickLine = undefined;
   }
