@@ -284,8 +284,8 @@ document.body.onload = async function(): Promise<void> {
     });
   });
 
-  const loadingSpinner = document.getElementById('loading')!;
-  loadingSpinner.parentNode!.removeChild(loadingSpinner); // Delete Loading Thingymajig
+  const loadingOverlay = document.getElementById('loading')!;
+  loadingOverlay.parentNode!.removeChild(loadingOverlay); // Delete Loading Thingymajig
 };
 
 

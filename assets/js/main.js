@@ -181,8 +181,8 @@ document.body.onload = async function () {
             sortTableByColumn(isoTable, columnIndex, isoTableSortDirections[columnIndex]);
         });
     });
-    const loadingSpinner = document.getElementById('loading');
-    loadingSpinner.parentNode.removeChild(loadingSpinner);
+    const loadingOverlay = document.getElementById('loading');
+    loadingOverlay.parentNode.removeChild(loadingOverlay);
 };
 window.onbeforeunload = () => {
     return 'Are you sure to leave?';

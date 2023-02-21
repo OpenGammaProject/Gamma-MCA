@@ -54,6 +54,11 @@ body {
   pointer-events: none;
 }
 
+#loading-spinner {
+  width: 3rem;
+  height: 3rem;
+}
+
 #ser-time-progress-bar {
   height: 12px;
 }
