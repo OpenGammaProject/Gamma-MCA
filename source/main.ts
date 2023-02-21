@@ -23,8 +23,9 @@
     - Dark Mode -> Bootstrap v5.3
     - FWHM calculation in peak finder
     - Styling for toggleLine in plot
-    - ROI with stats (total counts, max, min, FWHM, range,...)
     - Autoswitch CPS to CPM if too low count rate
+    - Use new isotope list: https://gist.github.com/Phoenix1747/755849920472bd12b4bdd7954b405d4e
+    - ROI with stats (total counts, max, min, FWHM, range,...)
 
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
