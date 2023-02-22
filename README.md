@@ -36,14 +36,14 @@ Gamma MCA can import JSON files complying with the [NPES JSON Schema](https://gi
 
 ## Using Serial
 
-Thanks to the Web Serial API you can use any serial device capable of doing gamma spectroscopy or processing the data to plot your spectra. The are two types of prints supported:
+Thanks to the WebSerial API and WebUSB you can use any serial device capable of doing gamma spectroscopy or processing the data to plot your spectra. The are two types of prints supported:
 
 1. _Chronological streams_ where each new detected event gets printed to the serial interface after the other. **Important:** Your device has to print a special character (default's a semicolon `;`) after every single event to signalize the end of a data entry. Whitespace or newlines do not matter. The delimiter can be changed in the settings.
 2. Ready-to-use _histograms_. This data has been pre-processed and the finished histogram will be periodically transmitted. **Important:** Your device has to print a special character (default's a semicolon `;`) after every single histogram channel/bin to signalize the end of a data entry and each new histogram needs to be on a new line (`\n` or e.g., Arduino's `Serial.println(...)`)! The delimiter can be changed in the settings, as well as the correct number of ADC channels that is required for this to work.
 
 Both modes are currently supported by our [Open Gamma Detector](https://github.com/OpenGammaProject/Open-Gamma-Detector) or any other serial device that has been set up to do so.
 
-**Note:** The API is currently only supported by Chromium-based (desktop) browsers! This includes most browsers except for Safari and Firefox. The feature is either enabled by default or you have to enable it in the settings yourself. See [Can I Use?.com](https://caniuse.com/web-serial).
+**Note:** Both APIs are currently mainly supported by Chromium-based browsers, both on desktop and on mobile! This includes most browsers except for Safari and Firefox. The feature is either enabled by default or you have to enable it in the settings yourself. See [Can I Use? Web Serial API](https://caniuse.com/web-serial) and [Can I Use? WebUSB](https://caniuse.com/webusb).
 
 ## Contributing
 
