@@ -139,6 +139,7 @@ const faSortClasses: {[key: string]: string} = {
 */
 document.body.onload = async function(): Promise<void> {
   localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
+  fileSystemWritableAvail = (window.FileSystemHandle && 'createWritable' in FileSystemFileHandle.prototype); // Test for File System Access API
 
   if (localStorageAvailable) {
     loadSettingsStorage();
@@ -193,8 +194,15 @@ document.body.onload = async function(): Promise<void> {
         if (!launchParams.files.length) return;
 
         const file: File = await launchParams.files[0].getFile();
-
         const fileEnding = file.name.split('.')[1].toLowerCase();
+
+        if (fileSystemWritableAvail) { // Try to use the File System Access API if possible
+          if (fileEnding === 'json' || fileEnding === 'xml') {
+            dataFileHandle = launchParams.files[0];
+            (<HTMLButtonElement>document.getElementById('overwrite-button')).disabled = false;
+          }
+        }
+
         const spectrumEndings = ['csv', 'tka', 'xml', 'txt', 'json'];
         if (spectrumEndings.includes(fileEnding)) getFileData(file);
         /* else if (fileEnding === 'json') {
@@ -202,10 +210,6 @@ document.body.onload = async function(): Promise<void> {
         } */
         console.warn('File could not be imported!');
       });
-  }
-
-  if (window.FileSystemHandle && 'createWritable' in FileSystemFileHandle.prototype) {
-    fileSystemWritableAvail = true;
   }
 
   resetPlot(); // Set up plot window

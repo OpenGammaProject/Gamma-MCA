@@ -64,6 +64,7 @@ const faSortClasses = {
 };
 document.body.onload = async function () {
     localStorageAvailable = 'localStorage' in self;
+    fileSystemWritableAvail = (window.FileSystemHandle && 'createWritable' in FileSystemFileHandle.prototype);
     if (localStorageAvailable) {
         loadSettingsStorage();
     }
@@ -111,14 +112,17 @@ document.body.onload = async function () {
                 return;
             const file = await launchParams.files[0].getFile();
             const fileEnding = file.name.split('.')[1].toLowerCase();
+            if (fileSystemWritableAvail) {
+                if (fileEnding === 'json' || fileEnding === 'xml') {
+                    dataFileHandle = launchParams.files[0];
+                    document.getElementById('overwrite-button').disabled = false;
+                }
+            }
             const spectrumEndings = ['csv', 'tka', 'xml', 'txt', 'json'];
             if (spectrumEndings.includes(fileEnding))
                 getFileData(file);
             console.warn('File could not be imported!');
         });
-    }
-    if (window.FileSystemHandle && 'createWritable' in FileSystemFileHandle.prototype) {
-        fileSystemWritableAvail = true;
     }
     resetPlot();
     document.getElementById('version-tag').innerText += ` ${APP_VERSION}.`;
