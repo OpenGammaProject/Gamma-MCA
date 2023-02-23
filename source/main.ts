@@ -555,6 +555,7 @@ function getFileData(file: File, background = false): void { // Gets called when
           }
 
           addImportLabel();
+          toggleCal(true);
         }
       } else {
         console.error('No DOM parser in this browser!');
@@ -636,6 +637,7 @@ function getFileData(file: File, background = false): void { // Gets called when
           (<HTMLInputElement>element).disabled = true;
         }
         addImportLabel();
+        toggleCal(true);
       }
     } else if (background) {
       spectrumData.backgroundTime = 1000;
@@ -897,6 +899,8 @@ async function toggleCal(enabled: boolean): Promise<void> {
   const button = document.getElementById('calibration-label')!;
 
   button.innerHTML = enabled ? '<i class="fa-solid fa-rotate-left"></i> Reset' : '<i class="fa-solid fa-check"></i> Calibrate';
+
+  (<HTMLInputElement>document.getElementById('apply-cal')).checked = enabled;
   /*
     Reset Plot beforehand, to prevent x-range from dying when zoomed?
   */

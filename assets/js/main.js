@@ -351,6 +351,7 @@ function getFileData(file, background = false) {
                         element.disabled = true;
                     }
                     addImportLabel();
+                    toggleCal(true);
                 }
             }
             else {
@@ -420,6 +421,7 @@ function getFileData(file, background = false) {
                     element.disabled = true;
                 }
                 addImportLabel();
+                toggleCal(true);
             }
         }
         else if (background) {
@@ -626,6 +628,7 @@ document.getElementById('apply-cal').onclick = event => toggleCal(event.target.c
 async function toggleCal(enabled) {
     const button = document.getElementById('calibration-label');
     button.innerHTML = enabled ? '<i class="fa-solid fa-rotate-left"></i> Reset' : '<i class="fa-solid fa-check"></i> Calibrate';
+    document.getElementById('apply-cal').checked = enabled;
     if (enabled) {
         if (!plot.calibration.imported) {
             const readoutArray = [
