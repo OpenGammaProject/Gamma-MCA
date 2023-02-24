@@ -519,7 +519,7 @@ export class SpectrumPlot {
                 y: dataObj.data,
                 type: 'scatter',
                 mode: 'lines',
-                fill: 'tozeroy',
+                fill: this.linePlot ? 'none' : 'tonexty',
                 line: {
                     color: 'orangered',
                     width: 1,
@@ -539,7 +539,7 @@ export class SpectrumPlot {
                 y: dataObj.background,
                 type: 'scatter',
                 mode: 'lines',
-                fill: 'tozeroy',
+                fill: this.linePlot ? 'none' : 'tonexty',
                 line: {
                     color: 'slategrey',
                     width: 1,
@@ -557,7 +557,6 @@ export class SpectrumPlot {
                     newData.push(data[0].y[i] - bgTrace.y[i]);
                 }
                 data[0].y = newData;
-                data[0].fill = 'tonexty';
                 data[0].name = 'Net Spectrum';
             }
             data.push(bgTrace);

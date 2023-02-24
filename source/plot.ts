@@ -758,7 +758,7 @@ export class SpectrumPlot {
         y: dataObj.data,
         type: 'scatter',
         mode: 'lines', // Remove lines, "lines", "none"
-        fill: 'tozeroy',
+        fill: this.linePlot ? 'none' : 'tonexty',
         //opacity: 0.8,
         line: {
           color: 'orangered',
@@ -784,7 +784,7 @@ export class SpectrumPlot {
         y: dataObj.background,
         type: 'scatter',
         mode: 'lines', // Remove lines, "lines", "none"
-        fill: 'tozeroy',
+        fill: this.linePlot ? 'none' : 'tonexty',
         //opacity: 1,
         line: {
           color: 'slategrey',
@@ -806,7 +806,7 @@ export class SpectrumPlot {
         }
 
         data[0].y = newData;
-        data[0].fill = 'tonexty'; //'tonextx'
+        //data[0].fill = this.linePlot ? 'none' : 'tonexty'; //'tonextx'
         data[0].name = 'Net Spectrum';
       }
 
