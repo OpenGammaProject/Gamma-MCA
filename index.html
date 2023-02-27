@@ -826,9 +826,10 @@
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="iso-hover-prox">Iso Hover Proximity</label>
                       <input type="number" class="form-control" id="iso-hover-prox" min="1">
+                      <label class="input-group-text" for="iso-hover-prox">keV</label>
                       <button class="btn btn-primary" type="button" id="iso-hover-prox-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
-                    <p><small>Input in keV. Any positive integer is valid.</small></p>
+                    <p><small>Any positive integer is valid.</small></p>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="custom-url">Isotope List</label>
@@ -889,9 +890,10 @@
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="custom-baud">Baud Rate</label>
                       <input type="number" class="form-control serial-controls" id="custom-baud" min="1">
+                      <label class="input-group-text" for="custom-baud">bps</label>
                       <button class="btn btn-primary serial-controls" type="button" id="custom-baud-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
-                    <p><small>Input in bits per second. Any positive integer is valid.</small></p>
+                    <p><small>Any positive integer is valid.</small></p>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="eol-char">EOL character</label>
@@ -908,16 +910,18 @@
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="ser-limit">Recording Time Limit</label>
                       <input type="number" class="form-control serial-controls" id="ser-limit"  min="1">
+                      <label class="input-group-text" for="ser-limit">s</label>
                       <button class="btn btn-primary serial-controls" id="ser-limit-btn" type="button" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
-                    <p><small>Input in seconds. Any positive integer is valid. Serial recording will stop automatically when time runs out.</small></p>
+                    <p><small>Any positive integer is valid. Serial recording will stop automatically when time runs out.</small></p>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="custom-ser-refresh">Plot Refresh Time</label>
                       <input type="number" class="form-control serial-controls" id="custom-ser-refresh" min="1">
+                      <label class="input-group-text" for="custom-ser-refresh">s</label>
                       <button class="btn btn-primary serial-controls" type="button" id="custom-ser-refresh-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
-                    <p><small>Input in seconds. Any positive float is valid, use integers for best performance.</small></p>
+                    <p><small>Any positive float is valid, use integers for best performance.</small></p>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="custom-ser-buffer">Max Serial Buffer</label>
@@ -969,6 +973,7 @@
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="peak-width">Peak Width</label>
                       <input type="number" class="form-control" id="peak-width" min="1">
+                      <label class="input-group-text" for="peak-width">keV</label>
                       <button class="btn btn-primary" type="button" id="peak-width-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <p><small>Maximum distance two peak lines can be apart to count as one single peak. Any positive integer is valid.</small></p>
@@ -976,6 +981,7 @@
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="seek-width">Isotope Seek</label>
                       <input type="number" class="form-control" id="seek-width" min="1">
+                      <label class="input-group-text" for="seek-width">keV</label>
                       <button class="btn btn-primary" type="button" id="seek-width-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <p><small>Maximum distance to search for isotopes around the peak energy (multiple of the peak width). Any positive float is valid.</small></p>

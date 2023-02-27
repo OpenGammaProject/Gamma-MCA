@@ -168,8 +168,8 @@ export class SpectrumPlot {
     mode: <PeakModes>undefined, // Gaussian Correlation: 0, Energy: 1 and Isotope: 2 modes
     thres: 0.005,
     lag: 50,
-    width: 5,
-    seekWidth: 2,
+    width: 5000,
+    seekWidth: 2000,
     lines: <number[]>[]
   };
   //resolutionValues: resolutionData[] = [];
@@ -944,13 +944,6 @@ export class SpectrumPlot {
       layout.xaxis.range = [0,newMax];
       layout.xaxis.rangeslider.range = [0,newMax];
     }
-    /*
-      CPS enabled
-    */
-    if (this.cps) {
-      layout.yaxis.title = 'Counts Per Second [Hz]';
-      layout.yaxis.ticksuffix = 'cps';
-    }
 
     const config = {
       responsive: true,
@@ -1005,6 +998,22 @@ export class SpectrumPlot {
     }
 
     if (!this.peakConfig.enabled || !data.length || data.length >= 3) data.reverse(); // Change/Fix data order
+
+    /*
+      CPS enabled
+    */
+    if (this.cps) {
+      if (Math.max(...data[0].y) < 1) { // Less than 1 cps at max, switch to cpm
+        for (const trace of data) {
+          trace.y = trace.y.map(value => value * 60);
+        }
+        layout.yaxis.title = 'Counts Per Minute [60 s<sup>-1</sup>]';
+        layout.yaxis.ticksuffix = 'cpm';
+      } else { // Enough counts for cpm
+        layout.yaxis.title = 'Counts Per Second [s<sup>-1</sup>]';
+        layout.yaxis.ticksuffix = 'cps';
+      }
+    }
 
     layout.shapes = this.shapes;
     layout.annotations = JSON.parse(JSON.stringify(this.annotations)); //layout.annotations.concat(JSON.parse(JSON.stringify(this.annotations))); // Copy array but do not reference

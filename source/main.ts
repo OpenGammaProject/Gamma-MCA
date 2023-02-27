@@ -23,7 +23,6 @@
     - Dark Mode -> Bootstrap v5.3
     - FWHM calculation in peak finder
     - Styling for toggleLine in plot
-    - Autoswitch CPS to CPM if too low count rate
     - Use new isotope list: https://gist.github.com/Phoenix1747/755849920472bd12b4bdd7954b405d4e
     - ROI with stats (total counts, max, min, FWHM, range,...)
 
@@ -1838,8 +1837,8 @@ function loadSettingsDefault(): void {
 
   (<HTMLInputElement>document.getElementById('peak-thres')).value = plot.peakConfig.thres.toString();
   (<HTMLInputElement>document.getElementById('peak-lag')).value = plot.peakConfig.lag.toString();
-  (<HTMLInputElement>document.getElementById('peak-width')).value = plot.peakConfig.width.toString();
-  (<HTMLInputElement>document.getElementById('seek-width')).value = plot.peakConfig.seekWidth.toString();
+  (<HTMLInputElement>document.getElementById('peak-width')).value = (plot.peakConfig.width / 1000).toString(); // eV to keV
+  (<HTMLInputElement>document.getElementById('seek-width')).value = (plot.peakConfig.seekWidth / 1000).toString(); // eV to keV
   (<HTMLInputElement>document.getElementById('gauss-sigma')).value = plot.gaussSigma.toString();
 
   const formatSelector = <HTMLSelectElement>document.getElementById('download-format');
@@ -2029,7 +2028,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       break;
     }
     case 'peakWidth': {
-      const numVal = parseInt(stringValue);
+      const numVal = parseInt(stringValue) * 1000; // keV to eV
       plot.peakConfig.width = numVal;
       plot.updatePlot(spectrumData);
 
@@ -2037,7 +2036,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       break;
     }
     case 'seekWidth': {
-      const numVal = parseFloat(stringValue);
+      const numVal = parseFloat(stringValue) * 1000; // keV to eV
       plot.peakConfig.seekWidth = numVal;
       plot.updatePlot(spectrumData);
 
