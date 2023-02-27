@@ -23,8 +23,8 @@
     - Dark Mode -> Bootstrap v5.3
     - FWHM calculation in peak finder
     - Styling for toggleLine in plot
-    - Use new isotope list: https://gist.github.com/Phoenix1747/755849920472bd12b4bdd7954b405d4e
     - ROI with stats (total counts, max, min, FWHM, range,...)
+    - Tick Formatting SI Units? (10k keV --> 10MeV?)
 
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
@@ -40,7 +40,7 @@ import { WebUSBSerialPort } from './external/webusbserial-min.js'
 import { Notification } from './notifications.js';
 
 export interface IsotopeList {
-  [key: number]: string | undefined;
+  [key: string]: number[]
 }
 
 interface OpenPickerAcceptType {
@@ -55,6 +55,7 @@ type CalType = 'a' | 'b' | 'c';
 type DataType = 'data' | 'background';
 type PortList = (WebSerial | WebUSBSerial | undefined)[];
 type DownloadType = 'CAL' | 'XML' | 'JSON' | 'CSV';
+type SortTypes = 'asc' | 'desc' | 'none';
 
 export class SpectrumData { // Will hold the measurement data globally.
   data: number[] = [];
@@ -126,7 +127,7 @@ let fileSystemWritableAvail = false;
 let firstInstall = false;
 
 // Isotope table variables
-const isoTableSortDirections = ['none', 'none', 'asc'];
+const isoTableSortDirections: SortTypes[] = ['none', 'none', 'none'];
 const faSortClasses: {[key: string]: string} = {
   none: 'fa-sort',
   asc: 'fa-sort-up',
@@ -843,13 +844,13 @@ function clickEvent(data: any): void {
     }
   }
 
-  if (data.event.button === 0) { // Left-click. spawn a line in the plot and delete the last line
-    if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
+  if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false); // Delete the last line
+
+  if (data.event.button === 0) { // Left-click. spawn a line in the plot
     const newLine: number = Math.round(data.points[0].x);
     plot.toggleLine(newLine, newLine.toString(), true);
     prevClickLine = newLine;
-  } else if (data.event.button === 2) { // Right-click, delete all clicked lines
-    if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
+  } else if (data.event.button === 2) { // Right-click, delete old line
     prevClickLine = undefined;
   }
   plot.updatePlot(spectrumData);
@@ -1547,7 +1548,7 @@ function hideNotification(id: string): void {
 }
 
 
-function sortTableByColumn(table: HTMLTableElement, columnIndex: number, sortDirection: string) {
+function sortTableByColumn(table: HTMLTableElement, columnIndex: number, sortDirection: SortTypes) {
   const tbody = table.tBodies[0];
   const rows = Array.from(tbody.rows);
 
@@ -1599,58 +1600,74 @@ async function loadIsotopes(reload = false): Promise<boolean> { // Load Isotope 
     const response = await fetch(isoListURL, options);
 
     if (response.ok) { // If HTTP-status is 200-299
-      const json = await response.json();
+      const json: IsotopeList = await response.json();
       loadedIsos = true;
 
-      const tableElement = <HTMLTableElement>document.getElementById('iso-table');
+      const table = <HTMLTableElement>document.getElementById('table');
+      const tableElement = <HTMLTableElement>table.querySelector('#iso-table');
       tableElement.innerHTML = ''; // Delete old table
 
-      const intKeys = Object.keys(json);
-      intKeys.sort((a, b) => parseFloat(a) - parseFloat(b)); // Sort Energies numerically, ascending
+      for (const [key, energyArr] of Object.entries(json)) {
+        let index = 0; // Index used to avoid HTML id duplicates
 
-      let index = 0; // Index used to avoid HTML id duplicates
+        const lowercaseName = key.toLowerCase().replace(/[^a-z0-9 -]/gi, '').trim(); // Fixes security issue. Clean everything except for letters, numbers and minus. See GitHub: #2
+        const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1); // Capitalize Name
 
-      for (const key of intKeys) {
-        index++;
-        isoList[parseFloat(key)] = json[key];
+        for (const energy of energyArr) {
+          if (isNaN(energy)) continue; // Not a number, ignore this one
 
-        const row = tableElement.insertRow();
-        const cell1 = row.insertCell(0);
-        const cell2 = row.insertCell(1);
-        const cell3 = row.insertCell(2);
+          if (isoList[name]) {
+            isoList[name].push(energy);
+          } else {
+            isoList[name] = [energy];
+          }
 
-        cell1.onclick = () => (<HTMLInputElement>cell1.firstChild).click();
-        cell2.onclick = () => (<HTMLInputElement>cell1.firstChild).click();
-        cell3.onclick = () => (<HTMLInputElement>cell1.firstChild).click();
+          const uniqueName = name + '-' + index; // Append index number
+          index++;
 
-        cell1.style.cursor = 'pointer'; // Change cursor pointer to "click-ready"
-        cell2.style.cursor = 'pointer';
-        cell3.style.cursor = 'pointer';
+          const row = tableElement.insertRow();
+          const cell1 = row.insertCell(0);
+          const cell2 = row.insertCell(1);
+          const cell3 = row.insertCell(2);
 
-        const energy = parseFloat(key.trim());
-        const lowercaseName = json[key].toLowerCase().replace(/[^a-z0-9 -]/gi, '').trim(); // Fixes security issue. Clean everything except for letters, numbers and minus. See GitHub: #2
-        const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1) + '-' + index; // Capitalize Name and append index number
+          cell1.onclick = () => (<HTMLInputElement>cell1.firstChild).click();
+          cell2.onclick = () => (<HTMLInputElement>cell1.firstChild).click();
+          cell3.onclick = () => (<HTMLInputElement>cell1.firstChild).click();
 
-        cell1.innerHTML = `<input class="form-check-input iso-table-label" id="${name}" type="checkbox" value="${energy}">`;
-        cell3.innerText = energy.toFixed(2); //`<label for="${name}">${energy.toFixed(2)}</label>`;
+          cell1.style.cursor = 'pointer'; // Change cursor pointer to "click-ready"
+          cell2.style.cursor = 'pointer';
+          cell3.style.cursor = 'pointer';
 
-        const clickBox = <HTMLInputElement>document.getElementById(name);
-        clickBox.onclick = () => plotIsotope(clickBox);
+          cell1.innerHTML = `<input class="form-check-input iso-table-label" id="${uniqueName}" type="checkbox" value="${energy}">`; // keV to eV
+          cell3.innerText = energy.toFixed(2); //`<label for="${uniqueName}">${energy.toFixed(2)}</label>`;
 
-        const strArr = name.split('-');
+          const clickBox = <HTMLInputElement>document.getElementById(uniqueName);
+          clickBox.onclick = () => plotIsotope(clickBox);
 
-        cell2.innerHTML = `<sup>${strArr[1]}</sup>${strArr[0]}`; //`<label for="${name}"><sup>${strArr[1]}</sup>${strArr[0]}</label>`;
+          const strArr = name.split('-');
+
+          cell2.innerHTML = `<sup>${strArr[1]}</sup>${strArr[0]}`; //`<label for="${uniqueName}"><sup>${strArr[1]}</sup>${strArr[0]}</label>`;
+        }
+      }
+
+      if (isoTableSortDirections[2] !== 'asc') { // Default sort is ascending by isotope energy
+        const sortButton = <HTMLTableCellElement>table.querySelector('th[data-sort-by="2"]');
+        sortButton.click();
+      } else {
+        sortTableByColumn(table, 2, 'asc');
       }
 
       plot.clearAnnos(); // Delete all isotope lines
       plot.updatePlot(spectrumData);
-      plot.isoList = isoList; // Copy list to plot object
+      plot.isotopeSeeker = new SeekClosest(isoList); // Generate new seeker for the plot with the current list
+      isotopeSeeker = new SeekClosest(isoList);
     } else {
       isoError.innerText = `Could not load isotope list! HTTP Error: ${response.status}. Please try again.`;
       isoError.classList.remove('d-none');
       successFlag = false;
     }
   } catch (err) { // No network connection!
+    console.error(err);
     isoError.innerText = 'Could not load isotope list! Connection refused - you are probably offline.';
     isoError.classList.remove('d-none');
     successFlag = false;
@@ -1663,7 +1680,7 @@ async function loadIsotopes(reload = false): Promise<boolean> { // Load Isotope 
 
 document.getElementById('iso-hover')!.onclick = () => toggleIsoHover();
 
-let prevIso: IsotopeList = {};
+let prevIso: [string, number] | undefined;
 
 function toggleIsoHover(): void {
   checkNearIso = !checkNearIso;
@@ -1671,19 +1688,19 @@ function toggleIsoHover(): void {
 }
 
 
+let isotopeSeeker: SeekClosest | undefined;
+
 async function closestIso(value: number): Promise<void> {
   if (!await loadIsotopes()) return; // User has not yet opened the settings panel
 
-  const { energy, name } = new SeekClosest(isoList).seek(value, maxDist);
+  if (!isotopeSeeker) isotopeSeeker = new SeekClosest(isoList);
+  
+  if (prevIso) plot.toggleLine(prevIso[1], prevIso[0], false); // Remove previous isotope line
 
-  //if (Object.keys(prevIso).length >= 0) { // Always true???
-  const energyVal = parseFloat(Object.keys(prevIso)[0]);
-  if (!isNaN(energyVal)) plot.toggleLine(energyVal, Object.keys(prevIso)[0], false);
-  //}
+  const { energy, name } = isotopeSeeker.seek(value, maxDist);
 
   if (energy && name) {
-    const newIso: IsotopeList = {};
-    newIso[energy] = name;
+    const newIso: [string, number] = [name, energy];
 
     if (prevIso !== newIso) prevIso = newIso;
 

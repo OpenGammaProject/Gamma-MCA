@@ -2,7 +2,15 @@ import PolynomialRegression from './external/regression/PolynomialRegression.min
 export class SeekClosest {
     isoList;
     constructor(list) {
-        this.isoList = list;
+        const conversionList = {};
+        const isotopeEntry = Object.keys(list);
+        for (const key of isotopeEntry) {
+            const gammaLines = list[key];
+            for (const line of gammaLines) {
+                conversionList[line] = key;
+            }
+        }
+        this.isoList = conversionList;
     }
     seek(value, maxDist = 100) {
         const closeVals = Object.keys(this.isoList).filter(energy => energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
@@ -46,14 +54,14 @@ export class SpectrumPlot {
     shapes = [];
     annotations = [];
     editableMode = false;
-    isoList = {};
+    isotopeSeeker;
     peakConfig = {
         enabled: false,
         mode: undefined,
         thres: 0.005,
         lag: 50,
-        width: 5000,
-        seekWidth: 2000,
+        width: 5,
+        seekWidth: 2,
         lines: []
     };
     gaussSigma = 2;
@@ -168,7 +176,7 @@ export class SpectrumPlot {
         const k = this.calibration.coeff.c2;
         const d = this.calibration.coeff.c3;
         for (let i = 0; i < len; i++) {
-            calArray.push((a * i ** 2 + k * i + d) * 1000);
+            calArray.push(a * i ** 2 + k * i + d);
         }
         return calArray;
     }
@@ -246,7 +254,9 @@ export class SpectrumPlot {
                     this.peakConfig.lines.push(result);
                 }
                 else if (this.peakConfig.mode === 'isotopes') {
-                    const { energy, name } = new SeekClosest(this.isoList).seek(result, size);
+                    if (!this.isotopeSeeker)
+                        throw 'No isotope seeker found!';
+                    const { energy, name } = this.isotopeSeeker.seek(result, size);
                     if (energy && name) {
                         this.toggleLine(energy, name);
                         this.peakConfig.lines.push(energy);
@@ -444,11 +454,12 @@ export class SpectrumPlot {
                 spikecolor: 'blue',
                 spikemode: 'across',
                 ticksuffix: '',
+                hoverformat: ',.2~f',
                 exponentformat: 'SI',
                 automargin: true
             },
             yaxis: {
-                title: 'Energy [eV]',
+                title: 'Energy [keV]',
                 mirror: true,
                 linewidth: 2,
                 autorange: true,
@@ -460,10 +471,10 @@ export class SpectrumPlot {
                 spikecolor: 'blue',
                 spikemode: 'across',
                 showticksuffix: 'last',
-                ticksuffix: 'eV',
+                ticksuffix: ' keV',
                 showexponent: 'last',
                 exponentformat: 'SI',
-                hoverformat: '.4~s',
+                hoverformat: ',.2~f',
                 automargin: true
             },
             plot_bgcolor: 'white',
@@ -604,7 +615,7 @@ export class SpectrumPlot {
                 spikedash: 'solid',
                 spikecolor: 'blue',
                 spikemode: 'across',
-                hoverformat: '',
+                hoverformat: ',.2~f',
                 ticksuffix: '',
                 exponentformat: 'SI',
                 automargin: true
@@ -649,9 +660,8 @@ export class SpectrumPlot {
             for (const element of data) {
                 element.x = this.getCalAxis(element.x.length);
             }
-            layout.xaxis.title = 'Energy [eV]';
-            layout.xaxis.ticksuffix = 'eV';
-            layout.xaxis.hoverformat = '.4~s';
+            layout.xaxis.title = 'Energy [keV]';
+            layout.xaxis.ticksuffix = ' keV';
             let newMax = Math.max(data[0]?.x.at(-1) ?? 1, data[1]?.x.at(-1) ?? 1);
             if (this.xAxis === 'log')
                 newMax = Math.log10(newMax);

@@ -21,6 +21,10 @@ export interface CoeffObj {
 export type PeakModes = 'gaussian' | 'energy' | 'isotopes' | undefined;
 export type DownloadFormat = 'svg' | 'png' | 'jpeg' | 'webp';
 
+interface LegacyIsotopeList {
+  [key: number]: string | undefined
+}
+
 interface GaussData {
   dataArray: number[][],
   sigma: number
@@ -108,10 +112,20 @@ interface Trace {
   Seek the closest matching isotope by energy from an isotope list
 */
 export class SeekClosest {
-  isoList: IsotopeList;
+  isoList: LegacyIsotopeList;
 
   constructor(list: IsotopeList) {
-    this.isoList = list;
+    const conversionList: LegacyIsotopeList = {}; // Convert new isotope list to a legacy list that is easier to iterate
+
+    const isotopeEntry = Object.keys(list);
+    for (const key of isotopeEntry) {
+      const gammaLines = list[key];
+      for (const line of gammaLines) {
+        conversionList[line] = key;
+      }
+    }
+
+    this.isoList = conversionList;
   }
   
   seek(value: number, maxDist = 100): {energy: number, name: string} | {energy: undefined, name: undefined} {
@@ -162,14 +176,14 @@ export class SpectrumPlot {
   private shapes: Shape[] = [];
   private annotations: Anno[] = [];
   editableMode = false;
-  isoList: IsotopeList = {};
+  isotopeSeeker: SeekClosest | undefined;
   peakConfig = {
     enabled: false,
     mode: <PeakModes>undefined, // Gaussian Correlation: 0, Energy: 1 and Isotope: 2 modes
     thres: 0.005,
     lag: 50,
-    width: 5000,
-    seekWidth: 2000,
+    width: 5,
+    seekWidth: 2,
     lines: <number[]>[]
   };
   //resolutionValues: resolutionData[] = [];
@@ -312,7 +326,7 @@ export class SpectrumPlot {
     const d = this.calibration.coeff.c3;
 
     for (let i = 0; i < len; i++) {
-      calArray.push((a * i**2 + k * i + d) * 1000); // x1000 to convert keV to eV for the plot
+      calArray.push(a * i**2 + k * i + d); // x1000 to convert keV to eV for the plot
     }
 
     return calArray;
@@ -413,7 +427,9 @@ export class SpectrumPlot {
           this.toggleLine(result, Math.round(result).toString()); //, true, height);
           this.peakConfig.lines.push(result);
         } else if (this.peakConfig.mode === 'isotopes') { // Isotope Mode
-          const { energy, name } = new SeekClosest(this.isoList).seek(result, size);
+          if (!this.isotopeSeeker) throw 'No isotope seeker found!';
+
+          const { energy, name } = this.isotopeSeeker.seek(result, size);
           if (energy && name) {
             this.toggleLine(energy, name); //, true, height);
             this.peakConfig.lines.push(energy);
@@ -674,11 +690,12 @@ export class SpectrumPlot {
         spikecolor: 'blue',
         spikemode: 'across',
         ticksuffix: '',
+        hoverformat: ',.2~f',
         exponentformat: 'SI',
         automargin: true
       },
       yaxis: {
-        title: 'Energy [eV]',
+        title: 'Energy [keV]',
         mirror: true,
         linewidth: 2,
         autorange: true,
@@ -690,10 +707,10 @@ export class SpectrumPlot {
         spikecolor: 'blue',
         spikemode: 'across',
         showticksuffix: 'last',
-        ticksuffix: 'eV',
+        ticksuffix: ' keV',
         showexponent: 'last',
         exponentformat: 'SI',
-        hoverformat: '.4~s',
+        hoverformat: ',.2~f',
         automargin: true
       },
       plot_bgcolor: 'white', // Change depending on dark mode
@@ -871,7 +888,7 @@ export class SpectrumPlot {
         spikemode: 'across',
         //nticks: 20,
         //tickformat: '.01f',
-        hoverformat: '',
+        hoverformat: ',.2~f',
         ticksuffix: '',
         exponentformat: 'SI',
         automargin: true
@@ -935,9 +952,8 @@ export class SpectrumPlot {
       for (const element of data) {
         element.x = this.getCalAxis(element.x.length);
       }
-      layout.xaxis.title = 'Energy [eV]';
-      layout.xaxis.ticksuffix = 'eV';
-      layout.xaxis.hoverformat = '.4~s';
+      layout.xaxis.title = 'Energy [keV]';
+      layout.xaxis.ticksuffix = ' keV';
 
       let newMax = Math.max(data[0]?.x.at(-1) ?? 1, data[1]?.x.at(-1) ?? 1);
       if (this.xAxis === 'log') newMax = Math.log10(newMax);

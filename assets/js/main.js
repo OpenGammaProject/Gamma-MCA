@@ -56,7 +56,7 @@ const APP_VERSION = '2023-02-20';
 let localStorageAvailable = false;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
-const isoTableSortDirections = ['none', 'none', 'asc'];
+const isoTableSortDirections = ['none', 'none', 'none'];
 const faSortClasses = {
     none: 'fa-sort',
     asc: 'fa-sort-up',
@@ -586,16 +586,14 @@ function clickEvent(data) {
             document.getElementById(`select-${castKey}`).checked = calClick[key];
         }
     }
+    if (prevClickLine)
+        plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
     if (data.event.button === 0) {
-        if (prevClickLine)
-            plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
         const newLine = Math.round(data.points[0].x);
         plot.toggleLine(newLine, newLine.toString(), true);
         prevClickLine = newLine;
     }
     else if (data.event.button === 2) {
-        if (prevClickLine)
-            plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
         prevClickLine = undefined;
     }
     plot.updatePlot(spectrumData);
@@ -1158,37 +1156,53 @@ async function loadIsotopes(reload = false) {
         if (response.ok) {
             const json = await response.json();
             loadedIsos = true;
-            const tableElement = document.getElementById('iso-table');
+            const table = document.getElementById('table');
+            const tableElement = table.querySelector('#iso-table');
             tableElement.innerHTML = '';
-            const intKeys = Object.keys(json);
-            intKeys.sort((a, b) => parseFloat(a) - parseFloat(b));
-            let index = 0;
-            for (const key of intKeys) {
-                index++;
-                isoList[parseFloat(key)] = json[key];
-                const row = tableElement.insertRow();
-                const cell1 = row.insertCell(0);
-                const cell2 = row.insertCell(1);
-                const cell3 = row.insertCell(2);
-                cell1.onclick = () => cell1.firstChild.click();
-                cell2.onclick = () => cell1.firstChild.click();
-                cell3.onclick = () => cell1.firstChild.click();
-                cell1.style.cursor = 'pointer';
-                cell2.style.cursor = 'pointer';
-                cell3.style.cursor = 'pointer';
-                const energy = parseFloat(key.trim());
-                const lowercaseName = json[key].toLowerCase().replace(/[^a-z0-9 -]/gi, '').trim();
-                const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1) + '-' + index;
-                cell1.innerHTML = `<input class="form-check-input iso-table-label" id="${name}" type="checkbox" value="${energy}">`;
-                cell3.innerText = energy.toFixed(2);
-                const clickBox = document.getElementById(name);
-                clickBox.onclick = () => plotIsotope(clickBox);
-                const strArr = name.split('-');
-                cell2.innerHTML = `<sup>${strArr[1]}</sup>${strArr[0]}`;
+            for (const [key, energyArr] of Object.entries(json)) {
+                let index = 0;
+                const lowercaseName = key.toLowerCase().replace(/[^a-z0-9 -]/gi, '').trim();
+                const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1);
+                for (const energy of energyArr) {
+                    if (isNaN(energy))
+                        continue;
+                    if (isoList[name]) {
+                        isoList[name].push(energy);
+                    }
+                    else {
+                        isoList[name] = [energy];
+                    }
+                    const uniqueName = name + '-' + index;
+                    index++;
+                    const row = tableElement.insertRow();
+                    const cell1 = row.insertCell(0);
+                    const cell2 = row.insertCell(1);
+                    const cell3 = row.insertCell(2);
+                    cell1.onclick = () => cell1.firstChild.click();
+                    cell2.onclick = () => cell1.firstChild.click();
+                    cell3.onclick = () => cell1.firstChild.click();
+                    cell1.style.cursor = 'pointer';
+                    cell2.style.cursor = 'pointer';
+                    cell3.style.cursor = 'pointer';
+                    cell1.innerHTML = `<input class="form-check-input iso-table-label" id="${uniqueName}" type="checkbox" value="${energy}">`;
+                    cell3.innerText = energy.toFixed(2);
+                    const clickBox = document.getElementById(uniqueName);
+                    clickBox.onclick = () => plotIsotope(clickBox);
+                    const strArr = name.split('-');
+                    cell2.innerHTML = `<sup>${strArr[1]}</sup>${strArr[0]}`;
+                }
+            }
+            if (isoTableSortDirections[2] !== 'asc') {
+                const sortButton = table.querySelector('th[data-sort-by="2"]');
+                sortButton.click();
+            }
+            else {
+                sortTableByColumn(table, 2, 'asc');
             }
             plot.clearAnnos();
             plot.updatePlot(spectrumData);
-            plot.isoList = isoList;
+            plot.isotopeSeeker = new SeekClosest(isoList);
+            isotopeSeeker = new SeekClosest(isoList);
         }
         else {
             isoError.innerText = `Could not load isotope list! HTTP Error: ${response.status}. Please try again.`;
@@ -1197,6 +1211,7 @@ async function loadIsotopes(reload = false) {
         }
     }
     catch (err) {
+        console.error(err);
         isoError.innerText = 'Could not load isotope list! Connection refused - you are probably offline.';
         isoError.classList.remove('d-none');
         successFlag = false;
@@ -1205,21 +1220,22 @@ async function loadIsotopes(reload = false) {
     return successFlag;
 }
 document.getElementById('iso-hover').onclick = () => toggleIsoHover();
-let prevIso = {};
+let prevIso;
 function toggleIsoHover() {
     checkNearIso = !checkNearIso;
     closestIso(-100000);
 }
+let isotopeSeeker;
 async function closestIso(value) {
     if (!await loadIsotopes())
         return;
-    const { energy, name } = new SeekClosest(isoList).seek(value, maxDist);
-    const energyVal = parseFloat(Object.keys(prevIso)[0]);
-    if (!isNaN(energyVal))
-        plot.toggleLine(energyVal, Object.keys(prevIso)[0], false);
+    if (!isotopeSeeker)
+        isotopeSeeker = new SeekClosest(isoList);
+    if (prevIso)
+        plot.toggleLine(prevIso[1], prevIso[0], false);
+    const { energy, name } = isotopeSeeker.seek(value, maxDist);
     if (energy && name) {
-        const newIso = {};
-        newIso[energy] = name;
+        const newIso = [name, energy];
         if (prevIso !== newIso)
             prevIso = newIso;
         plot.toggleLine(energy, name);
