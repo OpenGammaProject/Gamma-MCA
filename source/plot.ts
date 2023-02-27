@@ -312,7 +312,7 @@ export class SpectrumPlot {
     const d = this.calibration.coeff.c3;
 
     for (let i = 0; i < len; i++) {
-      calArray.push(parseFloat((a * i**2 + k * i + d).toFixed(2)));
+      calArray.push((a * i**2 + k * i + d) * 1000); // x1000 to convert keV to eV for the plot
     }
 
     return calArray;
@@ -678,7 +678,7 @@ export class SpectrumPlot {
         automargin: true
       },
       yaxis: {
-        title: 'Energy [keV]',
+        title: 'Energy [eV]',
         mirror: true,
         linewidth: 2,
         autorange: true,
@@ -690,9 +690,10 @@ export class SpectrumPlot {
         spikecolor: 'blue',
         spikemode: 'across',
         showticksuffix: 'last',
-        ticksuffix: ' keV',
+        ticksuffix: 'eV',
         showexponent: 'last',
         exponentformat: 'SI',
+        hoverformat: '.4~s',
         automargin: true
       },
       plot_bgcolor: 'white', // Change depending on dark mode
@@ -869,7 +870,8 @@ export class SpectrumPlot {
         spikecolor: 'blue',
         spikemode: 'across',
         //nticks: 20,
-        //tickformat: '.02f',
+        //tickformat: '.01f',
+        hoverformat: '',
         ticksuffix: '',
         exponentformat: 'SI',
         automargin: true
@@ -881,15 +883,16 @@ export class SpectrumPlot {
         autorange: true,
         fixedrange: false,
         type: this.yAxis, // 'linear' or 'log'
-        showspikes: true, //Show spike line for Y-axis
-        spikethickness: 1,
-        spikedash: 'solid',
-        spikecolor: 'blue',
-        spikemode: 'across',
+        //showspikes: true, //Show spike line for Y-axis
+        //spikethickness: 1,
+        //spikedash: 'solid',
+        //spikecolor: 'blue',
+        //spikemode: 'across',
         showticksuffix: 'last',
-        ticksuffix: ' cts',
-        //tickformat: '.02f',
-        showexponent: 'last',
+        ticksuffix: 'cts',
+        //tickformat: '.02s',
+        hoverformat: '.4~s',
+        //showexponent: 'last',
         exponentformat: 'SI',
         automargin: true
       },
@@ -932,8 +935,9 @@ export class SpectrumPlot {
       for (const element of data) {
         element.x = this.getCalAxis(element.x.length);
       }
-      layout.xaxis.title = 'Energy [keV]';
-      layout.xaxis.ticksuffix = ' keV';
+      layout.xaxis.title = 'Energy [eV]';
+      layout.xaxis.ticksuffix = 'eV';
+      layout.xaxis.hoverformat = '.4~s';
 
       let newMax = Math.max(data[0]?.x.at(-1) ?? 1, data[1]?.x.at(-1) ?? 1);
       if (this.xAxis === 'log') newMax = Math.log10(newMax);
@@ -945,7 +949,7 @@ export class SpectrumPlot {
     */
     if (this.cps) {
       layout.yaxis.title = 'Counts Per Second [Hz]';
-      layout.yaxis.ticksuffix = ' cps';
+      layout.yaxis.ticksuffix = 'cps';
     }
 
     const config = {
