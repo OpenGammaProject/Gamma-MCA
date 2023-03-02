@@ -771,7 +771,7 @@ export class SpectrumPlot {
                 mode: 'lines',
                 line: {
                     color: 'black',
-                    width: 0.5,
+                    width: 1,
                     shape: this.linePlot ? 'linear' : 'hvh',
                 },
                 marker: {

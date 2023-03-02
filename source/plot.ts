@@ -1096,7 +1096,7 @@ export class SpectrumPlot {
         //opacity: 0.8,
         line: {
           color: 'black',
-          width: 0.5,
+          width: 1,
           shape: this.linePlot ? 'linear' : 'hvh',
         },
         marker: {
