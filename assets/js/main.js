@@ -1,4 +1,4 @@
-import { SpectrumPlot, SeekClosest } from './plot.js';
+import { SpectrumPlot, SeekClosest, CalculateFWHM } from './plot.js';
 import { RawData } from './raw-data.js';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
 import { Notification } from './notifications.js';
@@ -1337,6 +1337,8 @@ function bindInputs() {
         };
         buttonElement.onclick = () => changeSettings(settingsName, valueElement);
     }
+    document.getElementById('enable-res').onclick = event => changeSettings('showEnergyRes', event.target);
+    document.getElementById('fwhm-fast').onclick = event => changeSettings('useFWHMFast', event.target);
     document.getElementById('edit-plot').onclick = event => changeSettings('editMode', event.target);
     document.getElementById('toggle-time-limit').onclick = event => changeSettings('timeLimitBool', event.target);
     document.getElementById('download-format').onchange = event => changeSettings('plotDownload', event.target);
@@ -1355,6 +1357,8 @@ function loadSettingsDefault() {
     document.getElementById('custom-baud').value = SerialManager.baudRate.toString();
     document.getElementById('eol-char').value = SerialManager.eolChar;
     document.getElementById('smaVal').value = plot.smaLength.toString();
+    document.getElementById('enable-res').checked = plot.showFWHM;
+    document.getElementById('fwhm-fast').checked = CalculateFWHM.fastMode;
     document.getElementById('peak-thres').value = plot.peakConfig.thres.toString();
     document.getElementById('peak-lag').value = plot.peakConfig.lag.toString();
     document.getElementById('peak-width').value = (plot.peakConfig.width / 1000).toString();
@@ -1373,59 +1377,65 @@ function loadSettingsStorage() {
     if (setting)
         isoListURL = new URL(setting).href;
     setting = loadJSON('editMode');
-    if (setting)
+    if (setting !== null)
         plot.editableMode = setting;
     setting = loadJSON('fileDelimiter');
-    if (setting)
+    if (setting !== null)
         raw.delimiter = setting;
     setting = loadJSON('fileChannels');
-    if (setting)
+    if (setting !== null)
         raw.adcChannels = setting;
     setting = loadJSON('plotRefreshRate');
-    if (setting)
+    if (setting !== null)
         refreshRate = setting;
     setting = loadJSON('serBufferSize');
-    if (setting)
+    if (setting !== null)
         SerialManager.maxSize = setting;
     setting = loadJSON('timeLimitBool');
-    if (setting)
+    if (setting !== null)
         maxRecTimeEnabled = setting;
     setting = loadJSON('timeLimit');
-    if (setting)
+    if (setting !== null)
         maxRecTime = setting;
     setting = loadJSON('maxIsoDist');
-    if (setting)
+    if (setting !== null)
         maxDist = setting;
     setting = loadJSON('baudRate');
-    if (setting)
+    if (setting !== null)
         SerialManager.baudRate = setting;
     setting = loadJSON('eolChar');
-    if (setting)
+    if (setting !== null)
         SerialManager.eolChar = setting;
     setting = loadJSON('serChannels');
-    if (setting)
+    if (setting !== null)
         SerialManager.adcChannels = setting;
     setting = loadJSON('smaLength');
-    if (setting)
+    if (setting !== null)
         plot.smaLength = setting;
     setting = loadJSON('peakThres');
-    if (setting)
+    if (setting !== null)
         plot.peakConfig.thres = setting;
     setting = loadJSON('peakLag');
-    if (setting)
+    if (setting !== null)
         plot.peakConfig.lag = setting;
     setting = loadJSON('peakWidth');
-    if (setting)
+    if (setting !== null)
         plot.peakConfig.width = setting;
     setting = loadJSON('seekWidth');
-    if (setting)
+    if (setting !== null)
         plot.peakConfig.seekWidth = setting;
     setting = loadJSON('plotDownload');
-    if (setting)
+    if (setting !== null)
         plot.downloadFormat = setting;
     setting = loadJSON('gaussSigma');
-    if (setting)
+    if (setting !== null)
         plot.gaussSigma = setting;
+    setting = loadJSON('showEnergyRes');
+    if (setting !== null)
+        plot.showFWHM = setting;
+    setting = loadJSON('useFWHMFast');
+    if (setting !== null)
+        CalculateFWHM.fastMode = setting;
 }
 function changeSettings(name, element) {
     const stringValue = element.value.trim();
@@ -1552,6 +1562,20 @@ function changeSettings(name, element) {
             plot.gaussSigma = numVal;
             plot.updatePlot(spectrumData);
             result = saveJSON(name, numVal);
+            break;
+        }
+        case 'showEnergyRes': {
+            const boolVal = element.checked;
+            plot.showFWHM = boolVal;
+            plot.updatePlot(spectrumData);
+            result = saveJSON(name, boolVal);
+            break;
+        }
+        case 'useFWHMFast': {
+            const boolVal = element.checked;
+            CalculateFWHM.fastMode = boolVal;
+            plot.updatePlot(spectrumData);
+            result = saveJSON(name, boolVal);
             break;
         }
         default: {

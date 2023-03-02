@@ -21,7 +21,6 @@
     - Highlight plot lines in ROI selection
     - Dark Mode -> Bootstrap v5.3
 
-    - FWHM calculation settings (limit and fast mode)
     - Styling for toggleLine in plot
     - ROI with stats (total counts, max, min, FWHM, range,...)
 
@@ -32,7 +31,7 @@
 
 */
 
-import { SpectrumPlot, SeekClosest, DownloadFormat } from './plot.js';
+import { SpectrumPlot, SeekClosest, DownloadFormat, CalculateFWHM } from './plot.js';
 import { RawData, NPESv1, NPESv1Spectrum } from './raw-data.js';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
 import { WebUSBSerialPort } from './external/webusbserial-min.js'
@@ -1829,6 +1828,8 @@ function bindInputs(): void {
   }
 
   // Bind settings button press or onchange events for settings that do not have the default value input element
+  document.getElementById('enable-res')!.onclick = event => changeSettings('showEnergyRes', <HTMLInputElement>event.target); // Checkbox
+  document.getElementById('fwhm-fast')!.onclick = event => changeSettings('useFWHMFast', <HTMLInputElement>event.target); // Checkbox
   document.getElementById('edit-plot')!.onclick = event => changeSettings('editMode', <HTMLInputElement>event.target); // Checkbox
   document.getElementById('toggle-time-limit')!.onclick = event => changeSettings('timeLimitBool', <HTMLInputElement>event.target); // Checkbox
   document.getElementById('download-format')!.onchange = event => changeSettings('plotDownload', <HTMLSelectElement>event.target); // Select
@@ -1851,6 +1852,9 @@ function loadSettingsDefault(): void {
 
   (<HTMLInputElement>document.getElementById('smaVal')).value = plot.smaLength.toString();
 
+  (<HTMLInputElement>document.getElementById('enable-res')).checked = plot.showFWHM;
+  (<HTMLInputElement>document.getElementById('fwhm-fast')).checked = CalculateFWHM.fastMode;
+
   (<HTMLInputElement>document.getElementById('peak-thres')).value = plot.peakConfig.thres.toString();
   (<HTMLInputElement>document.getElementById('peak-lag')).value = plot.peakConfig.lag.toString();
   (<HTMLInputElement>document.getElementById('peak-width')).value = (plot.peakConfig.width / 1000).toString(); // eV to keV
@@ -1871,58 +1875,64 @@ function loadSettingsStorage(): void {
   if (setting) isoListURL = new URL(setting).href;
 
   setting = loadJSON('editMode');
-  if (setting) plot.editableMode = setting;
+  if (setting !== null) plot.editableMode = setting;
 
   setting = loadJSON('fileDelimiter');
-  if (setting) raw.delimiter = setting;
+  if (setting !== null) raw.delimiter = setting;
 
   setting = loadJSON('fileChannels');
-  if (setting) raw.adcChannels = setting;
+  if (setting !== null) raw.adcChannels = setting;
 
   setting = loadJSON('plotRefreshRate');
-  if (setting) refreshRate = setting;
+  if (setting !== null) refreshRate = setting;
 
   setting = loadJSON('serBufferSize');
-  if (setting) SerialManager.maxSize = setting;
+  if (setting !== null) SerialManager.maxSize = setting;
 
   setting = loadJSON('timeLimitBool');
-  if (setting) maxRecTimeEnabled = setting;
+  if (setting !== null) maxRecTimeEnabled = setting;
 
   setting = loadJSON('timeLimit');
-  if (setting) maxRecTime = setting;
+  if (setting !== null) maxRecTime = setting;
 
   setting = loadJSON('maxIsoDist');
-  if (setting) maxDist = setting;
+  if (setting !== null) maxDist = setting;
 
   setting = loadJSON('baudRate');
-  if (setting) SerialManager.baudRate = setting;
+  if (setting !== null) SerialManager.baudRate = setting;
 
   setting = loadJSON('eolChar');
-  if (setting) SerialManager.eolChar = setting;
+  if (setting !== null) SerialManager.eolChar = setting;
 
   setting = loadJSON('serChannels');
-  if (setting) SerialManager.adcChannels = setting;
+  if (setting !== null) SerialManager.adcChannels = setting;
 
   setting = loadJSON('smaLength');
-  if (setting) plot.smaLength = setting;
+  if (setting !== null) plot.smaLength = setting;
 
   setting = loadJSON('peakThres');
-  if (setting) plot.peakConfig.thres = setting;
+  if (setting !== null) plot.peakConfig.thres = setting;
 
   setting = loadJSON('peakLag');
-  if (setting) plot.peakConfig.lag = setting;
+  if (setting !== null) plot.peakConfig.lag = setting;
 
   setting = loadJSON('peakWidth');
-  if (setting) plot.peakConfig.width = setting;
+  if (setting !== null) plot.peakConfig.width = setting;
 
   setting = loadJSON('seekWidth');
-  if (setting) plot.peakConfig.seekWidth = setting;
+  if (setting !== null) plot.peakConfig.seekWidth = setting;
 
   setting = loadJSON('plotDownload');
-  if (setting) plot.downloadFormat = setting;
+  if (setting !== null) plot.downloadFormat = setting;
 
   setting = loadJSON('gaussSigma');
-  if (setting) plot.gaussSigma = setting;
+  if (setting !== null) plot.gaussSigma = setting;
+
+  setting = loadJSON('showEnergyRes');
+  if (setting !== null) plot.showFWHM = setting;
+
+  setting = loadJSON('useFWHMFast');
+  if (setting !== null) CalculateFWHM.fastMode = setting;
 }
 
 
@@ -2072,6 +2082,22 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       plot.updatePlot(spectrumData);
 
       result = saveJSON(name, numVal);
+      break;
+    }
+    case 'showEnergyRes': {
+      const boolVal = (<HTMLInputElement>element).checked;
+      plot.showFWHM = boolVal;
+      plot.updatePlot(spectrumData);
+
+      result = saveJSON(name, boolVal);
+      break;
+    }
+    case 'useFWHMFast': {
+      const boolVal = (<HTMLInputElement>element).checked;
+      CalculateFWHM.fastMode = boolVal;
+      plot.updatePlot(spectrumData);
+      
+      result = saveJSON(name, boolVal);
       break;
     }
     default: {

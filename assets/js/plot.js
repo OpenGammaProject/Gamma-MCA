@@ -25,8 +25,8 @@ export class SeekClosest {
     }
 }
 export class CalculateFWHM {
-    resolutionLimit = 0.5;
-    fastMode = false;
+    static resolutionLimit = 0.5;
+    static fastMode = false;
     peakList;
     calibratedBins;
     yAxis;
@@ -58,7 +58,7 @@ export class CalculateFWHM {
         for (const index in peakBins) {
             const peakBin = peakBins[index];
             const peakEnergy = this.peakList[index];
-            const limitFWHM = peakEnergy * this.resolutionLimit;
+            const limitFWHM = peakEnergy * CalculateFWHM.resolutionLimit;
             const limitMin = peakEnergy - limitFWHM / 2;
             const halfHeight = this.yAxis[peakBin] / 2;
             let binLeft = peakBin;
@@ -70,7 +70,7 @@ export class CalculateFWHM {
                 heightLeft = this.yAxis[binLeft];
             }
             const fwhmPartLeft = peakEnergy - energyLeft;
-            if (this.fastMode) {
+            if (CalculateFWHM.fastMode) {
                 peakFWHMs[peakEnergy] = fwhmPartLeft * 2;
                 continue;
             }

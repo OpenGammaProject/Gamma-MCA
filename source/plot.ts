@@ -138,8 +138,8 @@ export class SeekClosest {
   Compute the FWHM and energy resolution of peaks. Takes a list of peaks and the calibrated axis 
 */
 export class CalculateFWHM {
-  resolutionLimit = 0.5; // Worst energy res a peak can have before computation just stops for performance reasons; in %
-  fastMode = false; // Better performance by assuming peaks are perfectly symmetrical
+  static resolutionLimit = 0.5; // Worst energy res a peak can have before computation just stops for performance reasons; in %
+  static fastMode = false; // Better performance by assuming peaks are perfectly symmetrical
 
   private readonly peakList: number[];
   private readonly calibratedBins: number[];
@@ -180,7 +180,7 @@ export class CalculateFWHM {
       const peakBin = peakBins[index];
       const peakEnergy = this.peakList[index];
       //const peakEnergy = this.calibratedBins[peakBin];
-      const limitFWHM = peakEnergy * this.resolutionLimit;
+      const limitFWHM = peakEnergy * CalculateFWHM.resolutionLimit;
       const limitMin = peakEnergy - limitFWHM / 2;
       const halfHeight = this.yAxis[peakBin] / 2;
 
@@ -197,7 +197,7 @@ export class CalculateFWHM {
 
       const fwhmPartLeft = peakEnergy - energyLeft;
 
-      if (this.fastMode) {
+      if (CalculateFWHM.fastMode) {
         peakFWHMs[peakEnergy] = fwhmPartLeft * 2; // Assume perfectly symmetrical peak and FWHM
         //peakFWHMs.push(fwhmPartLeft * 2); // Assume perfectly symmetrical peak and FWHM
         continue;

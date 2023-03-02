@@ -849,6 +849,12 @@
                     </div>
                     <p><small>File format for downloading a static plot. SVG looks the best.</small></p>
 
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="fwhm-fast">
+                      <label class="form-check-label" for="fwhm-fast">FWHM Fast Mode</label>
+                    </div>
+                    <p><small>Better FWHM calculation performance by assuming symmetrical peaks.</small></p>
+
                   </div>
                 </div>
               </div>
@@ -949,6 +955,12 @@
                 <div id="panel4-collapse" class="accordion-collapse collapse" aria-labelledby="panel4-heading">
                   <div class="accordion-body">
 
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="enable-res">
+                      <label class="form-check-label" for="enable-res">Show Energy Resolution</label>
+                    </div>
+                    <p><small>Automatically compute the energy resolution of all the peaks.</small></p>
+
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="gauss-sigma">Gaussian Filter &sigma;</label>
                       <input type="number" class="form-control" id="gauss-sigma" min="1" step="1">
@@ -1012,7 +1024,7 @@
 
             <hr>
 
-            <p><span id="version-tag">Version </span> <a class="float-end" href="https://hits.seeyoufarm.com"><img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fspectrum.nuclearphoenix.xyz&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=true" alt="Total Hits" title="Total Hits"></a> </p>
+            <p><span id="version-tag">Version </span> <a class="float-end" href="https://hits.seeyoufarm.com"><img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fspectrum.nuclearphoenix.xyz&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=true" alt="Total Hits" title="Total Hits" loading="lazy"></a> </p>
 
             <div class="d-none" id="manual-install">
               <hr>
