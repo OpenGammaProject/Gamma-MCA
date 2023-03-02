@@ -455,7 +455,7 @@ export class SpectrumPlot {
                 spikemode: 'across',
                 ticksuffix: '',
                 hoverformat: ',.2~f',
-                exponentformat: 'SI',
+                exponentformat: 'none',
                 automargin: true
             },
             yaxis: {
@@ -473,7 +473,7 @@ export class SpectrumPlot {
                 showticksuffix: 'last',
                 ticksuffix: ' keV',
                 showexponent: 'last',
-                exponentformat: 'SI',
+                exponentformat: 'none',
                 hoverformat: ',.2~f',
                 automargin: true
             },
@@ -617,7 +617,7 @@ export class SpectrumPlot {
                 spikemode: 'across',
                 hoverformat: ',.2~f',
                 ticksuffix: '',
-                exponentformat: 'SI',
+                exponentformat: 'none',
                 automargin: true
             },
             yaxis: {

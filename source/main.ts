@@ -19,12 +19,11 @@
 
     - Calibration n-polynomial regression
     - Highlight plot lines in ROI selection
-    
     - Dark Mode -> Bootstrap v5.3
+
     - FWHM calculation in peak finder
     - Styling for toggleLine in plot
     - ROI with stats (total counts, max, min, FWHM, range,...)
-    - Tick Formatting SI Units? (10k keV --> 10MeV?)
 
   Known Issue:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance
