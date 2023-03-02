@@ -21,7 +21,7 @@
     - Highlight plot lines in ROI selection
     - Dark Mode -> Bootstrap v5.3
 
-    - FWHM calculation in peak finder
+    - FWHM calculation settings (limit and fast mode)
     - Styling for toggleLine in plot
     - ROI with stats (total counts, max, min, FWHM, range,...)
 

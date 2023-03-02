@@ -24,6 +24,80 @@ export class SeekClosest {
         return { energy: undefined, name: undefined };
     }
 }
+export class CalculateFWHM {
+    resolutionLimit = 0.5;
+    fastMode = false;
+    peakList;
+    calibratedBins;
+    yAxis;
+    constructor(peakList, calibratedBins, yAxis) {
+        this.peakList = peakList.sort((a, b) => a - b);
+        this.calibratedBins = calibratedBins;
+        this.yAxis = yAxis;
+    }
+    energyToBin() {
+        const numberOfPeaks = this.peakList.length;
+        const axisLength = this.calibratedBins.length;
+        const binPeaks = [];
+        let compareIndex = 0;
+        for (let i = 0; i < axisLength; i++) {
+            const value = this.calibratedBins[i];
+            const compareValue = this.peakList[compareIndex];
+            if (value > compareValue) {
+                binPeaks.push(i);
+                compareIndex++;
+                if (compareIndex >= numberOfPeaks)
+                    break;
+            }
+        }
+        return binPeaks;
+    }
+    compute() {
+        const peakBins = this.energyToBin();
+        const peakFWHMs = {};
+        for (const index in peakBins) {
+            const peakBin = peakBins[index];
+            const peakEnergy = this.peakList[index];
+            const limitFWHM = peakEnergy * this.resolutionLimit;
+            const limitMin = peakEnergy - limitFWHM / 2;
+            const halfHeight = this.yAxis[peakBin] / 2;
+            let binLeft = peakBin;
+            let energyLeft = this.calibratedBins[binLeft];
+            let heightLeft = this.yAxis[binLeft];
+            while (energyLeft > limitMin && heightLeft > halfHeight) {
+                binLeft--;
+                energyLeft = this.calibratedBins[binLeft];
+                heightLeft = this.yAxis[binLeft];
+            }
+            const fwhmPartLeft = peakEnergy - energyLeft;
+            if (this.fastMode) {
+                peakFWHMs[peakEnergy] = fwhmPartLeft * 2;
+                continue;
+            }
+            const limitMax = peakEnergy + limitFWHM / 2;
+            let binRight = peakBin;
+            let energyRight = this.calibratedBins[binRight];
+            let heightRight = this.yAxis[binRight];
+            while (energyRight < limitMax && heightRight > halfHeight) {
+                binRight++;
+                energyRight = this.calibratedBins[binRight];
+                heightRight = this.yAxis[binRight];
+            }
+            const fwhmPartRight = energyRight - peakEnergy;
+            peakFWHMs[peakEnergy] = fwhmPartLeft + fwhmPartRight;
+        }
+        return peakFWHMs;
+    }
+    getResolution() {
+        const peakFWHMs = this.compute();
+        const peakResolutions = {};
+        for (const [stringPeakEnergy, fwhm] of Object.entries(peakFWHMs)) {
+            const peakEnergy = parseFloat(stringPeakEnergy);
+            peakResolutions[peakEnergy] = fwhm / peakEnergy;
+        }
+        return peakResolutions;
+    }
+}
 export class SpectrumPlot {
     plotDiv;
     showCalChart = false;
@@ -64,6 +138,7 @@ export class SpectrumPlot {
         seekWidth: 2,
         lines: []
     };
+    showFWHM = true;
     gaussSigma = 2;
     customDownloadModeBar = {
         name: 'downloadPlot',
@@ -292,7 +367,7 @@ export class SpectrumPlot {
                 opacity: 0.66
             };
             const newAnno = {
-                x: parseFloat(energy.toFixed(2)),
+                x: energy,
                 y: 1,
                 xref: 'x',
                 yref: 'paper',
@@ -324,7 +399,7 @@ export class SpectrumPlot {
                     this.shapes.splice(parseInt(i), 1);
             }
             for (const i in this.annotations) {
-                if (this.annotations[i].x === parseFloat(energy.toFixed(2)))
+                if (this.annotations[i].x === energy)
                     this.annotations.splice(parseInt(i), 1);
             }
         }
@@ -639,7 +714,7 @@ export class SpectrumPlot {
                 l: 40,
                 r: 40,
                 b: 60,
-                t: 60,
+                t: 70,
             },
             images: [{
                     x: 0.99,
@@ -704,6 +779,14 @@ export class SpectrumPlot {
                 }
             };
             this.peakFinder(data[0].x, gaussData);
+            if (this.showFWHM) {
+                const peakResolutions = new CalculateFWHM(this.peakConfig.lines, data[0].x, data[0].y).getResolution();
+                for (const anno of this.annotations) {
+                    const fwhmValue = peakResolutions[anno.x];
+                    if (fwhmValue > 0)
+                        anno.text += `<br>${(fwhmValue * 100).toFixed(1)}%`;
+                }
+            }
             data.unshift(eTrace);
         }
         if (!this.peakConfig.enabled || !data.length || data.length >= 3)

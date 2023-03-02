@@ -39,7 +39,6 @@ interface Shape {
   x1: number;
   y1: number;
   editable?: boolean;
-  //fillcolor: string,
   line: {
       color: string;
       width: number;
@@ -64,14 +63,6 @@ interface Anno {
     size: number;
   };
 }
-
-/*
-interface resolutionData {
-  start: number, // Start of peak
-  end: number, // End of peak
-  resolution: number // FWHM of peak in %
-}
-*/
 
 interface CoeffPoints {
   aFrom: number,
@@ -144,6 +135,111 @@ export class SeekClosest {
 }
 
 /*
+  Compute the FWHM and energy resolution of peaks. Takes a list of peaks and the calibrated axis 
+*/
+export class CalculateFWHM {
+  resolutionLimit = 0.5; // Worst energy res a peak can have before computation just stops for performance reasons; in %
+  fastMode = false; // Better performance by assuming peaks are perfectly symmetrical
+
+  private readonly peakList: number[];
+  private readonly calibratedBins: number[];
+  private readonly yAxis: number[]
+  
+  constructor(peakList: number[], calibratedBins: number[], yAxis: number[]) {
+    this.peakList = peakList.sort((a, b) => a - b); // Sort numerically
+    this.calibratedBins = calibratedBins;
+    this.yAxis = yAxis;
+  }
+
+  private energyToBin(): number[] {
+    const numberOfPeaks = this.peakList.length;
+    const axisLength = this.calibratedBins.length;
+    const binPeaks: number[] = [];
+    let compareIndex = 0;
+
+    for (let i = 0; i < axisLength; i++) {
+      const value = this.calibratedBins[i];
+      const compareValue = this.peakList[compareIndex];
+
+      if (value > compareValue) {
+        binPeaks.push(i); // Can be off by +1, doesn't really matter though.
+        compareIndex++;
+
+        if (compareIndex >= numberOfPeaks) break; // All peaks have been found, break the loop
+      }
+    }
+
+    return binPeaks;
+  }
+
+  compute(): {[key: number]: number} {
+    const peakBins = this.energyToBin();
+    const peakFWHMs: {[key: number]: number} = {};
+
+    for (const index in peakBins) {
+      const peakBin = peakBins[index];
+      const peakEnergy = this.peakList[index];
+      //const peakEnergy = this.calibratedBins[peakBin];
+      const limitFWHM = peakEnergy * this.resolutionLimit;
+      const limitMin = peakEnergy - limitFWHM / 2;
+      const halfHeight = this.yAxis[peakBin] / 2;
+
+      // Compute FWHM in left direction
+      let binLeft = peakBin;
+      let energyLeft = this.calibratedBins[binLeft];
+      let heightLeft = this.yAxis[binLeft];
+
+      while (energyLeft > limitMin && heightLeft > halfHeight) { // Break if too far away or if under half the height -> assumes worst case for FWHM
+        binLeft--;
+        energyLeft = this.calibratedBins[binLeft];
+        heightLeft = this.yAxis[binLeft];
+      }
+
+      const fwhmPartLeft = peakEnergy - energyLeft;
+
+      if (this.fastMode) {
+        peakFWHMs[peakEnergy] = fwhmPartLeft * 2; // Assume perfectly symmetrical peak and FWHM
+        //peakFWHMs.push(fwhmPartLeft * 2); // Assume perfectly symmetrical peak and FWHM
+        continue;
+      }
+
+      // Compute FWHM in right direction
+      const limitMax = peakEnergy + limitFWHM / 2;
+
+      let binRight = peakBin;
+      let energyRight = this.calibratedBins[binRight];
+      let heightRight = this.yAxis[binRight];
+
+      while (energyRight < limitMax && heightRight > halfHeight) {
+        binRight++;
+        energyRight = this.calibratedBins[binRight];
+        heightRight = this.yAxis[binRight];
+      }
+
+      const fwhmPartRight = energyRight - peakEnergy;
+      peakFWHMs[peakEnergy] = fwhmPartLeft + fwhmPartRight;
+      //peakFWHMs.push(fwhmPartLeft + fwhmPartRight);
+    }
+
+    return peakFWHMs;
+  }
+
+  getResolution(): {[key: number]: number} {
+    const peakFWHMs = this.compute();
+    const peakResolutions: {[key: number]: number} = {};
+
+    for (const [stringPeakEnergy, fwhm] of Object.entries(peakFWHMs)) {
+      const peakEnergy = parseFloat(stringPeakEnergy);
+      
+      peakResolutions[peakEnergy] = fwhm / peakEnergy;
+      //peakResolutions.push(fwhm / peakEnergy);
+    }
+
+    return peakResolutions;
+  }
+}
+
+/*
   Plotly.js plot control everything
 */
 export class SpectrumPlot {
@@ -186,7 +282,7 @@ export class SpectrumPlot {
     seekWidth: 2,
     lines: <number[]>[]
   };
-  //resolutionValues: resolutionData[] = [];
+  showFWHM = true;
   gaussSigma = 2;
   private customDownloadModeBar = {
     name: 'downloadPlot',
@@ -476,7 +572,7 @@ export class SpectrumPlot {
         opacity: 0.66
       };
       const newAnno: Anno = {
-        x: parseFloat(energy.toFixed(2)),
+        x: energy,
         y: 1,
         xref: 'x',
         yref: 'paper',
@@ -523,7 +619,7 @@ export class SpectrumPlot {
         if (this.shapes[i].x0 === energy) this.shapes.splice(parseInt(i),1);
       }
       for (const i in this.annotations) {
-        if (this.annotations[i].x === parseFloat(energy.toFixed(2))) this.annotations.splice(parseInt(i),1);
+        if (this.annotations[i].x === energy) this.annotations.splice(parseInt(i),1);
       }
     }
   }
@@ -925,7 +1021,7 @@ export class SpectrumPlot {
         l: 40,
         r: 40,
         b: 60,
-        t: 60,
+        t: 70,
         //pad: 4,
       },
       images: [{
@@ -1009,6 +1105,16 @@ export class SpectrumPlot {
       };
 
       this.peakFinder(data[0].x, gaussData);
+
+      if (this.showFWHM) {
+        const peakResolutions = new CalculateFWHM(this.peakConfig.lines, data[0].x, data[0].y).getResolution();
+        
+        for (const anno of this.annotations) {
+          const fwhmValue = peakResolutions[anno.x];
+          
+          if (fwhmValue > 0) anno.text += `<br>${(fwhmValue * 100).toFixed(1)}%`;
+        }
+      }
 
       data.unshift(eTrace);
     }
