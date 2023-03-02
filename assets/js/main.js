@@ -606,21 +606,42 @@ function selectEvent(data) {
         infoElement.classList.remove('d-none');
         return;
     }
-    console.log(data);
     roiElement.classList.remove('d-none');
     infoElement.classList.add('d-none');
     let range = data.range.x;
     range = range.map(value => Math.round(value));
-    const start = range[0];
-    const end = range[1];
+    let start = range[0];
+    let end = range[1];
     document.getElementById('roi-range').innerText = `${start.toString()} - ${end.toString()}`;
     document.getElementById('roi-range-unit').innerText = plot.calibration.enabled ? ' keV' : '';
+    if (plot.calibration.enabled) {
+        const max = Math.max(spectrumData.data.length, spectrumData.background.length);
+        const calAxis = plot.getCalAxis(max);
+        const axisLength = calAxis.length;
+        const findPoints = [start, end];
+        const numberOfPoints = findPoints.length;
+        const binPoints = [];
+        let compareIndex = 0;
+        for (let i = 0; i < axisLength; i++) {
+            const value = calAxis[i];
+            const compareValue = findPoints[compareIndex];
+            if (value > compareValue) {
+                binPoints.push(i);
+                compareIndex++;
+                if (compareIndex >= numberOfPoints)
+                    break;
+            }
+        }
+        start = binPoints[0];
+        end = binPoints[1];
+    }
     const net = spectrumData.getTotalCounts('data', start, end);
     const bg = spectrumData.getTotalCounts('background', start, end);
     const total = net + bg;
     document.getElementById('total-counts').innerText = total.toString();
     document.getElementById('net-counts').innerText = net.toString();
     document.getElementById('bg-counts').innerText = bg.toString();
+    document.getElementById('bg-ratio').innerText = (net / bg * 100).toFixed();
 }
 document.getElementById('apply-cal').onclick = event => toggleCal(event.target.checked);
 async function toggleCal(enabled) {
@@ -1361,8 +1382,8 @@ function loadSettingsDefault() {
     document.getElementById('fwhm-fast').checked = CalculateFWHM.fastMode;
     document.getElementById('peak-thres').value = plot.peakConfig.thres.toString();
     document.getElementById('peak-lag').value = plot.peakConfig.lag.toString();
-    document.getElementById('peak-width').value = (plot.peakConfig.width / 1000).toString();
-    document.getElementById('seek-width').value = (plot.peakConfig.seekWidth / 1000).toString();
+    document.getElementById('peak-width').value = plot.peakConfig.width.toString();
+    document.getElementById('seek-width').value = plot.peakConfig.seekWidth.toString();
     document.getElementById('gauss-sigma').value = plot.gaussSigma.toString();
     const formatSelector = document.getElementById('download-format');
     const len = formatSelector.options.length;
@@ -1538,14 +1559,14 @@ function changeSettings(name, element) {
             break;
         }
         case 'peakWidth': {
-            const numVal = parseInt(stringValue) * 1000;
+            const numVal = parseInt(stringValue);
             plot.peakConfig.width = numVal;
             plot.updatePlot(spectrumData);
             result = saveJSON(name, numVal);
             break;
         }
         case 'seekWidth': {
-            const numVal = parseFloat(stringValue) * 1000;
+            const numVal = parseFloat(stringValue);
             plot.peakConfig.seekWidth = numVal;
             plot.updatePlot(spectrumData);
             result = saveJSON(name, numVal);

@@ -16,17 +16,17 @@
     - (?) Add desktop notifications
     - (?) Hotkeys
     - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with one click
+    - (?) Highlight plot lines in ROI selection
 
     - Calibration n-polynomial regression
-    - Highlight plot lines in ROI selection
     - Dark Mode -> Bootstrap v5.3
+    - (!!!) Styling for toggleLine in plot
 
-    - Styling for toggleLine in plot
-    - ROI with stats (total counts, max, min, FWHM, range,...)
-
-  Known Issue:
-    - Plot: Gaussian Correlation Filtering still has pretty bad performance
-    - Plot: Plotly Update takes forever, but there is no real way to improve it
+  Known Issues/Problems/Limitations:
+    - Plot: Gaussian Correlation Filtering still has pretty bad performance.
+    - Plot: Plotly Update takes forever, but there is no real way to improve it (?)
+    - Would love to use Plotly ScatterGL (WebGL) that VASTLY improves performance, but stackgroups don't work there: https://github.com/plotly/plotly.js/issues/5365
+    - Selection Box is technically not supported on scatter traces w/o text or markers, that's why it's spamming errors : https://github.com/plotly/plotly.js/issues/170
     - Service Worker: Somehow fetching and caching the hits tracker does not work in Edge for me (hits.seeyoufarm.com). Works fine with FF.
 
 */
@@ -865,29 +865,52 @@ function selectEvent(data: any): void {
     return;
   }
 
-  console.log(data);
-
   roiElement.classList.remove('d-none');
   infoElement.classList.add('d-none');
 
   let range: number[] = data.range.x;
   range = range.map(value => Math.round(value));
 
-  const start = range[0];
-  const end = range[1];
+  let start = range[0];
+  let end = range[1];
 
   document.getElementById('roi-range')!.innerText = `${start.toString()} - ${end.toString()}`;
   document.getElementById('roi-range-unit')!.innerText = plot.calibration.enabled ? ' keV' : '';
   
-  const net = spectrumData.getTotalCounts('data', start, end); // ONLY WORKS FOR BINS! CONVERT BACK ENERGY INTO BINS!
+  if (plot.calibration.enabled) { // Convert the keV points back to bins
+    const max = Math.max(spectrumData.data.length, spectrumData.background.length);
+    const calAxis = plot.getCalAxis(max);
+    const axisLength = calAxis.length;
+
+    const findPoints = [start, end];
+    const numberOfPoints = findPoints.length;
+    const binPoints: number[] = [];
+    let compareIndex = 0;
+
+    for (let i = 0; i < axisLength; i++) {
+      const value = calAxis[i];
+      const compareValue = findPoints[compareIndex];
+
+      if (value > compareValue) {
+        binPoints.push(i); // Can be off by +1, doesn't really matter too much though.
+        compareIndex++;
+
+        if (compareIndex >= numberOfPoints) break;
+      }
+    }
+
+    start = binPoints[0];
+    end = binPoints[1];
+  }
+  
+  const net = spectrumData.getTotalCounts('data', start, end);
   const bg = spectrumData.getTotalCounts('background', start, end);
   const total = net + bg;
 
   document.getElementById('total-counts')!.innerText = total.toString();
   document.getElementById('net-counts')!.innerText = net.toString();
   document.getElementById('bg-counts')!.innerText = bg.toString();
-
-  //const roiResolutionEle = document.getElementById('roi-res')!;
+  document.getElementById('bg-ratio')!.innerText = (net / bg * 100).toFixed();
 }
 
 
@@ -1857,8 +1880,8 @@ function loadSettingsDefault(): void {
 
   (<HTMLInputElement>document.getElementById('peak-thres')).value = plot.peakConfig.thres.toString();
   (<HTMLInputElement>document.getElementById('peak-lag')).value = plot.peakConfig.lag.toString();
-  (<HTMLInputElement>document.getElementById('peak-width')).value = (plot.peakConfig.width / 1000).toString(); // eV to keV
-  (<HTMLInputElement>document.getElementById('seek-width')).value = (plot.peakConfig.seekWidth / 1000).toString(); // eV to keV
+  (<HTMLInputElement>document.getElementById('peak-width')).value = plot.peakConfig.width.toString();
+  (<HTMLInputElement>document.getElementById('seek-width')).value = plot.peakConfig.seekWidth.toString();
   (<HTMLInputElement>document.getElementById('gauss-sigma')).value = plot.gaussSigma.toString();
 
   const formatSelector = <HTMLSelectElement>document.getElementById('download-format');
@@ -2054,7 +2077,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       break;
     }
     case 'peakWidth': {
-      const numVal = parseInt(stringValue) * 1000; // keV to eV
+      const numVal = parseInt(stringValue);
       plot.peakConfig.width = numVal;
       plot.updatePlot(spectrumData);
 
@@ -2062,7 +2085,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       break;
     }
     case 'seekWidth': {
-      const numVal = parseFloat(stringValue) * 1000; // keV to eV
+      const numVal = parseFloat(stringValue);
       plot.peakConfig.seekWidth = numVal;
       plot.updatePlot(spectrumData);
 
