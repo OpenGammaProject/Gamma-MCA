@@ -56,7 +56,7 @@
 
     -->
     <div id="loading" class="vh-100 vw-100 fixed-top">
-      <div id="text-window" class="position-absolute top-50 start-50 translate-middle mx-auto p-4 text-center text-bg-light border border-3 rounded-3 border-primary">
+      <div id="text-window" class="position-absolute top-50 start-50 translate-middle mx-auto pt-3 pb-3 ps-5 pe-5 text-center text-bg-light border border-2 rounded-2 border-primary">
 
         <noscript>
           <p class="fs-3 text-bg-danger text-center">
@@ -66,7 +66,7 @@
         </noscript>
 
         <p class="fs-2">LOADING</p>
-        <div class="spinner-border spinner-border-lg" role="status">
+        <div id="loading-spinner" class="fs-5 spinner-border text-primary" role="status">
           <span class="visually-hidden">Loading...</span>
         </div>
 
@@ -143,7 +143,7 @@
 
                   <div class="input-group input-group-sm">
                     <label for="data" class="btn btn-sm btn-primary" title="Import a file"> <i class="fas fa-file-import"></i> Open File </label>
-                    <label class="file-import-selector form-control text-truncate" for="data" id="data-form-label">No File Chosen</label>
+                    <label class="cursor-pointer form-control text-truncate" for="data" id="data-form-label">No File Chosen</label>
 
                     <button class="btn btn-primary btn-sm" type="button" id="clear-data" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
                   </div>
@@ -157,7 +157,7 @@
 
                   <div class="input-group input-group-sm">
                     <label for="background" class="btn btn-sm btn-primary" title="Import a file"> <i class="fas fa-file-import"></i> Open File </label>
-                    <label class="file-import-selector form-control text-truncate" for="background" id="background-form-label">No File Chosen</label>
+                    <label class="cursor-pointer form-control text-truncate" for="background" id="background-form-label">No File Chosen</label>
 
                     <button class="btn btn-primary btn-sm" type="button" id="clear-bg" title="Remove File"> <i class="fas fa-trash"></i> Clear</button>
                   </div>
@@ -523,20 +523,35 @@
 
         <div class="col-md-2 p-2">
 
-          <h2 class="fs-4">Information</h2>
+          <div id="static-info">
+            <h2 class="fs-4">Information</h2>
 
-          <strong>Click Position:</strong>
-          <p><span id="click-data">None</span></p>
+            <strong>Click Position:</strong>
+            <p><span id="click-data">None</span></p>
 
-          <hr>
+            <hr>
 
-          <strong>Spectrum:</strong>
-          <p class="mb-1"><span id="total-spec-cts">0 cts</span></p>
-          <p class="mt-1 mb-2"><span id="spec-time">00:00:00</span></p>
+            <strong>Spectrum:</strong>
+            <p class="mb-1"><span id="total-spec-cts">0</span> cts</p>
+            <p class="mt-1 mb-2"><span id="spec-time">00:00:00</span></p>
 
-          <strong>Background:</strong>
-          <p class="mb-1"><span id="total-bg-cts">0 cts</span></p>
-          <p class="mt-1 mb-2"><span id="bg-time">00:00:00</span></p>
+            <strong>Background:</strong>
+            <p class="mb-1"><span id="total-bg-cts">0</span> cts</p>
+            <p class="mt-1 mb-2"><span id="bg-time">00:00:00</span></p>
+          </div>
+
+          <div id="roi-info" class="d-none">
+            <h2 class="fs-4">ROI</h2>
+
+            <strong>Range:</strong>
+            <p class="mt-1 mb-3"><span id="roi-range">N/A</span> <span id="roi-range-unit">N/A</span></p>
+
+            <strong>Counts:</strong>
+            <p class="mb-1">Total: <span id="total-counts">N/A</span> cts</p>
+            <p class="mb-1">Net: <span id="net-counts">N/A</span> cts</p>
+            <p class="mb-1">Background: <span id="bg-counts">N/A</span> cts</p>
+            <p class="mt-1 mb-3">BG ratio: <span id="bg-ratio">N/A</span> %</p>
+          </div>
 
         </div>
       </div>
@@ -766,12 +781,12 @@
                 <thead class="theme-mode table-light"> <!-- style="box-shadow: inset 1px 1px #000, 0 2px #000;" -->
                   <tr>
                     <th> <input class="form-check-input" id="check-all-isos" type="checkbox" value="" title="Toggle all isotopes"> </th>
-                    <th>Isotope</th>
-                    <th>Energy [keV]</th>
+                    <th class="cursor-pointer" data-sort-by="1">Isotope <i class="fa-solid fa-sort"></i></th>
+                    <th class="cursor-pointer" data-sort-by="2">Energy [keV] <i class="fa-solid fa-sort"></i></th>
                   </tr>
                 </thead>
 
-                <tbody id="iso-table"></tbody>
+                <tbody class="table-group-divider" id="iso-table"></tbody>
 
               </table>
             </div>
@@ -809,9 +824,10 @@
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="iso-hover-prox">Iso Hover Proximity</label>
                       <input type="number" class="form-control" id="iso-hover-prox" min="1">
+                      <label class="input-group-text" for="iso-hover-prox">keV</label>
                       <button class="btn btn-primary" type="button" id="iso-hover-prox-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
-                    <p><small>Input in keV. Any positive integer is valid.</small></p>
+                    <p><small>Any positive integer is valid.</small></p>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="custom-url">Isotope List</label>
@@ -830,6 +846,12 @@
                       </select>
                     </div>
                     <p><small>File format for downloading a static plot. SVG looks the best.</small></p>
+
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="fwhm-fast">
+                      <label class="form-check-label" for="fwhm-fast">FWHM Fast Mode</label>
+                    </div>
+                    <p><small>Better FWHM calculation performance by assuming symmetrical peaks.</small></p>
 
                   </div>
                 </div>
@@ -872,9 +894,10 @@
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="custom-baud">Baud Rate</label>
                       <input type="number" class="form-control serial-controls" id="custom-baud" min="1">
+                      <label class="input-group-text" for="custom-baud">bps</label>
                       <button class="btn btn-primary serial-controls" type="button" id="custom-baud-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
-                    <p><small>Input in bits per second. Any positive integer is valid.</small></p>
+                    <p><small>Any positive integer is valid.</small></p>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="eol-char">EOL character</label>
@@ -891,16 +914,18 @@
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="ser-limit">Recording Time Limit</label>
                       <input type="number" class="form-control serial-controls" id="ser-limit"  min="1">
+                      <label class="input-group-text" for="ser-limit">s</label>
                       <button class="btn btn-primary serial-controls" id="ser-limit-btn" type="button" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
-                    <p><small>Input in seconds. Any positive integer is valid. Serial recording will stop automatically when time runs out.</small></p>
+                    <p><small>Any positive integer is valid. Serial recording will stop automatically when time runs out.</small></p>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="custom-ser-refresh">Plot Refresh Time</label>
                       <input type="number" class="form-control serial-controls" id="custom-ser-refresh" min="1">
+                      <label class="input-group-text" for="custom-ser-refresh">s</label>
                       <button class="btn btn-primary serial-controls" type="button" id="custom-ser-refresh-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
-                    <p><small>Input in seconds. Any positive float is valid, use integers for best performance.</small></p>
+                    <p><small>Any positive float is valid, use integers for best performance.</small></p>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="custom-ser-buffer">Max Serial Buffer</label>
@@ -928,6 +953,18 @@
                 <div id="panel4-collapse" class="accordion-collapse collapse" aria-labelledby="panel4-heading">
                   <div class="accordion-body">
 
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="enable-res">
+                      <label class="form-check-label" for="enable-res">Show Energy Resolution</label>
+                    </div>
+                    <p><small>Automatically compute the energy resolution of all the peaks.</small></p>
+
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="new-flags">
+                      <label class="form-check-label" for="new-flags">New Highlighting Style</label>
+                    </div>
+                    <p><small>Use the new highlighting style for the peak finder. Turn off to use the old style.</small></p>
+
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="gauss-sigma">Gaussian Filter &sigma;</label>
                       <input type="number" class="form-control" id="gauss-sigma" min="1" step="1">
@@ -950,18 +987,11 @@
                     <p><small>Change this after adapting the <code>Smoothing</code> setting. Decreasing this will make the peak finder trigger on lower-amplitude peaks and vice versa. Any positive float is valid.</small></p>
 
                     <div class="input-group input-group-sm">
-                      <label class="input-group-text" for="peak-width">Peak Width</label>
-                      <input type="number" class="form-control" id="peak-width" min="1">
-                      <button class="btn btn-primary" type="button" id="peak-width-btn" title="Apply"> <i class="fas fa-check"></i> </button>
-                    </div>
-                    <p><small>Maximum distance two peak lines can be apart to count as one single peak. Any positive integer is valid.</small></p>
-
-                    <div class="input-group input-group-sm">
                       <label class="input-group-text" for="seek-width">Isotope Seek</label>
                       <input type="number" class="form-control" id="seek-width" min="1">
                       <button class="btn btn-primary" type="button" id="seek-width-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
-                    <p><small>Maximum distance to search for isotopes around the peak energy (multiple of the peak width). Any positive float is valid.</small></p>
+                    <p><small>Maximum distance to search for isotopes around the peak energy (multiple of the peak width in bins). Any positive float is valid.</small></p>
 
                   </div>
                 </div>
@@ -989,7 +1019,7 @@
 
             <hr>
 
-            <p><span id="version-tag">Version </span> <a class="float-end" href="https://hits.seeyoufarm.com"><img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fspectrum.nuclearphoenix.xyz&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=true" alt="Total Hits" title="Total Hits"></a> </p>
+            <p><span id="version-tag">Version </span> <a class="float-end" href="https://hits.seeyoufarm.com"><img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fspectrum.nuclearphoenix.xyz&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=true" alt="Total Hits" title="Total Hits" loading="lazy"></a> </p>
 
             <div class="d-none" id="manual-install">
               <hr>
@@ -1013,7 +1043,7 @@
     </div>
     <!--
 
-      BOOTSTRAP TOASTS FOR NOTIFICATIONS
+      BOOTSTRAP TOASTS FOR NOTIFICATIONS: LEGACY NOW; THE REST IS DONE BY THE NOTIFICATION SYSTEM
 
     -->
     <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3">

@@ -1,7 +1,16 @@
+import PolynomialRegression from './external/regression/PolynomialRegression.min.js';
 export class SeekClosest {
     isoList;
     constructor(list) {
-        this.isoList = list;
+        const conversionList = {};
+        const isotopeEntry = Object.keys(list);
+        for (const key of isotopeEntry) {
+            const gammaLines = list[key];
+            for (const line of gammaLines) {
+                conversionList[line] = key;
+            }
+        }
+        this.isoList = conversionList;
     }
     seek(value, maxDist = 100) {
         const closeVals = Object.keys(this.isoList).filter(energy => energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
@@ -15,10 +24,85 @@ export class SeekClosest {
         return { energy: undefined, name: undefined };
     }
 }
+export class CalculateFWHM {
+    static resolutionLimit = 0.5;
+    static fastMode = false;
+    peakList;
+    calibratedBins;
+    yAxis;
+    constructor(peakList, calibratedBins, yAxis) {
+        this.peakList = peakList.sort((a, b) => a - b);
+        this.calibratedBins = calibratedBins;
+        this.yAxis = yAxis;
+    }
+    energyToBin() {
+        const numberOfPeaks = this.peakList.length;
+        const axisLength = this.calibratedBins.length;
+        const binPeaks = [];
+        let compareIndex = 0;
+        for (let i = 0; i < axisLength; i++) {
+            const value = this.calibratedBins[i];
+            const compareValue = this.peakList[compareIndex];
+            if (value > compareValue) {
+                binPeaks.push(i);
+                compareIndex++;
+                if (compareIndex >= numberOfPeaks)
+                    break;
+            }
+        }
+        return binPeaks;
+    }
+    compute() {
+        const peakBins = this.energyToBin();
+        const peakFWHMs = {};
+        for (const index in peakBins) {
+            const peakBin = peakBins[index];
+            const peakEnergy = this.peakList[index];
+            const limitFWHM = peakEnergy * CalculateFWHM.resolutionLimit;
+            const limitMin = peakEnergy - limitFWHM / 2;
+            const halfHeight = this.yAxis[peakBin] / 2;
+            let binLeft = peakBin;
+            let energyLeft = this.calibratedBins[binLeft];
+            let heightLeft = this.yAxis[binLeft];
+            while (energyLeft > limitMin && heightLeft > halfHeight) {
+                binLeft--;
+                energyLeft = this.calibratedBins[binLeft];
+                heightLeft = this.yAxis[binLeft];
+            }
+            const avgLeft = (energyLeft + this.calibratedBins[binLeft + 1]) / 2;
+            const fwhmPartLeft = peakEnergy - avgLeft;
+            if (CalculateFWHM.fastMode) {
+                peakFWHMs[peakEnergy] = fwhmPartLeft * 2;
+                continue;
+            }
+            const limitMax = peakEnergy + limitFWHM / 2;
+            let binRight = peakBin;
+            let energyRight = this.calibratedBins[binRight];
+            let heightRight = this.yAxis[binRight];
+            while (energyRight < limitMax && heightRight > halfHeight) {
+                binRight++;
+                energyRight = this.calibratedBins[binRight];
+                heightRight = this.yAxis[binRight];
+            }
+            const avgRight = (energyRight + this.calibratedBins[binRight - 1]) / 2;
+            const fwhmPartRight = avgRight - peakEnergy;
+            peakFWHMs[peakEnergy] = fwhmPartLeft + fwhmPartRight;
+        }
+        return peakFWHMs;
+    }
+    getResolution() {
+        const peakFWHMs = this.compute();
+        const peakResolutions = {};
+        for (const [stringPeakEnergy, fwhm] of Object.entries(peakFWHMs)) {
+            const peakEnergy = parseFloat(stringPeakEnergy);
+            peakResolutions[peakEnergy] = fwhm / peakEnergy;
+        }
+        return peakResolutions;
+    }
+}
 export class SpectrumPlot {
     plotDiv;
     showCalChart = false;
-    fallbackGL = false;
     xAxis = 'linear';
     yAxis = 'linear';
     linePlot = false;
@@ -46,19 +130,21 @@ export class SpectrumPlot {
     shapes = [];
     annotations = [];
     editableMode = false;
-    isoList = {};
+    isotopeSeeker;
     peakConfig = {
         enabled: false,
         mode: undefined,
         thres: 0.005,
         lag: 50,
-        width: 5,
         seekWidth: 2,
+        showFWHM: true,
+        newPeakStyle: true,
         lines: []
     };
     gaussSigma = 2;
-    customModeBarButtons = {
-        name: 'Download plot as HTML',
+    customDownloadModeBar = {
+        name: 'downloadPlot',
+        title: 'Download plot as HTML',
         icon: window.Plotly.Icons['disk'],
         direction: 'up',
         click: (plotElement) => {
@@ -138,26 +224,28 @@ export class SpectrumPlot {
         };
         this.calibration.imported = false;
     }
-    computeCoefficients() {
-        const aF = this.calibration.points.aFrom;
-        const bF = this.calibration.points.bFrom;
-        const cF = this.calibration.points.cFrom ?? -1;
-        const aT = this.calibration.points.aTo;
-        const bT = this.calibration.points.bTo;
-        const cT = this.calibration.points.cTo ?? -1;
-        if (cT >= 0 && cF >= 0) {
-            const denom = (aF - bF) * (aF - cF) * (bF - cF);
-            this.calibration.coeff.c1 = (cF * (bT - aT) + bF * (aT - cT) + aF * (cT - bT)) / denom;
-            this.calibration.coeff.c2 = (cF ** 2 * (aT - bT) + aF ** 2 * (bT - cT) + bF ** 2 * (cT - aT)) / denom;
-            this.calibration.coeff.c3 = (bF * (bF - cF) * cF * aT + aF * cF * (cF - aF) * bT + aF * (aF - bF) * bF * cT) / denom;
+    async computeCoefficients() {
+        const data = [
+            {
+                x: this.calibration.points.aFrom,
+                y: this.calibration.points.aTo
+            },
+            {
+                x: this.calibration.points.bFrom,
+                y: this.calibration.points.bTo
+            }
+        ];
+        if (this.calibration.points.cFrom && this.calibration.points.cTo) {
+            data.push({
+                x: this.calibration.points.cFrom,
+                y: this.calibration.points.cTo
+            });
         }
-        else {
-            const k = (aT - bT) / (aF - bF);
-            const d = aT - k * aF;
-            this.calibration.coeff.c1 = 0;
-            this.calibration.coeff.c2 = k;
-            this.calibration.coeff.c3 = d;
-        }
+        const model = PolynomialRegression.read(data, data.length - 1);
+        const terms = model.getTerms();
+        this.calibration.coeff.c1 = terms[2] ?? 0;
+        this.calibration.coeff.c2 = terms[1];
+        this.calibration.coeff.c3 = terms[0];
     }
     getCalAxis(len) {
         const calArray = [];
@@ -165,7 +253,7 @@ export class SpectrumPlot {
         const k = this.calibration.coeff.c2;
         const d = this.calibration.coeff.c3;
         for (let i = 0; i < len; i++) {
-            calArray.push(parseFloat((a * i ** 2 + k * i + d).toFixed(2)));
+            calArray.push(a * i ** 2 + k * i + d);
         }
         return calArray;
     }
@@ -209,7 +297,7 @@ export class SpectrumPlot {
             this.peakConfig.lines = [];
         }
     }
-    peakFinder(xAxis, yAxis) {
+    peakFinder(xAxis, yAxis, heightAxis) {
         this.clearPeakFinder();
         const longData = this.computeMovingAverage(yAxis, this.peakConfig.lag);
         const maxVal = Math.max(...yAxis);
@@ -224,7 +312,7 @@ export class SpectrumPlot {
         const peakLen = peakLines.length;
         for (let i = 0; i < peakLen; i++) {
             values.push(peakLines[i]);
-            if (Math.abs(peakLines[i + 1] - peakLines[i]) > this.peakConfig.width) {
+            if (Math.abs(peakLines[i + 1] - peakLines[i]) > 2) {
                 let result = 0;
                 let size;
                 if (values.length === 1) {
@@ -238,15 +326,23 @@ export class SpectrumPlot {
                     result /= values.length;
                     size = this.peakConfig.seekWidth * (Math.max(...values) - Math.min(...values));
                 }
-                if (this.peakConfig.mode === 'energy') {
-                    this.toggleLine(result, result.toFixed(2));
-                    this.peakConfig.lines.push(result);
-                }
-                else if (this.peakConfig.mode === 'isotopes') {
-                    const { energy, name } = new SeekClosest(this.isoList).seek(result, size);
-                    if (energy && name) {
-                        this.toggleLine(energy, name);
-                        this.peakConfig.lines.push(energy);
+                const resultBin = Math.round(result);
+                const height = heightAxis[resultBin];
+                if (this.calibration.enabled)
+                    result = this.getCalAxis(xAxis.length)[resultBin];
+                if (height >= 0) {
+                    if (this.peakConfig.mode === 'energy') {
+                        this.toggleLine(result, Math.round(result).toString(), true, height);
+                        this.peakConfig.lines.push(result);
+                    }
+                    else if (this.peakConfig.mode === 'isotopes') {
+                        if (!this.isotopeSeeker)
+                            throw 'No isotope seeker found!';
+                        const { energy, name } = this.isotopeSeeker.seek(result, size);
+                        if (energy && name) {
+                            this.toggleLine(energy, name, true, height);
+                            this.peakConfig.lines.push(energy);
+                        }
                     }
                 }
                 values = [];
@@ -259,8 +355,7 @@ export class SpectrumPlot {
     updatePlot(spectrumData) {
         this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData, true);
     }
-    toggleLine(energy, name, enabled = true) {
-        name = name.replaceAll('-', '');
+    toggleLine(energy, name, enabled = true, height = -1) {
         if (enabled) {
             const newLine = {
                 type: 'line',
@@ -273,12 +368,13 @@ export class SpectrumPlot {
                 editable: false,
                 line: {
                     color: 'blue',
-                    width: .5,
-                    dash: 'solid'
+                    width: 0.8,
+                    dash: 'dot'
                 },
+                opacity: 0.66
             };
             const newAnno = {
-                x: parseFloat(energy.toFixed(2)),
+                x: energy,
                 y: 1,
                 xref: 'x',
                 yref: 'paper',
@@ -293,6 +389,17 @@ export class SpectrumPlot {
                     size: 11,
                 },
             };
+            if (height >= 0 && this.peakConfig.newPeakStyle) {
+                newLine.y0 = 0;
+                newLine.y1 = 0;
+                newLine.line.width = 0;
+                newAnno.y = height + 5;
+                newAnno.yref = 'y';
+                newAnno.arrowhead = 1;
+                newAnno.arrowsize = 0.8;
+                newAnno.ay = -40;
+                newAnno.bgcolor = 'rgba(255,255,255,0.4)';
+            }
             for (const shape of this.shapes) {
                 if (shape.x0 === newLine.x0)
                     return;
@@ -310,7 +417,7 @@ export class SpectrumPlot {
                     this.shapes.splice(parseInt(i), 1);
             }
             for (const i in this.annotations) {
-                if (this.annotations[i].x === parseFloat(energy.toFixed(2)))
+                if (this.annotations[i].x === energy)
                     this.annotations.splice(parseInt(i), 1);
             }
         }
@@ -374,6 +481,7 @@ export class SpectrumPlot {
             x: this.getXAxis(dataObj.data.length),
             y: this.getCalAxis(dataObj.data.length),
             mode: 'lines',
+            type: 'scatter',
             fill: 'tozeroy',
             line: {
                 color: 'orangered',
@@ -384,19 +492,14 @@ export class SpectrumPlot {
             name: 'Calibration Points',
             x: [],
             y: [],
-            mode: 'markers+text',
-            type: this.fallbackGL ? 'scatter' : 'scattergl',
+            mode: 'text+markers',
+            type: 'scatter',
             marker: {
-                symbol: 'cross-thin',
-                size: 10,
-                color: 'black',
-                line: {
-                    color: 'black',
-                    width: 2
-                }
+                size: 8,
+                color: '#444444',
             },
             text: [],
-            textposition: 'top',
+            textposition: 'top center',
         };
         if (this.calibration.points) {
             const charArr = ['a', 'b', 'c'];
@@ -410,7 +513,7 @@ export class SpectrumPlot {
                     if (fromVal && toVal) {
                         markersTrace.x.push(fromVal);
                         markersTrace.y.push(toVal);
-                        markersTrace.text.push('Point ' + (parseInt(index) + 1).toString());
+                        markersTrace.text?.push('Point ' + (parseInt(index) + 1).toString());
                     }
                 }
             }
@@ -441,10 +544,11 @@ export class SpectrumPlot {
                 showspikes: true,
                 spikethickness: 1,
                 spikedash: 'solid',
-                spikecolor: 'black',
+                spikecolor: 'blue',
                 spikemode: 'across',
                 ticksuffix: '',
-                exponentformat: 'SI',
+                hoverformat: ',.2~f',
+                exponentformat: 'none',
                 automargin: true
             },
             yaxis: {
@@ -457,12 +561,13 @@ export class SpectrumPlot {
                 showspikes: true,
                 spikethickness: 1,
                 spikedash: 'solid',
-                spikecolor: 'black',
+                spikecolor: 'blue',
                 spikemode: 'across',
                 showticksuffix: 'last',
                 ticksuffix: ' keV',
                 showexponent: 'last',
-                exponentformat: 'SI',
+                exponentformat: 'none',
+                hoverformat: ',.2~f',
                 automargin: true
             },
             plot_bgcolor: 'white',
@@ -496,9 +601,14 @@ export class SpectrumPlot {
                 filename: 'gamma_mca_calibration',
             },
             editable: this.editableMode,
-            modeBarButtonsToAdd: [],
+            modeBarButtons: [
+                ['zoom2d'],
+                ['zoomIn2d', 'zoomOut2d'],
+                ['autoScale2d', 'resetScale2d'],
+                ['toImage'],
+                [this.customDownloadModeBar]
+            ]
         };
-        config.modeBarButtonsToAdd = [this.customModeBarButtons];
         window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, markersTrace], layout, config);
     }
     plotData(dataObj, update) {
@@ -512,12 +622,12 @@ export class SpectrumPlot {
                 stackgroup: 'data',
                 x: this.getXAxis(dataObj.data.length),
                 y: dataObj.data,
-                type: this.fallbackGL ? 'scatter' : 'scattergl',
+                type: 'scatter',
                 mode: 'lines',
-                fill: 'tozeroy',
+                fill: this.linePlot ? 'none' : 'tonexty',
                 line: {
                     color: 'orangered',
-                    width: .5,
+                    width: 1,
                     shape: this.linePlot ? 'linear' : 'hvh',
                 }
             };
@@ -532,12 +642,12 @@ export class SpectrumPlot {
                 stackgroup: 'data',
                 x: this.getXAxis(dataObj.background.length),
                 y: dataObj.background,
-                type: this.fallbackGL ? 'scatter' : 'scattergl',
+                type: 'scatter',
                 mode: 'lines',
-                fill: 'tozeroy',
+                fill: this.linePlot ? 'none' : 'tonexty',
                 line: {
                     color: 'slategrey',
-                    width: .5,
+                    width: 1,
                     shape: this.linePlot ? 'linear' : 'hvh',
                 }
             };
@@ -552,7 +662,6 @@ export class SpectrumPlot {
                     newData.push(data[0].y[i] - bgTrace.y[i]);
                 }
                 data[0].y = newData;
-                data[0].fill = 'tonexty';
                 data[0].name = 'Net Spectrum';
             }
             data.push(bgTrace);
@@ -573,7 +682,18 @@ export class SpectrumPlot {
                 orientation: 'h',
                 y: -0.35,
             },
-            barmode: 'stack',
+            selectdirection: 'h',
+            activeselection: {
+                fillcolor: 'blue',
+                opacity: 0.01
+            },
+            newselection: {
+                line: {
+                    color: 'blue',
+                    width: 1,
+                    dash: 'solid'
+                }
+            },
             xaxis: {
                 title: 'Bin [1]',
                 mirror: true,
@@ -590,10 +710,11 @@ export class SpectrumPlot {
                 showspikes: true,
                 spikethickness: 1,
                 spikedash: 'solid',
-                spikecolor: 'black',
+                spikecolor: 'blue',
                 spikemode: 'across',
+                hoverformat: ',.2~f',
                 ticksuffix: '',
-                exponentformat: 'SI',
+                exponentformat: 'none',
                 automargin: true
             },
             yaxis: {
@@ -603,14 +724,9 @@ export class SpectrumPlot {
                 autorange: true,
                 fixedrange: false,
                 type: this.yAxis,
-                showspikes: true,
-                spikethickness: 1,
-                spikedash: 'solid',
-                spikecolor: 'black',
-                spikemode: 'across',
                 showticksuffix: 'last',
-                ticksuffix: ' cts',
-                showexponent: 'last',
+                ticksuffix: 'cts',
+                hoverformat: '.4~s',
                 exponentformat: 'SI',
                 automargin: true
             },
@@ -620,7 +736,7 @@ export class SpectrumPlot {
                 l: 40,
                 r: 40,
                 b: 60,
-                t: 60,
+                t: 70,
             },
             images: [{
                     x: 0.99,
@@ -649,10 +765,6 @@ export class SpectrumPlot {
             layout.xaxis.range = [0, newMax];
             layout.xaxis.rangeslider.range = [0, newMax];
         }
-        if (this.cps) {
-            layout.yaxis.title = 'Counts Per Second [Hz]';
-            layout.yaxis.ticksuffix = ' cps';
-        }
         const config = {
             responsive: true,
             scrollZoom: false,
@@ -662,7 +774,14 @@ export class SpectrumPlot {
                 filename: 'gamma_mca_spectrum',
             },
             editable: this.editableMode,
-            modeBarButtonsToAdd: [],
+            modeBarButtons: [
+                ['select2d'],
+                ['zoom2d'],
+                ['zoomIn2d', 'zoomOut2d'],
+                ['autoScale2d', 'resetScale2d'],
+                ['toImage'],
+                [this.customDownloadModeBar]
+            ]
         };
         if (this.peakConfig.enabled && data.length) {
             const gaussData = this.gaussianCorrel(data[0].y, this.gaussSigma);
@@ -670,22 +789,43 @@ export class SpectrumPlot {
                 name: 'Gaussian Correlation',
                 x: data[0].x,
                 y: gaussData,
-                type: this.fallbackGL ? 'scatter' : 'scattergl',
+                type: 'scatter',
                 mode: 'lines',
                 line: {
                     color: 'black',
-                    width: 0.5,
+                    width: 0.6,
                     shape: this.linePlot ? 'linear' : 'hvh',
                 },
                 marker: {
                     color: 'black',
                 }
             };
-            this.peakFinder(data[0].x, gaussData);
+            this.peakFinder(this.getXAxis(gaussData.length), gaussData, data[0].y);
+            if (this.peakConfig.showFWHM) {
+                const peakResolutions = new CalculateFWHM(this.peakConfig.lines, data[0].x, data[0].y).getResolution();
+                for (const anno of this.annotations) {
+                    const fwhmValue = peakResolutions[anno.x];
+                    if (fwhmValue > 0)
+                        anno.text += `<br>${(fwhmValue * 100).toFixed(1)}%`;
+                }
+            }
             data.unshift(eTrace);
         }
         if (!this.peakConfig.enabled || !data.length || data.length >= 3)
             data.reverse();
+        if (this.cps) {
+            if (Math.max(...data[0].y) < 1) {
+                for (const trace of data) {
+                    trace.y = trace.y.map(value => value * 60);
+                }
+                layout.yaxis.title = 'Counts Per Minute [60 s<sup>-1</sup>]';
+                layout.yaxis.ticksuffix = 'cpm';
+            }
+            else {
+                layout.yaxis.title = 'Counts Per Second [s<sup>-1</sup>]';
+                layout.yaxis.ticksuffix = 'cps';
+            }
+        }
         layout.shapes = this.shapes;
         layout.annotations = JSON.parse(JSON.stringify(this.annotations));
         if (this.calibration.enabled) {
@@ -693,7 +833,6 @@ export class SpectrumPlot {
                 anno.hovertext += layout.xaxis.ticksuffix;
             }
         }
-        config.modeBarButtonsToAdd = [this.customModeBarButtons];
         window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, data, layout, config);
     }
 }

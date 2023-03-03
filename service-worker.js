@@ -7,7 +7,7 @@
   https://nuclearphoenix.xyz
 
 */
-const APP_VERSION = '2023-02-20';
+const APP_VERSION = '2023-03-03';
 const CACHE_NAME = 'gamma-static'; // A random name for the cache
 
 const OFFLINE_RESOURCES = ['/',
@@ -21,6 +21,9 @@ const OFFLINE_RESOURCES = ['/',
                           '/assets/webfonts/fa-brands-400.woff2',
                           '/assets/webfonts/fa-solid-900.ttf',
                           '/assets/webfonts/fa-brands-400.ttf',
+                          '/assets/js/external/regression/DataPoint.min.js',
+                          '/assets/js/external/regression/Matrix.min.js',
+                          '/assets/js/external/regression/PolynomialRegression.min.js',
                           '/assets/js/external/webusbserial-min.js',
                           '/assets/js/external/plotly-basic.min.js',
                           '/assets/js/external/bootstrap.min.js',

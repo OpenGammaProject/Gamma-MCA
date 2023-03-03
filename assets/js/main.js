@@ -1,4 +1,4 @@
-import { SpectrumPlot, SeekClosest } from './plot.js';
+import { SpectrumPlot, SeekClosest, CalculateFWHM } from './plot.js';
 import { RawData } from './raw-data.js';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
 import { Notification } from './notifications.js';
@@ -9,8 +9,17 @@ export class SpectrumData {
     backgroundCps = [];
     dataTime = 1000;
     backgroundTime = 1000;
-    getTotalCounts(type) {
-        return this[type].reduce((acc, curr) => acc + curr, 0);
+    getTotalCounts(type, start = 0, end = this[type].length - 1) {
+        const dataArr = this[type];
+        let sum = 0;
+        if (start < 0 || start >= dataArr.length || end < 0 || end >= dataArr.length || start > end) {
+            console.error('Invalid sum range! Return default 0.');
+            return sum;
+        }
+        for (let i = start; i <= end; i++) {
+            sum += dataArr[i];
+        }
+        return sum;
     }
     addPulseData(type, newDataArr, adcChannels) {
         if (!this[type].length)
@@ -43,12 +52,19 @@ let isoListURL = 'assets/isotopes_energies_min.json';
 const isoList = {};
 let checkNearIso = false;
 let maxDist = 100;
-const APP_VERSION = '2023-02-20';
+const APP_VERSION = '2023-03-03';
 let localStorageAvailable = false;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
+const isoTableSortDirections = ['none', 'none', 'none'];
+const faSortClasses = {
+    none: 'fa-sort',
+    asc: 'fa-sort-up',
+    desc: 'fa-sort-down'
+};
 document.body.onload = async function () {
     localStorageAvailable = 'localStorage' in self;
+    fileSystemWritableAvail = (window.FileSystemHandle && 'createWritable' in FileSystemFileHandle.prototype);
     if (localStorageAvailable) {
         loadSettingsStorage();
     }
@@ -96,14 +112,17 @@ document.body.onload = async function () {
                 return;
             const file = await launchParams.files[0].getFile();
             const fileEnding = file.name.split('.')[1].toLowerCase();
+            if (fileSystemWritableAvail) {
+                if (fileEnding === 'json' || fileEnding === 'xml') {
+                    dataFileHandle = launchParams.files[0];
+                    document.getElementById('overwrite-button').disabled = false;
+                }
+            }
             const spectrumEndings = ['csv', 'tka', 'xml', 'txt', 'json'];
             if (spectrumEndings.includes(fileEnding))
                 getFileData(file);
             console.warn('File could not be imported!');
         });
-    }
-    if (window.FileSystemHandle && 'createWritable' in FileSystemFileHandle.prototype) {
-        fileSystemWritableAvail = true;
     }
     resetPlot();
     document.getElementById('version-tag').innerText += ` ${APP_VERSION}.`;
@@ -155,8 +174,24 @@ document.body.onload = async function () {
             }
         });
     }
-    const loadingSpinner = document.getElementById('loading');
-    loadingSpinner.parentNode.removeChild(loadingSpinner);
+    const isoTable = document.getElementById('table');
+    const thList = isoTable.querySelectorAll('th[data-sort-by]');
+    thList.forEach(th => {
+        th.addEventListener('click', () => {
+            const columnIndex = Number(th.dataset.sortBy);
+            const sortDirection = isoTableSortDirections[columnIndex];
+            isoTableSortDirections.fill('none');
+            isoTableSortDirections[columnIndex] = sortDirection === 'asc' ? 'desc' : 'asc';
+            thList.forEach((loopTableHeader, index) => {
+                const sortIcon = loopTableHeader.querySelector('.fa-solid');
+                sortIcon.classList.remove(...Object.values(faSortClasses));
+                sortIcon.classList.add(faSortClasses[isoTableSortDirections[index + 1]]);
+            });
+            sortTableByColumn(isoTable, columnIndex, isoTableSortDirections[columnIndex]);
+        });
+    });
+    const loadingOverlay = document.getElementById('loading');
+    loadingOverlay.parentNode.removeChild(loadingOverlay);
 };
 window.onbeforeunload = () => {
     return 'Are you sure to leave?';
@@ -316,6 +351,7 @@ function getFileData(file, background = false) {
                         element.disabled = true;
                     }
                     addImportLabel();
+                    toggleCal(true);
                 }
             }
             else {
@@ -385,6 +421,7 @@ function getFileData(file, background = false) {
                     element.disabled = true;
                 }
                 addImportLabel();
+                toggleCal(true);
             }
         }
         else if (background) {
@@ -442,8 +479,8 @@ function addImportLabel() {
 function updateSpectrumCounts() {
     const sCounts = spectrumData.getTotalCounts('data');
     const bgCounts = spectrumData.getTotalCounts('background');
-    document.getElementById('total-spec-cts').innerText = sCounts.toString() + ' cts';
-    document.getElementById('total-bg-cts').innerText = bgCounts.toString() + ' cts';
+    document.getElementById('total-spec-cts').innerText = sCounts.toString();
+    document.getElementById('total-bg-cts').innerText = bgCounts.toString();
     if (sCounts)
         document.getElementById('data-icon').classList.remove('d-none');
     if (bgCounts)
@@ -516,7 +553,7 @@ function bindPlotEvents() {
     myPlot.on('plotly_hover', hoverEvent);
     myPlot.on('plotly_unhover', unHover);
     myPlot.on('plotly_click', clickEvent);
-    myPlot.on('plotly_webglcontextlost', webGLcontextLoss);
+    myPlot.on('plotly_selected', selectEvent);
     myPlot.addEventListener('contextmenu', (event) => {
         event.preventDefault();
     });
@@ -549,30 +586,68 @@ function clickEvent(data) {
             document.getElementById(`select-${castKey}`).checked = calClick[key];
         }
     }
-    if (data.event.which === 1) {
-        if (prevClickLine)
-            plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
+    if (prevClickLine)
+        plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
+    if (data.event.button === 0) {
         const newLine = Math.round(data.points[0].x);
         plot.toggleLine(newLine, newLine.toString(), true);
         prevClickLine = newLine;
     }
-    else if (data.event.which === 3) {
-        if (prevClickLine)
-            plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
+    else if (data.event.button === 2) {
         prevClickLine = undefined;
     }
     plot.updatePlot(spectrumData);
 }
-function webGLcontextLoss() {
-    console.error('Lost WebGL context for Plotly.js! Falling back to default SVG render mode...');
-    plot.fallbackGL = true;
-    plot.resetPlot(spectrumData);
-    bindPlotEvents();
+function selectEvent(data) {
+    const roiElement = document.getElementById('roi-info');
+    const infoElement = document.getElementById('static-info');
+    if (!data?.range?.x.length) {
+        roiElement.classList.add('d-none');
+        infoElement.classList.remove('d-none');
+        return;
+    }
+    roiElement.classList.remove('d-none');
+    infoElement.classList.add('d-none');
+    let range = data.range.x;
+    range = range.map(value => Math.round(value));
+    let start = range[0];
+    let end = range[1];
+    document.getElementById('roi-range').innerText = `${start.toString()} - ${end.toString()}`;
+    document.getElementById('roi-range-unit').innerText = plot.calibration.enabled ? ' keV' : '';
+    if (plot.calibration.enabled) {
+        const max = Math.max(spectrumData.data.length, spectrumData.background.length);
+        const calAxis = plot.getCalAxis(max);
+        const axisLength = calAxis.length;
+        const findPoints = [start, end];
+        const numberOfPoints = findPoints.length;
+        const binPoints = [];
+        let compareIndex = 0;
+        for (let i = 0; i < axisLength; i++) {
+            const value = calAxis[i];
+            const compareValue = findPoints[compareIndex];
+            if (value > compareValue) {
+                binPoints.push(i);
+                compareIndex++;
+                if (compareIndex >= numberOfPoints)
+                    break;
+            }
+        }
+        start = binPoints[0];
+        end = binPoints[1];
+    }
+    const net = spectrumData.getTotalCounts('data', start, end);
+    const bg = spectrumData.getTotalCounts('background', start, end);
+    const total = net + bg;
+    document.getElementById('total-counts').innerText = total.toString();
+    document.getElementById('net-counts').innerText = net.toString();
+    document.getElementById('bg-counts').innerText = bg.toString();
+    document.getElementById('bg-ratio').innerText = (net / bg * 100).toFixed();
 }
 document.getElementById('apply-cal').onclick = event => toggleCal(event.target.checked);
-function toggleCal(enabled) {
+async function toggleCal(enabled) {
     const button = document.getElementById('calibration-label');
     button.innerHTML = enabled ? '<i class="fa-solid fa-rotate-left"></i> Reset' : '<i class="fa-solid fa-check"></i> Calibrate';
+    document.getElementById('apply-cal').checked = enabled;
     if (enabled) {
         if (!plot.calibration.imported) {
             const readoutArray = [
@@ -611,7 +686,7 @@ function toggleCal(enabled) {
                 delete plot.calibration.points.cTo;
                 delete plot.calibration.points.cFrom;
             }
-            plot.computeCoefficients();
+            await plot.computeCoefficients();
         }
     }
     displayCoeffs();
@@ -620,7 +695,8 @@ function toggleCal(enabled) {
     bindPlotEvents();
 }
 function displayCoeffs() {
-    for (const elem of ['c1', 'c2', 'c3']) {
+    const arr = ['c1', 'c2', 'c3'];
+    for (const elem of arr) {
         document.getElementById(`${elem}-coeff`).innerText = plot.calibration.coeff[elem].toString();
     }
 }
@@ -802,7 +878,8 @@ function makeXMLSpectrum(type, name) {
     root.appendChild(mt);
     const s = document.createElementNS(null, 'Spectrum');
     root.appendChild(s);
-    for (const datapoint of spectrumData[type]) {
+    const data = spectrumData[type];
+    for (const datapoint of data) {
         const d = document.createElementNS(null, 'DataPoint');
         d.textContent = datapoint.toString();
         s.appendChild(d);
@@ -1062,6 +1139,22 @@ function hideNotification(id) {
     if (toast.isShown())
         toast.hide();
 }
+function sortTableByColumn(table, columnIndex, sortDirection) {
+    const tbody = table.tBodies[0];
+    const rows = Array.from(tbody.rows);
+    rows.sort((a, b) => {
+        const aCellValue = a.cells[columnIndex].textContent?.trim() ?? '';
+        const bCellValue = b.cells[columnIndex].textContent?.trim() ?? '';
+        const aNumValue = parseFloat(aCellValue.replace(/[^\d.-]/g, ''));
+        const bNumValue = parseFloat(bCellValue.replace(/[^\d.-]/g, ''));
+        if (isNaN(aNumValue) || isNaN(bNumValue)) {
+            return aCellValue.localeCompare(bCellValue);
+        }
+        const comparison = aNumValue - bNumValue;
+        return sortDirection === 'asc' ? comparison : -comparison;
+    });
+    tbody.append(...rows);
+}
 document.getElementById('toggle-menu').onclick = () => loadIsotopes();
 document.getElementById('reload-isos-btn').onclick = () => loadIsotopes(true);
 let loadedIsos = false;
@@ -1084,37 +1177,53 @@ async function loadIsotopes(reload = false) {
         if (response.ok) {
             const json = await response.json();
             loadedIsos = true;
-            const tableElement = document.getElementById('iso-table');
+            const table = document.getElementById('table');
+            const tableElement = table.querySelector('#iso-table');
             tableElement.innerHTML = '';
+            for (const [key, energyArr] of Object.entries(json)) {
+                let index = 0;
+                const lowercaseName = key.toLowerCase().replace(/[^a-z0-9 -]/gi, '').trim();
+                const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1);
+                for (const energy of energyArr) {
+                    if (isNaN(energy))
+                        continue;
+                    if (isoList[name]) {
+                        isoList[name].push(energy);
+                    }
+                    else {
+                        isoList[name] = [energy];
+                    }
+                    const uniqueName = name + '-' + index;
+                    index++;
+                    const row = tableElement.insertRow();
+                    const cell1 = row.insertCell(0);
+                    const cell2 = row.insertCell(1);
+                    const cell3 = row.insertCell(2);
+                    cell1.onclick = () => cell1.firstChild.click();
+                    cell2.onclick = () => cell1.firstChild.click();
+                    cell3.onclick = () => cell1.firstChild.click();
+                    cell1.style.cursor = 'pointer';
+                    cell2.style.cursor = 'pointer';
+                    cell3.style.cursor = 'pointer';
+                    cell1.innerHTML = `<input class="form-check-input iso-table-label" id="${uniqueName}" type="checkbox" value="${energy}">`;
+                    cell3.innerText = energy.toFixed(2);
+                    const clickBox = document.getElementById(uniqueName);
+                    clickBox.onclick = () => plotIsotope(clickBox);
+                    const strArr = name.split('-');
+                    cell2.innerHTML = `<sup>${strArr[1]}</sup>${strArr[0]}`;
+                }
+            }
+            if (isoTableSortDirections[2] !== 'asc') {
+                const sortButton = table.querySelector('th[data-sort-by="2"]');
+                sortButton.click();
+            }
+            else {
+                sortTableByColumn(table, 2, 'asc');
+            }
             plot.clearAnnos();
             plot.updatePlot(spectrumData);
-            const intKeys = Object.keys(json);
-            intKeys.sort((a, b) => parseFloat(a) - parseFloat(b));
-            let index = 0;
-            for (const key of intKeys) {
-                index++;
-                isoList[parseFloat(key)] = json[key];
-                const row = tableElement.insertRow();
-                const cell1 = row.insertCell(0);
-                const cell2 = row.insertCell(1);
-                const cell3 = row.insertCell(2);
-                cell1.onclick = () => cell1.firstChild.click();
-                cell2.onclick = () => cell1.firstChild.click();
-                cell3.onclick = () => cell1.firstChild.click();
-                cell1.style.cursor = 'pointer';
-                cell2.style.cursor = 'pointer';
-                cell3.style.cursor = 'pointer';
-                const energy = parseFloat(key.trim());
-                const lowercaseName = json[key].toLowerCase().replace(/[^a-z0-9 -]/gi, '').trim();
-                const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1) + '-' + index;
-                cell1.innerHTML = `<input class="form-check-input iso-table-label" id="${name}" type="checkbox" value="${energy}">`;
-                cell3.innerText = energy.toFixed(2);
-                const clickBox = document.getElementById(name);
-                clickBox.onclick = () => plotIsotope(clickBox);
-                const strArr = name.split('-');
-                cell2.innerHTML = `<sup>${strArr[1]}</sup>${strArr[0]}`;
-            }
-            plot.isoList = isoList;
+            plot.isotopeSeeker = new SeekClosest(isoList);
+            isotopeSeeker = new SeekClosest(isoList);
         }
         else {
             isoError.innerText = `Could not load isotope list! HTTP Error: ${response.status}. Please try again.`;
@@ -1123,6 +1232,7 @@ async function loadIsotopes(reload = false) {
         }
     }
     catch (err) {
+        console.error(err);
         isoError.innerText = 'Could not load isotope list! Connection refused - you are probably offline.';
         isoError.classList.remove('d-none');
         successFlag = false;
@@ -1131,21 +1241,22 @@ async function loadIsotopes(reload = false) {
     return successFlag;
 }
 document.getElementById('iso-hover').onclick = () => toggleIsoHover();
-let prevIso = {};
+let prevIso;
 function toggleIsoHover() {
     checkNearIso = !checkNearIso;
     closestIso(-100000);
 }
+let isotopeSeeker;
 async function closestIso(value) {
     if (!await loadIsotopes())
         return;
-    const { energy, name } = new SeekClosest(isoList).seek(value, maxDist);
-    const energyVal = parseFloat(Object.keys(prevIso)[0]);
-    if (!isNaN(energyVal))
-        plot.toggleLine(energyVal, Object.keys(prevIso)[0], false);
+    if (!isotopeSeeker)
+        isotopeSeeker = new SeekClosest(isoList);
+    if (prevIso)
+        plot.toggleLine(prevIso[1], prevIso[0], false);
+    const { energy, name } = isotopeSeeker.seek(value, maxDist);
     if (energy && name) {
-        const newIso = {};
-        newIso[energy] = name;
+        const newIso = [name, energy];
         if (prevIso !== newIso)
             prevIso = newIso;
         plot.toggleLine(energy, name);
@@ -1234,7 +1345,6 @@ function bindInputs() {
         'custom-ser-adc': 'serChannels',
         'peak-thres': 'peakThres',
         'peak-lag': 'peakLag',
-        'peak-width': 'peakWidth',
         'seek-width': 'seekWidth',
         'gauss-sigma': 'gaussSigma'
     };
@@ -1247,6 +1357,9 @@ function bindInputs() {
         };
         buttonElement.onclick = () => changeSettings(settingsName, valueElement);
     }
+    document.getElementById('new-flags').onclick = event => changeSettings('newPeakStyle', event.target);
+    document.getElementById('enable-res').onclick = event => changeSettings('showEnergyRes', event.target);
+    document.getElementById('fwhm-fast').onclick = event => changeSettings('useFWHMFast', event.target);
     document.getElementById('edit-plot').onclick = event => changeSettings('editMode', event.target);
     document.getElementById('toggle-time-limit').onclick = event => changeSettings('timeLimitBool', event.target);
     document.getElementById('download-format').onchange = event => changeSettings('plotDownload', event.target);
@@ -1265,9 +1378,11 @@ function loadSettingsDefault() {
     document.getElementById('custom-baud').value = SerialManager.baudRate.toString();
     document.getElementById('eol-char').value = SerialManager.eolChar;
     document.getElementById('smaVal').value = plot.smaLength.toString();
+    document.getElementById('new-flags').checked = plot.peakConfig.newPeakStyle;
+    document.getElementById('enable-res').checked = plot.peakConfig.showFWHM;
+    document.getElementById('fwhm-fast').checked = CalculateFWHM.fastMode;
     document.getElementById('peak-thres').value = plot.peakConfig.thres.toString();
     document.getElementById('peak-lag').value = plot.peakConfig.lag.toString();
-    document.getElementById('peak-width').value = plot.peakConfig.width.toString();
     document.getElementById('seek-width').value = plot.peakConfig.seekWidth.toString();
     document.getElementById('gauss-sigma').value = plot.gaussSigma.toString();
     const formatSelector = document.getElementById('download-format');
@@ -1283,59 +1398,65 @@ function loadSettingsStorage() {
     if (setting)
         isoListURL = new URL(setting).href;
     setting = loadJSON('editMode');
-    if (setting)
+    if (setting !== null)
         plot.editableMode = setting;
     setting = loadJSON('fileDelimiter');
-    if (setting)
+    if (setting !== null)
         raw.delimiter = setting;
     setting = loadJSON('fileChannels');
-    if (setting)
+    if (setting !== null)
         raw.adcChannels = setting;
     setting = loadJSON('plotRefreshRate');
-    if (setting)
+    if (setting !== null)
         refreshRate = setting;
     setting = loadJSON('serBufferSize');
-    if (setting)
+    if (setting !== null)
         SerialManager.maxSize = setting;
     setting = loadJSON('timeLimitBool');
-    if (setting)
+    if (setting !== null)
         maxRecTimeEnabled = setting;
     setting = loadJSON('timeLimit');
-    if (setting)
+    if (setting !== null)
         maxRecTime = setting;
     setting = loadJSON('maxIsoDist');
-    if (setting)
+    if (setting !== null)
         maxDist = setting;
     setting = loadJSON('baudRate');
-    if (setting)
+    if (setting !== null)
         SerialManager.baudRate = setting;
     setting = loadJSON('eolChar');
-    if (setting)
+    if (setting !== null)
         SerialManager.eolChar = setting;
     setting = loadJSON('serChannels');
-    if (setting)
+    if (setting !== null)
         SerialManager.adcChannels = setting;
     setting = loadJSON('smaLength');
-    if (setting)
+    if (setting !== null)
         plot.smaLength = setting;
     setting = loadJSON('peakThres');
-    if (setting)
+    if (setting !== null)
         plot.peakConfig.thres = setting;
     setting = loadJSON('peakLag');
-    if (setting)
+    if (setting !== null)
         plot.peakConfig.lag = setting;
-    setting = loadJSON('peakWidth');
-    if (setting)
-        plot.peakConfig.width = setting;
     setting = loadJSON('seekWidth');
-    if (setting)
+    if (setting !== null)
         plot.peakConfig.seekWidth = setting;
     setting = loadJSON('plotDownload');
-    if (setting)
+    if (setting !== null)
         plot.downloadFormat = setting;
     setting = loadJSON('gaussSigma');
-    if (setting)
+    if (setting !== null)
         plot.gaussSigma = setting;
+    setting = loadJSON('showEnergyRes');
+    if (setting !== null)
+        plot.peakConfig.showFWHM = setting;
+    setting = loadJSON('useFWHMFast');
+    if (setting !== null)
+        CalculateFWHM.fastMode = setting;
+    setting = loadJSON('newPeakStyle');
+    if (setting !== null)
+        plot.peakConfig.newPeakStyle = setting;
 }
 function changeSettings(name, element) {
     const stringValue = element.value.trim();
@@ -1437,13 +1558,6 @@ function changeSettings(name, element) {
             result = saveJSON(name, numVal);
             break;
         }
-        case 'peakWidth': {
-            const numVal = parseInt(stringValue);
-            plot.peakConfig.width = numVal;
-            plot.updatePlot(spectrumData);
-            result = saveJSON(name, numVal);
-            break;
-        }
         case 'seekWidth': {
             const numVal = parseFloat(stringValue);
             plot.peakConfig.seekWidth = numVal;
@@ -1462,6 +1576,27 @@ function changeSettings(name, element) {
             plot.gaussSigma = numVal;
             plot.updatePlot(spectrumData);
             result = saveJSON(name, numVal);
+            break;
+        }
+        case 'showEnergyRes': {
+            const boolVal = element.checked;
+            plot.peakConfig.showFWHM = boolVal;
+            plot.updatePlot(spectrumData);
+            result = saveJSON(name, boolVal);
+            break;
+        }
+        case 'useFWHMFast': {
+            const boolVal = element.checked;
+            CalculateFWHM.fastMode = boolVal;
+            plot.updatePlot(spectrumData);
+            result = saveJSON(name, boolVal);
+            break;
+        }
+        case 'newPeakStyle': {
+            const boolVal = element.checked;
+            plot.peakConfig.newPeakStyle = boolVal;
+            plot.updatePlot(spectrumData);
+            result = saveJSON(name, boolVal);
             break;
         }
         default: {
