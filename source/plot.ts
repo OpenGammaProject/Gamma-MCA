@@ -604,7 +604,7 @@ export class SpectrumPlot {
         newLine.line.width = 0;
         //newLine.line.width = 2;
 
-        newAnno.y = height + 5;
+        newAnno.y = height * 1.03;
         newAnno.yref = 'y';
         newAnno.arrowhead = 1;
         newAnno.arrowsize = 0.8;
@@ -1085,6 +1085,22 @@ export class SpectrumPlot {
     };
 
     /*
+      CPS enabled
+    */
+    if (this.cps) {
+      if (Math.max(...data[0].y) < 1) { // Less than 1 cps at max, switch to cpm
+        for (const trace of data) {
+          trace.y = trace.y.map(value => value * 60);
+        }
+        layout.yaxis.title = 'Counts Per Minute [60 s<sup>-1</sup>]';
+        layout.yaxis.ticksuffix = 'cpm';
+      } else { // Enough counts for cpm
+        layout.yaxis.title = 'Counts Per Second [s<sup>-1</sup>]';
+        layout.yaxis.ticksuffix = 'cps';
+      }
+    }
+
+    /*
       Peak Detection Stuff
     */
     if (this.peakConfig.enabled && data.length) {
@@ -1127,22 +1143,6 @@ export class SpectrumPlot {
     }
 
     if (!this.peakConfig.enabled || !data.length || data.length >= 3) data.reverse(); // Change/Fix data order
-
-    /*
-      CPS enabled
-    */
-    if (this.cps) {
-      if (Math.max(...data[0].y) < 1) { // Less than 1 cps at max, switch to cpm
-        for (const trace of data) {
-          trace.y = trace.y.map(value => value * 60);
-        }
-        layout.yaxis.title = 'Counts Per Minute [60 s<sup>-1</sup>]';
-        layout.yaxis.ticksuffix = 'cpm';
-      } else { // Enough counts for cpm
-        layout.yaxis.title = 'Counts Per Second [s<sup>-1</sup>]';
-        layout.yaxis.ticksuffix = 'cps';
-      }
-    }
 
     layout.shapes = this.shapes;
     layout.annotations = JSON.parse(JSON.stringify(this.annotations)); //layout.annotations.concat(JSON.parse(JSON.stringify(this.annotations))); // Copy array but do not reference
