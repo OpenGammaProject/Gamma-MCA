@@ -63,6 +63,7 @@ interface Anno {
   font: {
     size: number;
   };
+  bgcolor?: string;
 }
 
 interface CoeffPoints {
@@ -281,11 +282,11 @@ export class SpectrumPlot {
     mode: <PeakModes>undefined, // Gaussian Correlation: 0, Energy: 1 and Isotope: 2 modes
     thres: 0.005,
     lag: 50,
-    width: 5,
     seekWidth: 2,
+    showFWHM: true,
+    newPeakStyle: true,
     lines: <number[]>[]
   };
-  showFWHM = true;
   gaussSigma = 2;
   private customDownloadModeBar = {
     name: 'downloadPlot',
@@ -483,7 +484,7 @@ export class SpectrumPlot {
   /*
     Find and mark energy peaks by using two different moving averages
   */
-  peakFinder(xAxis: number[], yAxis: number[], yAxis2: number[]): void {
+  peakFinder(xAxis: number[], yAxis: number[], heightAxis: number[]): void {
     this.clearPeakFinder();
 
     const longData = this.computeMovingAverage(yAxis, this.peakConfig.lag);
@@ -505,7 +506,7 @@ export class SpectrumPlot {
     for (let i = 0; i < peakLen; i++) {
       values.push(peakLines[i]);
 
-      if (Math.abs(peakLines[i + 1] - peakLines[i]) > this.peakConfig.width) {
+      if (Math.abs(peakLines[i + 1] - peakLines[i]) > 2) { // Check if adjacent bins, i.e. one connected peak
         let result = 0;
         let size: number;
 
@@ -520,27 +521,22 @@ export class SpectrumPlot {
           size = this.peakConfig.seekWidth * (Math.max(...values) - Math.min(...values));
         }
 
-        // Convert result in keV back to bins
-        let j = 0;
-        let value = xAxis[j]; // Iterating over the whole x axis, meh...
+        const resultBin = Math.round(result);
+        const height = heightAxis[resultBin];
+        if (this.calibration.enabled) result = this.getCalAxis(xAxis.length)[resultBin];
 
-        while (value < result) {
-          value = xAxis[j];
-          j++;
-        }
-
-        const height = yAxis2[j-1] * 1.01; // Get the number of counts in this bin
-
-        if (this.peakConfig.mode === 'energy') {
-          this.toggleLine(result, Math.round(result).toString(), true, height);
-          this.peakConfig.lines.push(result);
-        } else if (this.peakConfig.mode === 'isotopes') { // Isotope Mode
-          if (!this.isotopeSeeker) throw 'No isotope seeker found!';
-
-          const { energy, name } = this.isotopeSeeker.seek(result, size);
-          if (energy && name) {
-            this.toggleLine(energy, name, true, height);
-            this.peakConfig.lines.push(energy);
+        if (height >= 0) {
+          if (this.peakConfig.mode === 'energy') {
+            this.toggleLine(result, Math.round(result).toString(), true, height);
+            this.peakConfig.lines.push(result);
+          } else if (this.peakConfig.mode === 'isotopes') { // Isotope Mode
+            if (!this.isotopeSeeker) throw 'No isotope seeker found!';
+  
+            const { energy, name } = this.isotopeSeeker.seek(result, size);
+            if (energy && name) {
+              this.toggleLine(energy, name, true, height);
+              this.peakConfig.lines.push(energy);
+            }
           }
         }
 
@@ -563,8 +559,8 @@ export class SpectrumPlot {
   /*
     Add a line
   */
-  toggleLine(energy: number, name: string, enabled = true, height = 0): void {
-    name = name.replaceAll('-',''); // Remove - to save space
+  toggleLine(energy: number, name: string, enabled = true, height = -1): void {
+    //name = name.replaceAll('-',''); // Remove - to save space
     if (enabled) {
       const newLine: Shape = {
         type: 'line',
@@ -578,7 +574,7 @@ export class SpectrumPlot {
         editable: false,
         line: {
           color: 'blue',
-          width: 1,
+          width: 0.8,
           dash: 'dot'
         },
         opacity: 0.66
@@ -600,18 +596,20 @@ export class SpectrumPlot {
         },
       };
 
-      if (height > 0) {
-        newLine.yref = 'y';
+      if (height >= 0 && this.peakConfig.newPeakStyle) {
+        //newLine.yref = 'y';
         newLine.y0 = 0;
-        newLine.y1 = height;
-        //newLine.line.dash = 'dashdot';
-        newLine.line.width = 2; 
+        //newLine.y1 = height;
+        newLine.y1 = 0;
+        newLine.line.width = 0;
+        //newLine.line.width = 2;
 
-        newAnno.y = height;
+        newAnno.y = height + 5;
         newAnno.yref = 'y';
         newAnno.arrowhead = 1;
         newAnno.arrowsize = 0.8;
         newAnno.ay = -40;
+        newAnno.bgcolor = 'rgba(255,255,255,0.4)';
       }
 
       for (const shape of this.shapes) {
@@ -1105,7 +1103,7 @@ export class SpectrumPlot {
         //opacity: 0.8,
         line: {
           color: 'black',
-          width: 1,
+          width: 0.6,
           shape: this.linePlot ? 'linear' : 'hvh',
         },
         marker: {
@@ -1113,9 +1111,9 @@ export class SpectrumPlot {
         }
       };
 
-      this.peakFinder(data[0].x, gaussData, data[0].y);
+      this.peakFinder(this.getXAxis(gaussData.length), gaussData, data[0].y);
 
-      if (this.showFWHM) {
+      if (this.peakConfig.showFWHM) {
         const peakResolutions = new CalculateFWHM(this.peakConfig.lines, data[0].x, data[0].y).getResolution();
         
         for (const anno of this.annotations) {

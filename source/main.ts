@@ -20,7 +20,6 @@
 
     - Calibration n-polynomial regression
     - Dark Mode -> Bootstrap v5.3
-    - (!!!) Styling for toggleLine in plot
 
   Known Issues/Problems/Limitations:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance.
@@ -1837,7 +1836,6 @@ function bindInputs(): void {
     'custom-ser-adc': 'serChannels',
     'peak-thres': 'peakThres',
     'peak-lag': 'peakLag',
-    'peak-width': 'peakWidth',
     'seek-width': 'seekWidth',
     'gauss-sigma': 'gaussSigma'
   }
@@ -1851,6 +1849,7 @@ function bindInputs(): void {
   }
 
   // Bind settings button press or onchange events for settings that do not have the default value input element
+  document.getElementById('new-flags')!.onclick = event => changeSettings('newPeakStyle', <HTMLInputElement>event.target); // Checkbox
   document.getElementById('enable-res')!.onclick = event => changeSettings('showEnergyRes', <HTMLInputElement>event.target); // Checkbox
   document.getElementById('fwhm-fast')!.onclick = event => changeSettings('useFWHMFast', <HTMLInputElement>event.target); // Checkbox
   document.getElementById('edit-plot')!.onclick = event => changeSettings('editMode', <HTMLInputElement>event.target); // Checkbox
@@ -1875,12 +1874,12 @@ function loadSettingsDefault(): void {
 
   (<HTMLInputElement>document.getElementById('smaVal')).value = plot.smaLength.toString();
 
-  (<HTMLInputElement>document.getElementById('enable-res')).checked = plot.showFWHM;
+  (<HTMLInputElement>document.getElementById('new-flags')).checked = plot.peakConfig.newPeakStyle;
+  (<HTMLInputElement>document.getElementById('enable-res')).checked = plot.peakConfig.showFWHM;
   (<HTMLInputElement>document.getElementById('fwhm-fast')).checked = CalculateFWHM.fastMode;
 
   (<HTMLInputElement>document.getElementById('peak-thres')).value = plot.peakConfig.thres.toString();
   (<HTMLInputElement>document.getElementById('peak-lag')).value = plot.peakConfig.lag.toString();
-  (<HTMLInputElement>document.getElementById('peak-width')).value = plot.peakConfig.width.toString();
   (<HTMLInputElement>document.getElementById('seek-width')).value = plot.peakConfig.seekWidth.toString();
   (<HTMLInputElement>document.getElementById('gauss-sigma')).value = plot.gaussSigma.toString();
 
@@ -1939,9 +1938,6 @@ function loadSettingsStorage(): void {
   setting = loadJSON('peakLag');
   if (setting !== null) plot.peakConfig.lag = setting;
 
-  setting = loadJSON('peakWidth');
-  if (setting !== null) plot.peakConfig.width = setting;
-
   setting = loadJSON('seekWidth');
   if (setting !== null) plot.peakConfig.seekWidth = setting;
 
@@ -1952,10 +1948,13 @@ function loadSettingsStorage(): void {
   if (setting !== null) plot.gaussSigma = setting;
 
   setting = loadJSON('showEnergyRes');
-  if (setting !== null) plot.showFWHM = setting;
+  if (setting !== null) plot.peakConfig.showFWHM = setting;
 
   setting = loadJSON('useFWHMFast');
   if (setting !== null) CalculateFWHM.fastMode = setting;
+
+  setting = loadJSON('newPeakStyle');
+  if (setting !== null) plot.peakConfig.newPeakStyle = setting;
 }
 
 
@@ -2076,14 +2075,6 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       result = saveJSON(name, numVal);
       break;
     }
-    case 'peakWidth': {
-      const numVal = parseInt(stringValue);
-      plot.peakConfig.width = numVal;
-      plot.updatePlot(spectrumData);
-
-      result = saveJSON(name, numVal);
-      break;
-    }
     case 'seekWidth': {
       const numVal = parseFloat(stringValue);
       plot.peakConfig.seekWidth = numVal;
@@ -2109,7 +2100,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
     }
     case 'showEnergyRes': {
       const boolVal = (<HTMLInputElement>element).checked;
-      plot.showFWHM = boolVal;
+      plot.peakConfig.showFWHM = boolVal;
       plot.updatePlot(spectrumData);
 
       result = saveJSON(name, boolVal);
@@ -2118,6 +2109,14 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
     case 'useFWHMFast': {
       const boolVal = (<HTMLInputElement>element).checked;
       CalculateFWHM.fastMode = boolVal;
+      plot.updatePlot(spectrumData);
+      
+      result = saveJSON(name, boolVal);
+      break;
+    }
+    case 'newPeakStyle': {
+      const boolVal = (<HTMLInputElement>element).checked;
+      plot.peakConfig.newPeakStyle = boolVal;
       plot.updatePlot(spectrumData);
       
       result = saveJSON(name, boolVal);

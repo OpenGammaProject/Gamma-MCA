@@ -959,6 +959,12 @@
                     </div>
                     <p><small>Automatically compute the energy resolution of all the peaks.</small></p>
 
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="new-flags">
+                      <label class="form-check-label" for="new-flags">New Highlighting Style</label>
+                    </div>
+                    <p><small>Use the new highlighting style for the peak finder. Turn off to use the old style.</small></p>
+
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="gauss-sigma">Gaussian Filter &sigma;</label>
                       <input type="number" class="form-control" id="gauss-sigma" min="1" step="1">
@@ -981,20 +987,11 @@
                     <p><small>Change this after adapting the <code>Smoothing</code> setting. Decreasing this will make the peak finder trigger on lower-amplitude peaks and vice versa. Any positive float is valid.</small></p>
 
                     <div class="input-group input-group-sm">
-                      <label class="input-group-text" for="peak-width">Peak Width</label>
-                      <input type="number" class="form-control" id="peak-width" min="1">
-                      <label class="input-group-text" for="peak-width">keV</label>
-                      <button class="btn btn-primary" type="button" id="peak-width-btn" title="Apply"> <i class="fas fa-check"></i> </button>
-                    </div>
-                    <p><small>Maximum distance two peak lines can be apart to count as one single peak. Any positive integer is valid.</small></p>
-
-                    <div class="input-group input-group-sm">
                       <label class="input-group-text" for="seek-width">Isotope Seek</label>
                       <input type="number" class="form-control" id="seek-width" min="1">
-                      <label class="input-group-text" for="seek-width">keV</label>
                       <button class="btn btn-primary" type="button" id="seek-width-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
-                    <p><small>Maximum distance to search for isotopes around the peak energy (multiple of the peak width). Any positive float is valid.</small></p>
+                    <p><small>Maximum distance to search for isotopes around the peak energy (multiple of the peak width in bins). Any positive float is valid.</small></p>
 
                   </div>
                 </div>

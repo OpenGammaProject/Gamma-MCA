@@ -1345,7 +1345,6 @@ function bindInputs() {
         'custom-ser-adc': 'serChannels',
         'peak-thres': 'peakThres',
         'peak-lag': 'peakLag',
-        'peak-width': 'peakWidth',
         'seek-width': 'seekWidth',
         'gauss-sigma': 'gaussSigma'
     };
@@ -1358,6 +1357,7 @@ function bindInputs() {
         };
         buttonElement.onclick = () => changeSettings(settingsName, valueElement);
     }
+    document.getElementById('new-flags').onclick = event => changeSettings('newPeakStyle', event.target);
     document.getElementById('enable-res').onclick = event => changeSettings('showEnergyRes', event.target);
     document.getElementById('fwhm-fast').onclick = event => changeSettings('useFWHMFast', event.target);
     document.getElementById('edit-plot').onclick = event => changeSettings('editMode', event.target);
@@ -1378,11 +1378,11 @@ function loadSettingsDefault() {
     document.getElementById('custom-baud').value = SerialManager.baudRate.toString();
     document.getElementById('eol-char').value = SerialManager.eolChar;
     document.getElementById('smaVal').value = plot.smaLength.toString();
-    document.getElementById('enable-res').checked = plot.showFWHM;
+    document.getElementById('new-flags').checked = plot.peakConfig.newPeakStyle;
+    document.getElementById('enable-res').checked = plot.peakConfig.showFWHM;
     document.getElementById('fwhm-fast').checked = CalculateFWHM.fastMode;
     document.getElementById('peak-thres').value = plot.peakConfig.thres.toString();
     document.getElementById('peak-lag').value = plot.peakConfig.lag.toString();
-    document.getElementById('peak-width').value = plot.peakConfig.width.toString();
     document.getElementById('seek-width').value = plot.peakConfig.seekWidth.toString();
     document.getElementById('gauss-sigma').value = plot.gaussSigma.toString();
     const formatSelector = document.getElementById('download-format');
@@ -1439,9 +1439,6 @@ function loadSettingsStorage() {
     setting = loadJSON('peakLag');
     if (setting !== null)
         plot.peakConfig.lag = setting;
-    setting = loadJSON('peakWidth');
-    if (setting !== null)
-        plot.peakConfig.width = setting;
     setting = loadJSON('seekWidth');
     if (setting !== null)
         plot.peakConfig.seekWidth = setting;
@@ -1453,10 +1450,13 @@ function loadSettingsStorage() {
         plot.gaussSigma = setting;
     setting = loadJSON('showEnergyRes');
     if (setting !== null)
-        plot.showFWHM = setting;
+        plot.peakConfig.showFWHM = setting;
     setting = loadJSON('useFWHMFast');
     if (setting !== null)
         CalculateFWHM.fastMode = setting;
+    setting = loadJSON('newPeakStyle');
+    if (setting !== null)
+        plot.peakConfig.newPeakStyle = setting;
 }
 function changeSettings(name, element) {
     const stringValue = element.value.trim();
@@ -1558,13 +1558,6 @@ function changeSettings(name, element) {
             result = saveJSON(name, numVal);
             break;
         }
-        case 'peakWidth': {
-            const numVal = parseInt(stringValue);
-            plot.peakConfig.width = numVal;
-            plot.updatePlot(spectrumData);
-            result = saveJSON(name, numVal);
-            break;
-        }
         case 'seekWidth': {
             const numVal = parseFloat(stringValue);
             plot.peakConfig.seekWidth = numVal;
@@ -1587,7 +1580,7 @@ function changeSettings(name, element) {
         }
         case 'showEnergyRes': {
             const boolVal = element.checked;
-            plot.showFWHM = boolVal;
+            plot.peakConfig.showFWHM = boolVal;
             plot.updatePlot(spectrumData);
             result = saveJSON(name, boolVal);
             break;
@@ -1595,6 +1588,13 @@ function changeSettings(name, element) {
         case 'useFWHMFast': {
             const boolVal = element.checked;
             CalculateFWHM.fastMode = boolVal;
+            plot.updatePlot(spectrumData);
+            result = saveJSON(name, boolVal);
+            break;
+        }
+        case 'newPeakStyle': {
+            const boolVal = element.checked;
+            plot.peakConfig.newPeakStyle = boolVal;
             plot.updatePlot(spectrumData);
             result = saveJSON(name, boolVal);
             break;

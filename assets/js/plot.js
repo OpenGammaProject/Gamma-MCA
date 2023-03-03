@@ -136,11 +136,11 @@ export class SpectrumPlot {
         mode: undefined,
         thres: 0.005,
         lag: 50,
-        width: 5,
         seekWidth: 2,
+        showFWHM: true,
+        newPeakStyle: true,
         lines: []
     };
-    showFWHM = true;
     gaussSigma = 2;
     customDownloadModeBar = {
         name: 'downloadPlot',
@@ -297,7 +297,7 @@ export class SpectrumPlot {
             this.peakConfig.lines = [];
         }
     }
-    peakFinder(xAxis, yAxis, yAxis2) {
+    peakFinder(xAxis, yAxis, heightAxis) {
         this.clearPeakFinder();
         const longData = this.computeMovingAverage(yAxis, this.peakConfig.lag);
         const maxVal = Math.max(...yAxis);
@@ -312,7 +312,7 @@ export class SpectrumPlot {
         const peakLen = peakLines.length;
         for (let i = 0; i < peakLen; i++) {
             values.push(peakLines[i]);
-            if (Math.abs(peakLines[i + 1] - peakLines[i]) > this.peakConfig.width) {
+            if (Math.abs(peakLines[i + 1] - peakLines[i]) > 2) {
                 let result = 0;
                 let size;
                 if (values.length === 1) {
@@ -326,24 +326,23 @@ export class SpectrumPlot {
                     result /= values.length;
                     size = this.peakConfig.seekWidth * (Math.max(...values) - Math.min(...values));
                 }
-                let j = 0;
-                let value = xAxis[j];
-                while (value < result) {
-                    value = xAxis[j];
-                    j++;
-                }
-                const height = yAxis2[j - 1] * 1.01;
-                if (this.peakConfig.mode === 'energy') {
-                    this.toggleLine(result, Math.round(result).toString(), true, height);
-                    this.peakConfig.lines.push(result);
-                }
-                else if (this.peakConfig.mode === 'isotopes') {
-                    if (!this.isotopeSeeker)
-                        throw 'No isotope seeker found!';
-                    const { energy, name } = this.isotopeSeeker.seek(result, size);
-                    if (energy && name) {
-                        this.toggleLine(energy, name, true, height);
-                        this.peakConfig.lines.push(energy);
+                const resultBin = Math.round(result);
+                const height = heightAxis[resultBin];
+                if (this.calibration.enabled)
+                    result = this.getCalAxis(xAxis.length)[resultBin];
+                if (height >= 0) {
+                    if (this.peakConfig.mode === 'energy') {
+                        this.toggleLine(result, Math.round(result).toString(), true, height);
+                        this.peakConfig.lines.push(result);
+                    }
+                    else if (this.peakConfig.mode === 'isotopes') {
+                        if (!this.isotopeSeeker)
+                            throw 'No isotope seeker found!';
+                        const { energy, name } = this.isotopeSeeker.seek(result, size);
+                        if (energy && name) {
+                            this.toggleLine(energy, name, true, height);
+                            this.peakConfig.lines.push(energy);
+                        }
                     }
                 }
                 values = [];
@@ -356,8 +355,7 @@ export class SpectrumPlot {
     updatePlot(spectrumData) {
         this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData, true);
     }
-    toggleLine(energy, name, enabled = true, height = 0) {
-        name = name.replaceAll('-', '');
+    toggleLine(energy, name, enabled = true, height = -1) {
         if (enabled) {
             const newLine = {
                 type: 'line',
@@ -370,7 +368,7 @@ export class SpectrumPlot {
                 editable: false,
                 line: {
                     color: 'blue',
-                    width: 1,
+                    width: 0.8,
                     dash: 'dot'
                 },
                 opacity: 0.66
@@ -391,16 +389,16 @@ export class SpectrumPlot {
                     size: 11,
                 },
             };
-            if (height > 0) {
-                newLine.yref = 'y';
+            if (height >= 0 && this.peakConfig.newPeakStyle) {
                 newLine.y0 = 0;
-                newLine.y1 = height;
-                newLine.line.width = 2;
-                newAnno.y = height;
+                newLine.y1 = 0;
+                newLine.line.width = 0;
+                newAnno.y = height + 5;
                 newAnno.yref = 'y';
                 newAnno.arrowhead = 1;
                 newAnno.arrowsize = 0.8;
                 newAnno.ay = -40;
+                newAnno.bgcolor = 'rgba(255,255,255,0.4)';
             }
             for (const shape of this.shapes) {
                 if (shape.x0 === newLine.x0)
@@ -795,15 +793,15 @@ export class SpectrumPlot {
                 mode: 'lines',
                 line: {
                     color: 'black',
-                    width: 1,
+                    width: 0.6,
                     shape: this.linePlot ? 'linear' : 'hvh',
                 },
                 marker: {
                     color: 'black',
                 }
             };
-            this.peakFinder(data[0].x, gaussData, data[0].y);
-            if (this.showFWHM) {
+            this.peakFinder(this.getXAxis(gaussData.length), gaussData, data[0].y);
+            if (this.peakConfig.showFWHM) {
                 const peakResolutions = new CalculateFWHM(this.peakConfig.lines, data[0].x, data[0].y).getResolution();
                 for (const anno of this.annotations) {
                     const fwhmValue = peakResolutions[anno.x];
