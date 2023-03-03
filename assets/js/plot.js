@@ -69,7 +69,8 @@ export class CalculateFWHM {
                 energyLeft = this.calibratedBins[binLeft];
                 heightLeft = this.yAxis[binLeft];
             }
-            const fwhmPartLeft = peakEnergy - energyLeft;
+            const avgLeft = (energyLeft + this.calibratedBins[binLeft + 1]) / 2;
+            const fwhmPartLeft = peakEnergy - avgLeft;
             if (CalculateFWHM.fastMode) {
                 peakFWHMs[peakEnergy] = fwhmPartLeft * 2;
                 continue;
@@ -83,7 +84,8 @@ export class CalculateFWHM {
                 energyRight = this.calibratedBins[binRight];
                 heightRight = this.yAxis[binRight];
             }
-            const fwhmPartRight = energyRight - peakEnergy;
+            const avgRight = (energyRight + this.calibratedBins[binRight - 1]) / 2;
+            const fwhmPartRight = avgRight - peakEnergy;
             peakFWHMs[peakEnergy] = fwhmPartLeft + fwhmPartRight;
         }
         return peakFWHMs;

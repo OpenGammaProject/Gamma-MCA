@@ -190,13 +190,14 @@ export class CalculateFWHM {
       let energyLeft = this.calibratedBins[binLeft];
       let heightLeft = this.yAxis[binLeft];
 
-      while (energyLeft > limitMin && heightLeft > halfHeight) { // Break if too far away or if under half the height -> assumes worst case for FWHM
+      while (energyLeft > limitMin && heightLeft > halfHeight) { // Break if too far away or if under half the height
         binLeft--;
         energyLeft = this.calibratedBins[binLeft];
         heightLeft = this.yAxis[binLeft];
       }
 
-      const fwhmPartLeft = peakEnergy - energyLeft;
+      const avgLeft = (energyLeft + this.calibratedBins[binLeft + 1]) / 2;
+      const fwhmPartLeft = peakEnergy - avgLeft;
 
       if (CalculateFWHM.fastMode) {
         peakFWHMs[peakEnergy] = fwhmPartLeft * 2; // Assume perfectly symmetrical peak and FWHM
@@ -217,7 +218,8 @@ export class CalculateFWHM {
         heightRight = this.yAxis[binRight];
       }
 
-      const fwhmPartRight = energyRight - peakEnergy;
+      const avgRight = (energyRight + this.calibratedBins[binRight - 1]) / 2;
+      const fwhmPartRight = avgRight - peakEnergy;
       peakFWHMs[peakEnergy] = fwhmPartLeft + fwhmPartRight;
       //peakFWHMs.push(fwhmPartLeft + fwhmPartRight);
     }
