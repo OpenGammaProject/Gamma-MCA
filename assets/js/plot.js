@@ -393,7 +393,7 @@ export class SpectrumPlot {
                 newLine.y0 = 0;
                 newLine.y1 = 0;
                 newLine.line.width = 0;
-                newAnno.y = height + 5;
+                newAnno.y = height * 1.03;
                 newAnno.yref = 'y';
                 newAnno.arrowhead = 1;
                 newAnno.arrowsize = 0.8;
@@ -783,6 +783,19 @@ export class SpectrumPlot {
                 [this.customDownloadModeBar]
             ]
         };
+        if (this.cps) {
+            if (Math.max(...data[0].y) < 1) {
+                for (const trace of data) {
+                    trace.y = trace.y.map(value => value * 60);
+                }
+                layout.yaxis.title = 'Counts Per Minute [60 s<sup>-1</sup>]';
+                layout.yaxis.ticksuffix = 'cpm';
+            }
+            else {
+                layout.yaxis.title = 'Counts Per Second [s<sup>-1</sup>]';
+                layout.yaxis.ticksuffix = 'cps';
+            }
+        }
         if (this.peakConfig.enabled && data.length) {
             const gaussData = this.gaussianCorrel(data[0].y, this.gaussSigma);
             const eTrace = {
@@ -813,19 +826,6 @@ export class SpectrumPlot {
         }
         if (!this.peakConfig.enabled || !data.length || data.length >= 3)
             data.reverse();
-        if (this.cps) {
-            if (Math.max(...data[0].y) < 1) {
-                for (const trace of data) {
-                    trace.y = trace.y.map(value => value * 60);
-                }
-                layout.yaxis.title = 'Counts Per Minute [60 s<sup>-1</sup>]';
-                layout.yaxis.ticksuffix = 'cpm';
-            }
-            else {
-                layout.yaxis.title = 'Counts Per Second [s<sup>-1</sup>]';
-                layout.yaxis.ticksuffix = 'cps';
-            }
-        }
         layout.shapes = this.shapes;
         layout.annotations = JSON.parse(JSON.stringify(this.annotations));
         if (this.calibration.enabled) {
