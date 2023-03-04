@@ -91,12 +91,12 @@ interface Trace {
   line?: {
     color?: string,
     width?: number,
-    shape?: 'linear' | 'hvh',
+    shape?: 'linear' | 'hvh' | 'spline'
   },
   marker?: {
     color?: string,
-    size?: number
-    
+    size?: number,
+    symbol?: string
   },
   width?: number,
   text?: string[],
@@ -736,70 +736,48 @@ export class SpectrumPlot {
   */
   private plotEvolution(cpsValues: number[], update: boolean): void {
     const trace: Trace = {
-      name: 'Calibration',
+      name: 'Radiation Evolution',
       x: this.getXAxis(cpsValues.length),
       y: cpsValues,
-      mode: 'lines', // Remove lines, "lines", "none"
+      mode: 'lines+markers', // Remove lines, "lines", "none"
       type: 'scatter',
-      fill: 'tozeroy',
+      //fill: 'tozeroy',
       //opacity: 0.8,
       line: {
         color: 'orangered',
-        width: 1,
+        width: 1.5,
+        shape: 'spline'
       }
     };
 
-    const markersTrace: Trace = {
-      name: 'Calibration Points',
-      x: [],
-      y: [],
-      mode: 'text+markers',
+    const averageTrace: Trace = {
+      name: 'Moving Average',
+      x: this.getXAxis(cpsValues.length),
+      y: this.computeMovingAverage(cpsValues),
+      mode: 'lines', // Remove lines, "lines", "none"
       type: 'scatter',
-      marker: {
-        //symbol: 'cross-thin',
-        size: 8,
-        color: '#444444',
-        //line: {
-        //  color: 'black',
-        //  width: 2
-        //}
-      },
-      text: [],
-      textposition: 'top center',
-    };
-
-    if (this.calibration.points) {
-      const charArr = ['a', 'b', 'c'];
-      for (const index in charArr) {
-        const char = charArr[index];
-        const fromVar = `${char}From`;
-        const toVar = `${char}To`;
-        if (fromVar in this.calibration.points && toVar in this.calibration.points) {
-          const fromVal = this.calibration.points[fromVar];
-          const toVal = this.calibration.points[toVar];
-          if (fromVal && toVal) {
-            markersTrace.x.push(fromVal);
-            markersTrace.y.push(toVal);
-            markersTrace.text?.push('Point ' + (parseInt(index)+1).toString());
-          }
-        }
+      //fill: 'tozeroy',
+      //opacity: 0.8,
+      line: {
+        color: 'darkblue',
+        width: 2,
+        shape: 'spline'
       }
-    }
+    };
 
     const maxXValue = trace.x.at(-1) ?? 1;
-    const maxYValue = trace.y.at(-1) ?? 1;
 
     const layout = {
       uirevision: 1,
       autosize: true, // Needed for resizing on update
-      title: 'Calibration Chart',
+      title: 'Radiation Evolution',
       hovermode: 'x',
       legend: {
         orientation: 'h',
         y: -0.35,
       },
       xaxis: {
-        title: 'Bin [1]',
+        title: 'Measurement Point [1]',
         mirror: true,
         linewidth: 2,
         autorange: false,
@@ -821,22 +799,22 @@ export class SpectrumPlot {
         automargin: true
       },
       yaxis: {
-        title: 'Energy [keV]',
+        title: 'Counts Per Second [s<sup>-1</sup>]',
         mirror: true,
         linewidth: 2,
         autorange: true,
         fixedrange: false,
-        range: [0,maxYValue],
         showspikes: true, //Show spike line for Y-axis
         spikethickness: 1,
         spikedash: 'solid',
         spikecolor: 'blue',
         spikemode: 'across',
         showticksuffix: 'last',
-        ticksuffix: ' keV',
-        showexponent: 'last',
-        exponentformat: 'none',
-        hoverformat: ',.2~f',
+        ticksuffix: 'cps',
+        //tickformat: '.02s',
+        hoverformat: '.4~s',
+        //showexponent: 'last',
+        exponentformat: 'SI',
         automargin: true
       },
       plot_bgcolor: 'white', // Change depending on dark mode
@@ -882,7 +860,7 @@ export class SpectrumPlot {
       ]
     };
 
-    (<any>window).Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, markersTrace], layout, config);
+    (<any>window).Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, averageTrace], layout, config);
   }
   /*
     Plot Calibration Chart
@@ -945,7 +923,7 @@ export class SpectrumPlot {
     const layout = {
       uirevision: 1,
       autosize: true, // Needed for resizing on update
-      title: 'Calibration Chart',
+      title: 'Calibration',
       hovermode: 'x',
       legend: {
         orientation: 'h',

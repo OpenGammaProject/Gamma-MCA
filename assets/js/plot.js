@@ -497,60 +497,41 @@ export class SpectrumPlot {
     }
     plotEvolution(cpsValues, update) {
         const trace = {
-            name: 'Calibration',
+            name: 'Radiation Evolution',
             x: this.getXAxis(cpsValues.length),
             y: cpsValues,
-            mode: 'lines',
+            mode: 'lines+markers',
             type: 'scatter',
-            fill: 'tozeroy',
             line: {
                 color: 'orangered',
-                width: 1,
+                width: 1.5,
+                shape: 'spline'
             }
         };
-        const markersTrace = {
-            name: 'Calibration Points',
-            x: [],
-            y: [],
-            mode: 'text+markers',
+        const averageTrace = {
+            name: 'Moving Average',
+            x: this.getXAxis(cpsValues.length),
+            y: this.computeMovingAverage(cpsValues),
+            mode: 'lines',
             type: 'scatter',
-            marker: {
-                size: 8,
-                color: '#444444',
-            },
-            text: [],
-            textposition: 'top center',
-        };
-        if (this.calibration.points) {
-            const charArr = ['a', 'b', 'c'];
-            for (const index in charArr) {
-                const char = charArr[index];
-                const fromVar = `${char}From`;
-                const toVar = `${char}To`;
-                if (fromVar in this.calibration.points && toVar in this.calibration.points) {
-                    const fromVal = this.calibration.points[fromVar];
-                    const toVal = this.calibration.points[toVar];
-                    if (fromVal && toVal) {
-                        markersTrace.x.push(fromVal);
-                        markersTrace.y.push(toVal);
-                        markersTrace.text?.push('Point ' + (parseInt(index) + 1).toString());
-                    }
-                }
+            line: {
+                color: 'darkblue',
+                width: 2,
+                shape: 'spline'
             }
-        }
+        };
         const maxXValue = trace.x.at(-1) ?? 1;
-        const maxYValue = trace.y.at(-1) ?? 1;
         const layout = {
             uirevision: 1,
             autosize: true,
-            title: 'Calibration Chart',
+            title: 'Radiation Evolution',
             hovermode: 'x',
             legend: {
                 orientation: 'h',
                 y: -0.35,
             },
             xaxis: {
-                title: 'Bin [1]',
+                title: 'Measurement Point [1]',
                 mirror: true,
                 linewidth: 2,
                 autorange: false,
@@ -572,22 +553,20 @@ export class SpectrumPlot {
                 automargin: true
             },
             yaxis: {
-                title: 'Energy [keV]',
+                title: 'Counts Per Second [s<sup>-1</sup>]',
                 mirror: true,
                 linewidth: 2,
                 autorange: true,
                 fixedrange: false,
-                range: [0, maxYValue],
                 showspikes: true,
                 spikethickness: 1,
                 spikedash: 'solid',
                 spikecolor: 'blue',
                 spikemode: 'across',
                 showticksuffix: 'last',
-                ticksuffix: ' keV',
-                showexponent: 'last',
-                exponentformat: 'none',
-                hoverformat: ',.2~f',
+                ticksuffix: 'cps',
+                hoverformat: '.4~s',
+                exponentformat: 'SI',
                 automargin: true
             },
             plot_bgcolor: 'white',
@@ -629,7 +608,7 @@ export class SpectrumPlot {
                 [this.customDownloadModeBar]
             ]
         };
-        window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, markersTrace], layout, config);
+        window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, averageTrace], layout, config);
     }
     plotCalibration(dataObj, update) {
         const trace = {
@@ -679,7 +658,7 @@ export class SpectrumPlot {
         const layout = {
             uirevision: 1,
             autosize: true,
-            title: 'Calibration Chart',
+            title: 'Calibration',
             hovermode: 'x',
             legend: {
                 orientation: 'h',
