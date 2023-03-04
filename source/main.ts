@@ -17,6 +17,7 @@
     - (?) Hotkeys
     - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with one click
     - (?) Highlight plot lines in ROI selection
+    - (?) sdev for each point in radiation evolution chart
 
     - Calibration n-polynomial regression
     - Dark Mode -> Bootstrap v5.3
@@ -2335,7 +2336,7 @@ async function disconnectPort(stop = false): Promise<void> {
 
   document.getElementById('resume-button')!.classList.toggle('d-none', stop);
 
-  (<HTMLInputElement>document.getElementById('toggle-evolution-chart')).disabled = true;
+  //(<HTMLInputElement>document.getElementById('toggle-evolution-chart')).disabled = true;
 
   if (stop) {
     (<HTMLButtonElement>document.getElementById('stop-button')).disabled = true;

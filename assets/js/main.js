@@ -1756,7 +1756,6 @@ async function disconnectPort(stop = false) {
         ele.classList.add('d-none');
     }
     document.getElementById('resume-button').classList.toggle('d-none', stop);
-    document.getElementById('toggle-evolution-chart').disabled = true;
     if (stop) {
         document.getElementById('stop-button').disabled = true;
         document.getElementById('record-button').classList.remove('d-none');
