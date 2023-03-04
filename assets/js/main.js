@@ -13,7 +13,7 @@ export class SpectrumData {
         const dataArr = this[type];
         let sum = 0;
         if (start < 0 || start >= dataArr.length || end < 0 || end >= dataArr.length || start > end) {
-            console.error('Invalid sum range! Return default 0.');
+            console.warn('Invalid sum range! Return default 0.');
             return sum;
         }
         for (let i = start; i <= end; i++) {
