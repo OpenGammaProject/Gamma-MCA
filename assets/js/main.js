@@ -163,7 +163,7 @@ document.body.onload = async function () {
     bindInputs();
     const menuElements = document.getElementById('main-tabs').getElementsByTagName('button');
     for (const button of menuElements) {
-        button.addEventListener('shown.bs.tab', (event) => {
+        button.addEventListener('shown.bs.tab', () => {
             const toggleCalChartElement = document.getElementById('toggle-calibration-chart');
             const toggleEvolChartElement = document.getElementById('toggle-evolution-chart');
             if (toggleCalChartElement.checked || toggleEvolChartElement.checked) {

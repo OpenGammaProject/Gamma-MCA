@@ -259,7 +259,7 @@ document.body.onload = async function(): Promise<void> {
 
   const menuElements = document.getElementById('main-tabs')!.getElementsByTagName('button');
   for (const button of menuElements) {
-    button.addEventListener('shown.bs.tab', (event: Event): void => {
+    button.addEventListener('shown.bs.tab', (/*event: Event*/): void => {
       const toggleCalChartElement = <HTMLInputElement>document.getElementById('toggle-calibration-chart');
       const toggleEvolChartElement = <HTMLInputElement>document.getElementById('toggle-evolution-chart');
 
