@@ -13,7 +13,7 @@ export class SpectrumData {
         const dataArr = this[type];
         let sum = 0;
         if (start < 0 || start >= dataArr.length || end < 0 || end >= dataArr.length || start > end) {
-            console.error('Invalid sum range! Return default 0.');
+            console.warn('Invalid sum range! Return default 0.');
             return sum;
         }
         for (let i = start; i <= end; i++) {
@@ -52,7 +52,7 @@ let isoListURL = 'assets/isotopes_energies_min.json';
 const isoList = {};
 let checkNearIso = false;
 let maxDist = 100;
-const APP_VERSION = '2023-03-03';
+const APP_VERSION = '2023-03-04';
 let localStorageAvailable = false;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
@@ -165,9 +165,12 @@ document.body.onload = async function () {
     for (const button of menuElements) {
         button.addEventListener('shown.bs.tab', (event) => {
             const toggleCalChartElement = document.getElementById('toggle-calibration-chart');
-            if (event.target.id !== 'calibration-tab' && toggleCalChartElement.checked) {
+            const toggleEvolChartElement = document.getElementById('toggle-evolution-chart');
+            if (toggleCalChartElement.checked || toggleEvolChartElement.checked) {
                 toggleCalChartElement.checked = false;
+                toggleEvolChartElement.checked = false;
                 toggleCalChart(false);
+                toogleEvolChart(false);
             }
             else {
                 plot.updatePlot(spectrumData);
@@ -797,7 +800,13 @@ document.getElementById('toggle-calibration-chart').onclick = event => toggleCal
 function toggleCalChart(enabled) {
     const buttonLabel = document.getElementById('toggle-cal-chart-label');
     buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Chart' : '<i class="fa-solid fa-eye"></i> Show Chart';
-    plot.toggleCalibrationChart(spectrumData, enabled);
+    plot.setChartType(enabled ? 'calibration' : 'default', spectrumData);
+}
+document.getElementById('toggle-evolution-chart').onclick = event => toogleEvolChart(event.target.checked);
+function toogleEvolChart(enabled) {
+    const buttonLabel = document.getElementById('toggle-evol-chart-label');
+    buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Evolution' : '<i class="fa-solid fa-eye"></i> Show Evolution';
+    plot.setChartType(enabled ? 'evolution' : 'default', spectrumData, cpsValues);
 }
 function addLeadingZero(number) {
     if (parseFloat(number) < 10)
@@ -1725,6 +1734,7 @@ async function startRecord(pause = false, type) {
         removeFile(type);
         startDate = new Date();
     }
+    document.getElementById('toggle-evolution-chart').disabled = false;
     document.getElementById('stop-button').disabled = false;
     document.getElementById('pause-button').classList.remove('d-none');
     document.getElementById('record-button').classList.add('d-none');
@@ -1877,11 +1887,11 @@ function refreshRender(type, firstLoad = false) {
         }
         spectrumData[`${type}Cps`] = spectrumData[type].map(val => val / measTime * 1000);
         if (firstLoad) {
-            plot.resetPlot(spectrumData);
+            plot.resetPlot(spectrumData, cpsValues);
             bindPlotEvents();
         }
         else {
-            plot.updatePlot(spectrumData);
+            plot.updatePlot(spectrumData, cpsValues);
         }
         const deltaLastRefresh = measTime - lastUpdate;
         lastUpdate = measTime;

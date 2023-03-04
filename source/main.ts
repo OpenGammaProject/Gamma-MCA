@@ -17,6 +17,7 @@
     - (?) Hotkeys
     - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with one click
     - (?) Highlight plot lines in ROI selection
+    - (?) sdev for each point in radiation evolution chart
 
     - Calibration n-polynomial regression
     - Dark Mode -> Bootstrap v5.3
@@ -68,7 +69,7 @@ export class SpectrumData { // Will hold the measurement data globally.
     let sum = 0;
 
     if (start < 0 || start >= dataArr.length || end < 0 || end >= dataArr.length || start > end) {
-      console.error('Invalid sum range! Return default 0.');
+      console.warn('Invalid sum range! Return default 0.');
       return sum;
     }
 
@@ -118,7 +119,7 @@ const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2023-03-03';
+const APP_VERSION = '2023-03-04';
 let localStorageAvailable = false;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
@@ -260,10 +261,13 @@ document.body.onload = async function(): Promise<void> {
   for (const button of menuElements) {
     button.addEventListener('shown.bs.tab', (event: Event): void => {
       const toggleCalChartElement = <HTMLInputElement>document.getElementById('toggle-calibration-chart');
+      const toggleEvolChartElement = <HTMLInputElement>document.getElementById('toggle-evolution-chart');
 
-      if ((<HTMLButtonElement>event.target).id !== 'calibration-tab' && toggleCalChartElement.checked) { // Leave cal chart when leaving cal tab
+      if (toggleCalChartElement.checked || toggleEvolChartElement.checked) { // Leave cal/evol chart when changing tabs
         toggleCalChartElement.checked = false;
+        toggleEvolChartElement.checked = false;
         toggleCalChart(false);
+        toogleEvolChart(false);
       } else {
         plot.updatePlot(spectrumData); // Adjust Plot Size For Main Tab Menu Content Size
       }
@@ -1118,7 +1122,17 @@ function toggleCalChart(enabled: boolean): void {
   const buttonLabel = document.getElementById('toggle-cal-chart-label')!;
   buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Chart' : '<i class="fa-solid fa-eye"></i> Show Chart';
 
-  plot.toggleCalibrationChart(spectrumData, enabled);
+  plot.setChartType(enabled ? 'calibration' : 'default', spectrumData);
+}
+
+
+document.getElementById('toggle-evolution-chart')!.onclick = event => toogleEvolChart((<HTMLInputElement>event.target).checked);
+
+function toogleEvolChart(enabled: boolean): void {
+  const buttonLabel = document.getElementById('toggle-evol-chart-label')!;
+  buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Evolution' : '<i class="fa-solid fa-eye"></i> Show Evolution';
+
+  plot.setChartType(enabled ? 'evolution' : 'default', spectrumData, cpsValues);
 }
 
 
@@ -2287,6 +2301,7 @@ async function startRecord(pause = false, type: DataType): Promise<void> {
     startDate = new Date();
   }
 
+  (<HTMLInputElement>document.getElementById('toggle-evolution-chart')).disabled = false;
   (<HTMLButtonElement>document.getElementById('stop-button')).disabled = false;
   document.getElementById('pause-button')!.classList.remove('d-none');
   document.getElementById('record-button')!.classList.add('d-none');
@@ -2320,6 +2335,8 @@ async function disconnectPort(stop = false): Promise<void> {
   }
 
   document.getElementById('resume-button')!.classList.toggle('d-none', stop);
+
+  //(<HTMLInputElement>document.getElementById('toggle-evolution-chart')).disabled = true;
 
   if (stop) {
     (<HTMLButtonElement>document.getElementById('stop-button')).disabled = true;
@@ -2494,10 +2511,10 @@ function refreshRender(type: DataType, firstLoad = false): void {
     spectrumData[`${type}Cps`] = spectrumData[type].map(val => val / measTime * 1000);
 
     if (firstLoad) {
-      plot.resetPlot(spectrumData); // Prevent the overlay going into the toolbar
+      plot.resetPlot(spectrumData, cpsValues); // Prevent the overlay going into the toolbar
       bindPlotEvents();
     } else {
-      plot.updatePlot(spectrumData);
+      plot.updatePlot(spectrumData, cpsValues);
     }
 
     const deltaLastRefresh = measTime - lastUpdate;

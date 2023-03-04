@@ -102,7 +102,7 @@ export class CalculateFWHM {
 }
 export class SpectrumPlot {
     plotDiv;
-    showCalChart = false;
+    type = 'default';
     xAxis = 'linear';
     yAxis = 'linear';
     linePlot = false;
@@ -349,11 +349,19 @@ export class SpectrumPlot {
             }
         }
     }
-    resetPlot(spectrumData) {
-        this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData, false);
+    resetPlot(spectrumData, cpsValues = []) {
+        if (this.type === 'calibration')
+            this.plotCalibration(spectrumData, false);
+        if (this.type === 'evolution')
+            this.plotEvolution(cpsValues, false);
+        this.plotData(spectrumData, false);
     }
-    updatePlot(spectrumData) {
-        this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData, true);
+    updatePlot(spectrumData, cpsValues = []) {
+        if (this.type === 'calibration')
+            this.plotCalibration(spectrumData, true);
+        if (this.type === 'evolution')
+            this.plotEvolution(cpsValues, true);
+        this.plotData(spectrumData, true);
     }
     toggleLine(energy, name, enabled = true, height = -1) {
         if (enabled) {
@@ -426,9 +434,21 @@ export class SpectrumPlot {
         this.shapes = [];
         this.annotations = [];
     }
-    toggleCalibrationChart(dataObj, override) {
-        this.showCalChart = (typeof override === 'boolean') ? override : !this.showCalChart;
-        this.showCalChart ? this.plotCalibration(dataObj, false) : this.plotData(dataObj, false);
+    setChartType(type, dataObj, cpsValues = []) {
+        this.type = type;
+        switch (type) {
+            case 'evolution': {
+                this.plotEvolution(cpsValues, false);
+                break;
+            }
+            case 'calibration': {
+                this.plotCalibration(dataObj, false);
+                break;
+            }
+            default: {
+                this.plotData(dataObj, false);
+            }
+        }
     }
     computeGaussValues(index, xMin, xMax) {
         const gaussValues = [];
@@ -474,6 +494,121 @@ export class SpectrumPlot {
         const scalingFactor = .8 * Math.max(...data) / Math.max(...correlValues);
         correlValues.forEach((value, index, array) => array[index] = value * scalingFactor);
         return correlValues;
+    }
+    plotEvolution(cpsValues, update) {
+        const trace = {
+            name: 'Radiation Evolution',
+            x: this.getXAxis(cpsValues.length),
+            y: cpsValues,
+            mode: 'lines+markers',
+            type: 'scatter',
+            line: {
+                color: 'orangered',
+                width: 1.5,
+                shape: 'spline'
+            }
+        };
+        const averageTrace = {
+            name: 'Moving Average',
+            x: this.getXAxis(cpsValues.length),
+            y: this.computeMovingAverage(cpsValues),
+            mode: 'lines',
+            type: 'scatter',
+            line: {
+                color: 'darkblue',
+                width: 2,
+                shape: 'spline'
+            }
+        };
+        const maxXValue = trace.x.at(-1) ?? 1;
+        const layout = {
+            uirevision: 1,
+            autosize: true,
+            title: 'Radiation Evolution',
+            hovermode: 'x',
+            legend: {
+                orientation: 'h',
+                y: -0.35,
+            },
+            xaxis: {
+                title: 'Measurement Point [1]',
+                mirror: true,
+                linewidth: 2,
+                autorange: false,
+                fixedrange: false,
+                range: [0, maxXValue],
+                rangeslider: {
+                    borderwidth: 1,
+                    autorange: false,
+                    range: [0, maxXValue],
+                },
+                showspikes: true,
+                spikethickness: 1,
+                spikedash: 'solid',
+                spikecolor: 'blue',
+                spikemode: 'across',
+                ticksuffix: '',
+                hoverformat: ',.2~f',
+                exponentformat: 'none',
+                automargin: true
+            },
+            yaxis: {
+                title: 'Counts Per Second [s<sup>-1</sup>]',
+                mirror: true,
+                linewidth: 2,
+                autorange: true,
+                fixedrange: false,
+                showspikes: true,
+                spikethickness: 1,
+                spikedash: 'solid',
+                spikecolor: 'blue',
+                spikemode: 'across',
+                showticksuffix: 'last',
+                ticksuffix: 'cps',
+                hoverformat: '.4~s',
+                exponentformat: 'SI',
+                automargin: true
+            },
+            plot_bgcolor: 'white',
+            paper_bgcolor: '#f8f9fa',
+            margin: {
+                l: 80,
+                r: 40,
+                b: 60,
+                t: 60,
+            },
+            images: [{
+                    x: 0.99,
+                    y: 0.99,
+                    opacity: 0.4,
+                    sizex: 0.15,
+                    sizey: 0.15,
+                    source: '/assets/logo.svg',
+                    xanchor: 'right',
+                    xref: 'paper',
+                    yanchor: 'top',
+                    yref: 'paper',
+                }],
+            annotations: []
+        };
+        const config = {
+            responsive: true,
+            scrollZoom: false,
+            displaylogo: false,
+            toImageButtonOptions: {
+                format: this.downloadFormat,
+                filename: 'gamma_mca_calibration',
+            },
+            editable: this.editableMode,
+            modeBarButtons: [
+                ['zoom2d'],
+                ['zoomIn2d', 'zoomOut2d'],
+                ['autoScale2d', 'resetScale2d'],
+                ['toImage'],
+                [this.customDownloadModeBar]
+            ]
+        };
+        window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, averageTrace], layout, config);
     }
     plotCalibration(dataObj, update) {
         const trace = {
@@ -523,7 +658,7 @@ export class SpectrumPlot {
         const layout = {
             uirevision: 1,
             autosize: true,
-            title: 'Calibration Chart',
+            title: 'Calibration',
             hovermode: 'x',
             legend: {
                 orientation: 'h',
@@ -612,7 +747,7 @@ export class SpectrumPlot {
         window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, markersTrace], layout, config);
     }
     plotData(dataObj, update) {
-        if (this.showCalChart)
+        if (this.type !== 'default')
             return;
         const data = [];
         let maxXValue = 0;
