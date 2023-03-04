@@ -165,9 +165,12 @@ document.body.onload = async function () {
     for (const button of menuElements) {
         button.addEventListener('shown.bs.tab', (event) => {
             const toggleCalChartElement = document.getElementById('toggle-calibration-chart');
-            if (event.target.id !== 'calibration-tab' && toggleCalChartElement.checked) {
+            const toggleEvolChartElement = document.getElementById('toggle-evolution-chart');
+            if (toggleCalChartElement.checked || toggleEvolChartElement.checked) {
                 toggleCalChartElement.checked = false;
+                toggleEvolChartElement.checked = false;
                 toggleCalChart(false);
+                toogleEvolChart(false);
             }
             else {
                 plot.updatePlot(spectrumData);
@@ -798,6 +801,12 @@ function toggleCalChart(enabled) {
     const buttonLabel = document.getElementById('toggle-cal-chart-label');
     buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Chart' : '<i class="fa-solid fa-eye"></i> Show Chart';
     plot.setChartType(enabled ? 'calibration' : 'default', spectrumData);
+}
+document.getElementById('toggle-evolution-chart').onclick = event => toogleEvolChart(event.target.checked);
+function toogleEvolChart(enabled) {
+    const buttonLabel = document.getElementById('toggle-evol-chart-label');
+    buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Evolution' : '<i class="fa-solid fa-eye"></i> Show Evolution';
+    plot.setChartType(enabled ? 'evolution' : 'default', spectrumData, cpsValues);
 }
 function addLeadingZero(number) {
     if (parseFloat(number) < 10)

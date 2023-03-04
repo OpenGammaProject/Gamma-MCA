@@ -260,10 +260,13 @@ document.body.onload = async function(): Promise<void> {
   for (const button of menuElements) {
     button.addEventListener('shown.bs.tab', (event: Event): void => {
       const toggleCalChartElement = <HTMLInputElement>document.getElementById('toggle-calibration-chart');
+      const toggleEvolChartElement = <HTMLInputElement>document.getElementById('toggle-evolution-chart');
 
-      if ((<HTMLButtonElement>event.target).id !== 'calibration-tab' && toggleCalChartElement.checked) { // Leave cal chart when leaving cal tab
+      if (toggleCalChartElement.checked || toggleEvolChartElement.checked) { // Leave cal/evol chart when changing tabs
         toggleCalChartElement.checked = false;
+        toggleEvolChartElement.checked = false;
         toggleCalChart(false);
+        toogleEvolChart(false);
       } else {
         plot.updatePlot(spectrumData); // Adjust Plot Size For Main Tab Menu Content Size
       }
@@ -1119,6 +1122,16 @@ function toggleCalChart(enabled: boolean): void {
   buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Chart' : '<i class="fa-solid fa-eye"></i> Show Chart';
 
   plot.setChartType(enabled ? 'calibration' : 'default', spectrumData);
+}
+
+
+document.getElementById('toggle-evolution-chart')!.onclick = event => toogleEvolChart((<HTMLInputElement>event.target).checked);
+
+function toogleEvolChart(enabled: boolean): void {
+  const buttonLabel = document.getElementById('toggle-evol-chart-label')!;
+  buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Evolution' : '<i class="fa-solid fa-eye"></i> Show Evolution';
+
+  plot.setChartType(enabled ? 'evolution' : 'default', spectrumData, cpsValues);
 }
 
 
