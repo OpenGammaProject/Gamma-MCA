@@ -21,6 +21,8 @@ export interface CoeffObj {
 export type PeakModes = 'gaussian' | 'energy' | 'isotopes' | undefined;
 export type DownloadFormat = 'svg' | 'png' | 'jpeg' | 'webp';
 
+type ChartType = 'default' | 'evolution' | 'calibration';
+
 interface LegacyIsotopeList {
   [key: number]: string | undefined
 }
@@ -248,7 +250,7 @@ export class CalculateFWHM {
 */
 export class SpectrumPlot {
   readonly plotDiv: HTMLElement | null;
-  private showCalChart = false;
+  private type: ChartType = 'default';
   xAxis: 'linear' | 'log' = 'linear';
   yAxis: 'linear' | 'log' = 'linear';
   linePlot = false; // 'linear', 'hvh' for 'lines' or 'bar
@@ -547,14 +549,20 @@ export class SpectrumPlot {
   /*
     Convenient Wrapper, could do more in the future
   */
-  resetPlot(spectrumData: SpectrumData): void {
-    this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData, false); // Not Updating
+  resetPlot(spectrumData: SpectrumData, cpsValues: number[] = []): void {
+    if (this.type === 'calibration') this.plotCalibration(spectrumData, false); // Plot calibration chart
+    if (this.type === 'evolution') this.plotEvolution(cpsValues, false); // Plot radiation evolution chart
+
+    this.plotData(spectrumData, false); // Update the default spectrum plot
   }
   /*
     Convenient Wrapper, could do more in the future
   */
-  updatePlot(spectrumData: SpectrumData): void {
-    this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData, true); // Update either spectrum plot or calibration chart
+  updatePlot(spectrumData: SpectrumData, cpsValues: number[] = []): void {
+    if (this.type === 'calibration') this.plotCalibration(spectrumData, true); // Plot calibration chart
+    if (this.type === 'evolution') this.plotEvolution(cpsValues, true); // Plot radiation evolution chart
+
+    this.plotData(spectrumData, true); // Update the default spectrum plot
   }
   /*
     Add a line
@@ -640,11 +648,24 @@ export class SpectrumPlot {
     this.annotations = [];
   }
   /*
-    Toggle the calibration chart on or off
+    Switch between different chart types
   */
-  toggleCalibrationChart(dataObj: SpectrumData, override: boolean): void {
-    this.showCalChart = (typeof override === 'boolean') ? override : !this.showCalChart;
-    this.showCalChart ? this.plotCalibration(dataObj, false) : this.plotData(dataObj, false); // Needs to be false, otherwise the xaxis range won't update correctly.
+  setChartType(type: ChartType, dataObj: SpectrumData, cpsValues: number[] = []): void {
+    this.type = type;
+
+    switch (type) {
+      case 'evolution': {
+        this.plotEvolution(cpsValues, false)
+        break;
+      }
+      case 'calibration': {
+        this.plotCalibration(dataObj, false)
+        break;
+      }
+      default: {
+        this.plotData(dataObj, false);
+      }
+    }
   }
   /*
     Compute gaussValues for the Gaussian correlation filter
@@ -709,6 +730,159 @@ export class SpectrumPlot {
     correlValues.forEach((value, index, array) => array[index] = value * scalingFactor);
 
     return correlValues;
+  }
+  /*
+    Plot Calibration Chart
+  */
+  private plotEvolution(cpsValues: number[], update: boolean): void {
+    const trace: Trace = {
+      name: 'Calibration',
+      x: this.getXAxis(cpsValues.length),
+      y: this.getCalAxis(cpsValues.length),
+      mode: 'lines', // Remove lines, "lines", "none"
+      type: 'scatter',
+      fill: 'tozeroy',
+      //opacity: 0.8,
+      line: {
+        color: 'orangered',
+        width: 1,
+      }
+    };
+
+    const markersTrace: Trace = {
+      name: 'Calibration Points',
+      x: [],
+      y: [],
+      mode: 'text+markers',
+      type: 'scatter',
+      marker: {
+        //symbol: 'cross-thin',
+        size: 8,
+        color: '#444444',
+        //line: {
+        //  color: 'black',
+        //  width: 2
+        //}
+      },
+      text: [],
+      textposition: 'top center',
+    };
+
+    if (this.calibration.points) {
+      const charArr = ['a', 'b', 'c'];
+      for (const index in charArr) {
+        const char = charArr[index];
+        const fromVar = `${char}From`;
+        const toVar = `${char}To`;
+        if (fromVar in this.calibration.points && toVar in this.calibration.points) {
+          const fromVal = this.calibration.points[fromVar];
+          const toVal = this.calibration.points[toVar];
+          if (fromVal && toVal) {
+            markersTrace.x.push(fromVal);
+            markersTrace.y.push(toVal);
+            markersTrace.text?.push('Point ' + (parseInt(index)+1).toString());
+          }
+        }
+      }
+    }
+
+    const maxXValue = trace.x.at(-1) ?? 1;
+    const maxYValue = trace.y.at(-1) ?? 1;
+
+    const layout = {
+      uirevision: 1,
+      autosize: true, // Needed for resizing on update
+      title: 'Calibration Chart',
+      hovermode: 'x',
+      legend: {
+        orientation: 'h',
+        y: -0.35,
+      },
+      xaxis: {
+        title: 'Bin [1]',
+        mirror: true,
+        linewidth: 2,
+        autorange: false,
+        fixedrange: false,
+        range: [0,maxXValue],
+        rangeslider: {
+          borderwidth: 1,
+          autorange: false,
+          range: [0,maxXValue],
+        },
+        showspikes: true, //Show spike line for X-axis
+        spikethickness: 1,
+        spikedash: 'solid',
+        spikecolor: 'blue',
+        spikemode: 'across',
+        ticksuffix: '',
+        hoverformat: ',.2~f',
+        exponentformat: 'none',
+        automargin: true
+      },
+      yaxis: {
+        title: 'Energy [keV]',
+        mirror: true,
+        linewidth: 2,
+        autorange: true,
+        fixedrange: false,
+        range: [0,maxYValue],
+        showspikes: true, //Show spike line for Y-axis
+        spikethickness: 1,
+        spikedash: 'solid',
+        spikecolor: 'blue',
+        spikemode: 'across',
+        showticksuffix: 'last',
+        ticksuffix: ' keV',
+        showexponent: 'last',
+        exponentformat: 'none',
+        hoverformat: ',.2~f',
+        automargin: true
+      },
+      plot_bgcolor: 'white', // Change depending on dark mode
+      paper_bgcolor: '#f8f9fa', // Bootstrap bg-light, bg-dark: 212529
+      margin: {
+        l: 80,
+        r: 40,
+        b: 60,
+        t: 60,
+        //pad: 4,
+      },
+      images: [{
+        x: 0.99,
+        y: 0.99,
+        opacity: 0.4,
+        sizex: 0.15,
+        sizey: 0.15,
+        source: '/assets/logo.svg',
+        xanchor: 'right',
+        xref: 'paper',
+        yanchor: 'top',
+        yref: 'paper',
+      }],
+      annotations: <Anno[]>[]
+    };
+
+    const config = {
+      responsive: true,
+      scrollZoom: false,
+      //displayModeBar: true,
+      displaylogo: false,
+      toImageButtonOptions: {
+        format: this.downloadFormat,
+        filename: 'gamma_mca_calibration',
+      },
+      editable: this.editableMode,
+      modeBarButtons: <any[][]>[
+        ['zoom2d'],
+        ['zoomIn2d', 'zoomOut2d'],
+        ['autoScale2d', 'resetScale2d'],
+        ['toImage'],
+        [this.customDownloadModeBar]
+      ]
+    };
+
+    (<any>window).Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, markersTrace], layout, config);
   }
   /*
     Plot Calibration Chart
@@ -867,7 +1041,7 @@ export class SpectrumPlot {
     Plot All The Data
   */
   private plotData(dataObj: SpectrumData, update: boolean): void {
-    if (this.showCalChart) return; // Ignore this if the calibration chart is currently shown
+    if (this.type !== 'default') return; // Ignore this if the calibration chart is currently shown
 
     const data: Trace[] = [];
     let maxXValue = 0;

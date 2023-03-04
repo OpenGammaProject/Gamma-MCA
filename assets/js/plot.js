@@ -102,7 +102,7 @@ export class CalculateFWHM {
 }
 export class SpectrumPlot {
     plotDiv;
-    showCalChart = false;
+    type = 'default';
     xAxis = 'linear';
     yAxis = 'linear';
     linePlot = false;
@@ -349,11 +349,19 @@ export class SpectrumPlot {
             }
         }
     }
-    resetPlot(spectrumData) {
-        this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData, false);
+    resetPlot(spectrumData, cpsValues = []) {
+        if (this.type === 'calibration')
+            this.plotCalibration(spectrumData, false);
+        if (this.type === 'evolution')
+            this.plotEvolution(cpsValues, false);
+        this.plotData(spectrumData, false);
     }
-    updatePlot(spectrumData) {
-        this[this.showCalChart ? 'plotCalibration' : 'plotData'](spectrumData, true);
+    updatePlot(spectrumData, cpsValues = []) {
+        if (this.type === 'calibration')
+            this.plotCalibration(spectrumData, true);
+        if (this.type === 'evolution')
+            this.plotEvolution(cpsValues, true);
+        this.plotData(spectrumData, true);
     }
     toggleLine(energy, name, enabled = true, height = -1) {
         if (enabled) {
@@ -426,9 +434,21 @@ export class SpectrumPlot {
         this.shapes = [];
         this.annotations = [];
     }
-    toggleCalibrationChart(dataObj, override) {
-        this.showCalChart = (typeof override === 'boolean') ? override : !this.showCalChart;
-        this.showCalChart ? this.plotCalibration(dataObj, false) : this.plotData(dataObj, false);
+    setChartType(type, dataObj, cpsValues = []) {
+        this.type = type;
+        switch (type) {
+            case 'evolution': {
+                this.plotEvolution(cpsValues, false);
+                break;
+            }
+            case 'calibration': {
+                this.plotCalibration(dataObj, false);
+                break;
+            }
+            default: {
+                this.plotData(dataObj, false);
+            }
+        }
     }
     computeGaussValues(index, xMin, xMax) {
         const gaussValues = [];
@@ -474,6 +494,142 @@ export class SpectrumPlot {
         const scalingFactor = .8 * Math.max(...data) / Math.max(...correlValues);
         correlValues.forEach((value, index, array) => array[index] = value * scalingFactor);
         return correlValues;
+    }
+    plotEvolution(cpsValues, update) {
+        const trace = {
+            name: 'Calibration',
+            x: this.getXAxis(cpsValues.length),
+            y: this.getCalAxis(cpsValues.length),
+            mode: 'lines',
+            type: 'scatter',
+            fill: 'tozeroy',
+            line: {
+                color: 'orangered',
+                width: 1,
+            }
+        };
+        const markersTrace = {
+            name: 'Calibration Points',
+            x: [],
+            y: [],
+            mode: 'text+markers',
+            type: 'scatter',
+            marker: {
+                size: 8,
+                color: '#444444',
+            },
+            text: [],
+            textposition: 'top center',
+        };
+        if (this.calibration.points) {
+            const charArr = ['a', 'b', 'c'];
+            for (const index in charArr) {
+                const char = charArr[index];
+                const fromVar = `${char}From`;
+                const toVar = `${char}To`;
+                if (fromVar in this.calibration.points && toVar in this.calibration.points) {
+                    const fromVal = this.calibration.points[fromVar];
+                    const toVal = this.calibration.points[toVar];
+                    if (fromVal && toVal) {
+                        markersTrace.x.push(fromVal);
+                        markersTrace.y.push(toVal);
+                        markersTrace.text?.push('Point ' + (parseInt(index) + 1).toString());
+                    }
+                }
+            }
+        }
+        const maxXValue = trace.x.at(-1) ?? 1;
+        const maxYValue = trace.y.at(-1) ?? 1;
+        const layout = {
+            uirevision: 1,
+            autosize: true,
+            title: 'Calibration Chart',
+            hovermode: 'x',
+            legend: {
+                orientation: 'h',
+                y: -0.35,
+            },
+            xaxis: {
+                title: 'Bin [1]',
+                mirror: true,
+                linewidth: 2,
+                autorange: false,
+                fixedrange: false,
+                range: [0, maxXValue],
+                rangeslider: {
+                    borderwidth: 1,
+                    autorange: false,
+                    range: [0, maxXValue],
+                },
+                showspikes: true,
+                spikethickness: 1,
+                spikedash: 'solid',
+                spikecolor: 'blue',
+                spikemode: 'across',
+                ticksuffix: '',
+                hoverformat: ',.2~f',
+                exponentformat: 'none',
+                automargin: true
+            },
+            yaxis: {
+                title: 'Energy [keV]',
+                mirror: true,
+                linewidth: 2,
+                autorange: true,
+                fixedrange: false,
+                range: [0, maxYValue],
+                showspikes: true,
+                spikethickness: 1,
+                spikedash: 'solid',
+                spikecolor: 'blue',
+                spikemode: 'across',
+                showticksuffix: 'last',
+                ticksuffix: ' keV',
+                showexponent: 'last',
+                exponentformat: 'none',
+                hoverformat: ',.2~f',
+                automargin: true
+            },
+            plot_bgcolor: 'white',
+            paper_bgcolor: '#f8f9fa',
+            margin: {
+                l: 80,
+                r: 40,
+                b: 60,
+                t: 60,
+            },
+            images: [{
+                    x: 0.99,
+                    y: 0.99,
+                    opacity: 0.4,
+                    sizex: 0.15,
+                    sizey: 0.15,
+                    source: '/assets/logo.svg',
+                    xanchor: 'right',
+                    xref: 'paper',
+                    yanchor: 'top',
+                    yref: 'paper',
+                }],
+            annotations: []
+        };
+        const config = {
+            responsive: true,
+            scrollZoom: false,
+            displaylogo: false,
+            toImageButtonOptions: {
+                format: this.downloadFormat,
+                filename: 'gamma_mca_calibration',
+            },
+            editable: this.editableMode,
+            modeBarButtons: [
+                ['zoom2d'],
+                ['zoomIn2d', 'zoomOut2d'],
+                ['autoScale2d', 'resetScale2d'],
+                ['toImage'],
+                [this.customDownloadModeBar]
+            ]
+        };
+        window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, markersTrace], layout, config);
     }
     plotCalibration(dataObj, update) {
         const trace = {
@@ -612,7 +768,7 @@ export class SpectrumPlot {
         window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, markersTrace], layout, config);
     }
     plotData(dataObj, update) {
-        if (this.showCalChart)
+        if (this.type !== 'default')
             return;
         const data = [];
         let maxXValue = 0;

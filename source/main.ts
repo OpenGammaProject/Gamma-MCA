@@ -1118,7 +1118,7 @@ function toggleCalChart(enabled: boolean): void {
   const buttonLabel = document.getElementById('toggle-cal-chart-label')!;
   buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Chart' : '<i class="fa-solid fa-eye"></i> Show Chart';
 
-  plot.toggleCalibrationChart(spectrumData, enabled);
+  plot.setChartType(enabled ? 'calibration' : 'default', spectrumData);
 }
 
 
