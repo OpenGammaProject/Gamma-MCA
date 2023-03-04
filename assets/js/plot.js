@@ -597,7 +597,7 @@ export class SpectrumPlot {
             displaylogo: false,
             toImageButtonOptions: {
                 format: this.downloadFormat,
-                filename: 'gamma_mca_calibration',
+                filename: 'gamma_mca_evolution',
             },
             editable: this.editableMode,
             modeBarButtons: [
