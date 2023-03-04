@@ -1179,9 +1179,9 @@ export class SpectrumPlot {
       margin: {
         l: 40,
         r: 40,
-        b: 60,
-        t: 70,
-        //pad: 4,
+        b: 50,
+        t: this.peakConfig.newPeakStyle ? 55 : 80,
+        //autoexpand: true
       },
       images: [{
         x: 0.99,
