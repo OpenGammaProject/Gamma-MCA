@@ -732,13 +732,13 @@ export class SpectrumPlot {
     return correlValues;
   }
   /*
-    Plot Calibration Chart
+    Plot Radiation Evolution Chart
   */
   private plotEvolution(cpsValues: number[], update: boolean): void {
     const trace: Trace = {
       name: 'Calibration',
       x: this.getXAxis(cpsValues.length),
-      y: this.getCalAxis(cpsValues.length),
+      y: cpsValues,
       mode: 'lines', // Remove lines, "lines", "none"
       type: 'scatter',
       fill: 'tozeroy',

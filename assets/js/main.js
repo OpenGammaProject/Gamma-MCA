@@ -1734,6 +1734,7 @@ async function startRecord(pause = false, type) {
         removeFile(type);
         startDate = new Date();
     }
+    document.getElementById('toggle-evolution-chart').disabled = false;
     document.getElementById('stop-button').disabled = false;
     document.getElementById('pause-button').classList.remove('d-none');
     document.getElementById('record-button').classList.add('d-none');
@@ -1755,6 +1756,7 @@ async function disconnectPort(stop = false) {
         ele.classList.add('d-none');
     }
     document.getElementById('resume-button').classList.toggle('d-none', stop);
+    document.getElementById('toggle-evolution-chart').disabled = true;
     if (stop) {
         document.getElementById('stop-button').disabled = true;
         document.getElementById('record-button').classList.remove('d-none');
@@ -1886,11 +1888,11 @@ function refreshRender(type, firstLoad = false) {
         }
         spectrumData[`${type}Cps`] = spectrumData[type].map(val => val / measTime * 1000);
         if (firstLoad) {
-            plot.resetPlot(spectrumData);
+            plot.resetPlot(spectrumData, cpsValues);
             bindPlotEvents();
         }
         else {
-            plot.updatePlot(spectrumData);
+            plot.updatePlot(spectrumData, cpsValues);
         }
         const deltaLastRefresh = measTime - lastUpdate;
         lastUpdate = measTime;

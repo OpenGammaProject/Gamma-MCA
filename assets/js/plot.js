@@ -499,7 +499,7 @@ export class SpectrumPlot {
         const trace = {
             name: 'Calibration',
             x: this.getXAxis(cpsValues.length),
-            y: this.getCalAxis(cpsValues.length),
+            y: cpsValues,
             mode: 'lines',
             type: 'scatter',
             fill: 'tozeroy',

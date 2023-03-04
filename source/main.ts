@@ -2300,6 +2300,7 @@ async function startRecord(pause = false, type: DataType): Promise<void> {
     startDate = new Date();
   }
 
+  (<HTMLInputElement>document.getElementById('toggle-evolution-chart')).disabled = false;
   (<HTMLButtonElement>document.getElementById('stop-button')).disabled = false;
   document.getElementById('pause-button')!.classList.remove('d-none');
   document.getElementById('record-button')!.classList.add('d-none');
@@ -2333,6 +2334,8 @@ async function disconnectPort(stop = false): Promise<void> {
   }
 
   document.getElementById('resume-button')!.classList.toggle('d-none', stop);
+
+  (<HTMLInputElement>document.getElementById('toggle-evolution-chart')).disabled = true;
 
   if (stop) {
     (<HTMLButtonElement>document.getElementById('stop-button')).disabled = true;
@@ -2507,10 +2510,10 @@ function refreshRender(type: DataType, firstLoad = false): void {
     spectrumData[`${type}Cps`] = spectrumData[type].map(val => val / measTime * 1000);
 
     if (firstLoad) {
-      plot.resetPlot(spectrumData); // Prevent the overlay going into the toolbar
+      plot.resetPlot(spectrumData, cpsValues); // Prevent the overlay going into the toolbar
       bindPlotEvents();
     } else {
-      plot.updatePlot(spectrumData);
+      plot.updatePlot(spectrumData, cpsValues);
     }
 
     const deltaLastRefresh = measTime - lastUpdate;
