@@ -801,12 +801,16 @@ function toggleCalChart(enabled) {
     const buttonLabel = document.getElementById('toggle-cal-chart-label');
     buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Chart' : '<i class="fa-solid fa-eye"></i> Show Chart';
     plot.setChartType(enabled ? 'calibration' : 'default', spectrumData);
+    if (!enabled)
+        bindPlotEvents();
 }
 document.getElementById('toggle-evolution-chart').onclick = event => toogleEvolChart(event.target.checked);
 function toogleEvolChart(enabled) {
     const buttonLabel = document.getElementById('toggle-evol-chart-label');
     buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Evolution' : '<i class="fa-solid fa-eye"></i> Show Evolution';
     plot.setChartType(enabled ? 'evolution' : 'default', spectrumData, cpsValues);
+    if (!enabled)
+        bindPlotEvents();
 }
 function addLeadingZero(number) {
     if (parseFloat(number) < 10)

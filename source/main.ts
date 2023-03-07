@@ -1123,6 +1123,8 @@ function toggleCalChart(enabled: boolean): void {
   buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Chart' : '<i class="fa-solid fa-eye"></i> Show Chart';
 
   plot.setChartType(enabled ? 'calibration' : 'default', spectrumData);
+
+  if (!enabled) bindPlotEvents(); // Above call is equivalent to a full reset, so we need to bind the events again!
 }
 
 
@@ -1133,6 +1135,8 @@ function toogleEvolChart(enabled: boolean): void {
   buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Evolution' : '<i class="fa-solid fa-eye"></i> Show Evolution';
 
   plot.setChartType(enabled ? 'evolution' : 'default', spectrumData, cpsValues);
+
+  if (!enabled) bindPlotEvents(); // Above call is equivalent to a full reset, so we need to bind the events again!
 }
 
 
