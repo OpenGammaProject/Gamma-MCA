@@ -119,7 +119,7 @@ const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2023-03-04';
+const APP_VERSION = '2023-03-08';
 let localStorageAvailable = false;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
@@ -259,7 +259,7 @@ document.body.onload = async function(): Promise<void> {
 
   const menuElements = document.getElementById('main-tabs')!.getElementsByTagName('button');
   for (const button of menuElements) {
-    button.addEventListener('shown.bs.tab', (event: Event): void => {
+    button.addEventListener('shown.bs.tab', (/*event: Event*/): void => {
       const toggleCalChartElement = <HTMLInputElement>document.getElementById('toggle-calibration-chart');
       const toggleEvolChartElement = <HTMLInputElement>document.getElementById('toggle-evolution-chart');
 
@@ -1123,6 +1123,8 @@ function toggleCalChart(enabled: boolean): void {
   buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Chart' : '<i class="fa-solid fa-eye"></i> Show Chart';
 
   plot.setChartType(enabled ? 'calibration' : 'default', spectrumData);
+
+  if (!enabled) bindPlotEvents(); // Above call is equivalent to a full reset, so we need to bind the events again!
 }
 
 
@@ -1133,6 +1135,8 @@ function toogleEvolChart(enabled: boolean): void {
   buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Evolution' : '<i class="fa-solid fa-eye"></i> Show Evolution';
 
   plot.setChartType(enabled ? 'evolution' : 'default', spectrumData, cpsValues);
+
+  if (!enabled) bindPlotEvents(); // Above call is equivalent to a full reset, so we need to bind the events again!
 }
 
 

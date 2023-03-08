@@ -52,7 +52,7 @@ let isoListURL = 'assets/isotopes_energies_min.json';
 const isoList = {};
 let checkNearIso = false;
 let maxDist = 100;
-const APP_VERSION = '2023-03-04';
+const APP_VERSION = '2023-03-08';
 let localStorageAvailable = false;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
@@ -163,7 +163,7 @@ document.body.onload = async function () {
     bindInputs();
     const menuElements = document.getElementById('main-tabs').getElementsByTagName('button');
     for (const button of menuElements) {
-        button.addEventListener('shown.bs.tab', (event) => {
+        button.addEventListener('shown.bs.tab', () => {
             const toggleCalChartElement = document.getElementById('toggle-calibration-chart');
             const toggleEvolChartElement = document.getElementById('toggle-evolution-chart');
             if (toggleCalChartElement.checked || toggleEvolChartElement.checked) {
@@ -801,12 +801,16 @@ function toggleCalChart(enabled) {
     const buttonLabel = document.getElementById('toggle-cal-chart-label');
     buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Chart' : '<i class="fa-solid fa-eye"></i> Show Chart';
     plot.setChartType(enabled ? 'calibration' : 'default', spectrumData);
+    if (!enabled)
+        bindPlotEvents();
 }
 document.getElementById('toggle-evolution-chart').onclick = event => toogleEvolChart(event.target.checked);
 function toogleEvolChart(enabled) {
     const buttonLabel = document.getElementById('toggle-evol-chart-label');
     buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Evolution' : '<i class="fa-solid fa-eye"></i> Show Evolution';
     plot.setChartType(enabled ? 'evolution' : 'default', spectrumData, cpsValues);
+    if (!enabled)
+        bindPlotEvents();
 }
 function addLeadingZero(number) {
     if (parseFloat(number) < 10)

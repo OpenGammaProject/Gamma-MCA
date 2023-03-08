@@ -870,8 +870,8 @@ export class SpectrumPlot {
             margin: {
                 l: 40,
                 r: 40,
-                b: 60,
-                t: 70,
+                b: 50,
+                t: this.peakConfig.newPeakStyle ? 55 : 80,
             },
             images: [{
                     x: 0.99,
@@ -953,7 +953,7 @@ export class SpectrumPlot {
                 const peakResolutions = new CalculateFWHM(this.peakConfig.lines, data[0].x, data[0].y).getResolution();
                 for (const anno of this.annotations) {
                     const fwhmValue = peakResolutions[anno.x];
-                    if (fwhmValue > 0)
+                    if (fwhmValue > 0 && fwhmValue < 0.9 * CalculateFWHM.resolutionLimit)
                         anno.text += `<br>${(fwhmValue * 100).toFixed(1)}%`;
                 }
             }
