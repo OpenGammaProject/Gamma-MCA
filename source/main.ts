@@ -119,7 +119,7 @@ const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2023-03-08';
+const APP_VERSION = '2023-03-27';
 let localStorageAvailable = false;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
@@ -2526,6 +2526,18 @@ function refreshRender(type: DataType, firstLoad = false): void {
 
     const cpsValue = ((SerialManager.orderType === 'chron') ? newData.length : newData.reduce((acc, curr) => acc+curr, 0)) / deltaLastRefresh * 1000;
     cpsValues.push(cpsValue);
+
+    /* // Only update whenever counts are received
+    let cpsValue = 0;
+
+    if (newData.length >= 0) { // Only do whenever new data is received
+      const deltaLastRefresh = measTime - lastUpdate;
+      lastUpdate = measTime;
+
+      cpsValue = ((SerialManager.orderType === 'chron') ? newData.length : newData.reduce((acc, curr) => acc+curr, 0)) / deltaLastRefresh * 1000;
+      cpsValues.push(cpsValue);
+    }
+    */
 
     document.getElementById('cps')!.innerText = cpsValue.toFixed(1) + ' cps';
 
