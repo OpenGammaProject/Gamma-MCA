@@ -21,6 +21,7 @@
 
     - Calibration n-polynomial regression
     - Dark Mode -> Bootstrap v5.3
+    - Add pulse limit analog to time limit for serial recordings
 
   Known Issues/Problems/Limitations:
     - Plot: Gaussian Correlation Filtering still has pretty bad performance.
