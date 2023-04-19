@@ -22,12 +22,13 @@
     - Calibration n-polynomial regression
     - Dark Mode -> Bootstrap v5.3
     - Add pulse limit analog to time limit for serial recordings
+    - Capitalize port USB ID
 
   Known Issues/Problems/Limitations:
-    - Plot: Gaussian Correlation Filtering still has pretty bad performance.
-    - Plot: Plotly Update takes forever, but there is no real way to improve it (?)
-    - Would love to use Plotly ScatterGL (WebGL) that VASTLY improves performance, but stackgroups don't work there: https://github.com/plotly/plotly.js/issues/5365
-    - Selection Box is technically not supported on scatter traces w/o text or markers, that's why it's spamming errors : https://github.com/plotly/plotly.js/issues/170
+    - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
+    - Plotly.js: Plot updates takes forever, but there is no real way to improve it (?)
+    - Plotly.js: Would love to use ScatterGL (WebGL) that VASTLY improves performance, but stackgroups don't work there: https://github.com/plotly/plotly.js/issues/5365
+    - Plotly.js: Selection Box is technically not supported on scatter traces w/o text or markers, that's why it's spamming errors : https://github.com/plotly/plotly.js/issues/170
     - Service Worker: Somehow fetching and caching the hits tracker does not work in Edge for me (hits.seeyoufarm.com). Works fine with FF.
 
 */
