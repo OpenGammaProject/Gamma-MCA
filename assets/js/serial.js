@@ -119,7 +119,7 @@ export class WebSerial {
         this.isOpen = false;
     }
     getInfo() {
-        return `Id: 0x${this.port.getInfo().usbProductId?.toString(16)}`;
+        return `ID: 0x${this.port.getInfo().usbProductId?.toString(16).toUpperCase()}`;
     }
     getPort() {
         return this.port;

@@ -64,6 +64,16 @@ Both modes are currently supported by our [Open Gamma Detector](https://github.c
 
 **Note:** Both APIs are currently mainly supported by Chromium-based browsers, both on desktop and on mobile! This includes most browsers except for Safari and Firefox. The feature is either enabled by default or you have to enable it in the settings yourself. See [Can I Use? Web Serial API](https://caniuse.com/web-serial) and [Can I Use? WebUSB](https://caniuse.com/webusb).
 
+## Using Locally
+
+You can use most if not all features of Gamma MCA locally on your machine. All it takes you to do is download this repository and install Python 3.
+
+You can then execute the `run_locally.py` script that will create a web server on your local machine and navigate to `http://127.0.0.1` in a browser of your choice.
+
+Keep in mind that Gamma MCA will not be able to automatically update itself anymore. Also, this will oviously only work inside the same network as the web server except if you do some port forwarding or stuff.
+
+Nothing will be tested for this specific use case, so use at your own risk.
+
 ## Contributing
 
 The PWA is written with TypeScript. To make changes to the code, please only commit to and make pull requests for the `dev` branch! `main` will only pull changes from `dev` once I approve it.
