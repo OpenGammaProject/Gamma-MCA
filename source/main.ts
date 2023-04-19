@@ -22,7 +22,6 @@
     - Calibration n-polynomial regression
     - Dark Mode -> Bootstrap v5.3
     - Add pulse limit analog to time limit for serial recordings
-    - Capitalize port USB ID
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.

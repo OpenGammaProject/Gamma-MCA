@@ -157,7 +157,7 @@ export class WebSerial {
   }
 
   getInfo(): string {
-    return `Id: 0x${this.port.getInfo().usbProductId?.toString(16)}`;
+    return `ID: 0x${this.port.getInfo().usbProductId?.toString(16).toUpperCase()}`;
   }
 
   getPort(): SerialPort {
