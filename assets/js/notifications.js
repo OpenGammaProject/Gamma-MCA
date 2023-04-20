@@ -160,7 +160,8 @@ export class Notification {
         root.appendChild(toastHeader);
         toastHeader.className = 'toast-header';
         toastHeader.innerHTML = `<i class="${content.icon} me-2"></i> <strong class="me-auto">${content.header}</strong>` +
-            '<button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>';
+            `<small>${new Date().toLocaleString()}</small>`;
+        '<button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>';
         const toastBody = document.createElement('div');
         root.appendChild(toastBody);
         toastBody.className = 'toast-body';
