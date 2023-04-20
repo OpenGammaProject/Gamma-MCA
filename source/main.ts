@@ -20,8 +20,8 @@
     - (?) sdev for each point in radiation evolution chart
 
     - Calibration n-polynomial regression
-    - Dark Mode -> Bootstrap v5.3
     - Add pulse limit analog to time limit for serial recordings
+    - Dark Mode -> Bootstrap v5.3
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -120,7 +120,7 @@ const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2023-04-19';
+const APP_VERSION = '2023-04-20';
 let localStorageAvailable = false;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
