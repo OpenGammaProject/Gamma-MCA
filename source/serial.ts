@@ -183,7 +183,7 @@ export class SerialManager {
   static baudRate = 9600; // Default 9600 baud rate
 
   // SECTION: Serial Data
-  private consoleMemory = 1_000_000;
+  private consoleMemory = 100_000;
   private rawConsoleData = '';
   private rawData = ''; // Raw String Input from Serial Reading
   private maxHistLength = 2**18 * 2 * 10; // Maximum number of characters for a valid histogram string/number

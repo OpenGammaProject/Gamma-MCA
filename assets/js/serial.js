@@ -134,7 +134,7 @@ class SerialManager {
     timeDone = 0;
     static orderType = 'chron';
     static baudRate = 9600;
-    consoleMemory = 1000000;
+    consoleMemory = 100000;
     rawConsoleData = '';
     rawData = '';
     maxHistLength = 2 ** 18 * 2 * 10;
