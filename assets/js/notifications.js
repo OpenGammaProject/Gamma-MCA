@@ -127,7 +127,14 @@ const notificationContents = {
         header: 'File Save Error',
         body: '<p>You tried to save (overwrite) multiple files at once. This is not supported due to the risk of data loss.</p>' +
             '<p>If you want to combine and save data from different files, please use the <code>Save As</code> function.</p>'
-    }
+    },
+    'saveFile': {
+        type: 'success',
+        delay: 3000,
+        icon: 'fas fa-check-circle fa-beat notification-beat-slow',
+        header: 'Saved File',
+        body: 'Successfully saved data to the file system.'
+    },
 };
 export class Notification {
     toastElement;

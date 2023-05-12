@@ -1075,6 +1075,7 @@ async function overwriteFile() {
     }
     await writable.write(content);
     await writable.close();
+    new Notification('saveFile');
 }
 const saveFileTypes = {
     'CAL': {
@@ -1129,6 +1130,7 @@ async function download(filename, text, type) {
         const writableStream = await newHandle.createWritable();
         await writableStream.write(text);
         await writableStream.close();
+        new Notification('saveFile');
     }
     else {
         const element = document.createElement('a');

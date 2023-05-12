@@ -24,7 +24,6 @@
     - Dark Mode -> Bootstrap v5.3
     - Hist mode: First cps value is always zero?
     - Serial console: Limit lines instead of total characters
-    - Saving Confirmation Message
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -1497,6 +1496,8 @@ async function overwriteFile(): Promise<void> {
 
   await writable.write(content); // Write the contents of the file to the stream.
   await writable.close(); // Close the file and write the contents to disk.
+
+  new Notification('saveFile');
 }
 
 
@@ -1559,6 +1560,8 @@ async function download(filename: string, text: string | undefined, type: Downlo
 
     await writableStream.write(text); // Write our file
     await writableStream.close(); // Close the file and write the contents to disk.
+
+    new Notification('saveFile');
   } else { // Fallback old download-only method
     const element = document.createElement('a');
     element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
