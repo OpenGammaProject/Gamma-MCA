@@ -184,6 +184,7 @@ export class SerialManager {
 
   // SECTION: Serial Data
   private consoleMemory = 1000; // Number of newlines saved before the first newlines gets removed again
+  private consoleMemoryTotal = 100_000; // Number of chars saved before the first chars get removed again
   private rawConsoleData = '';
   private rawData = ''; // Raw String Input from Serial Reading
   private maxHistLength = 2**18 * 2 * 10; // Maximum number of characters for a valid histogram string/number
@@ -292,7 +293,7 @@ export class SerialManager {
     const rawLines = this.rawConsoleData.split('\n'); // Split newlines
     rawLines.pop(); // Last line will always be empty
 
-    if (rawLines.length > this.consoleMemory) {
+    if (rawLines.length > this.consoleMemory || this.rawConsoleData.length > this.consoleMemoryTotal) {
       //console.warn('Serial console log is out of memory, deleting old history...');
       this.rawConsoleData = this.rawConsoleData.replace(rawLines[0] + '\n', '');
     }
