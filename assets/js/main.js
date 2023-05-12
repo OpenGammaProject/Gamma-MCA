@@ -1120,6 +1120,12 @@ async function download(filename, text, type) {
             console.warn('File SaveAs error:', error);
             return;
         }
+        if (dataFileHandle) {
+            dataFileHandle = newHandle;
+        }
+        else if (backgroundFileHandle) {
+            backgroundFileHandle = newHandle;
+        }
         const writableStream = await newHandle.createWritable();
         await writableStream.write(text);
         await writableStream.close();

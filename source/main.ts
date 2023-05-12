@@ -25,7 +25,6 @@
     - Hist mode: First cps value is always zero?
     - Serial console: Limit lines instead of total characters
     - Saving Confirmation Message
-    - After clicking "Save As" once and successfully saving, change FileHandle to this new file for "Save" button
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -1547,6 +1546,13 @@ async function download(filename: string, text: string | undefined, type: Downlo
     } catch(error) {
       console.warn('File SaveAs error:', error);
       return;
+    }
+
+    // Update FileHandle for "Save" button
+    if (dataFileHandle) {
+      dataFileHandle = newHandle;
+    } else if (backgroundFileHandle) {
+      backgroundFileHandle = newHandle;
     }
     
     const writableStream = await newHandle.createWritable(); // Create a FileSystemWritableFileStream to write to
