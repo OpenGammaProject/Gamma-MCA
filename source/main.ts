@@ -18,11 +18,11 @@
     - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with one click
     - (?) Highlight plot lines in ROI selection
     - (?) sdev for each point in radiation evolution chart
+    - (?) Hist mode: First cps value is always zero?
 
     - Calibration n-polynomial regression
     - Add pulse limit analog to time limit for serial recordings
     - Dark Mode -> Bootstrap v5.3
-    - Hist mode: First cps value is always zero?
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
