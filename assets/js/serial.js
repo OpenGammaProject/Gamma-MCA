@@ -134,7 +134,8 @@ class SerialManager {
     timeDone = 0;
     static orderType = 'chron';
     static baudRate = 9600;
-    consoleMemory = 1000000;
+    consoleMemory = 1000;
+    consoleMemoryTotal = 100000;
     rawConsoleData = '';
     rawData = '';
     maxHistLength = 2 ** 18 * 2 * 10;
@@ -214,8 +215,10 @@ class SerialManager {
     addRaw(uintArray) {
         const string = new TextDecoder('utf-8').decode(uintArray);
         this.rawConsoleData += string;
-        if (this.rawConsoleData.length > this.consoleMemory) {
-            this.rawConsoleData = this.rawConsoleData.slice(this.rawConsoleData.length - this.consoleMemory);
+        const rawLines = this.rawConsoleData.split('\n');
+        rawLines.pop();
+        if (rawLines.length > this.consoleMemory || this.rawConsoleData.length > this.consoleMemoryTotal) {
+            this.rawConsoleData = this.rawConsoleData.replace(rawLines[0] + '\n', '');
         }
         if (this.onlyConsole)
             return;

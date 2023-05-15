@@ -52,7 +52,7 @@ let isoListURL = 'assets/isotopes_energies_min.json';
 const isoList = {};
 let checkNearIso = false;
 let maxDist = 100;
-const APP_VERSION = '2023-04-21';
+const APP_VERSION = '2023-05-15';
 let localStorageAvailable = false;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
@@ -1075,6 +1075,7 @@ async function overwriteFile() {
     }
     await writable.write(content);
     await writable.close();
+    new Notification('saveFile');
 }
 const saveFileTypes = {
     'CAL': {
@@ -1120,9 +1121,16 @@ async function download(filename, text, type) {
             console.warn('File SaveAs error:', error);
             return;
         }
+        if (dataFileHandle) {
+            dataFileHandle = newHandle;
+        }
+        else if (backgroundFileHandle) {
+            backgroundFileHandle = newHandle;
+        }
         const writableStream = await newHandle.createWritable();
         await writableStream.write(text);
         await writableStream.close();
+        new Notification('saveFile');
     }
     else {
         const element = document.createElement('a');

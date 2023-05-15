@@ -18,6 +18,7 @@
     - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with one click
     - (?) Highlight plot lines in ROI selection
     - (?) sdev for each point in radiation evolution chart
+    - (?) Hist mode: First cps value is always zero?
 
     - Calibration n-polynomial regression
     - Add pulse limit analog to time limit for serial recordings
@@ -120,7 +121,7 @@ const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2023-04-21';
+const APP_VERSION = '2023-05-15';
 let localStorageAvailable = false;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
@@ -1494,6 +1495,8 @@ async function overwriteFile(): Promise<void> {
 
   await writable.write(content); // Write the contents of the file to the stream.
   await writable.close(); // Close the file and write the contents to disk.
+
+  new Notification('saveFile');
 }
 
 
@@ -1544,11 +1547,20 @@ async function download(filename: string, text: string | undefined, type: Downlo
       console.warn('File SaveAs error:', error);
       return;
     }
+
+    // Update FileHandle for "Save" button
+    if (dataFileHandle) {
+      dataFileHandle = newHandle;
+    } else if (backgroundFileHandle) {
+      backgroundFileHandle = newHandle;
+    }
     
     const writableStream = await newHandle.createWritable(); // Create a FileSystemWritableFileStream to write to
 
     await writableStream.write(text); // Write our file
     await writableStream.close(); // Close the file and write the contents to disk.
+
+    new Notification('saveFile');
   } else { // Fallback old download-only method
     const element = document.createElement('a');
     element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
