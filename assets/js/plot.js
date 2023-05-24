@@ -108,6 +108,7 @@ export class SpectrumPlot {
     yAxis = 'linear';
     linePlot = false;
     downloadFormat = 'png';
+    corrEfficiency = false;
     sma = false;
     smaLength = 8;
     calibration = {

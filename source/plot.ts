@@ -255,6 +255,7 @@ export class SpectrumPlot {
   yAxis: 'linear' | 'log' = 'linear';
   linePlot = false; // 'linear', 'hvh' for 'lines' or 'bar
   downloadFormat: DownloadFormat = 'png';
+  corrEfficiency = false;
   sma = false; // Simple Moving Average
   smaLength = 8;
   calibration = {
@@ -1088,6 +1089,7 @@ export class SpectrumPlot {
       //data.unshift(bgTrace);
       data.push(bgTrace);
     }
+    
     /*
       Set Simple Moving Average
     */
