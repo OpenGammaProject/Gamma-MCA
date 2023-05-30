@@ -22,8 +22,8 @@
 
     - Calibration n-polynomial regression
     - Add pulse limit analog to time limit for serial recordings
-    - 404 Page Themeing!
-    - Dark Mode!
+    - (!!!) 404 Page Themeing
+    - (!!!) Dark Mode Toggle Button + Auto detection + Small fixes (button primary colors and stuff, plotly, outer borders)
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
