@@ -867,7 +867,6 @@ export class SpectrumPlot {
                 automargin: true
             },
             plot_bgcolor: 'white',
-            paper_bgcolor: '#f8f9fa',
             margin: {
                 l: 40,
                 r: 40,

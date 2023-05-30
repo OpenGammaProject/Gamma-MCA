@@ -1175,7 +1175,7 @@ export class SpectrumPlot {
       },
       */
       plot_bgcolor: 'white', // Change depending on dark mode
-      paper_bgcolor: '#f8f9fa', // Bootstrap bg-light, bg-dark: 212529
+      //paper_bgcolor: '#f8f9fa', // Bootstrap bg-light, bg-dark: 212529
       margin: {
         l: 40,
         r: 40,

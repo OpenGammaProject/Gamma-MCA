@@ -22,7 +22,9 @@
 
     - Calibration n-polynomial regression
     - Add pulse limit analog to time limit for serial recordings
-    - Dark Mode -> Bootstrap v5.3
+    - 404 Page Themeing!
+    - Dark Mode!
+    - Delete borders around in PWA
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
