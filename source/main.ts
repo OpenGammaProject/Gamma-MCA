@@ -2481,18 +2481,20 @@ function refreshMeta(type: DataType): void {
     document.getElementById('record-time')!.innerText = getRecordTimeStamp(totalMeasTime);
     const delta = new Date(totalMeasTime);
 
+    const progressBar = document.getElementById('ser-time-progress-bar')!;
+    progressBar.classList.toggle('d-none', !maxRecTimeEnabled);
+
     if (maxRecTimeEnabled) {
       const progressElement = document.getElementById('ser-time-progress')!;
       const progress = Math.round(delta.getTime() / maxRecTime * 100);
       progressElement.style.width = progress + '%';
       progressElement.innerText = progress + '%';
-      progressElement.setAttribute('aria-valuenow', progress.toString())
+      progressBar.setAttribute('aria-valuenow', progress.toString())
 
       totalTimeElement.innerText = ' / ' +  getRecordTimeStamp(maxRecTime);
     } else {
       totalTimeElement.innerText = '';
     }
-    document.getElementById('ser-time-progress-bar')!.classList.toggle('d-none', !maxRecTimeEnabled);
 
     updateSpectrumTime();
 
