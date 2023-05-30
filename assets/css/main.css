@@ -67,9 +67,11 @@ body {
   resize: none;
 }
 
+/* SEEMS LIKE NOT NEEDED ANYMORE
 .toast-container {
   z-index: 1111;
 }
+*/
 
 /* Special Settings for PWA */
 @media all and (display-mode: standalone) {
