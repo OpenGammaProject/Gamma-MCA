@@ -49,7 +49,7 @@
     <script type="module" src="/assets/js/serial.js"></script>
     <script type="module" src="/assets/js/main.js"></script>
   </head>
-  <body class="theme-mode text-bg-white">
+  <body class="text-bg-white">
     <!--
 
       LOADING AND NOSCRIPT ALERT
@@ -79,8 +79,8 @@
       MAIN PAGE CONTENT
 
     -->
-    <div class="container-fluid flex-column d-flex vh-100 pb-1 p-1 text-dark lh-sm main" id="main"> <!-- pb-1 needed for vertical scroll bar -->
-      <div class="row border border-1 border-secondary-subtle rounded-top-3 theme-mode">
+    <div class="container-fluid flex-column d-flex vh-100 pb-1 p-1 lh-sm main" id="main"> <!-- pb-1 needed for vertical scroll bar -->
+      <div class="row border border-1 border-dark border-bottom-0 rounded-top-3 border-mode">
 
         <div class="col-md-auto p-2 text-center">
 
@@ -117,9 +117,9 @@
 
         </div>
 
-        <div class="col-md-auto g-0">
+        <div class="col-md-auto g-0 bg-dark">
           <div class="vr h-100 d-none d-md-block"></div>
-          <hr class="d-md-none">
+          <hr class="d-md-none m-0">
         </div>
 
         <div class="col-md p-3">
@@ -522,9 +522,9 @@
 
         </div>
 
-        <div class="col-md-auto g-0">
+        <div class="col-md-auto g-0 bg-dark">
           <div class="vr h-100 d-none d-md-block"></div>
-          <hr class="d-md-none">
+          <hr class="d-md-none m-0">
         </div>
 
         <div class="col-md-2 p-2">
@@ -562,8 +562,8 @@
         </div>
       </div>
 
-      <div class="row theme-mode flex-grow-1 plot-div border border-top-0 border-1 border-secondary-subtle"> <!-- flex-fill -->
-        <div class="col">
+      <div id="plot-tab" class="row flex-grow-1 plot-div border border-1 border-dark"> <!-- flex-fill -->
+        <div class="col p-1">
           <!--
             PLOT DIV
           -->
@@ -571,7 +571,7 @@
         </div>
       </div>
 
-      <div class="row border border-top-0 border-1 border-secondary-subtle rounded-bottom-3 theme-mode p-1">
+      <div class="row border border-top-0 border-1 border-dark rounded-bottom-3 border-mode p-1">
 
         <div class="col-auto p-1">
           <button class="btn btn-primary btn-sm" type="button" id="reset-plot" title="Reset plot settings"> <i class="fas fa-redo"></i> Reset Plot </button>
@@ -784,7 +784,7 @@
             <div class="table-responsive"> <!-- style="max-height:70vh;" -->
               <table id="table" class="table table-hover align-middle">
                 <caption>List of gamma-ray energies of common isotopes.</caption>
-                <thead class="theme-mode table-light"> <!-- style="box-shadow: inset 1px 1px #000, 0 2px #000;" -->
+                <thead> <!-- class="table-light" style="box-shadow: inset 1px 1px #000, 0 2px #000;" -->
                   <tr>
                     <th> <input class="form-check-input" id="check-all-isos" type="checkbox" value="" title="Toggle all isotopes"> </th>
                     <th class="cursor-pointer" data-sort-by="1">Isotope <i class="fa-solid fa-sort"></i></th>
