@@ -81,6 +81,11 @@ document.body.onload = async function () {
     if ('standalone' in window.navigator || window.matchMedia('(display-mode: standalone)').matches) {
         document.title += ' PWA';
         document.getElementById('main').classList.remove('p-1');
+        const boarderModeElements = document.getElementsByClassName('border-mode');
+        for (const element of boarderModeElements) {
+            element.classList.add('border-0');
+        }
+        document.getElementById('plot-tab').classList.add('border-start-0', 'border-end-0');
     }
     else {
         document.getElementById('main').classList.remove('pb-1');

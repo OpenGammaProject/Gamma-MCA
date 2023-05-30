@@ -24,7 +24,6 @@
     - Add pulse limit analog to time limit for serial recordings
     - 404 Page Themeing!
     - Dark Mode!
-    - Delete borders around in PWA
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -163,6 +162,13 @@ document.body.onload = async function(): Promise<void> {
   if ('standalone' in window.navigator || window.matchMedia('(display-mode: standalone)').matches) { // Standalone PWA mode
     document.title += ' PWA';
     document.getElementById('main')!.classList.remove('p-1');
+
+    const boarderModeElements = document.getElementsByClassName('border-mode');
+    for (const element of boarderModeElements) {
+      element.classList.add('border-0');
+    }
+
+    document.getElementById('plot-tab')!.classList.add('border-start-0', 'border-end-0');
   } else { // Default browser window
     document.getElementById('main')!.classList.remove('pb-1');
     document.title += ' web application';
