@@ -109,14 +109,16 @@ export class SpectrumPlot {
     linePlot = false;
     downloadFormat = 'png';
     darkMode = false;
-    darkPlotBg = '#3f4448';
-    lightPlotBg = '#ffffff';
-    darkPaperBg = '#212529';
-    lightPaperBg = '#ffffff';
-    lightFontColor = '#444444';
-    darkFontColor = '#adb5bd';
+    plotBgDark = '#3f4448';
+    plotBgLight = '#ffffff';
+    paperBgDark = '#212529';
+    paperBgLight = '#ffffff';
+    fontColorLight = '#444444';
+    fontColorDark = '#adb5bd';
     gridColorLight = '#eeeeee';
     gridColorDark = '#4a4a4a';
+    annoBgLight = 'rgba(255,255,255,0.4)';
+    annoBgDark = 'rgba(0,0,0,0.4)';
     sma = false;
     smaLength = 8;
     calibration = {
@@ -398,6 +400,7 @@ export class SpectrumPlot {
                 yref: 'paper',
                 text: name,
                 showarrow: true,
+                arrowcolor: this.darkMode ? this.fontColorDark : this.fontColorLight,
                 arrowhead: 7,
                 ax: 0,
                 ay: -20,
@@ -416,7 +419,7 @@ export class SpectrumPlot {
                 newAnno.arrowhead = 1;
                 newAnno.arrowsize = 0.8;
                 newAnno.ay = -40;
-                newAnno.bgcolor = 'rgba(255,255,255,0.4)';
+                newAnno.bgcolor = this.darkMode ? this.annoBgDark : this.annoBgLight;
             }
             for (const shape of this.shapes) {
                 if (shape.x0 === newLine.x0)
@@ -581,10 +584,10 @@ export class SpectrumPlot {
                 automargin: true,
                 gridcolor: this.darkMode ? this.gridColorDark : this.gridColorLight
             },
-            plot_bgcolor: this.darkMode ? this.darkPlotBg : this.lightPlotBg,
-            paper_bgcolor: this.darkMode ? this.darkPaperBg : this.lightPaperBg,
+            plot_bgcolor: this.darkMode ? this.plotBgDark : this.plotBgLight,
+            paper_bgcolor: this.darkMode ? this.paperBgDark : this.paperBgLight,
             font: {
-                color: this.darkMode ? this.darkFontColor : this.lightFontColor,
+                color: this.darkMode ? this.fontColorDark : this.fontColorLight,
             },
             margin: {
                 l: 40,
@@ -722,10 +725,10 @@ export class SpectrumPlot {
                 automargin: true,
                 gridcolor: this.darkMode ? this.gridColorDark : this.gridColorLight
             },
-            plot_bgcolor: this.darkMode ? this.darkPlotBg : this.lightPlotBg,
-            paper_bgcolor: this.darkMode ? this.darkPaperBg : this.lightPaperBg,
+            plot_bgcolor: this.darkMode ? this.plotBgDark : this.plotBgLight,
+            paper_bgcolor: this.darkMode ? this.paperBgDark : this.paperBgLight,
             font: {
-                color: this.darkMode ? this.darkFontColor : this.lightFontColor,
+                color: this.darkMode ? this.fontColorDark : this.fontColorLight,
             },
             margin: {
                 l: 40,
@@ -887,10 +890,10 @@ export class SpectrumPlot {
                 automargin: true,
                 gridcolor: this.darkMode ? this.gridColorDark : this.gridColorLight
             },
-            plot_bgcolor: this.darkMode ? this.darkPlotBg : this.lightPlotBg,
-            paper_bgcolor: this.darkMode ? this.darkPaperBg : this.lightPaperBg,
+            plot_bgcolor: this.darkMode ? this.plotBgDark : this.plotBgLight,
+            paper_bgcolor: this.darkMode ? this.paperBgDark : this.paperBgLight,
             font: {
-                color: this.darkMode ? this.darkFontColor : this.lightFontColor,
+                color: this.darkMode ? this.fontColorDark : this.fontColorLight,
             },
             margin: {
                 l: 40,
