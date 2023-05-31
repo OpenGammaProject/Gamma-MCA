@@ -38,7 +38,7 @@ import { RawData, NPESv1, NPESv1Spectrum } from './raw-data.js';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
 import { WebUSBSerialPort } from './external/webusbserial-min.js'
 import { Notification } from './notifications.js';
-import { Theme, applyTheming, autoThemeChange } from './global-theming.js';
+import { applyTheming, autoThemeChange } from './global-theming.js';
 
 export interface IsotopeList {
   [key: string]: number[]
@@ -122,7 +122,7 @@ const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2023-05-15';
+const APP_VERSION = '2023-05-31';
 const localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 let fileSystemWritableAvail = false;
 let firstInstall = false;
