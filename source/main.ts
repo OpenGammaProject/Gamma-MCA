@@ -140,7 +140,7 @@ const faSortClasses: {[key: string]: string} = {
 window.addEventListener('DOMContentLoaded', () => {
   if (localStorageAvailable) {
     plot.darkMode = applyTheming() === 'dark';
-    plot.updatePlot(spectrumData);
+    resetPlot(false);
   }
 });
 
@@ -148,7 +148,7 @@ window.addEventListener('DOMContentLoaded', () => {
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
   if (localStorageAvailable) {
     plot.darkMode = autoThemeChange() === 'dark';
-    plot.updatePlot(spectrumData);
+    resetPlot(false);
   }
 });
 
@@ -753,10 +753,12 @@ function selectFileType(button: HTMLInputElement): void {
 
 document.getElementById('reset-plot')!.onclick = () => resetPlot();
 
-function resetPlot(): void {
-  if (plot.xAxis === 'log') changeAxis(<HTMLButtonElement>document.getElementById('xAxis'));
-  if (plot.yAxis === 'log') changeAxis(<HTMLButtonElement>document.getElementById('yAxis'));
-  if (plot.sma) toggleSma(false, <HTMLInputElement>document.getElementById('sma'));
+function resetPlot(hardReset = true): void {
+  if (hardReset) {
+    if (plot.xAxis === 'log') changeAxis(<HTMLButtonElement>document.getElementById('xAxis'));
+    if (plot.yAxis === 'log') changeAxis(<HTMLButtonElement>document.getElementById('yAxis'));
+    if (plot.sma) toggleSma(false, <HTMLInputElement>document.getElementById('sma'));
+  }
 
   plot.clearAnnos();
   (<HTMLInputElement>document.getElementById('check-all-isos')).checked = false; // reset "select all" checkbox
@@ -2147,7 +2149,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       result = saveJSON(name, stringValue);
 
       plot.darkMode = applyTheming() === 'dark';
-      plot.updatePlot(spectrumData);
+      resetPlot(false);
 
       break;
     }

@@ -66,13 +66,13 @@ const faSortClasses = {
 window.addEventListener('DOMContentLoaded', () => {
     if (localStorageAvailable) {
         plot.darkMode = applyTheming() === 'dark';
-        plot.updatePlot(spectrumData);
+        resetPlot(false);
     }
 });
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
     if (localStorageAvailable) {
         plot.darkMode = autoThemeChange() === 'dark';
-        plot.updatePlot(spectrumData);
+        resetPlot(false);
     }
 });
 document.body.onload = async function () {
@@ -518,13 +518,15 @@ function selectFileType(button) {
     saveJSON('fileDataMode', button.id);
 }
 document.getElementById('reset-plot').onclick = () => resetPlot();
-function resetPlot() {
-    if (plot.xAxis === 'log')
-        changeAxis(document.getElementById('xAxis'));
-    if (plot.yAxis === 'log')
-        changeAxis(document.getElementById('yAxis'));
-    if (plot.sma)
-        toggleSma(false, document.getElementById('sma'));
+function resetPlot(hardReset = true) {
+    if (hardReset) {
+        if (plot.xAxis === 'log')
+            changeAxis(document.getElementById('xAxis'));
+        if (plot.yAxis === 'log')
+            changeAxis(document.getElementById('yAxis'));
+        if (plot.sma)
+            toggleSma(false, document.getElementById('sma'));
+    }
     plot.clearAnnos();
     document.getElementById('check-all-isos').checked = false;
     loadIsotopes(true);
@@ -1620,7 +1622,7 @@ function changeSettings(name, element) {
         case 'theme': {
             result = saveJSON(name, stringValue);
             plot.darkMode = applyTheming() === 'dark';
-            plot.updatePlot(spectrumData);
+            resetPlot(false);
             break;
         }
         case 'gaussSigma': {
