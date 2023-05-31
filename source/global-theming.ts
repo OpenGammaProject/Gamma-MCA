@@ -14,10 +14,12 @@
 
 export type Theme = 'dark' | 'light' | 'auto';
 
+/*
 function saveJSON(name: string, value: string | boolean | number): boolean {
 	localStorage.setItem(name, JSON.stringify(value));
 	return true;
 }
+*/
 
 
 function loadJSON(name: string): any {
@@ -75,6 +77,7 @@ export function applyTheming(): Theme {
 
 	setTheme(theme); // Apply theme
 
+	/*
 	// Add event listener to theming toggle buttons
 	document.querySelectorAll('[data-bs-theme-value]').forEach(toggle => {
 		toggle.addEventListener('click', () => {
@@ -86,6 +89,7 @@ export function applyTheming(): Theme {
 			}
 		})
 	});
+	*/
 
 	return theme;
 }

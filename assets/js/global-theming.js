@@ -1,7 +1,3 @@
-function saveJSON(name, value) {
-    localStorage.setItem(name, JSON.stringify(value));
-    return true;
-}
 function loadJSON(name) {
     return JSON.parse(localStorage.getItem(name));
 }
@@ -44,15 +40,6 @@ export function autoThemeChange() {
 export function applyTheming() {
     const theme = getPreferredTheme();
     setTheme(theme);
-    document.querySelectorAll('[data-bs-theme-value]').forEach(toggle => {
-        toggle.addEventListener('click', () => {
-            const theme = toggle.getAttribute('data-bs-theme-value');
-            if (theme) {
-                saveJSON('theme', theme);
-                setTheme(theme);
-            }
-        });
-    });
     return theme;
 }
 //# sourceMappingURL=global-theming.js.map
