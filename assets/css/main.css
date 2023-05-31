@@ -1,11 +1,15 @@
 /*
-  Spectrum Site CSS
-  2021, PHNX.-
+
+  Some of the extra CSS needed for Gamma MCA.
+
+  Gamma MCA: free, open-source web-MCA for gamma spectroscopy
+  2021, NuclearPhoenix.- Phoenix1747
+  https://nuclearphoenix.xyz
+
 */
 
 body {
   font-size: 14px;
-  /*background-color: #ffffff;*/ /*#f6bd16;*/
 }
 
 .main {
