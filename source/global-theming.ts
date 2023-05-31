@@ -43,9 +43,10 @@ function changeTabBorders(theme: Theme = 'dark'): void {
 		element.classList.replace(`border-${theme}`, `border-${borderColor}`);
 	}
 
-	const plotTabElement = document.getElementById('plot-tab');
-	if (plotTabElement) {
-		plotTabElement.classList.replace(`border-${theme}`, `border-${borderColor}`);
+	const boarderThemeElements = document.getElementsByClassName('border-theme');
+	for (const element of boarderThemeElements) {
+		element.classList.replace(`border-${theme}`, `border-${borderColor}`);
+		element.classList.replace(`bg-${theme}`, `bg-${borderColor}`);
 	}
 }
 

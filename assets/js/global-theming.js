@@ -13,9 +13,10 @@ function changeTabBorders(theme = 'dark') {
     for (const element of boarderModeElements) {
         element.classList.replace(`border-${theme}`, `border-${borderColor}`);
     }
-    const plotTabElement = document.getElementById('plot-tab');
-    if (plotTabElement) {
-        plotTabElement.classList.replace(`border-${theme}`, `border-${borderColor}`);
+    const boarderThemeElements = document.getElementsByClassName('border-theme');
+    for (const element of boarderThemeElements) {
+        element.classList.replace(`border-${theme}`, `border-${borderColor}`);
+        element.classList.replace(`bg-${theme}`, `bg-${borderColor}`);
     }
 }
 function setTheme(theme) {
