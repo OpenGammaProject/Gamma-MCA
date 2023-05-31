@@ -115,6 +115,8 @@ export class SpectrumPlot {
     lightPaperBg = '#ffffff';
     lightFontColor = '#444444';
     darkFontColor = '#adb5bd';
+    gridColorLight = '#eeeeee';
+    gridColorDark = '#4a4a4a';
     sma = false;
     smaLength = 8;
     calibration = {
@@ -558,7 +560,8 @@ export class SpectrumPlot {
                 ticksuffix: '',
                 hoverformat: ',.2~f',
                 exponentformat: 'none',
-                automargin: true
+                automargin: true,
+                gridcolor: this.darkMode ? this.gridColorDark : this.gridColorLight
             },
             yaxis: {
                 title: 'Counts Per Second [s<sup>-1</sup>]',
@@ -575,7 +578,8 @@ export class SpectrumPlot {
                 ticksuffix: 'cps',
                 hoverformat: '.4~s',
                 exponentformat: 'SI',
-                automargin: true
+                automargin: true,
+                gridcolor: this.darkMode ? this.gridColorDark : this.gridColorLight
             },
             plot_bgcolor: this.darkMode ? this.darkPlotBg : this.lightPlotBg,
             paper_bgcolor: this.darkMode ? this.darkPaperBg : this.lightPaperBg,
@@ -695,7 +699,8 @@ export class SpectrumPlot {
                 ticksuffix: '',
                 hoverformat: ',.2~f',
                 exponentformat: 'none',
-                automargin: true
+                automargin: true,
+                gridcolor: this.darkMode ? this.gridColorDark : this.gridColorLight
             },
             yaxis: {
                 title: 'Energy [keV]',
@@ -714,7 +719,8 @@ export class SpectrumPlot {
                 showexponent: 'last',
                 exponentformat: 'none',
                 hoverformat: ',.2~f',
-                automargin: true
+                automargin: true,
+                gridcolor: this.darkMode ? this.gridColorDark : this.gridColorLight
             },
             plot_bgcolor: this.darkMode ? this.darkPlotBg : this.lightPlotBg,
             paper_bgcolor: this.darkMode ? this.darkPaperBg : this.lightPaperBg,
@@ -864,7 +870,8 @@ export class SpectrumPlot {
                 hoverformat: ',.2~f',
                 ticksuffix: '',
                 exponentformat: 'none',
-                automargin: true
+                automargin: true,
+                gridcolor: this.darkMode ? this.gridColorDark : this.gridColorLight
             },
             yaxis: {
                 title: 'Counts [1]',
@@ -877,7 +884,8 @@ export class SpectrumPlot {
                 ticksuffix: 'cts',
                 hoverformat: '.4~s',
                 exponentformat: 'SI',
-                automargin: true
+                automargin: true,
+                gridcolor: this.darkMode ? this.gridColorDark : this.gridColorLight
             },
             plot_bgcolor: this.darkMode ? this.darkPlotBg : this.lightPlotBg,
             paper_bgcolor: this.darkMode ? this.darkPaperBg : this.lightPaperBg,
