@@ -17,12 +17,10 @@
     - (?) Hotkeys
     - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with one click
     - (?) Highlight plot lines in ROI selection
-    - (?) sdev for each point in radiation evolution chart
     - (?) Hist mode: First cps value is always zero?
 
     - Calibration n-polynomial regression
     - Add pulse limit analog to time limit for serial recordings
-    - Dark Mode -> Bootstrap v5.3
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -38,6 +36,7 @@ import { RawData, NPESv1, NPESv1Spectrum } from './raw-data.js';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
 import { WebUSBSerialPort } from './external/webusbserial-min.js'
 import { Notification } from './notifications.js';
+import { applyTheming, autoThemeChange } from './global-theming.js';
 
 export interface IsotopeList {
   [key: string]: number[]
@@ -121,8 +120,8 @@ const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2023-05-15';
-let localStorageAvailable = false;
+const APP_VERSION = '2023-05-31';
+const localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 let fileSystemWritableAvail = false;
 let firstInstall = false;
 
@@ -134,16 +133,34 @@ const faSortClasses: {[key: string]: string} = {
   desc: 'fa-sort-down'
 };
 
+
+/*
+  Theming-related function calls
+*/
+window.addEventListener('DOMContentLoaded', () => {
+  if (localStorageAvailable) {
+    plot.darkMode = applyTheming() === 'dark';
+    resetPlot(false);
+  }
+});
+
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if (localStorageAvailable) {
+    plot.darkMode = autoThemeChange() === 'dark';
+    resetPlot(false);
+  }
+});
+
+
 /*
   Startup of the page
 */
 document.body.onload = async function(): Promise<void> {
-  localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
   fileSystemWritableAvail = (window.FileSystemHandle && 'createWritable' in FileSystemFileHandle.prototype); // Test for File System Access API
 
   if (localStorageAvailable) {
     loadSettingsStorage();
-    //toggleDarkMode(); // Load from settings
   } 
 
   if (navigator.serviceWorker) { // Add service worker for PWA
@@ -161,6 +178,13 @@ document.body.onload = async function(): Promise<void> {
   if ('standalone' in window.navigator || window.matchMedia('(display-mode: standalone)').matches) { // Standalone PWA mode
     document.title += ' PWA';
     document.getElementById('main')!.classList.remove('p-1');
+
+    const borderModeElements = document.getElementsByClassName('border-mode');
+    for (const element of borderModeElements) {
+      element.classList.add('border-0');
+    }
+
+    document.getElementById('plot-tab')!.classList.add('border-start-0', 'border-end-0');
   } else { // Default browser window
     document.getElementById('main')!.classList.remove('pb-1');
     document.title += ' web application';
@@ -320,18 +344,6 @@ document.body.onresize = (): void => {
   }
 };
 
-/*
-document.getElementById()!.onclick = () => toggleDarkMode();
-
-function toggleDarkMode(): void {
-  const themeElements = document.getElementsByClassName('theme-mode');
-  for (const element of themeElements) {
-    element.classList.remove('text-bg-light', 'text-bg-white', 'table-light');
-    element.classList.add('text-bg-dark'); // TODO: add table-dark
-    // TODO: Change font color, reset to light mode, save to settings
-  }
-}
-*/
 
 /*
 window.addEventListener('hidden.bs.collapse', (event: Event) => {
@@ -741,10 +753,12 @@ function selectFileType(button: HTMLInputElement): void {
 
 document.getElementById('reset-plot')!.onclick = () => resetPlot();
 
-function resetPlot(): void {
-  if (plot.xAxis === 'log') changeAxis(<HTMLButtonElement>document.getElementById('xAxis'));
-  if (plot.yAxis === 'log') changeAxis(<HTMLButtonElement>document.getElementById('yAxis'));
-  if (plot.sma) toggleSma(false, <HTMLInputElement>document.getElementById('sma'));
+function resetPlot(hardReset = true): void {
+  if (hardReset) {
+    if (plot.xAxis === 'log') changeAxis(<HTMLButtonElement>document.getElementById('xAxis'));
+    if (plot.yAxis === 'log') changeAxis(<HTMLButtonElement>document.getElementById('yAxis'));
+    if (plot.sma) toggleSma(false, <HTMLInputElement>document.getElementById('sma'));
+  }
 
   plot.clearAnnos();
   (<HTMLInputElement>document.getElementById('check-all-isos')).checked = false; // reset "select all" checkbox
@@ -1886,6 +1900,7 @@ function bindInputs(): void {
   document.getElementById('edit-plot')!.onclick = event => changeSettings('editMode', <HTMLInputElement>event.target); // Checkbox
   document.getElementById('toggle-time-limit')!.onclick = event => changeSettings('timeLimitBool', <HTMLInputElement>event.target); // Checkbox
   document.getElementById('download-format')!.onchange = event => changeSettings('plotDownload', <HTMLSelectElement>event.target); // Select
+  document.getElementById('theme-select')!.onchange = event => changeSettings('theme', <HTMLSelectElement>event.target); // Select
 }
 
 
@@ -1915,10 +1930,17 @@ function loadSettingsDefault(): void {
   (<HTMLInputElement>document.getElementById('gauss-sigma')).value = plot.gaussSigma.toString();
 
   const formatSelector = <HTMLSelectElement>document.getElementById('download-format');
-  const len = formatSelector.options.length;
+  const formatLen = formatSelector.options.length;
   const format = plot.downloadFormat;
-  for (let i = 0; i < len; i++) {
+  for (let i = 0; i < formatLen; i++) {
     if (formatSelector.options[i].value === format) formatSelector.selectedIndex = i;
+  }
+
+  const themeSelector = <HTMLSelectElement>document.getElementById('theme-select');
+  const themeLen = themeSelector.options.length;
+  const theme = loadJSON('theme');
+  for (let i = 0; i < themeLen; i++) {
+    if (themeSelector.options[i].value === theme) themeSelector.selectedIndex = i;
   }
 }
 
@@ -1974,6 +1996,8 @@ function loadSettingsStorage(): void {
 
   setting = loadJSON('plotDownload');
   if (setting !== null) plot.downloadFormat = setting;
+
+  // Setting for dark mode is right at the beginning of the file
 
   setting = loadJSON('gaussSigma');
   if (setting !== null) plot.gaussSigma = setting;
@@ -2119,6 +2143,14 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       plot.updatePlot(spectrumData);
 
       result = saveJSON(name, stringValue);
+      break;
+    }
+    case 'theme': {
+      result = saveJSON(name, stringValue);
+
+      plot.darkMode = applyTheming() === 'dark';
+      resetPlot(false);
+
       break;
     }
     case 'gaussSigma': {
@@ -2481,18 +2513,20 @@ function refreshMeta(type: DataType): void {
     document.getElementById('record-time')!.innerText = getRecordTimeStamp(totalMeasTime);
     const delta = new Date(totalMeasTime);
 
+    const progressBar = document.getElementById('ser-time-progress-bar')!;
+    progressBar.classList.toggle('d-none', !maxRecTimeEnabled);
+
     if (maxRecTimeEnabled) {
       const progressElement = document.getElementById('ser-time-progress')!;
       const progress = Math.round(delta.getTime() / maxRecTime * 100);
       progressElement.style.width = progress + '%';
       progressElement.innerText = progress + '%';
-      progressElement.setAttribute('aria-valuenow', progress.toString())
+      progressBar.setAttribute('aria-valuenow', progress.toString())
 
       totalTimeElement.innerText = ' / ' +  getRecordTimeStamp(maxRecTime);
     } else {
       totalTimeElement.innerText = '';
     }
-    document.getElementById('ser-time-progress-bar')!.classList.toggle('d-none', !maxRecTimeEnabled);
 
     updateSpectrumTime();
 

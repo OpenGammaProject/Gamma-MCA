@@ -57,6 +57,7 @@ interface Anno {
   text: string;
   showarrow: boolean;
   arrowhead: number;
+  arrowcolor?: string;
   ax: number;
   ay: number;
   editable?: boolean;
@@ -255,7 +256,17 @@ export class SpectrumPlot {
   yAxis: 'linear' | 'log' = 'linear';
   linePlot = false; // 'linear', 'hvh' for 'lines' or 'bar
   downloadFormat: DownloadFormat = 'png';
-  corrEfficiency = false;
+  darkMode = false;
+  private plotBgDark = '#3f4448';
+  private plotBgLight = '#ffffff';
+  private paperBgDark = '#212529';
+  private paperBgLight = '#ffffff';
+  private fontColorLight = '#444444';
+  private fontColorDark = '#adb5bd';
+  private gridColorLight = '#eeeeee';
+  private gridColorDark = '#4a4a4a';
+  private annoBgLight = 'rgba(255,255,255,0.4)';
+  private annoBgDark = 'rgba(0,0,0,0.4)';
   sma = false; // Simple Moving Average
   smaLength = 8;
   calibration = {
@@ -595,6 +606,7 @@ export class SpectrumPlot {
         yref: 'paper',
         text: name,
         showarrow: true,
+        arrowcolor: this.darkMode ? this.fontColorDark : this.fontColorLight,
         arrowhead: 7,
         ax: 0,
         ay: -20,
@@ -618,7 +630,7 @@ export class SpectrumPlot {
         newAnno.arrowhead = 1;
         newAnno.arrowsize = 0.8;
         newAnno.ay = -40;
-        newAnno.bgcolor = 'rgba(255,255,255,0.4)';
+        newAnno.bgcolor = this.darkMode ? this.annoBgDark : this.annoBgLight;
       }
 
       for (const shape of this.shapes) {
@@ -797,7 +809,8 @@ export class SpectrumPlot {
         ticksuffix: '',
         hoverformat: ',.2~f',
         exponentformat: 'none',
-        automargin: true
+        automargin: true,
+        gridcolor: this.darkMode ? this.gridColorDark : this.gridColorLight
       },
       yaxis: {
         title: 'Counts Per Second [s<sup>-1</sup>]',
@@ -816,15 +829,19 @@ export class SpectrumPlot {
         hoverformat: '.4~s',
         //showexponent: 'last',
         exponentformat: 'SI',
-        automargin: true
+        automargin: true,
+        gridcolor: this.darkMode ? this.gridColorDark : this.gridColorLight
       },
-      plot_bgcolor: 'white', // Change depending on dark mode
-      paper_bgcolor: '#f8f9fa', // Bootstrap bg-light, bg-dark: 212529
+      plot_bgcolor: this.darkMode ? this.plotBgDark : this.plotBgLight,
+      paper_bgcolor: this.darkMode ? this.paperBgDark : this.paperBgLight,
+      font: {
+        color:  this.darkMode ? this.fontColorDark : this.fontColorLight,
+      },
       margin: {
-        l: 80,
+        l: 40,
         r: 40,
-        b: 60,
-        t: 60,
+        b: 50,
+        t: 55,
         //pad: 4,
       },
       images: [{
@@ -950,7 +967,8 @@ export class SpectrumPlot {
         ticksuffix: '',
         hoverformat: ',.2~f',
         exponentformat: 'none',
-        automargin: true
+        automargin: true,
+        gridcolor: this.darkMode ? this.gridColorDark : this.gridColorLight
       },
       yaxis: {
         title: 'Energy [keV]',
@@ -969,15 +987,19 @@ export class SpectrumPlot {
         showexponent: 'last',
         exponentformat: 'none',
         hoverformat: ',.2~f',
-        automargin: true
+        automargin: true,
+        gridcolor: this.darkMode ? this.gridColorDark : this.gridColorLight
       },
-      plot_bgcolor: 'white', // Change depending on dark mode
-      paper_bgcolor: '#f8f9fa', // Bootstrap bg-light, bg-dark: 212529
+      plot_bgcolor: this.darkMode ? this.plotBgDark : this.plotBgLight,
+      paper_bgcolor: this.darkMode ? this.paperBgDark : this.paperBgLight,
+      font: {
+        color:  this.darkMode ? this.fontColorDark : this.fontColorLight,
+      },
       margin: {
-        l: 80,
+        l: 40,
         r: 40,
-        b: 60,
-        t: 60,
+        b: 50,
+        t: 55,
         //pad: 4,
       },
       images: [{
@@ -1089,7 +1111,7 @@ export class SpectrumPlot {
       //data.unshift(bgTrace);
       data.push(bgTrace);
     }
-    
+
     /*
       Set Simple Moving Average
     */
@@ -1148,7 +1170,8 @@ export class SpectrumPlot {
         hoverformat: ',.2~f',
         ticksuffix: '',
         exponentformat: 'none',
-        automargin: true
+        automargin: true,
+        gridcolor: this.darkMode ? this.gridColorDark : this.gridColorLight
       },
       yaxis: {
         title: 'Counts [1]',
@@ -1168,7 +1191,8 @@ export class SpectrumPlot {
         hoverformat: '.4~s',
         //showexponent: 'last',
         exponentformat: 'SI',
-        automargin: true
+        automargin: true,
+        gridcolor: this.darkMode ? this.gridColorDark : this.gridColorLight
       },
       /*
       yaxis2: {
@@ -1176,8 +1200,11 @@ export class SpectrumPlot {
         side: 'right'
       },
       */
-      plot_bgcolor: 'white', // Change depending on dark mode
-      paper_bgcolor: '#f8f9fa', // Bootstrap bg-light, bg-dark: 212529
+      plot_bgcolor: this.darkMode ? this.plotBgDark : this.plotBgLight,
+      paper_bgcolor: this.darkMode ? this.paperBgDark : this.paperBgLight,
+      font: {
+        color:  this.darkMode ? this.fontColorDark : this.fontColorLight,
+      },
       margin: {
         l: 40,
         r: 40,

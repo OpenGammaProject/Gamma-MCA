@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"> <!-- data-bs-theme="dark/light" -->
+<html lang="en" data-bs-theme="light"> <!-- data-bs-theme="dark/light" -->
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -49,7 +49,7 @@
     <script type="module" src="/assets/js/serial.js"></script>
     <script type="module" src="/assets/js/main.js"></script>
   </head>
-  <body class="theme-mode text-bg-white">
+  <body>
     <!--
 
       LOADING AND NOSCRIPT ALERT
@@ -61,7 +61,8 @@
         <noscript>
           <p class="fs-3 text-bg-danger text-center">
             This website only works with Javascript enabled! You need to enable it in your browser to be able to use this site!
-            Instructions on how to do this can be found <a class="link-light" title="Enable-Javascript.com" href="https://enable-javascript.com/" target="_blank">here</a>.
+            <br>
+            Instructions on how to do this can be found <a class="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" title="Enable-Javascript.com" href="https://enable-javascript.com/" target="_blank">&lt;here&gt;</a>.
           </p>
         </noscript>
 
@@ -78,8 +79,8 @@
       MAIN PAGE CONTENT
 
     -->
-    <div class="container-fluid flex-column d-flex vh-100 pb-1 p-1 text-dark lh-sm main" id="main"> <!-- pb-1 needed for vertical scroll bar -->
-      <div class="row border border-1 border-secondary theme-mode text-bg-light">
+    <div class="container-fluid flex-column d-flex vh-100 pb-1 p-1 lh-sm main" id="main"> <!-- pb-1 needed for vertical scroll bar -->
+      <div class="row border border-1 border-dark border-bottom-0 rounded-top-3 border-mode">
 
         <div class="col-md-auto p-2 text-center">
 
@@ -116,9 +117,9 @@
 
         </div>
 
-        <div class="col-md-auto g-0">
-          <div class="vr h-100 opacity-50 d-none d-md-block"></div>
-          <hr class="d-md-none opacity-50">
+        <div class="col-md-auto g-0 bg-dark">
+          <div class="vr h-100 d-none d-md-block"></div>
+          <hr class="d-md-none m-0">
         </div>
 
         <div class="col-md p-3">
@@ -211,8 +212,8 @@
                #####################
               -->
               <div class="alert alert-warning" role="alert" id="serial-error">
-                <p>Oh no! Looks like neither the <a href="https://caniuse.com/web-serial" target="_blank" title="CanIUse? Web Serial API"> Web Serial API</a>, 
-                  nor <a href="https://caniuse.com/webusb" target="_blank" title="CanIUse? WebUSB">WebUSB</a> are not supported in your browser.</p>
+                <p>Oh no! Looks like neither the <a class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="https://caniuse.com/web-serial" target="_blank" title="CanIUse? Web Serial API"> Web Serial API</a>, 
+                  nor <a class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="https://caniuse.com/webusb" target="_blank" title="CanIUse? WebUSB">WebUSB</a> are not supported in your browser.</p>
                 
                 <p>Please switch to the latest Chromium-based browser (e.g. Chrome, Edge, etc.) or enable one of the features in your browser's settings if possible.
                   Otherwise you cannot use any serial devices.</p>
@@ -241,7 +242,7 @@
 
                     </div>
 
-                    <hr>
+                    <br>
 
                     <div class="clearfix">
 
@@ -259,8 +260,8 @@
                         <div class="vstack align-middle">
                           <span class="align-middle fw-bold"><span id="record-time"></span><span id="total-record-time"></span></span>
 
-                          <div class="progress mt-1" id="ser-time-progress-bar">
-                            <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="ser-time-progress" title="Serial recording progress"></div>
+                          <div class="progress mt-1" id="ser-time-progress-bar" role="progressbar" title="Serial recording progress" aria-label="Serial recording progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar text-bg-primary" id="ser-time-progress"></div>
                           </div>
                         </div>
 
@@ -423,7 +424,7 @@
                 <div class="col">
                   <!--
                     #####
-                    COL 1
+                    COL 2
                     #####
                   -->
                   <p class="mb-1">Linear (2-point) or quadratic (3-point) calibration is supported.</p>
@@ -521,9 +522,9 @@
 
         </div>
 
-        <div class="col-md-auto g-0">
-          <div class="vr h-100 opacity-50 d-none d-md-block"></div>
-          <hr class="d-md-none opacity-50">
+        <div class="col-md-auto g-0 bg-dark">
+          <div class="vr h-100 d-none d-md-block"></div>
+          <hr class="d-md-none m-0">
         </div>
 
         <div class="col-md-2 p-2">
@@ -561,8 +562,8 @@
         </div>
       </div>
 
-      <div class="row theme-mode text-bg-light flex-grow-1 plot-div border border-top-0 border-1 border-secondary"> <!-- flex-fill -->
-        <div class="col">
+      <div id="plot-tab" class="row flex-grow-1 plot-div border border-1 border-dark"> <!-- flex-fill -->
+        <div class="col p-1">
           <!--
             PLOT DIV
           -->
@@ -570,7 +571,7 @@
         </div>
       </div>
 
-      <div class="row border border-top-0 border-1 border-secondary theme-mode text-bg-light p-1">
+      <div class="row border border-top-0 border-1 border-dark rounded-bottom-3 border-mode p-1 d-flex justify-content-center">
 
         <div class="col-auto p-1">
           <button class="btn btn-primary btn-sm" type="button" id="reset-plot" title="Reset plot settings"> <i class="fas fa-redo"></i> Reset Plot </button>
@@ -782,7 +783,7 @@
             <div class="table-responsive"> <!-- style="max-height:70vh;" -->
               <table id="table" class="table table-hover align-middle">
                 <caption>List of gamma-ray energies of common isotopes.</caption>
-                <thead class="theme-mode table-light"> <!-- style="box-shadow: inset 1px 1px #000, 0 2px #000;" -->
+                <thead> <!-- class="table-light" style="box-shadow: inset 1px 1px #000, 0 2px #000;" -->
                   <tr>
                     <th> <input class="form-check-input" id="check-all-isos" type="checkbox" value="" title="Toggle all isotopes"> </th>
                     <th class="cursor-pointer" data-sort-by="1">Isotope <i class="fa-solid fa-sort"></i></th>
@@ -810,6 +811,28 @@
             </div>
 
             <div class="accordion accordion-flush">
+              <div class="accordion-item">
+                <h4 class="accordion-header" id="panel0-heading">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panel0-collaps" aria-expanded="true" aria-controls="panel0-collaps">
+                    General
+                  </button>
+                </h4>
+                <div id="panel0-collaps" class="accordion-collapse collapse" aria-labelledby="panel0-heading">
+                  <div class="accordion-body">
+
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="theme-select">Theme</label>
+                      <select class="form-select form-select-sm" id="theme-select" aria-label="Select the Gamma MCA theme">
+                        <option value="auto" selected>System (auto)</option>
+                        <option value="light">Light</option>
+                        <option value="dark">Dark</option>
+                      </select>
+                    </div>
+                    <p><small>Select a theme for Gamma MCA. <code>System</code> will automatically use your system theme.</small></p>
+
+                  </div>
+                </div>
+              </div>
               <div class="accordion-item">
                 <h4 class="accordion-header" id="panel1-heading">
                   <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panel1-collaps" aria-expanded="true" aria-controls="panel1-collaps">
@@ -1007,19 +1030,19 @@
             <br>
             <p>Gamma MCA is a complete progressive web app for gamma spectroscopy. It is free and open-source with online and offline functionality. You can import and export spectrum files or record new ones using the serial interface.</p>
 
-            <p>For a list of example spectra to help you get started head to the <a title="GammaDB" href="https://gammadb.nuclearphoenix.xyz" target="_blank">Gamma Spectrum Database</a>.</p>
+            <p>For a list of example spectra to help you get started head to the <a class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" title="GammaDB" href="https://gammadb.nuclearphoenix.xyz" target="_blank">Gamma Spectrum Database</a>.</p>
 
-            <p>For more information on the JSON file format head to the <abbr title="Nuclear Physics Energy Spectrum">NPES</abbr>-JSON <a title="GitHub/NPES-JSON" href="https://github.com/OpenGammaProject/NPES-JSON" target="_blank">GitHub repository</a>.</p>
+            <p>For more information on the JSON file format head to the <abbr title="Nuclear Physics Energy Spectrum">NPES</abbr>-JSON <a class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" title="GitHub/NPES-JSON" href="https://github.com/OpenGammaProject/NPES-JSON" target="_blank">GitHub repository</a>.</p>
 
             <hr>
 
-            <p>Made free and open-source by <a title="NuclearPhoenix.xyz" href="https://nuclearphoenix.xyz" target="_blank">NuclearPhoenix</a>. Licensed under the <a title="GitHub/License" href="https://github.com/OpenGammaProject/Gamma-MCA/blob/main/LICENSE" target="_blank">GNU General Public License v3.0</a>.</p>
+            <p>Made free and open-source by <a class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" title="NuclearPhoenix.xyz" href="https://nuclearphoenix.xyz" target="_blank">NuclearPhoenix</a>. Licensed under the <a class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" title="GitHub/License" href="https://github.com/OpenGammaProject/Gamma-MCA/blob/main/LICENSE" target="_blank">GNU General Public License v3.0</a>.</p>
 
-            <p>This site is part of the <a title="Open Gamma Project" href="https://github.com/OpenGammaProject" target="_blank">Open Gamma Project</a> to provide modern and open-source resources for accessible gamma-spectroscopy.</p>
+            <p>This site is part of the <a class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" title="Open Gamma Project" href="https://github.com/OpenGammaProject" target="_blank">Open Gamma Project</a> to provide modern and open-source resources for accessible gamma-spectroscopy.</p>
 
-            <p>Get the source code on <a title="GitHub/Gamma-MCA" href="https://github.com/OpenGammaProject/Gamma-MCA" target="_blank"><i class="fab fa-github"></i> GitHub</a>.</p>
-            <p>Report issues and bugs on <a title="GitHub/Issues" href="https://github.com/OpenGammaProject/Gamma-MCA/issues" target="_blank"><i class="fas fa-bug"></i> GitHub/Issues</a>.</p>
-            <p>Questions? Discussions, Q&As and more can be found on <a title="GitHub/Discussions" href="https://github.com/OpenGammaProject/Gamma-MCA/discussions" target="_blank"><i class="fas fa-comments"></i> GitHub/Discussions</a>.</p>
+            <p>Get the source code on <a class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" title="GitHub/Gamma-MCA" href="https://github.com/OpenGammaProject/Gamma-MCA" target="_blank"><i class="fab fa-github" aria-hidden="true"></i> GitHub</a>.</p>
+            <p>Report issues and bugs on <a class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" title="GitHub/Issues" href="https://github.com/OpenGammaProject/Gamma-MCA/issues" target="_blank"><i class="fas fa-bug" aria-hidden="true"></i> GitHub/Issues</a>.</p>
+            <p>Questions? Discussions, Q&amp;As and more can be found on <a class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" title="GitHub/Discussions" href="https://github.com/OpenGammaProject/Gamma-MCA/discussions" target="_blank"><i class="fas fa-comments" aria-hidden="true"></i> GitHub/Discussions</a>.</p>
 
             <hr>
 
@@ -1050,7 +1073,7 @@
       BOOTSTRAP TOASTS FOR NOTIFICATIONS: LEGACY NOW; THE REST IS DONE BY THE NOTIFICATION SYSTEM
 
     -->
-    <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3"> <!-- add z-3 for z-index? -->
       
       <div id="pwa-installer" class="toast text-bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
         <div class="toast-header">
