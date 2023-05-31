@@ -1111,6 +1111,7 @@ export class SpectrumPlot {
       //data.unshift(bgTrace);
       data.push(bgTrace);
     }
+
     /*
       Set Simple Moving Average
     */
