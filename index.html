@@ -813,6 +813,28 @@
 
             <div class="accordion accordion-flush">
               <div class="accordion-item">
+                <h4 class="accordion-header" id="panel0-heading">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panel0-collaps" aria-expanded="true" aria-controls="panel0-collaps">
+                    General
+                  </button>
+                </h4>
+                <div id="panel0-collaps" class="accordion-collapse collapse" aria-labelledby="panel0-heading">
+                  <div class="accordion-body">
+
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="theme-select">Theme</label>
+                      <select class="form-select form-select-sm" id="theme-select" aria-label="Select the Gamma MCA theme">
+                        <option value="auto" selected><i class="fa-solid fa-desktop" aria-hidden="true"></i> System (auto)</option>
+                        <option value="light"><i class="fa-solid fa-sun" aria-hidden="true"></i> Light</option>
+                        <option value="dark"><i class="fa-solid fa-moon" aria-hidden="true"></i> Dark</option>
+                      </select>
+                    </div>
+                    <p><small>Select a theme for Gamma MCA. <code>System</code> will automatically use your system theme.</small></p>
+
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
                 <h4 class="accordion-header" id="panel1-heading">
                   <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panel1-collaps" aria-expanded="true" aria-controls="panel1-collaps">
                     Plot

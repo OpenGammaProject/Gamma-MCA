@@ -108,6 +108,13 @@ export class SpectrumPlot {
     yAxis = 'linear';
     linePlot = false;
     downloadFormat = 'png';
+    darkMode = false;
+    darkPlotBg = '#3f4448';
+    lightPlotBg = '#ffffff';
+    darkPaperBg = '#212529';
+    lightPaperBg = '#ffffff';
+    lightFontColor = '#444444';
+    darkFontColor = '#adb5bd';
     sma = false;
     smaLength = 8;
     calibration = {
@@ -570,13 +577,16 @@ export class SpectrumPlot {
                 exponentformat: 'SI',
                 automargin: true
             },
-            plot_bgcolor: 'white',
-            paper_bgcolor: '#f8f9fa',
+            plot_bgcolor: this.darkMode ? this.darkPlotBg : this.lightPlotBg,
+            paper_bgcolor: this.darkMode ? this.darkPaperBg : this.lightPaperBg,
+            font: {
+                color: this.darkMode ? this.darkFontColor : this.lightFontColor,
+            },
             margin: {
-                l: 80,
+                l: 40,
                 r: 40,
-                b: 60,
-                t: 60,
+                b: 50,
+                t: 55,
             },
             images: [{
                     x: 0.99,
@@ -706,13 +716,16 @@ export class SpectrumPlot {
                 hoverformat: ',.2~f',
                 automargin: true
             },
-            plot_bgcolor: 'white',
-            paper_bgcolor: '#f8f9fa',
+            plot_bgcolor: this.darkMode ? this.darkPlotBg : this.lightPlotBg,
+            paper_bgcolor: this.darkMode ? this.darkPaperBg : this.lightPaperBg,
+            font: {
+                color: this.darkMode ? this.darkFontColor : this.lightFontColor,
+            },
             margin: {
-                l: 80,
+                l: 40,
                 r: 40,
-                b: 60,
-                t: 60,
+                b: 50,
+                t: 55,
             },
             images: [{
                     x: 0.99,
@@ -866,7 +879,11 @@ export class SpectrumPlot {
                 exponentformat: 'SI',
                 automargin: true
             },
-            plot_bgcolor: 'white',
+            plot_bgcolor: this.darkMode ? this.darkPlotBg : this.lightPlotBg,
+            paper_bgcolor: this.darkMode ? this.darkPaperBg : this.lightPaperBg,
+            font: {
+                color: this.darkMode ? this.darkFontColor : this.lightFontColor,
+            },
             margin: {
                 l: 40,
                 r: 40,

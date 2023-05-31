@@ -2,6 +2,7 @@ import { SpectrumPlot, SeekClosest, CalculateFWHM } from './plot.js';
 import { RawData } from './raw-data.js';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
 import { Notification } from './notifications.js';
+import { applyTheming, autoThemeChange } from './global-theming.js';
 export class SpectrumData {
     data = [];
     background = [];
@@ -53,7 +54,7 @@ const isoList = {};
 let checkNearIso = false;
 let maxDist = 100;
 const APP_VERSION = '2023-05-15';
-let localStorageAvailable = false;
+const localStorageAvailable = 'localStorage' in self;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
 const isoTableSortDirections = ['none', 'none', 'none'];
@@ -62,8 +63,19 @@ const faSortClasses = {
     asc: 'fa-sort-up',
     desc: 'fa-sort-down'
 };
+window.addEventListener('DOMContentLoaded', () => {
+    if (localStorageAvailable) {
+        plot.darkMode = applyTheming() === 'dark';
+        plot.updatePlot(spectrumData);
+    }
+});
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    if (localStorageAvailable) {
+        plot.darkMode = autoThemeChange() === 'dark';
+        plot.updatePlot(spectrumData);
+    }
+});
 document.body.onload = async function () {
-    localStorageAvailable = 'localStorage' in self;
     fileSystemWritableAvail = (window.FileSystemHandle && 'createWritable' in FileSystemFileHandle.prototype);
     if (localStorageAvailable) {
         loadSettingsStorage();
@@ -1389,6 +1401,7 @@ function bindInputs() {
     document.getElementById('edit-plot').onclick = event => changeSettings('editMode', event.target);
     document.getElementById('toggle-time-limit').onclick = event => changeSettings('timeLimitBool', event.target);
     document.getElementById('download-format').onchange = event => changeSettings('plotDownload', event.target);
+    document.getElementById('theme-select').onchange = event => changeSettings('theme', event.target);
 }
 function loadSettingsDefault() {
     document.getElementById('custom-url').value = isoListURL;
@@ -1412,11 +1425,18 @@ function loadSettingsDefault() {
     document.getElementById('seek-width').value = plot.peakConfig.seekWidth.toString();
     document.getElementById('gauss-sigma').value = plot.gaussSigma.toString();
     const formatSelector = document.getElementById('download-format');
-    const len = formatSelector.options.length;
+    const formatLen = formatSelector.options.length;
     const format = plot.downloadFormat;
-    for (let i = 0; i < len; i++) {
+    for (let i = 0; i < formatLen; i++) {
         if (formatSelector.options[i].value === format)
             formatSelector.selectedIndex = i;
+    }
+    const themeSelector = document.getElementById('theme-select');
+    const themeLen = themeSelector.options.length;
+    const theme = loadJSON('theme');
+    for (let i = 0; i < themeLen; i++) {
+        if (themeSelector.options[i].value === theme)
+            themeSelector.selectedIndex = i;
     }
 }
 function loadSettingsStorage() {
@@ -1595,6 +1615,12 @@ function changeSettings(name, element) {
             plot.downloadFormat = stringValue;
             plot.updatePlot(spectrumData);
             result = saveJSON(name, stringValue);
+            break;
+        }
+        case 'theme': {
+            result = saveJSON(name, stringValue);
+            plot.darkMode = applyTheming() === 'dark';
+            plot.updatePlot(spectrumData);
             break;
         }
         case 'gaussSigma': {

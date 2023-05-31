@@ -22,8 +22,7 @@
 
     - Calibration n-polynomial regression
     - Add pulse limit analog to time limit for serial recordings
-    - (!!!) 404 Page Themeing
-    - (!!!) Dark Mode Toggle Button + Auto detection + Small fixes (button primary colors and stuff, plotly, outer borders)
+    - (!!!) Button Primary colors, toasts, plotly
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -39,6 +38,7 @@ import { RawData, NPESv1, NPESv1Spectrum } from './raw-data.js';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
 import { WebUSBSerialPort } from './external/webusbserial-min.js'
 import { Notification } from './notifications.js';
+import { Theme, applyTheming, autoThemeChange } from './global-theming.js';
 
 export interface IsotopeList {
   [key: string]: number[]
@@ -123,7 +123,7 @@ let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
 const APP_VERSION = '2023-05-15';
-let localStorageAvailable = false;
+const localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 let fileSystemWritableAvail = false;
 let firstInstall = false;
 
@@ -135,16 +135,34 @@ const faSortClasses: {[key: string]: string} = {
   desc: 'fa-sort-down'
 };
 
+
+/*
+  Theming-related function calls
+*/
+window.addEventListener('DOMContentLoaded', () => {
+  if (localStorageAvailable) {
+    plot.darkMode = applyTheming() === 'dark';
+    plot.updatePlot(spectrumData);
+  }
+});
+
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if (localStorageAvailable) {
+    plot.darkMode = autoThemeChange() === 'dark';
+    plot.updatePlot(spectrumData);
+  }
+});
+
+
 /*
   Startup of the page
 */
 document.body.onload = async function(): Promise<void> {
-  localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
   fileSystemWritableAvail = (window.FileSystemHandle && 'createWritable' in FileSystemFileHandle.prototype); // Test for File System Access API
 
   if (localStorageAvailable) {
     loadSettingsStorage();
-    //toggleDarkMode(); // Load from settings
   } 
 
   if (navigator.serviceWorker) { // Add service worker for PWA
@@ -328,18 +346,6 @@ document.body.onresize = (): void => {
   }
 };
 
-/*
-document.getElementById()!.onclick = () => toggleDarkMode();
-
-function toggleDarkMode(): void {
-  const themeElements = document.getElementsByClassName('theme-mode');
-  for (const element of themeElements) {
-    element.classList.remove('text-bg-light', 'text-bg-white', 'table-light');
-    element.classList.add('text-bg-dark'); // TODO: add table-dark
-    // TODO: Change font color, reset to light mode, save to settings
-  }
-}
-*/
 
 /*
 window.addEventListener('hidden.bs.collapse', (event: Event) => {
@@ -1894,6 +1900,7 @@ function bindInputs(): void {
   document.getElementById('edit-plot')!.onclick = event => changeSettings('editMode', <HTMLInputElement>event.target); // Checkbox
   document.getElementById('toggle-time-limit')!.onclick = event => changeSettings('timeLimitBool', <HTMLInputElement>event.target); // Checkbox
   document.getElementById('download-format')!.onchange = event => changeSettings('plotDownload', <HTMLSelectElement>event.target); // Select
+  document.getElementById('theme-select')!.onchange = event => changeSettings('theme', <HTMLSelectElement>event.target); // Select
 }
 
 
@@ -1923,10 +1930,17 @@ function loadSettingsDefault(): void {
   (<HTMLInputElement>document.getElementById('gauss-sigma')).value = plot.gaussSigma.toString();
 
   const formatSelector = <HTMLSelectElement>document.getElementById('download-format');
-  const len = formatSelector.options.length;
+  const formatLen = formatSelector.options.length;
   const format = plot.downloadFormat;
-  for (let i = 0; i < len; i++) {
+  for (let i = 0; i < formatLen; i++) {
     if (formatSelector.options[i].value === format) formatSelector.selectedIndex = i;
+  }
+
+  const themeSelector = <HTMLSelectElement>document.getElementById('theme-select');
+  const themeLen = themeSelector.options.length;
+  const theme = loadJSON('theme');
+  for (let i = 0; i < themeLen; i++) {
+    if (themeSelector.options[i].value === theme) themeSelector.selectedIndex = i;
   }
 }
 
@@ -1982,6 +1996,8 @@ function loadSettingsStorage(): void {
 
   setting = loadJSON('plotDownload');
   if (setting !== null) plot.downloadFormat = setting;
+
+  // Setting for dark mode is right at the beginning of the file
 
   setting = loadJSON('gaussSigma');
   if (setting !== null) plot.gaussSigma = setting;
@@ -2127,6 +2143,14 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       plot.updatePlot(spectrumData);
 
       result = saveJSON(name, stringValue);
+      break;
+    }
+    case 'theme': {
+      result = saveJSON(name, stringValue);
+
+      plot.darkMode = applyTheming() === 'dark';
+      plot.updatePlot(spectrumData);
+
       break;
     }
     case 'gaussSigma': {

@@ -255,6 +255,13 @@ export class SpectrumPlot {
   yAxis: 'linear' | 'log' = 'linear';
   linePlot = false; // 'linear', 'hvh' for 'lines' or 'bar
   downloadFormat: DownloadFormat = 'png';
+  darkMode = false;
+  private darkPlotBg = '#3f4448';
+  private lightPlotBg = '#ffffff';
+  private darkPaperBg = '#212529';
+  private lightPaperBg = '#ffffff';
+  private lightFontColor = '#444444';
+  private darkFontColor = '#adb5bd';
   sma = false; // Simple Moving Average
   smaLength = 8;
   calibration = {
@@ -817,13 +824,16 @@ export class SpectrumPlot {
         exponentformat: 'SI',
         automargin: true
       },
-      plot_bgcolor: 'white', // Change depending on dark mode
-      paper_bgcolor: '#f8f9fa', // Bootstrap bg-light, bg-dark: 212529
+      plot_bgcolor: this.darkMode ? this.darkPlotBg : this.lightPlotBg,
+      paper_bgcolor: this.darkMode ? this.darkPaperBg : this.lightPaperBg,
+      font: {
+        color:  this.darkMode ? this.darkFontColor : this.lightFontColor,
+      },
       margin: {
-        l: 80,
+        l: 40,
         r: 40,
-        b: 60,
-        t: 60,
+        b: 50,
+        t: 55,
         //pad: 4,
       },
       images: [{
@@ -970,13 +980,16 @@ export class SpectrumPlot {
         hoverformat: ',.2~f',
         automargin: true
       },
-      plot_bgcolor: 'white', // Change depending on dark mode
-      paper_bgcolor: '#f8f9fa', // Bootstrap bg-light, bg-dark: 212529
+      plot_bgcolor: this.darkMode ? this.darkPlotBg : this.lightPlotBg,
+      paper_bgcolor: this.darkMode ? this.darkPaperBg : this.lightPaperBg,
+      font: {
+        color:  this.darkMode ? this.darkFontColor : this.lightFontColor,
+      },
       margin: {
-        l: 80,
+        l: 40,
         r: 40,
-        b: 60,
-        t: 60,
+        b: 50,
+        t: 55,
         //pad: 4,
       },
       images: [{
@@ -1174,8 +1187,11 @@ export class SpectrumPlot {
         side: 'right'
       },
       */
-      plot_bgcolor: 'white', // Change depending on dark mode
-      //paper_bgcolor: '#f8f9fa', // Bootstrap bg-light, bg-dark: 212529
+      plot_bgcolor: this.darkMode ? this.darkPlotBg : this.lightPlotBg,
+      paper_bgcolor: this.darkMode ? this.darkPaperBg : this.lightPaperBg,
+      font: {
+        color:  this.darkMode ? this.darkFontColor : this.lightFontColor,
+      },
       margin: {
         l: 40,
         r: 40,
