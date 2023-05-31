@@ -179,8 +179,8 @@ document.body.onload = async function(): Promise<void> {
     document.title += ' PWA';
     document.getElementById('main')!.classList.remove('p-1');
 
-    const boarderModeElements = document.getElementsByClassName('border-mode');
-    for (const element of boarderModeElements) {
+    const borderModeElements = document.getElementsByClassName('border-mode');
+    for (const element of borderModeElements) {
       element.classList.add('border-0');
     }
 
