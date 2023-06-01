@@ -53,8 +53,9 @@ let isoListURL = 'assets/isotopes_energies_min.json';
 const isoList = {};
 let checkNearIso = false;
 let maxDist = 100;
-const APP_VERSION = '2023-05-31';
+const APP_VERSION = '2023-06-01';
 const localStorageAvailable = 'localStorage' in self;
+const wakeLockAvailable = 'wakeLock' in navigator;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
 const isoTableSortDirections = ['none', 'none', 'none'];
@@ -1764,6 +1765,7 @@ document.getElementById('record-bg-btn').onclick = () => startRecord(false, 'bac
 let recordingType;
 let startDate;
 let endDate;
+let wakeLock;
 async function startRecord(pause = false, type) {
     try {
         selectPort();
@@ -1773,6 +1775,19 @@ async function startRecord(pause = false, type) {
         console.error('Connection Error:', err);
         new Notification('serialConnectError');
         return;
+    }
+    if (wakeLockAvailable) {
+        try {
+            wakeLock = await navigator.wakeLock.request('screen');
+            document.addEventListener('visibilitychange', async () => {
+                if (wakeLock !== null && document.visibilityState === 'visible') {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                }
+            });
+        }
+        catch (err) {
+            console.error('Screen Wake Lock Error:', err);
+        }
     }
     recordingType = type;
     if (!pause) {
@@ -1806,6 +1821,9 @@ async function disconnectPort(stop = false) {
         document.getElementById('record-button').classList.remove('d-none');
         endDate = new Date();
     }
+    wakeLock?.release().then(() => {
+        wakeLock = null;
+    });
     try {
         clearTimeout(refreshTimeout);
         clearTimeout(metaTimeout);

@@ -1,5 +1,5 @@
 import { WebUSBSerialPort } from './external/webusbserial-min.js';
-class WebUSBSerial {
+export class WebUSBSerial {
     port;
     device;
     isOpen = false;
@@ -57,7 +57,6 @@ class WebUSBSerial {
         return this.device;
     }
 }
-export { WebUSBSerial };
 export class WebSerial {
     port;
     isOpen = false;
@@ -125,7 +124,7 @@ export class WebSerial {
         return this.port;
     }
 }
-class SerialManager {
+export class SerialManager {
     port;
     closed;
     recording = false;
@@ -314,5 +313,4 @@ class SerialManager {
         return (this.recording ? (performance.now() - this.startTime + this.timeDone) : this.timeDone);
     }
 }
-export { SerialManager };
 //# sourceMappingURL=serial.js.map
