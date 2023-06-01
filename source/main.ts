@@ -122,6 +122,7 @@ let maxDist = 100; // Max energy distance to highlight
 
 const APP_VERSION = '2023-05-31';
 const localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
+const wakeLockAvailable = 'wakeLock' in navigator; // Test for Screen Wake Lock API
 let fileSystemWritableAvail = false;
 let firstInstall = false;
 
@@ -2332,6 +2333,7 @@ document.getElementById('record-bg-btn')!.onclick = () => startRecord(false, 'ba
 let recordingType: DataType;
 let startDate: Date;
 let endDate: Date;
+let wakeLock: WakeLockSentinel | null;
 
 async function startRecord(pause = false, type: DataType): Promise<void> {
   try {
@@ -2341,6 +2343,21 @@ async function startRecord(pause = false, type: DataType): Promise<void> {
     console.error('Connection Error:', err);
     new Notification('serialConnectError'); //popupNotification('serial-connect-error');
     return;
+  }
+
+  if (wakeLockAvailable) {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen'); // Acquire Screen Wake Lock
+
+      document.addEventListener('visibilitychange', async () => {
+        if (wakeLock !== null && document.visibilityState === 'visible') {
+          // Reacquire wake lock on visibility change (minimizing and maximizing again)
+          wakeLock = await navigator.wakeLock.request('screen');
+        }
+      });
+    } catch (err) {
+      console.error('Screen Wake Lock Error:', err); // The Wake Lock request has failed - usually system related, such as battery.
+    }
   }
 
   recordingType = type;
@@ -2393,6 +2410,10 @@ async function disconnectPort(stop = false): Promise<void> {
 
     endDate = new Date();
   }
+
+  wakeLock?.release().then(() => { // Release Screen Wake Lock
+    wakeLock = null;
+  });
 
   try {
     clearTimeout(refreshTimeout);
