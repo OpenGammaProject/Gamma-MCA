@@ -45,45 +45,52 @@
   "screenshots": [
     {
       "src": "/assets/screenshots/browser.PNG",
-      "sizes": "1920x937",
+      "sizes": "1920x927",
       "type": "image/png",
       "platform": "wide",
       "label": "Start screen of the browser app"
     },
     {
       "src": "/assets/screenshots/pwa.PNG",
-      "sizes": "1341x897",
+      "sizes": "1380x862",
       "type": "image/png",
       "platform": "wide",
       "label": "Start screen of the installed PWA"
     },
     {
       "src": "/assets/screenshots/file.PNG",
-      "sizes": "1177x788",
+      "sizes": "1380x862",
       "type": "image/png",
       "platform": "wide",
-      "label": "CSV spectrum files imported into the PWA and plotted"
+      "label": "JSON spectrum file imported into the PWA and plotted"
     },
     {
       "src": "/assets/screenshots/serial.PNG",
-      "sizes": "1341x897",
+      "sizes": "1380x862",
       "type": "image/png",
       "platform": "wide",
       "label": "Recording a spectrum using the serial port"
     },
     {
       "src": "/assets/screenshots/settings.PNG",
-      "sizes": "1341x897",
+      "sizes": "1380x862",
       "type": "image/png",
       "platform": "wide",
-      "label": "Opened settings panel with three sub-tabs"
+      "label": "Opened settings panel with three menu points"
     },
     {
       "src": "/assets/screenshots/calibration.PNG",
-      "sizes": "1341x897",
+      "sizes": "1380x862",
       "type": "image/png",
       "platform": "wide",
-      "label": "Imported calibration from an XML file"
+      "label": "Imported calibration from a JSON file"
+    },
+    {
+      "src": "/assets/screenshots/dark_file.png",
+      "sizes": "1380x862",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "JSON spectrum file imported into the PWA and plotted in dark mode"
     }
   ],
   "file_handlers": [
