@@ -7,7 +7,7 @@
   https://nuclearphoenix.xyz
 
 */
-const APP_VERSION = '2023-05-31';
+const APP_VERSION = '2023-06-01';
 const CACHE_NAME = 'gamma-static'; // A random name for the cache
 
 const OFFLINE_RESOURCES = ['/',
