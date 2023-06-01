@@ -24,7 +24,7 @@ export class SeekClosest {
         return { energy: undefined, name: undefined };
     }
 }
-class CalculateFWHM {
+export class CalculateFWHM {
     static resolutionLimit = 0.5;
     static fastMode = false;
     peakList;
@@ -100,7 +100,6 @@ class CalculateFWHM {
         return peakResolutions;
     }
 }
-export { CalculateFWHM };
 export class SpectrumPlot {
     plotDiv;
     type = 'default';
