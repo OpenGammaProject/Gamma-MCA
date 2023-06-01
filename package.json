@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@types/dom-screen-wake-lock": "^1.0.1",
     "@types/w3c-web-serial": "^1.0.3",
     "@types/w3c-web-usb": "^1.0.6",
     "@types/wicg-file-system-access": "^2020.9.6",
