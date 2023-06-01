@@ -18,6 +18,7 @@
     - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with one click
     - (?) Highlight plot lines in ROI selection
     - (?) Hist mode: First cps value is always zero?
+    - (?) Add option to compress files via the Compression Streams API (<10% file size)
 
     - Calibration n-polynomial regression
     - Add pulse limit analog to time limit for serial recordings
