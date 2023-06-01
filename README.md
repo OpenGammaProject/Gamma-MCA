@@ -4,9 +4,9 @@
 
 Progressive web application for gamma spectroscopy including file and live plot support via the serial interface.
 
-![example spectrum](/docs/thumbnail.png)
+![Example spectrum](docs/thumbnail.png)
 
-Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://github.com/plotly/plotly.js), [Font Awesome](https://github.com/FortAwesome/Font-Awesome) and [Z-Schema](https://github.com/zaggino/z-schema).
+Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://github.com/plotly/plotly.js), [Font Awesome](https://github.com/FortAwesome/Font-Awesome), [Z-Schema](https://github.com/zaggino/z-schema) and some more.
 
 ## Feature Overview
 
@@ -24,6 +24,8 @@ Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://
 * Export interactive graphs of your spectrum to embed it into your website
 * Automatic peak detection (energy and isotope)
 * ... and much more!
+
+![Example spectrum in dark mode](docs/thumbnail_dark.png)
 
 ## Importing Spectra
 
@@ -86,8 +88,8 @@ To make changes to the service worker, have a look at `service-worker.js`. It is
 
 The [LICENSE](/LICENSE) does not apply to the name _Gamma MCA_ and especially the Gamma MCA/OpenGammaProject [logo](assets/logo.svg). This also includes any derivatives that contain the same logo, such as the images inside `assets/favicon` or `assets/files`.
 
-- Do not use them in any way that suggests you are the OpenGammaProject or Gamma MCA or that the OpenGammaProject is endorsing you or your offering or project.
-- Do not use the OpenGammaProject logo as the icon or logo for your business/organization, offering, project, domain name, social media account, or website.
-- Do not modify the OpenGammaProject logo.
+* Do not use them in any way that suggests you are the OpenGammaProject or Gamma MCA or that the OpenGammaProject is endorsing you or your offering or project.
+* Do not use the OpenGammaProject logo as the icon or logo for your business/organization, offering, project, domain name, social media account, or website.
+* Do not modify the OpenGammaProject logo.
 
 Feel free to fork this repository to archive it or create pull requests here and contribute. However, if you're forking the project, then make (significant) changes without the purpose of contribution these here, please remove the branding (_Gamma MCA_ name and all OpenGammaProject-related logos).
