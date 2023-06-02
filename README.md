@@ -4,7 +4,7 @@
 
 Progressive web application for gamma spectroscopy including file and live plot support via the serial interface.
 
-![Example spectrum](docs/thumbnail.png)
+[![Example spectrum](docs/thumbnail.png)](https://www.youtube.com/watch?v=dkMhoUwDla0) _(Click image for a short trailer video)_
 
 Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://github.com/plotly/plotly.js), [Font Awesome](https://github.com/FortAwesome/Font-Awesome), [Z-Schema](https://github.com/zaggino/z-schema) and some more.
 
