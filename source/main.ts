@@ -21,6 +21,7 @@
 
     - Calibration n-polynomial regression
     - Add pulse limit analog to time limit for serial recordings
+    - Optional real-time file saving to help with long recordings and crashes or sudden device disconnects
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -120,7 +121,7 @@ const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2023-06-01';
+const APP_VERSION = '2023-07-04';
 const localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 const wakeLockAvailable = 'wakeLock' in navigator; // Test for Screen Wake Lock API
 let fileSystemWritableAvail = false;
