@@ -1877,7 +1877,9 @@ function bindInputs(): void {
     'custom-file-adc': 'fileChannels',
     'custom-baud': 'baudRate',
     'eol-char': 'eolChar',
-    'ser-limit': 'timeLimit',
+    'ser-limit-h': 'timeLimit',
+    'ser-limit-m': 'timeLimit',
+    'ser-limit-s': 'timeLimit',
     'custom-ser-refresh': 'plotRefreshRate',
     'custom-ser-buffer': 'serBufferSize',
     'custom-ser-adc': 'serChannels',
@@ -1888,11 +1890,12 @@ function bindInputs(): void {
   }
   for (const [inputId, settingsName] of Object.entries(settingsEnterPressElements)) {
     const valueElement = <HTMLInputElement>document.getElementById(inputId);
-    const buttonElement = <HTMLButtonElement>document.getElementById(`${inputId}-btn`);
     valueElement.onkeydown = event => {
-      if (event.key === 'Enter') buttonElement.click(); // Press ENTER key;
+      //if (event.key === 'Enter') buttonElement.click(); // Press ENTER key;
+      if (event.key === 'Enter') changeSettings(settingsName, valueElement);
     };
-    buttonElement.onclick = () => changeSettings(settingsName, valueElement);
+    const buttonElement = <HTMLButtonElement>document.getElementById(`${inputId}-btn`);
+    if (buttonElement) buttonElement.onclick = () => changeSettings(settingsName, valueElement);
   }
 
   // Bind settings button press or onchange events for settings that do not have the default value input element
@@ -1911,10 +1914,15 @@ function loadSettingsDefault(): void {
   (<HTMLInputElement>document.getElementById('edit-plot')).checked = plot.editableMode;
   (<HTMLInputElement>document.getElementById('custom-delimiter')).value = raw.delimiter;
   (<HTMLInputElement>document.getElementById('custom-file-adc')).value = raw.adcChannels.toString();
-  (<HTMLInputElement>document.getElementById('custom-ser-refresh')).value = (refreshRate / 1000).toString(); // convert ms to s
+  (<HTMLInputElement>document.getElementById('custom-ser-refresh')).value = (refreshRate / 1000).toString(); // Convert ms to s
   (<HTMLInputElement>document.getElementById('custom-ser-buffer')).value = SerialManager.maxSize.toString();
   (<HTMLInputElement>document.getElementById('custom-ser-adc')).value = SerialManager.adcChannels.toString();
-  (<HTMLInputElement>document.getElementById('ser-limit')).value = (maxRecTime / 1000).toString(); // convert ms to s
+  
+  const time = new Date(maxRecTime); // Create a date with the time limit
+  (<HTMLInputElement>document.getElementById('ser-limit-h')).value = (time.getUTCHours() + (time.getUTCDate() - 1) * 24).toString(); // Grab the hours
+  (<HTMLInputElement>document.getElementById('ser-limit-m')).value = time.getUTCMinutes().toString(); // Grab the minutes
+  (<HTMLInputElement>document.getElementById('ser-limit-s')).value = time.getUTCSeconds().toString(); // Grab the seconds
+  
   (<HTMLInputElement>document.getElementById('toggle-time-limit')).checked = maxRecTimeEnabled;
   (<HTMLInputElement>document.getElementById('iso-hover-prox')).value = maxDist.toString();
   (<HTMLInputElement>document.getElementById('custom-baud')).value = SerialManager.baudRate.toString();
@@ -2069,8 +2077,15 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       break;
     }
     case 'timeLimit': {
-      const numVal = parseFloat(stringValue);
-      maxRecTime = numVal * 1000; // convert s to ms
+      const timeElements = element.id.split('-');
+      const elementIds = ['s', 'm', 'h'];
+      let value = 0;
+      for (const index in elementIds) {
+        value += parseInt((<HTMLInputElement>document.getElementById(`${timeElements[0]}-${timeElements[1]}-${elementIds[index]}`)).value.trim()) * 60**parseInt(index);
+      }
+      value *= 1000; // Convert s to ms
+
+      maxRecTime = value;
 
       result = saveJSON(name, maxRecTime);
       break;
@@ -2516,7 +2531,7 @@ function refreshConsole(): void {
 
 function getRecordTimeStamp(time: number): string {
   const dateTime = new Date(time);
-  return addLeadingZero(dateTime.getUTCHours().toString()) + ':' + addLeadingZero(dateTime.getUTCMinutes().toString()) + ':' + addLeadingZero(dateTime.getUTCSeconds().toString());
+  return addLeadingZero((dateTime.getUTCHours() + (dateTime.getUTCDate() - 1) * 24).toString()) + ':' + addLeadingZero(dateTime.getUTCMinutes().toString()) + ':' + addLeadingZero(dateTime.getUTCSeconds().toString());
 }
 
 

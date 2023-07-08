@@ -1380,7 +1380,9 @@ function bindInputs() {
         'custom-file-adc': 'fileChannels',
         'custom-baud': 'baudRate',
         'eol-char': 'eolChar',
-        'ser-limit': 'timeLimit',
+        'ser-limit-h': 'timeLimit',
+        'ser-limit-m': 'timeLimit',
+        'ser-limit-s': 'timeLimit',
         'custom-ser-refresh': 'plotRefreshRate',
         'custom-ser-buffer': 'serBufferSize',
         'custom-ser-adc': 'serChannels',
@@ -1391,12 +1393,13 @@ function bindInputs() {
     };
     for (const [inputId, settingsName] of Object.entries(settingsEnterPressElements)) {
         const valueElement = document.getElementById(inputId);
-        const buttonElement = document.getElementById(`${inputId}-btn`);
         valueElement.onkeydown = event => {
             if (event.key === 'Enter')
-                buttonElement.click();
+                changeSettings(settingsName, valueElement);
         };
-        buttonElement.onclick = () => changeSettings(settingsName, valueElement);
+        const buttonElement = document.getElementById(`${inputId}-btn`);
+        if (buttonElement)
+            buttonElement.onclick = () => changeSettings(settingsName, valueElement);
     }
     document.getElementById('new-flags').onclick = event => changeSettings('newPeakStyle', event.target);
     document.getElementById('enable-res').onclick = event => changeSettings('showEnergyRes', event.target);
@@ -1414,7 +1417,10 @@ function loadSettingsDefault() {
     document.getElementById('custom-ser-refresh').value = (refreshRate / 1000).toString();
     document.getElementById('custom-ser-buffer').value = SerialManager.maxSize.toString();
     document.getElementById('custom-ser-adc').value = SerialManager.adcChannels.toString();
-    document.getElementById('ser-limit').value = (maxRecTime / 1000).toString();
+    const time = new Date(maxRecTime);
+    document.getElementById('ser-limit-h').value = (time.getUTCHours() + (time.getUTCDate() - 1) * 24).toString();
+    document.getElementById('ser-limit-m').value = time.getUTCMinutes().toString();
+    document.getElementById('ser-limit-s').value = time.getUTCSeconds().toString();
     document.getElementById('toggle-time-limit').checked = maxRecTimeEnabled;
     document.getElementById('iso-hover-prox').value = maxDist.toString();
     document.getElementById('custom-baud').value = SerialManager.baudRate.toString();
@@ -1553,8 +1559,14 @@ function changeSettings(name, element) {
             break;
         }
         case 'timeLimit': {
-            const numVal = parseFloat(stringValue);
-            maxRecTime = numVal * 1000;
+            const timeElements = element.id.split('-');
+            const elementIds = ['s', 'm', 'h'];
+            let value = 0;
+            for (const index in elementIds) {
+                value += parseInt(document.getElementById(`${timeElements[0]}-${timeElements[1]}-${elementIds[index]}`).value.trim()) * 60 ** parseInt(index);
+            }
+            value *= 1000;
+            maxRecTime = value;
             result = saveJSON(name, maxRecTime);
             break;
         }
@@ -1901,7 +1913,7 @@ function refreshConsole() {
 }
 function getRecordTimeStamp(time) {
     const dateTime = new Date(time);
-    return addLeadingZero(dateTime.getUTCHours().toString()) + ':' + addLeadingZero(dateTime.getUTCMinutes().toString()) + ':' + addLeadingZero(dateTime.getUTCSeconds().toString());
+    return addLeadingZero((dateTime.getUTCHours() + (dateTime.getUTCDate() - 1) * 24).toString()) + ':' + addLeadingZero(dateTime.getUTCMinutes().toString()) + ':' + addLeadingZero(dateTime.getUTCSeconds().toString());
 }
 let metaTimeout;
 function refreshMeta(type) {

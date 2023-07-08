@@ -939,12 +939,13 @@
                     </div>
 
                     <div class="input-group input-group-sm">
-                      <label class="input-group-text" for="ser-limit">Recording Time Limit</label>
-                      <input type="number" class="form-control serial-controls" id="ser-limit"  min="1">
-                      <label class="input-group-text" for="ser-limit">s</label>
-                      <button class="btn btn-primary serial-controls" id="ser-limit-btn" type="button" title="Apply"> <i class="fas fa-check"></i> </button>
+                      <label class="input-group-text" for="ser-limit-h">Time Limit</label>
+                      <input type="number" class="form-control serial-controls" id="ser-limit-h"  min="0" max="744" step="1" placeholder="hour">
+                      <input type="number" class="form-control serial-controls" id="ser-limit-m"  min="0" max="59" step="1" placeholder="min">
+                      <input type="number" class="form-control serial-controls" id="ser-limit-s"  min="0" max="59" step="1" placeholder="sec">
+                      <button class="btn btn-primary serial-controls" id="ser-limit-h-btn" type="button" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
-                    <p><small>Any positive integer is valid. Serial recording will stop automatically when time runs out.</small></p>
+                    <p><small>Formatted as <code>hh:mm:ss</code>. Any positive integer is valid. Serial recording will stop automatically when time runs out.</small></p>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="custom-ser-refresh">Data Refresh Time</label>
