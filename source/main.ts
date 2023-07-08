@@ -23,6 +23,8 @@
     - Add pulse limit analog to time limit for serial recordings
     - Optional real-time file saving to help with long recordings and crashes or sudden device disconnects
 
+    - !!! Recording time limit use hh:mm:ss inputs
+
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
     - Plotly.js: Plot updates takes forever, but there is no real way to improve it (?)
@@ -2516,7 +2518,7 @@ function refreshConsole(): void {
 
 function getRecordTimeStamp(time: number): string {
   const dateTime = new Date(time);
-  return addLeadingZero(dateTime.getUTCHours().toString()) + ':' + addLeadingZero(dateTime.getUTCMinutes().toString()) + ':' + addLeadingZero(dateTime.getUTCSeconds().toString());
+  return addLeadingZero((dateTime.getUTCHours() + (dateTime.getUTCDate() - 1) * 24).toString()) + ':' + addLeadingZero(dateTime.getUTCMinutes().toString()) + ':' + addLeadingZero(dateTime.getUTCSeconds().toString());
 }
 
 

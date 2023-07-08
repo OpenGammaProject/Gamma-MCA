@@ -1901,7 +1901,7 @@ function refreshConsole() {
 }
 function getRecordTimeStamp(time) {
     const dateTime = new Date(time);
-    return addLeadingZero(dateTime.getUTCHours().toString()) + ':' + addLeadingZero(dateTime.getUTCMinutes().toString()) + ':' + addLeadingZero(dateTime.getUTCSeconds().toString());
+    return addLeadingZero((dateTime.getUTCHours() + (dateTime.getUTCDate() - 1) * 24).toString()) + ':' + addLeadingZero(dateTime.getUTCMinutes().toString()) + ':' + addLeadingZero(dateTime.getUTCSeconds().toString());
 }
 let metaTimeout;
 function refreshMeta(type) {
