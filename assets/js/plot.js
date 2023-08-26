@@ -113,9 +113,9 @@ export class SpectrumPlot {
     paperBgDark = '#212529';
     paperBgLight = '#ffffff';
     fontColorLight = '#444444';
-    fontColorDark = '#adb5bd';
+    fontColorDark = '#dee2e6';
     gridColorLight = '#eeeeee';
-    gridColorDark = '#4a4a4a';
+    gridColorDark = '#515151';
     annoBgLight = 'rgba(255,255,255,0.4)';
     annoBgDark = 'rgba(0,0,0,0.4)';
     sma = false;

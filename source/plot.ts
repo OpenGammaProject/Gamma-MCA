@@ -262,9 +262,9 @@ export class SpectrumPlot {
   private paperBgDark = '#212529';
   private paperBgLight = '#ffffff';
   private fontColorLight = '#444444';
-  private fontColorDark = '#adb5bd';
+  private fontColorDark = '#dee2e6';
   private gridColorLight = '#eeeeee';
-  private gridColorDark = '#4a4a4a';
+  private gridColorDark = '#515151';
   private annoBgLight = 'rgba(255,255,255,0.4)';
   private annoBgDark = 'rgba(0,0,0,0.4)';
   sma = false; // Simple Moving Average
