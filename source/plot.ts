@@ -778,8 +778,6 @@ export class SpectrumPlot {
       }
     };
 
-    const maxXValue = trace.x.at(-1) ?? 1;
-
     const layout = {
       uirevision: 1,
       autosize: true, // Needed for resizing on update
@@ -793,13 +791,12 @@ export class SpectrumPlot {
         title: 'Measurement Point [1]',
         mirror: true,
         linewidth: 2,
-        autorange: false,
-        fixedrange: false,
-        range: [0,maxXValue],
+        autorange: true,
+        autorangeoptions: {
+          minallowed: 0
+        },
         rangeslider: {
-          borderwidth: 1,
-          autorange: false,
-          range: [0,maxXValue],
+          borderwidth: 1
         },
         showspikes: true, //Show spike line for X-axis
         spikethickness: 1,
@@ -817,7 +814,6 @@ export class SpectrumPlot {
         mirror: true,
         linewidth: 2,
         autorange: true,
-        fixedrange: false,
         showspikes: true, //Show spike line for Y-axis
         spikethickness: 1,
         spikedash: 'solid',
@@ -935,9 +931,6 @@ export class SpectrumPlot {
       }
     }
 
-    const maxXValue = trace.x.at(-1) ?? 1;
-    const maxYValue = trace.y.at(-1) ?? 1;
-
     const layout = {
       uirevision: 1,
       autosize: true, // Needed for resizing on update
@@ -951,13 +944,12 @@ export class SpectrumPlot {
         title: 'Bin [1]',
         mirror: true,
         linewidth: 2,
-        autorange: false,
-        fixedrange: false,
-        range: [0,maxXValue],
+        autorange: true,
+        autorangeoptions: {
+          minallowed: 0
+        },
         rangeslider: {
-          borderwidth: 1,
-          autorange: false,
-          range: [0,maxXValue],
+          borderwidth: 1
         },
         showspikes: true, //Show spike line for X-axis
         spikethickness: 1,
@@ -974,9 +966,11 @@ export class SpectrumPlot {
         title: 'Energy [keV]',
         mirror: true,
         linewidth: 2,
-        autorange: true,
-        fixedrange: false,
-        range: [0,maxYValue],
+        autorange: true, //'max',
+        autorangeoptions: {
+          minallowed: 0
+        },
+        //range: [0, null],
         showspikes: true, //Show spike line for Y-axis
         spikethickness: 1,
         spikedash: 'solid',
@@ -1045,7 +1039,6 @@ export class SpectrumPlot {
     if (this.type !== 'default') return; // Ignore this if the calibration chart is currently shown
 
     const data: Trace[] = [];
-    let maxXValue = 0;
 
     if (dataObj.data.length) {
       const trace: Trace = {
@@ -1065,7 +1058,6 @@ export class SpectrumPlot {
         }
       };
 
-      maxXValue = trace.x.at(-1) ?? 1;
       if (this.cps) trace.y = dataObj.dataCps;
       data.push(trace);
     }
@@ -1090,8 +1082,6 @@ export class SpectrumPlot {
           shape: this.linePlot ? 'linear' : 'hvh',
         }
       };
-
-      if (bgTrace.x.length > maxXValue) maxXValue = bgTrace.x.at(-1) ?? 1;
 
       if (this.cps) bgTrace.y = dataObj.backgroundCps;
 
@@ -1120,8 +1110,6 @@ export class SpectrumPlot {
         element.y = this.computeMovingAverage(element.y);
       }
     }
-
-    if (this.xAxis === 'log') maxXValue = Math.log10(maxXValue);
     
     /*
       All The Layout Stuff
@@ -1151,14 +1139,13 @@ export class SpectrumPlot {
         title: 'Bin [1]',
         mirror: true,
         linewidth: 2,
-        autorange: false,
-        fixedrange: false,
-        range: [0,maxXValue],
+        autorange: true,
+        autorangeoptions: {
+          minallowed: 0
+        },
         type: this.xAxis, // 'linear' or 'log'
         rangeslider: {
-          borderwidth: 1,
-          autorange: false,
-          range: [0,maxXValue],
+          borderwidth: 1
         },
         showspikes: true, //Show spike line for X-axis
         spikethickness: 1,
@@ -1238,11 +1225,6 @@ export class SpectrumPlot {
       }
       layout.xaxis.title = 'Energy [keV]';
       layout.xaxis.ticksuffix = ' keV';
-
-      let newMax = Math.max(data[0]?.x.at(-1) ?? 1, data[1]?.x.at(-1) ?? 1);
-      if (this.xAxis === 'log') newMax = Math.log10(newMax);
-      layout.xaxis.range = [0,newMax];
-      layout.xaxis.rangeslider.range = [0,newMax];
     }
 
     const config = {
