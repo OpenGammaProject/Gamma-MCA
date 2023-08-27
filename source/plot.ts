@@ -581,6 +581,8 @@ export class SpectrumPlot {
   */
   toggleLine(energy: number, name: string, enabled = true, height = -1): void {
     //name = name.replaceAll('-',''); // Remove - to save space
+    const hovertext = energy.toFixed(2);
+
     if (enabled) {
       const newLine: Shape = {
         type: 'line',
@@ -611,7 +613,7 @@ export class SpectrumPlot {
         ax: 0,
         ay: -20,
         editable: false,
-        hovertext: energy.toFixed(2),
+        hovertext: hovertext,
         font: {
           size: 11,
         },
@@ -649,7 +651,7 @@ export class SpectrumPlot {
         if (this.shapes[i].x0 === energy) this.shapes.splice(parseInt(i),1);
       }
       for (const i in this.annotations) {
-        if (this.annotations[i].hovertext === energy.toFixed(2)) this.annotations.splice(parseInt(i),1);
+        if (this.annotations[i].hovertext === hovertext) this.annotations.splice(parseInt(i),1);
       }
     }
   }

@@ -375,6 +375,7 @@ export class SpectrumPlot {
         this.plotData(spectrumData, true);
     }
     toggleLine(energy, name, enabled = true, height = -1) {
+        const hovertext = energy.toFixed(2);
         if (enabled) {
             const newLine = {
                 type: 'line',
@@ -404,7 +405,7 @@ export class SpectrumPlot {
                 ax: 0,
                 ay: -20,
                 editable: false,
-                hovertext: energy.toFixed(2),
+                hovertext: hovertext,
                 font: {
                     size: 11,
                 },
@@ -437,7 +438,7 @@ export class SpectrumPlot {
                     this.shapes.splice(parseInt(i), 1);
             }
             for (const i in this.annotations) {
-                if (this.annotations[i].hovertext === energy.toFixed(2))
+                if (this.annotations[i].hovertext === hovertext)
                     this.annotations.splice(parseInt(i), 1);
             }
         }
