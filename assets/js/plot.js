@@ -413,7 +413,7 @@ export class SpectrumPlot {
                 newLine.y0 = 0;
                 newLine.y1 = 0;
                 newLine.line.width = 0;
-                newAnno.y = height * 1.03;
+                newAnno.y = (this.yAxis === 'log' ? Math.log10(height) : height) * 1.03;
                 newAnno.yref = 'y';
                 newAnno.arrowhead = 1;
                 newAnno.arrowsize = 0.8;
