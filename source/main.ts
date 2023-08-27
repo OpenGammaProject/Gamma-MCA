@@ -21,7 +21,7 @@
 
     - Calibration n-polynomial regression
     - Add pulse limit analog to time limit for serial recordings
-    - Optional real-time file saving to help with long recordings and crashes or sudden device disconnects
+    - Optional real-time file saving to help with long recordings and crashes
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -121,7 +121,7 @@ const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2023-07-23';
+const APP_VERSION = '2023-08-27';
 const localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 const wakeLockAvailable = 'wakeLock' in navigator; // Test for Screen Wake Lock API
 let fileSystemWritableAvail = false;
@@ -866,7 +866,7 @@ function clickEvent(data: any): void {
   if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false); // Delete the last line
 
   if (data.event.button === 0) { // Left-click. spawn a line in the plot
-    const newLine: number = Math.round(data.points[0].x);
+    const newLine = Math.round(data.points[0].x);
     plot.toggleLine(newLine, newLine.toString(), true);
     prevClickLine = newLine;
   } else if (data.event.button === 2) { // Right-click, delete old line

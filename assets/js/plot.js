@@ -113,9 +113,9 @@ export class SpectrumPlot {
     paperBgDark = '#212529';
     paperBgLight = '#ffffff';
     fontColorLight = '#444444';
-    fontColorDark = '#adb5bd';
+    fontColorDark = '#dee2e6';
     gridColorLight = '#eeeeee';
-    gridColorDark = '#4a4a4a';
+    gridColorDark = '#515151';
     annoBgLight = 'rgba(255,255,255,0.4)';
     annoBgDark = 'rgba(0,0,0,0.4)';
     sma = false;
@@ -375,6 +375,7 @@ export class SpectrumPlot {
         this.plotData(spectrumData, true);
     }
     toggleLine(energy, name, enabled = true, height = -1) {
+        const hovertext = energy.toFixed(2);
         if (enabled) {
             const newLine = {
                 type: 'line',
@@ -393,7 +394,7 @@ export class SpectrumPlot {
                 opacity: 0.66
             };
             const newAnno = {
-                x: energy,
+                x: this.xAxis === 'log' ? Math.log10(energy) : energy,
                 y: 1,
                 xref: 'x',
                 yref: 'paper',
@@ -404,7 +405,7 @@ export class SpectrumPlot {
                 ax: 0,
                 ay: -20,
                 editable: false,
-                hovertext: energy.toFixed(2),
+                hovertext: hovertext,
                 font: {
                     size: 11,
                 },
@@ -413,7 +414,7 @@ export class SpectrumPlot {
                 newLine.y0 = 0;
                 newLine.y1 = 0;
                 newLine.line.width = 0;
-                newAnno.y = height * 1.03;
+                newAnno.y = (this.yAxis === 'log' ? Math.log10(height) : height) * 1.03;
                 newAnno.yref = 'y';
                 newAnno.arrowhead = 1;
                 newAnno.arrowsize = 0.8;
@@ -425,7 +426,7 @@ export class SpectrumPlot {
                     return;
             }
             for (const anno of this.annotations) {
-                if (anno.x === newAnno.x)
+                if (anno.hovertext === newAnno.hovertext)
                     return;
             }
             this.shapes.push(newLine);
@@ -437,7 +438,7 @@ export class SpectrumPlot {
                     this.shapes.splice(parseInt(i), 1);
             }
             for (const i in this.annotations) {
-                if (this.annotations[i].x === energy)
+                if (this.annotations[i].hovertext === hovertext)
                     this.annotations.splice(parseInt(i), 1);
             }
         }
@@ -532,7 +533,6 @@ export class SpectrumPlot {
                 shape: 'spline'
             }
         };
-        const maxXValue = trace.x.at(-1) ?? 1;
         const layout = {
             uirevision: 1,
             autosize: true,
@@ -546,13 +546,12 @@ export class SpectrumPlot {
                 title: 'Measurement Point [1]',
                 mirror: true,
                 linewidth: 2,
-                autorange: false,
-                fixedrange: false,
-                range: [0, maxXValue],
+                autorange: true,
+                autorangeoptions: {
+                    minallowed: 0
+                },
                 rangeslider: {
-                    borderwidth: 1,
-                    autorange: false,
-                    range: [0, maxXValue],
+                    borderwidth: 1
                 },
                 showspikes: true,
                 spikethickness: 1,
@@ -570,7 +569,6 @@ export class SpectrumPlot {
                 mirror: true,
                 linewidth: 2,
                 autorange: true,
-                fixedrange: false,
                 showspikes: true,
                 spikethickness: 1,
                 spikedash: 'solid',
@@ -670,8 +668,6 @@ export class SpectrumPlot {
                 }
             }
         }
-        const maxXValue = trace.x.at(-1) ?? 1;
-        const maxYValue = trace.y.at(-1) ?? 1;
         const layout = {
             uirevision: 1,
             autosize: true,
@@ -685,13 +681,12 @@ export class SpectrumPlot {
                 title: 'Bin [1]',
                 mirror: true,
                 linewidth: 2,
-                autorange: false,
-                fixedrange: false,
-                range: [0, maxXValue],
+                autorange: true,
+                autorangeoptions: {
+                    minallowed: 0
+                },
                 rangeslider: {
-                    borderwidth: 1,
-                    autorange: false,
-                    range: [0, maxXValue],
+                    borderwidth: 1
                 },
                 showspikes: true,
                 spikethickness: 1,
@@ -709,8 +704,9 @@ export class SpectrumPlot {
                 mirror: true,
                 linewidth: 2,
                 autorange: true,
-                fixedrange: false,
-                range: [0, maxYValue],
+                autorangeoptions: {
+                    minallowed: 0
+                },
                 showspikes: true,
                 spikethickness: 1,
                 spikedash: 'solid',
@@ -772,7 +768,6 @@ export class SpectrumPlot {
         if (this.type !== 'default')
             return;
         const data = [];
-        let maxXValue = 0;
         if (dataObj.data.length) {
             const trace = {
                 name: 'Spectrum',
@@ -788,7 +783,6 @@ export class SpectrumPlot {
                     shape: this.linePlot ? 'linear' : 'hvh',
                 }
             };
-            maxXValue = trace.x.at(-1) ?? 1;
             if (this.cps)
                 trace.y = dataObj.dataCps;
             data.push(trace);
@@ -808,8 +802,6 @@ export class SpectrumPlot {
                     shape: this.linePlot ? 'linear' : 'hvh',
                 }
             };
-            if (bgTrace.x.length > maxXValue)
-                maxXValue = bgTrace.x.at(-1) ?? 1;
             if (this.cps)
                 bgTrace.y = dataObj.backgroundCps;
             if (data.length) {
@@ -828,8 +820,6 @@ export class SpectrumPlot {
                 element.y = this.computeMovingAverage(element.y);
             }
         }
-        if (this.xAxis === 'log')
-            maxXValue = Math.log10(maxXValue);
         const layout = {
             uirevision: 1,
             autosize: true,
@@ -855,14 +845,13 @@ export class SpectrumPlot {
                 title: 'Bin [1]',
                 mirror: true,
                 linewidth: 2,
-                autorange: false,
-                fixedrange: false,
-                range: [0, maxXValue],
+                autorange: true,
+                autorangeoptions: {
+                    minallowed: 0
+                },
                 type: this.xAxis,
                 rangeslider: {
-                    borderwidth: 1,
-                    autorange: false,
-                    range: [0, maxXValue],
+                    borderwidth: 1
                 },
                 showspikes: true,
                 spikethickness: 1,
@@ -921,11 +910,6 @@ export class SpectrumPlot {
             }
             layout.xaxis.title = 'Energy [keV]';
             layout.xaxis.ticksuffix = ' keV';
-            let newMax = Math.max(data[0]?.x.at(-1) ?? 1, data[1]?.x.at(-1) ?? 1);
-            if (this.xAxis === 'log')
-                newMax = Math.log10(newMax);
-            layout.xaxis.range = [0, newMax];
-            layout.xaxis.rangeslider.range = [0, newMax];
         }
         const config = {
             responsive: true,
