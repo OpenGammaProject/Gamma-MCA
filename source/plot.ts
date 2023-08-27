@@ -600,7 +600,7 @@ export class SpectrumPlot {
         opacity: 0.66
       };
       const newAnno: Anno = {
-        x: energy,
+        x: this.xAxis === 'log' ? Math.log10(energy) : energy,
         y: 1,
         xref: 'x',
         yref: 'paper',
@@ -638,7 +638,7 @@ export class SpectrumPlot {
       }
 
       for (const anno of this.annotations) {
-        if (anno.x === newAnno.x) return;
+        if (anno.hovertext === newAnno.hovertext) return;
       }
 
       // Not a duplicate
@@ -649,7 +649,7 @@ export class SpectrumPlot {
         if (this.shapes[i].x0 === energy) this.shapes.splice(parseInt(i),1);
       }
       for (const i in this.annotations) {
-        if (this.annotations[i].x === energy) this.annotations.splice(parseInt(i),1);
+        if (this.annotations[i].hovertext === energy.toFixed(2)) this.annotations.splice(parseInt(i),1);
       }
     }
   }

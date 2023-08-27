@@ -393,7 +393,7 @@ export class SpectrumPlot {
                 opacity: 0.66
             };
             const newAnno = {
-                x: energy,
+                x: this.xAxis === 'log' ? Math.log10(energy) : energy,
                 y: 1,
                 xref: 'x',
                 yref: 'paper',
@@ -425,7 +425,7 @@ export class SpectrumPlot {
                     return;
             }
             for (const anno of this.annotations) {
-                if (anno.x === newAnno.x)
+                if (anno.hovertext === newAnno.hovertext)
                     return;
             }
             this.shapes.push(newLine);
@@ -437,7 +437,7 @@ export class SpectrumPlot {
                     this.shapes.splice(parseInt(i), 1);
             }
             for (const i in this.annotations) {
-                if (this.annotations[i].x === energy)
+                if (this.annotations[i].hovertext === energy.toFixed(2))
                     this.annotations.splice(parseInt(i), 1);
             }
         }

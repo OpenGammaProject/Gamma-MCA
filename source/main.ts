@@ -866,7 +866,7 @@ function clickEvent(data: any): void {
   if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false); // Delete the last line
 
   if (data.event.button === 0) { // Left-click. spawn a line in the plot
-    const newLine: number = Math.round(data.points[0].x);
+    const newLine = Math.round(data.points[0].x);
     plot.toggleLine(newLine, newLine.toString(), true);
     prevClickLine = newLine;
   } else if (data.event.button === 2) { // Right-click, delete old line
