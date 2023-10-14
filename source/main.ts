@@ -1515,25 +1515,25 @@ async function overwriteFile(): Promise<void> {
 
 const saveFileTypes: SaveTypeList = {
   'CAL': {
-    description: 'Calibration Data File',
+    description: 'Calibration data file',
     accept: {
       'application/json': ['.json']
     }
   },
   'XML': {
-    description: 'Combination Data File',
+    description: 'Combination data file (XML)',
     accept: {
       'application/xml': ['.xml']
     }
   },
   'JSON': {
-    description: 'Combination Data File (NPES)',
+    description: 'Combination data file (NPESv1, small size)',
     accept: {
       'application/json': ['.json']
     }
   },
   'CSV': {
-    description: 'Single Spectrum File',
+    description: 'Single spectrum file',
     accept: {
       'text/csv': ['.csv']
     }
