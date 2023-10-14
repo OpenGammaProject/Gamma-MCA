@@ -255,14 +255,14 @@ document.getElementById('data').onclick = event => clickFileInput(event, false);
 document.getElementById('background').onclick = event => clickFileInput(event, true);
 const openFileTypes = [
     {
-        description: 'Combination Files',
+        description: 'Combination data file',
         accept: {
             'application/json': ['.json'],
             'application/xml': ['.xml']
         }
     },
     {
-        description: 'Single Spectrum Files',
+        description: 'Single spectrum file',
         accept: {
             'text/csv': ['.csv'],
             'text/txt': ['.txt'],
