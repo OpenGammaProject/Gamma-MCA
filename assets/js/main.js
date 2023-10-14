@@ -53,7 +53,7 @@ let isoListURL = 'assets/isotopes_energies_min.json';
 const isoList = {};
 let checkNearIso = false;
 let maxDist = 100;
-const APP_VERSION = '2023-08-27';
+const APP_VERSION = '2023-10-14';
 const localStorageAvailable = 'localStorage' in self;
 const wakeLockAvailable = 'wakeLock' in navigator;
 let fileSystemWritableAvail = false;
@@ -255,14 +255,14 @@ document.getElementById('data').onclick = event => clickFileInput(event, false);
 document.getElementById('background').onclick = event => clickFileInput(event, true);
 const openFileTypes = [
     {
-        description: 'Combination Files',
+        description: 'Combination data file',
         accept: {
             'application/json': ['.json'],
             'application/xml': ['.xml']
         }
     },
     {
-        description: 'Single Spectrum Files',
+        description: 'Single spectrum file',
         accept: {
             'text/csv': ['.csv'],
             'text/txt': ['.txt'],
@@ -1099,25 +1099,25 @@ async function overwriteFile() {
 }
 const saveFileTypes = {
     'CAL': {
-        description: 'Calibration Data File',
+        description: 'Calibration data file',
         accept: {
             'application/json': ['.json']
         }
     },
     'XML': {
-        description: 'Combination Data File',
+        description: 'Combination data file (XML)',
         accept: {
             'application/xml': ['.xml']
         }
     },
     'JSON': {
-        description: 'Combination Data File (NPES)',
+        description: 'Combination data file (NPESv1, small size)',
         accept: {
             'application/json': ['.json']
         }
     },
     'CSV': {
-        description: 'Single Spectrum File',
+        description: 'Single spectrum file',
         accept: {
             'text/csv': ['.csv']
         }

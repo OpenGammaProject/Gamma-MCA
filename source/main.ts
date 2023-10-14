@@ -43,11 +43,8 @@ export interface IsotopeList {
   [key: string]: number[]
 }
 
-interface OpenPickerAcceptType {
-  description: string,
-  accept: {
-    [key: string]: string[]
-  }
+export interface SaveTypeList {
+  [key: string]: FilePickerAcceptType
 }
 
 export type DataOrder = 'hist' | 'chron';
@@ -121,7 +118,7 @@ const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2023-08-27';
+const APP_VERSION = '2023-10-14';
 const localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 const wakeLockAvailable = 'wakeLock' in navigator; // Test for Screen Wake Lock API
 let fileSystemWritableAvail = false;
@@ -425,16 +422,16 @@ document.onkeydown = async function(event) {
 document.getElementById('data')!.onclick = event => clickFileInput(event, false);
 document.getElementById('background')!.onclick = event => clickFileInput(event, true);
 
-const openFileTypes: OpenPickerAcceptType[] = [
+const openFileTypes: FilePickerAcceptType[] = [
   {
-    description: 'Combination Files',
+    description: 'Combination data file',
     accept: {
       'application/json': ['.json'],
       'application/xml': ['.xml']
     }
   },
   {
-    description: 'Single Spectrum Files',
+    description: 'Single spectrum file',
     accept: {
       'text/csv': ['.csv'],
       'text/txt': ['.txt'],
@@ -1516,27 +1513,27 @@ async function overwriteFile(): Promise<void> {
 }
 
 
-const saveFileTypes = {
+const saveFileTypes: SaveTypeList = {
   'CAL': {
-    description: 'Calibration Data File',
+    description: 'Calibration data file',
     accept: {
       'application/json': ['.json']
     }
   },
   'XML': {
-    description: 'Combination Data File',
+    description: 'Combination data file (XML)',
     accept: {
       'application/xml': ['.xml']
     }
   },
   'JSON': {
-    description: 'Combination Data File (NPES)',
+    description: 'Combination data file (NPESv1, small size)',
     accept: {
       'application/json': ['.json']
     }
   },
   'CSV': {
-    description: 'Single Spectrum File',
+    description: 'Single spectrum file',
     accept: {
       'text/csv': ['.csv']
     }
