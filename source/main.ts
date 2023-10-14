@@ -43,11 +43,8 @@ export interface IsotopeList {
   [key: string]: number[]
 }
 
-interface OpenPickerAcceptType {
-  description: string,
-  accept: {
-    [key: string]: string[]
-  }
+export interface SaveTypeList {
+  [key: string]: FilePickerAcceptType
 }
 
 export type DataOrder = 'hist' | 'chron';
@@ -425,7 +422,7 @@ document.onkeydown = async function(event) {
 document.getElementById('data')!.onclick = event => clickFileInput(event, false);
 document.getElementById('background')!.onclick = event => clickFileInput(event, true);
 
-const openFileTypes: OpenPickerAcceptType[] = [
+const openFileTypes: FilePickerAcceptType[] = [
   {
     description: 'Combination Files',
     accept: {
@@ -1516,7 +1513,7 @@ async function overwriteFile(): Promise<void> {
 }
 
 
-const saveFileTypes = {
+const saveFileTypes: SaveTypeList = {
   'CAL': {
     description: 'Calibration Data File',
     accept: {
