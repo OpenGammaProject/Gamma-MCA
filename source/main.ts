@@ -23,6 +23,8 @@
     - Add pulse limit analog to time limit for serial recordings
     - Optional real-time file saving to help with long recordings and crashes
 
+    - Use String.prototype.toWellFormed() function already implemented in line ~1680
+
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
     - Plotly.js: Plot updates takes forever, but there is no real way to improve it (?)
@@ -1675,6 +1677,11 @@ async function loadIsotopes(reload = false): Promise<boolean> { // Load Isotope 
         let index = 0; // Index used to avoid HTML id duplicates
 
         const lowercaseName = key.toLowerCase().replace(/[^a-z0-9 -]/gi, '').trim(); // Fixes security issue. Clean everything except for letters, numbers and minus. See GitHub: #2
+        /*
+        if ('toWellFormed' in String.prototype) { // Use new String.prototype.toWellFormed() method too if available
+          lowercaseName = lowercaseName.toWellFormed();
+        }
+        */
         const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1); // Capitalize Name
 
         for (const energy of energyArr) {
