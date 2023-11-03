@@ -153,7 +153,7 @@ export class SpectrumPlot {
         lines: []
     };
     gaussSigma = 2;
-    customDownloadModeBar = {
+    customDownloadButton = {
         name: 'downloadPlot',
         title: 'Download plot as HTML',
         icon: window.Plotly.Icons['disk'],
@@ -203,6 +203,16 @@ export class SpectrumPlot {
             element.setAttribute('download', 'gamma_mca_export.html');
             element.style.display = 'none';
             element.click();
+        }
+    };
+    customFullscreenButton = {
+        name: 'fullscreen',
+        title: 'Toggle Fullscreen',
+        icon: window.Plotly.Icons['drawrect'],
+        direction: 'up',
+        click: (plotElement) => {
+            plotElement.classList.toggle('fullscreen');
+            window.Plotly.update(plotElement);
         }
     };
     gaussValues = {
@@ -620,7 +630,8 @@ export class SpectrumPlot {
                 ['zoomIn2d', 'zoomOut2d'],
                 ['autoScale2d', 'resetScale2d'],
                 ['toImage'],
-                [this.customDownloadModeBar]
+                [this.customDownloadButton],
+                [this.customFullscreenButton]
             ]
         };
         window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, averageTrace], layout, config);
@@ -759,7 +770,8 @@ export class SpectrumPlot {
                 ['zoomIn2d', 'zoomOut2d'],
                 ['autoScale2d', 'resetScale2d'],
                 ['toImage'],
-                [this.customDownloadModeBar]
+                [this.customDownloadButton],
+                [this.customFullscreenButton]
             ]
         };
         window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, markersTrace], layout, config);
@@ -926,7 +938,8 @@ export class SpectrumPlot {
                 ['zoomIn2d', 'zoomOut2d'],
                 ['autoScale2d', 'resetScale2d'],
                 ['toImage'],
-                [this.customDownloadModeBar]
+                [this.customDownloadButton],
+                [this.customFullscreenButton]
             ]
         };
         if (this.cps) {
