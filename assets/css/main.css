@@ -31,6 +31,19 @@ body {
 
 }
 
+.fullscreen{
+  z-index: 999;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: 0px;
+  padding: 0px -10px 0px 10px;
+  overflow: hidden;
+  scrollbar-width: 0px;
+}
+
 .cursor-pointer {
   cursor: pointer;
 }

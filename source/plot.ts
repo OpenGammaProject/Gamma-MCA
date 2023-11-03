@@ -302,7 +302,7 @@ export class SpectrumPlot {
     lines: <number[]>[]
   };
   gaussSigma = 2;
-  private customDownloadModeBar = {
+  private customDownloadButton = {
     name: 'downloadPlot',
     title: 'Download plot as HTML',
     icon: (<any>window).Plotly.Icons['disk'],
@@ -359,6 +359,15 @@ export class SpectrumPlot {
       element.setAttribute('download', 'gamma_mca_export.html');
       element.style.display = 'none';
       element.click();
+  }};
+  private customFullscreenButton = {
+    name: 'fullscreen',
+    title: 'Toggle Fullscreen',
+    icon: (<any>window).Plotly.Icons['drawrect'],
+    direction: 'up',
+    click: (plotElement: any) => {
+      plotElement.classList.toggle('fullscreen');
+      (<any>window).Plotly.update(plotElement);
   }};
   gaussValues: GaussData = {
     dataArray: [],
@@ -872,7 +881,8 @@ export class SpectrumPlot {
         ['zoomIn2d', 'zoomOut2d'],
         ['autoScale2d', 'resetScale2d'],
         ['toImage'],
-        [this.customDownloadModeBar]
+        [this.customDownloadButton],
+        [this.customFullscreenButton]
       ]
     };
 
@@ -1028,7 +1038,8 @@ export class SpectrumPlot {
         ['zoomIn2d', 'zoomOut2d'],
         ['autoScale2d', 'resetScale2d'],
         ['toImage'],
-        [this.customDownloadModeBar]
+        [this.customDownloadButton],
+        [this.customFullscreenButton]
       ]
     };
 
@@ -1245,7 +1256,8 @@ export class SpectrumPlot {
         ['zoomIn2d', 'zoomOut2d'],
         ['autoScale2d', 'resetScale2d'],
         ['toImage'],
-        [this.customDownloadModeBar]
+        [this.customDownloadButton],
+        [this.customFullscreenButton]
       ]
     };
 
