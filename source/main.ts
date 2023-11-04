@@ -22,6 +22,7 @@
     - Calibration n-polynomial regression
     - Add pulse limit analog to time limit for serial recordings
     - Optional real-time file saving to help with long recordings and crashes
+    - Use Compression Streams API to compress files?!
 
     - Use String.prototype.toWellFormed() function already implemented in line ~1680
 
