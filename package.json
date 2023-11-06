@@ -4,7 +4,7 @@
     "@types/w3c-web-serial": "^1.0.5",
     "@types/w3c-web-usb": "^1.0.9",
     "@types/wicg-file-system-access": "^2023.10.2",
-    "@typescript-eslint/eslint-plugin": "^6.9.1",
+    "@typescript-eslint/eslint-plugin": "^6.10.0",
     "@typescript-eslint/parser": "^6.9.1",
     "eslint": "^8.52.0",
     "typescript": "^5.2.2"
