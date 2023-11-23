@@ -25,6 +25,8 @@
     - Use Compression Streams API to compress files?!
 
     - Use String.prototype.toWellFormed() function already implemented in line ~1680
+    - Add notification pop-up with exact error message for NPES from ZSchema
+    - Implement new NPES version with file selection pop-up window
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
