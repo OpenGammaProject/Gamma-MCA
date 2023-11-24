@@ -84,6 +84,7 @@ const notificationContents: NotificationStorage = {
 		header: 'Recording Stopped',
 		body: 'Your set time-limit has run out. The recording has been automatically stopped. Changing this limit can be done in the settings.'
 	},
+	/*
 	'npesError': {
 		type: 'danger',
 		delay: 6000,
@@ -94,6 +95,7 @@ const notificationContents: NotificationStorage = {
 				'<br> <br>' +
 				'<em>Tip: You can open the browser console to look at the exact errors.</em>'
 	},
+	*/
 	'dataError': {
 		type: 'danger',
 		delay: 6000,

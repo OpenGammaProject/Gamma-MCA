@@ -580,10 +580,20 @@ function getFileData(file: File, background = false): void { // Gets called when
         console.error('No DOM parser in this browser!');
       }
     } else if (fileEnding.toLowerCase() === 'json') { // THIS SECTION MAKES EVERYTHING ASYNC!!!
-      const importData = await raw.jsonToObject(result);
+      const jsonData = await raw.jsonToObject(result);
+      const importData = jsonData[0]; // Workaround for now until NPESv2 launches, might be multiple errors and multiple spectra!!!
 
-      if (!importData) { // Data does not validate the schema
-        new Notification('npesError'); //popupNotification('npes-error');
+      if ('error' in importData) { // Data does not validate the schema
+        //new Notification('npesError'); //popupNotification('npes-error');
+        // Pop up modal with more error information instead of just toast with oopsy
+        const importErrorModalElement = document.getElementById('importErrorModal')
+        const fileImportErrorModal = new (<any>window).bootstrap.Modal(importErrorModalElement);
+
+        // Change content according to error
+        document.getElementById('error-code')!.innerText = importData.code;
+        document.getElementById('error-desc')!.innerText = importData.description;
+
+        fileImportErrorModal.show();
         return;
       }
 

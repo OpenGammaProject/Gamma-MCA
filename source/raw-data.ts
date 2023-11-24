@@ -52,6 +52,12 @@ interface NPESv1SampleInfo {
   note?: string
 }
 
+interface JSONParseError {
+  error: boolean,
+  code: string,
+  description: string
+}
+
 interface ImportDataMeta {
   name: string,
   location: string,
@@ -206,14 +212,14 @@ export class RawData {
     }
   }
 
-  async jsonToObject(data: string): Promise<NPESv1 | false> {
+  async jsonToObject(data: string): Promise<NPESv1[] | JSONParseError[]> {
     let json: NPESv1;
 
     try {
       json = JSON.parse(data);
     } catch (e) {
       console.error(e);
-      return false;
+      return [{error: true, code: 'JSON_PARSE_ERROR', description: 'Unable to parse the JSON format inside the file!'}];
     }
 
     try {
@@ -243,14 +249,27 @@ export class RawData {
       validator.validate(json, this.jsonSchema);
       const errors = validator.getLastErrors();
 
-      if (errors) throw errors; // Catch validation errors
+      if (errors) {
+        //throw errors; // Catch validation errors
+        const errorMessages: JSONParseError[] = [];
 
-      return json;
+        for (const error of errors) {
+          errorMessages.push({
+            'error': true,
+            'code': error.code,
+            'description': error.message
+          });
+        }
+
+        console.error(errorMessages);
+        return errorMessages;
+      }
+
+      return [json];
 
     } catch(e) {
       console.error(e);
+      return [{error: true, code: 'UNDEFINED_ERROR', description: 'Some undefined error occured, a detailed error message can be found in the developer console.'}];
     }
-
-    return false;
   }
 }

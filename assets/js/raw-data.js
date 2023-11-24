@@ -113,7 +113,7 @@ export class RawData {
         }
         catch (e) {
             console.error(e);
-            return false;
+            return [{ error: true, code: 'JSON_PARSE_ERROR', description: 'Unable to parse the JSON format inside the file!' }];
         }
         try {
             if (!this.jsonSchema) {
@@ -130,14 +130,24 @@ export class RawData {
             const validator = new window.ZSchema();
             validator.validate(json, this.jsonSchema);
             const errors = validator.getLastErrors();
-            if (errors)
-                throw errors;
-            return json;
+            if (errors) {
+                const errorMessages = [];
+                for (const error of errors) {
+                    errorMessages.push({
+                        'error': true,
+                        'code': error.code,
+                        'description': error.message
+                    });
+                }
+                console.error(errorMessages);
+                return errorMessages;
+            }
+            return [json];
         }
         catch (e) {
             console.error(e);
+            return [{ error: true, code: 'UNDEFINED_ERROR', description: 'Some undefined error occured, a detailed error message can be found in the developer console.' }];
         }
-        return false;
     }
 }
 //# sourceMappingURL=raw-data.js.map

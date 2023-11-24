@@ -740,6 +740,27 @@
         </div>
       </div>
     </div>
+
+    <!-- File Import Error Modal -->
+    <div class="modal fade" id="importErrorModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="importErrorModal" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title h4">File Error</h3>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Oopsy!</strong></p>
+            <p id="error-code">File does not import.</p>
+            <p id="error-desc">File does not import.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Close </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <!--
 
       BOOTSTRAP OFFCANVAS FOR SETTINGS, INFO AND ISOTOPE VIEWER

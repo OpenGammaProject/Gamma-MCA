@@ -61,16 +61,6 @@ const notificationContents = {
         header: 'Recording Stopped',
         body: 'Your set time-limit has run out. The recording has been automatically stopped. Changing this limit can be done in the settings.'
     },
-    'npesError': {
-        type: 'danger',
-        delay: 6000,
-        icon: 'fas fa-exclamation-triangle fa-shake',
-        header: 'JSON Import Error',
-        body: 'The file you uploaded is not formatted correctly. It does not validate the NPES JSON Schema!' +
-            'For more information, please head to <a title="GitHub/NPES-JSON" class="link-light" href="https://github.com/OpenGammaProject/NPES-JSON" target="_blank">NPES-JSON</a>.' +
-            '<br> <br>' +
-            '<em>Tip: You can open the browser console to look at the exact errors.</em>'
-    },
     'dataError': {
         type: 'danger',
         delay: 6000,
