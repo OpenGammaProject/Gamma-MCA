@@ -25,7 +25,7 @@
     - Use Compression Streams API to compress files?!
 
     - Use String.prototype.toWellFormed() function already implemented in line ~1680
-    - Add notification pop-up with exact error message for NPES from ZSchema
+    - Add animation icons to all other modals
     - Implement new NPES version with file selection pop-up window
 
   Known Issues/Problems/Limitations:
@@ -590,6 +590,7 @@ function getFileData(file: File, background = false): void { // Gets called when
         const fileImportErrorModal = new (<any>window).bootstrap.Modal(importErrorModalElement);
 
         // Change content according to error
+        document.getElementById('error-filename')!.innerText = file.name;
         document.getElementById('error-code')!.innerText = importData.code;
         document.getElementById('error-desc')!.innerText = importData.description;
 

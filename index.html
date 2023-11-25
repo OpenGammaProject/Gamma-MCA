@@ -139,7 +139,7 @@
                     #####
                   -->
                   <p>
-                    <label id="data-label" for="data"><strong>Spectrum File:</strong> <i id="data-icon" class="fa-solid fa-circle-check align-baseline text-primary d-none fa-beat file-import-success"></i></label>
+                    <label id="data-label" for="data"><strong>Spectrum File:</strong> <i id="data-icon" class="fa-solid fa-circle-check align-baseline text-primary d-none fa-beat animation-very-slow"></i></label>
                   </p>
 
                   <div class="input-group input-group-sm">
@@ -153,7 +153,7 @@
                   <br>
 
                   <p>
-                    <label id="background-label" for="background"><strong>Background File:</strong> <i id="background-icon" class="fa-solid fa-circle-check align-baseline text-primary d-none fa-beat file-import-success"></i></label>
+                    <label id="background-label" for="background"><strong>Background File:</strong> <i id="background-icon" class="fa-solid fa-circle-check align-baseline text-primary d-none fa-beat animation-very-slow"></i></label>
                   </p>
 
                   <div class="input-group input-group-sm">
@@ -746,13 +746,18 @@
       <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
-            <h3 class="modal-title h4">File Error</h3>
+            <h3 class="modal-title h4"><i class="fas fa-exclamation-triangle fa-shake me-2 animation-very-slow"></i>Import Error</h3>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <p><strong>Oopsy!</strong></p>
-            <p id="error-code">File does not import.</p>
-            <p id="error-desc">File does not import.</p>
+            <p><strong>An error occured when trying to import the following file:</strong></p>
+            <div class="alert alert-danger" role="alert">
+              <p><strong><code id="error-filename"></code></strong></p>
+              <p><strong>ERROR CODE: </strong><span id="error-code">ERROR_CODE</span></p>
+              <p id="error-desc">File does not import.</p>
+            </div>
+            <p>There probably is an error with the file formatting. Either it is not valid JSON, or it does not comply with the NPES formatting schema. If the file was generated using a different program, please contact the developers <i class="fa-regular fa-face-smile"></i></p>
+            <p>For more information about the schema, please head to <a title="GitHub/NPES-JSON" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="https://github.com/OpenGammaProject/NPES-JSON" target="_blank">NPES-JSON</a>.</p>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Close </button>

@@ -385,6 +385,7 @@ function getFileData(file, background = false) {
             if ('error' in importData) {
                 const importErrorModalElement = document.getElementById('importErrorModal');
                 const fileImportErrorModal = new window.bootstrap.Modal(importErrorModalElement);
+                document.getElementById('error-filename').innerText = file.name;
                 document.getElementById('error-code').innerText = importData.code;
                 document.getElementById('error-desc').innerText = importData.description;
                 fileImportErrorModal.show();
