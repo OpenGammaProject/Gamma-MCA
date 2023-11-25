@@ -27,7 +27,7 @@ export interface NPESv1Spectrum {
   energyCalibration?: {
     polynomialOrder: number;
     coefficients: number[]
-  },
+  };
   spectrum: number[]
 }
 
@@ -91,7 +91,7 @@ export class RawData {
   constructor(valueIndex: number, delimiter = ',') {
     this.valueIndex = valueIndex;
     this.delimiter = delimiter;
-    this.adcChannels
+    this.adcChannels;
     this.fileType = valueIndex;
     this.tempValIndex = valueIndex;
   }
