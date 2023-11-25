@@ -856,6 +856,12 @@
                     </div>
                     <p><small>Select a theme for Gamma MCA. <code>System</code> will automatically use your system theme.</small></p>
 
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="notifications-toggle" disabled>
+                      <label class="form-check-label" for="notifications-toggle">Enable Notifications</label>
+                    </div>
+                    <p><small>Enable system notifications for serial events and similar. Needs to be allowed by the browser to work.</small></p>
+
                   </div>
                 </div>
               </div>
@@ -1102,6 +1108,22 @@
     -->
     <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3"> <!-- add z-3 for z-index? -->
       
+      <div id="ask-notifications" class="toast text-bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+        <div class="toast-header">
+          <i class="fa-regular fa-bell fa-shake animation-slow me-2"></i>
+          <strong class="me-auto">Enable Notifications?</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          <p>System notifications will show up for serial recording events and on a few other occasions.</p>
+          <p>You can always enable or disable them again in the settings.</p>
+          <div class="mt-2 pt-2 border-top">
+            <button type="button" class="btn btn-light btn-sm" id="notifications-toast-btn" title="Enable notifications">Enable</button>
+            <button type="button" class="btn btn-primary btn-sm" title="Dismiss" data-bs-dismiss="toast">No</button>
+          </div>
+        </div>
+      </div>
+
       <div id="pwa-installer" class="toast text-bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
         <div class="toast-header">
           <i class="fa-solid fa-download me-2"></i>

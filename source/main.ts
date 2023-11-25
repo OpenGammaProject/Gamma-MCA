@@ -13,7 +13,6 @@
 
   Possible Future Improvements:
     - (?) Dead time correction for cps
-    - (?) Desktop notifications
     - (?) Hotkeys
     - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with one click
     - (?) Highlight plot lines in ROI selection
@@ -25,7 +24,6 @@
     - Use Compression Streams API to compress files?!
 
     - Use String.prototype.toWellFormed() function already implemented in line ~1680
-    - Add animation icons to all other modals
     - Implement new NPES version with file selection pop-up window
 
   Known Issues/Problems/Limitations:
@@ -126,6 +124,8 @@ let maxDist = 100; // Max energy distance to highlight
 const APP_VERSION = '2023-11-03';
 const localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 const wakeLockAvailable = 'wakeLock' in navigator; // Test for Screen Wake Lock API
+const notificationsAvailable = 'Notification' in window; // Test for Notifications API
+let allowNotifications = notificationsAvailable;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
 
@@ -165,7 +165,9 @@ document.body.onload = async function(): Promise<void> {
 
   if (localStorageAvailable) {
     loadSettingsStorage();
-  } 
+  } else {
+    console.error('Browser does not support local storage. OOF, it must be ancient. Dude, update your browser. For real.');
+  }
 
   if (navigator.serviceWorker) { // Add service worker for PWA
     const reg = await navigator.serviceWorker.register('/service-worker.js'); // Onload async because of this... good? hmmm.
@@ -247,6 +249,8 @@ document.body.onload = async function(): Promise<void> {
   if (localStorageAvailable) {
     if (loadJSON('lastVisit') <= 0) {
       new Notification('welcomeMessage'); //popupNotification('welcome-msg');
+      if (notificationsAvailable) legacyPopupNotification('ask-notifications'); // Show notifications notification on first visit
+
       firstInstall = true;
     }
 
@@ -329,7 +333,41 @@ document.body.onload = async function(): Promise<void> {
 
   const loadingOverlay = document.getElementById('loading')!;
   loadingOverlay.parentNode!.removeChild(loadingOverlay); // Delete Loading Thingymajig
+
+  // Activate notification button if the Notifications API is supported by the browser
+  if (notificationsAvailable) {
+    (<HTMLInputElement>document.getElementById('notifications-toggle')).disabled = false;
+  } else {
+    console.error('Browser does not support Notifications API.');
+  }
 };
+
+
+document.getElementById('notifications-toggle')!.onclick = event => toggleNotifications((<HTMLInputElement>event.target).checked);
+document.getElementById('notifications-toast-btn')!.onclick = () => toggleNotifications(true);
+
+function toggleNotifications(toggle: boolean) {
+  allowNotifications = toggle;
+
+  if (window.Notification.permission !== 'granted') {
+    if (allowNotifications) {
+      // Request permission from user to use notifications
+      window.Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+          new window.Notification('Success!');
+        }
+        allowNotifications = allowNotifications && (permission === 'granted');
+
+        (<HTMLInputElement>document.getElementById('notifications-toggle')).checked = allowNotifications;
+        saveJSON('allowNotifications', allowNotifications);
+      });
+    }
+  }
+  
+  hideNotification('ask-notifications');
+  (<HTMLInputElement>document.getElementById('notifications-toggle')).checked = allowNotifications;
+  saveJSON('allowNotifications', allowNotifications);
+}
 
 
 // Exit website confirmation alert
@@ -408,6 +446,7 @@ window.addEventListener('onappinstalled', (): void => {
   hideNotification('pwa-installer');
   document.getElementById('manual-install')!.classList.add('d-none');
 });
+
 
 /*
 document.onkeydown = async function(event) {
@@ -579,11 +618,11 @@ function getFileData(file: File, background = false): void { // Gets called when
       } else {
         console.error('No DOM parser in this browser!');
       }
-    } else if (fileEnding.toLowerCase() === 'json') { // THIS SECTION MAKES EVERYTHING ASYNC!!!
+    } else if (fileEnding.toLowerCase() === 'json') { // THIS SECTION MAKES EVERYTHING ASYNC DUE TO THE JSON THING!!!
       const jsonData = await raw.jsonToObject(result);
       const importData = jsonData[0]; // Workaround for now until NPESv2 launches, might be multiple errors and multiple spectra!!!
 
-      if ('error' in importData) { // Data does not validate the schema
+      if ('code' in importData && 'description' in importData) { // There was some error and the error object got passed instead of some useable data
         //new Notification('npesError'); //popupNotification('npes-error');
         // Pop up modal with more error information instead of just toast with oopsy
         const importErrorModalElement = document.getElementById('importErrorModal')
@@ -1928,6 +1967,10 @@ function bindInputs(): void {
 
 
 function loadSettingsDefault(): void {
+  if (notificationsAvailable) {
+    (<HTMLInputElement>document.getElementById('notifications-toggle')).checked = allowNotifications && (window.Notification.permission === 'granted');
+  }
+  
   (<HTMLInputElement>document.getElementById('custom-url')).value = isoListURL;
   (<HTMLInputElement>document.getElementById('edit-plot')).checked = plot.editableMode;
   (<HTMLInputElement>document.getElementById('custom-delimiter')).value = raw.delimiter;
@@ -1974,7 +2017,10 @@ function loadSettingsDefault(): void {
 
 
 function loadSettingsStorage(): void {
-  let setting = loadJSON('customURL');
+  let setting = loadJSON('allowNotifications');
+  if (notificationsAvailable && setting !== null) allowNotifications = setting && (window.Notification.permission === 'granted');
+
+  setting = loadJSON('customURL');
   if (setting) isoListURL = new URL(setting).href;
 
   setting = loadJSON('editMode');

@@ -56,6 +56,8 @@ let maxDist = 100;
 const APP_VERSION = '2023-11-03';
 const localStorageAvailable = 'localStorage' in self;
 const wakeLockAvailable = 'wakeLock' in navigator;
+const notificationsAvailable = 'Notification' in window;
+let allowNotifications = notificationsAvailable;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
 const isoTableSortDirections = ['none', 'none', 'none'];
@@ -80,6 +82,9 @@ document.body.onload = async function () {
     fileSystemWritableAvail = (window.FileSystemHandle && 'createWritable' in FileSystemFileHandle.prototype);
     if (localStorageAvailable) {
         loadSettingsStorage();
+    }
+    else {
+        console.error('Browser does not support local storage. OOF, it must be ancient. Dude, update your browser. For real.');
     }
     if (navigator.serviceWorker) {
         const reg = await navigator.serviceWorker.register('/service-worker.js');
@@ -147,6 +152,8 @@ document.body.onload = async function () {
     if (localStorageAvailable) {
         if (loadJSON('lastVisit') <= 0) {
             new Notification('welcomeMessage');
+            if (notificationsAvailable)
+                legacyPopupNotification('ask-notifications');
             firstInstall = true;
         }
         saveJSON('lastVisit', Date.now());
@@ -213,7 +220,33 @@ document.body.onload = async function () {
     });
     const loadingOverlay = document.getElementById('loading');
     loadingOverlay.parentNode.removeChild(loadingOverlay);
+    if (notificationsAvailable) {
+        document.getElementById('notifications-toggle').disabled = false;
+    }
+    else {
+        console.error('Browser does not support Notifications API.');
+    }
 };
+document.getElementById('notifications-toggle').onclick = event => toggleNotifications(event.target.checked);
+document.getElementById('notifications-toast-btn').onclick = () => toggleNotifications(true);
+function toggleNotifications(toggle) {
+    allowNotifications = toggle;
+    if (window.Notification.permission !== 'granted') {
+        if (allowNotifications) {
+            window.Notification.requestPermission().then((permission) => {
+                if (permission === 'granted') {
+                    new window.Notification('Success!');
+                }
+                allowNotifications = allowNotifications && (permission === 'granted');
+                document.getElementById('notifications-toggle').checked = allowNotifications;
+                saveJSON('allowNotifications', allowNotifications);
+            });
+        }
+    }
+    hideNotification('ask-notifications');
+    document.getElementById('notifications-toggle').checked = allowNotifications;
+    saveJSON('allowNotifications', allowNotifications);
+}
 window.onbeforeunload = () => {
     return 'Are you sure to leave?';
 };
@@ -382,7 +415,7 @@ function getFileData(file, background = false) {
         else if (fileEnding.toLowerCase() === 'json') {
             const jsonData = await raw.jsonToObject(result);
             const importData = jsonData[0];
-            if ('error' in importData) {
+            if ('code' in importData && 'description' in importData) {
                 const importErrorModalElement = document.getElementById('importErrorModal');
                 const fileImportErrorModal = new window.bootstrap.Modal(importErrorModalElement);
                 document.getElementById('error-filename').innerText = file.name;
@@ -1416,6 +1449,9 @@ function bindInputs() {
     document.getElementById('theme-select').onchange = event => changeSettings('theme', event.target);
 }
 function loadSettingsDefault() {
+    if (notificationsAvailable) {
+        document.getElementById('notifications-toggle').checked = allowNotifications && (window.Notification.permission === 'granted');
+    }
     document.getElementById('custom-url').value = isoListURL;
     document.getElementById('edit-plot').checked = plot.editableMode;
     document.getElementById('custom-delimiter').value = raw.delimiter;
@@ -1455,7 +1491,10 @@ function loadSettingsDefault() {
     }
 }
 function loadSettingsStorage() {
-    let setting = loadJSON('customURL');
+    let setting = loadJSON('allowNotifications');
+    if (notificationsAvailable && setting !== null)
+        allowNotifications = setting && (window.Notification.permission === 'granted');
+    setting = loadJSON('customURL');
     if (setting)
         isoListURL = new URL(setting).href;
     setting = loadJSON('editMode');
