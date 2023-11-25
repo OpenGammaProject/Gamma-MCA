@@ -1,7 +1,7 @@
 import { SpectrumPlot, SeekClosest, CalculateFWHM } from './plot.js';
 import { RawData } from './raw-data.js';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
-import { Notification } from './notifications.js';
+import { ToastNotification } from './notifications.js';
 import { applyTheming, autoThemeChange } from './global-theming.js';
 export class SpectrumData {
     data = [];
@@ -92,7 +92,7 @@ document.body.onload = async function () {
             reg.addEventListener('updatefound', () => {
                 if (firstInstall)
                     return;
-                new Notification('updateInstalled');
+                new ToastNotification('updateInstalled');
             });
         }
     }
@@ -151,7 +151,7 @@ document.body.onload = async function () {
     document.getElementById('version-tag').innerText += ` ${APP_VERSION}.`;
     if (localStorageAvailable) {
         if (loadJSON('lastVisit') <= 0) {
-            new Notification('welcomeMessage');
+            new ToastNotification('welcomeMessage');
             if (notificationsAvailable)
                 legacyPopupNotification('ask-notifications');
             firstInstall = true;
@@ -181,7 +181,7 @@ document.body.onload = async function () {
     else {
         const settingsSaveAlert = document.getElementById('ls-available');
         settingsSaveAlert.parentNode.removeChild(settingsSaveAlert);
-        new Notification('welcomeMessage');
+        new ToastNotification('welcomeMessage');
     }
     loadSettingsDefault();
     sizeCheck();
@@ -231,21 +231,30 @@ document.getElementById('notifications-toggle').onclick = event => toggleNotific
 document.getElementById('notifications-toast-btn').onclick = () => toggleNotifications(true);
 function toggleNotifications(toggle) {
     allowNotifications = toggle;
-    if (window.Notification.permission !== 'granted') {
+    if (Notification.permission !== 'granted') {
         if (allowNotifications) {
-            window.Notification.requestPermission().then((permission) => {
+            Notification.requestPermission().then((permission) => {
                 if (permission === 'granted') {
-                    new window.Notification('Success!');
+                    new Notification('Success!', {
+                        lang: 'en-US',
+                        badge: '/assets/notifications/badge.png',
+                        body: 'Notifications for Gamma MCA are now enabled.',
+                        icon: '/assets/notifications/icon.png'
+                    });
                 }
                 allowNotifications = allowNotifications && (permission === 'granted');
                 document.getElementById('notifications-toggle').checked = allowNotifications;
-                saveJSON('allowNotifications', allowNotifications);
+                const result = saveJSON('allowNotifications', allowNotifications);
+                if (result)
+                    new ToastNotification('settingSuccess');
             });
         }
     }
     hideNotification('ask-notifications');
     document.getElementById('notifications-toggle').checked = allowNotifications;
-    saveJSON('allowNotifications', allowNotifications);
+    const result = saveJSON('allowNotifications', allowNotifications);
+    if (result)
+        new ToastNotification('settingSuccess');
 }
 window.onbeforeunload = () => {
     return 'Are you sure to leave?';
@@ -383,7 +392,7 @@ function getFileData(file, background = false) {
                         spectrumData.backgroundCps = spectrumData.background.map(val => val / meta.backgroundMt);
                 }
                 else if (!espectrum?.length && !bgspectrum?.length) {
-                    new Notification('fileError');
+                    new ToastNotification('fileError');
                 }
                 else {
                     const fileData = espectrum?.length ? espectrum : bgspectrum;
@@ -495,14 +504,14 @@ function getFileData(file, background = false) {
         updateSpectrumCounts();
         updateSpectrumTime();
         if (spectrumData.background.length !== spectrumData.data.length && spectrumData.data.length && spectrumData.background.length) {
-            new Notification('dataError');
+            new ToastNotification('dataError');
             removeFile(background ? 'background' : 'data');
         }
         plot.resetPlot(spectrumData);
         bindPlotEvents();
     };
     reader.onerror = () => {
-        new Notification('fileError');
+        new ToastNotification('fileError');
         return;
     };
 }
@@ -600,7 +609,7 @@ document.getElementById('smaVal').oninput = event => changeSma(event.target);
 function changeSma(input) {
     const parsedInput = parseInt(input.value);
     if (isNaN(parsedInput)) {
-        new Notification('smaError');
+        new ToastNotification('smaError');
     }
     else {
         plot.smaLength = parsedInput;
@@ -729,7 +738,7 @@ async function toggleCal(enabled) {
                     validArray.push([float1, float2]);
                 }
                 if (invalid > 1) {
-                    new Notification('calibrationApplyError');
+                    new ToastNotification('calibrationApplyError');
                     const checkbox = document.getElementById('apply-cal');
                     checkbox.checked = false;
                     toggleCal(checkbox.checked);
@@ -847,11 +856,11 @@ function importCal(file) {
         }
         catch (e) {
             console.error('Calibration Import Error:', e);
-            new Notification('calibrationImportError');
+            new ToastNotification('calibrationImportError');
         }
     };
     reader.onerror = () => {
-        new Notification('fileError');
+        new ToastNotification('fileError');
         return;
     };
 }
@@ -1110,7 +1119,7 @@ function downloadData(filename, data) {
 document.getElementById('overwrite-button').onclick = () => overwriteFile();
 async function overwriteFile() {
     if (dataFileHandle && backgroundFileHandle) {
-        new Notification('saveMultipleAtOnce');
+        new ToastNotification('saveMultipleAtOnce');
         return;
     }
     if (!dataFileHandle && !backgroundFileHandle) {
@@ -1129,12 +1138,12 @@ async function overwriteFile() {
         content = generateNPES();
     }
     if (!content?.trim()) {
-        new Notification('fileEmptyError');
+        new ToastNotification('fileEmptyError');
         return;
     }
     await writable.write(content);
     await writable.close();
-    new Notification('saveFile');
+    new ToastNotification('saveFile');
 }
 const saveFileTypes = {
     'CAL': {
@@ -1164,7 +1173,7 @@ const saveFileTypes = {
 };
 async function download(filename, text, type) {
     if (!text?.trim()) {
-        new Notification('fileEmptyError');
+        new ToastNotification('fileEmptyError');
         return;
     }
     if (window.FileSystemHandle && window.showSaveFilePicker) {
@@ -1189,7 +1198,7 @@ async function download(filename, text, type) {
         const writableStream = await newHandle.createWritable();
         await writableStream.write(text);
         await writableStream.close();
-        new Notification('saveFile');
+        new ToastNotification('saveFile');
     }
     else {
         const element = document.createElement('a');
@@ -1450,7 +1459,7 @@ function bindInputs() {
 }
 function loadSettingsDefault() {
     if (notificationsAvailable) {
-        document.getElementById('notifications-toggle').checked = allowNotifications && (window.Notification.permission === 'granted');
+        document.getElementById('notifications-toggle').checked = allowNotifications && (Notification.permission === 'granted');
     }
     document.getElementById('custom-url').value = isoListURL;
     document.getElementById('edit-plot').checked = plot.editableMode;
@@ -1493,7 +1502,7 @@ function loadSettingsDefault() {
 function loadSettingsStorage() {
     let setting = loadJSON('allowNotifications');
     if (notificationsAvailable && setting !== null)
-        allowNotifications = setting && (window.Notification.permission === 'granted');
+        allowNotifications = setting && (Notification.permission === 'granted');
     setting = loadJSON('customURL');
     if (setting)
         isoListURL = new URL(setting).href;
@@ -1562,7 +1571,7 @@ function changeSettings(name, element) {
     const stringValue = element.value.trim();
     let result = false;
     if (!element.checkValidity() || !stringValue) {
-        new Notification('settingType');
+        new ToastNotification('settingType');
         return;
     }
     switch (name) {
@@ -1581,7 +1590,7 @@ function changeSettings(name, element) {
                 result = saveJSON(name, isoListURL);
             }
             catch (e) {
-                new Notification('settingError');
+                new ToastNotification('settingError');
                 console.error('Custom URL Error', e);
             }
             break;
@@ -1712,12 +1721,12 @@ function changeSettings(name, element) {
             break;
         }
         default: {
-            new Notification('settingError');
+            new ToastNotification('settingError');
             return;
         }
     }
     if (result)
-        new Notification('settingSuccess');
+        new ToastNotification('settingSuccess');
 }
 document.getElementById('reset-gamma-mca').onclick = () => resetMCA();
 function resetMCA() {
@@ -1734,13 +1743,13 @@ function selectSerialType(button) {
 }
 function serialConnect() {
     listSerial();
-    new Notification('serialConnect');
+    new ToastNotification('serialConnect');
 }
 function serialDisconnect(event) {
     if (serRecorder?.isThisPort(event.target))
         disconnectPort(true);
     listSerial();
-    new Notification('serialDisconnect');
+    new ToastNotification('serialDisconnect');
 }
 document.getElementById('serial-list-btn').onclick = () => listSerial();
 async function listSerial() {
@@ -1830,7 +1839,7 @@ async function startRecord(pause = false, type) {
     }
     catch (err) {
         console.error('Connection Error:', err);
-        new Notification('serialConnectError');
+        new ToastNotification('serialConnectError');
         return;
     }
     if (wakeLockAvailable) {
@@ -1894,7 +1903,7 @@ async function disconnectPort(stop = false) {
     }
     catch (error) {
         console.error('Misc Serial Read Error:', error);
-        new Notification('miscSerialError');
+        new ToastNotification('miscSerialError');
     }
 }
 document.getElementById('clear-console-log').onclick = () => clearConsoleLog();
@@ -1917,7 +1926,7 @@ async function readSerial() {
     }
     catch (err) {
         console.error('Connection Error:', err);
-        new Notification('serialConnectError');
+        new ToastNotification('serialConnectError');
         return;
     }
     refreshConsole();
@@ -1930,7 +1939,7 @@ async function sendSerial() {
     }
     catch (err) {
         console.error('Connection Error:', err);
-        new Notification('serialConnectError');
+        new ToastNotification('serialConnectError');
         return;
     }
     element.value = '';
@@ -1985,7 +1994,7 @@ function refreshMeta(type) {
         updateSpectrumTime();
         if (delta.getTime() >= maxRecTime && maxRecTimeEnabled) {
             disconnectPort(true);
-            new Notification('autoStop');
+            new ToastNotification('autoStop');
         }
         else {
             const finishDelta = performance.now() - nowTime;

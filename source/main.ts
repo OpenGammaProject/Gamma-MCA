@@ -18,9 +18,10 @@
     - (?) Highlight plot lines in ROI selection
     - (?) Hist mode: First cps value is always zero?
 
-    - Calibration n-polynomial regression
+    - Automatically close system notifications when the user interacts with the page again
     - Add pulse limit analog to time limit for serial recordings
-    - Optional real-time file saving to help with long recordings and crashes
+    - Optional real-time file saving to help with long recordings and crashes via some temp files
+    - Calibration n-polynomial regression
     - Use Compression Streams API to compress files?!
 
     - Use String.prototype.toWellFormed() function already implemented in line ~1680
@@ -39,7 +40,7 @@ import { SpectrumPlot, SeekClosest, DownloadFormat, CalculateFWHM } from './plot
 import { RawData, NPESv1, NPESv1Spectrum } from './raw-data.js';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
 import { WebUSBSerialPort } from './external/webusbserial-min.js'
-import { Notification } from './notifications.js';
+import { ToastNotification } from './notifications.js';
 import { applyTheming, autoThemeChange } from './global-theming.js';
 
 export interface IsotopeList {
@@ -176,7 +177,7 @@ document.body.onload = async function(): Promise<void> {
       reg.addEventListener('updatefound', () => {
         if (firstInstall) return; // "Update" will always be installed on first load (service worker installation)
 
-        new Notification('updateInstalled'); //popupNotification('update-installed');
+        new ToastNotification('updateInstalled'); //popupNotification('update-installed');
       });
     }
   }
@@ -248,7 +249,7 @@ document.body.onload = async function(): Promise<void> {
 
   if (localStorageAvailable) {
     if (loadJSON('lastVisit') <= 0) {
-      new Notification('welcomeMessage'); //popupNotification('welcome-msg');
+      new ToastNotification('welcomeMessage'); //popupNotification('welcome-msg');
       if (notificationsAvailable) legacyPopupNotification('ask-notifications'); // Show notifications notification on first visit
 
       firstInstall = true;
@@ -283,7 +284,7 @@ document.body.onload = async function(): Promise<void> {
   } else {
     const settingsSaveAlert = document.getElementById('ls-available')!; // Remove saving alert
     settingsSaveAlert.parentNode!.removeChild(settingsSaveAlert);
-    new Notification('welcomeMessage'); //popupNotification('welcome-msg');
+    new ToastNotification('welcomeMessage'); //popupNotification('welcome-msg');
   }
 
   loadSettingsDefault();
@@ -349,24 +350,32 @@ document.getElementById('notifications-toast-btn')!.onclick = () => toggleNotifi
 function toggleNotifications(toggle: boolean) {
   allowNotifications = toggle;
 
-  if (window.Notification.permission !== 'granted') {
+  if (Notification.permission !== 'granted') {
     if (allowNotifications) {
       // Request permission from user to use notifications
-      window.Notification.requestPermission().then((permission) => {
+      Notification.requestPermission().then((permission) => {
         if (permission === 'granted') {
-          new window.Notification('Success!');
+          new Notification('Success!', {
+            lang: 'en-US', // Notification language code
+            badge: '/assets/notifications/badge.png', // Notification image that shows if there isn't enough space for the notification text
+            body: 'Notifications for Gamma MCA are now enabled.', // Notification body text
+            //image: '/assets/files/json.png', // Large image for notification, not avail in firefox
+            icon: '/assets/notifications/icon.png' // Small image for notification
+          });
         }
         allowNotifications = allowNotifications && (permission === 'granted');
 
         (<HTMLInputElement>document.getElementById('notifications-toggle')).checked = allowNotifications;
-        saveJSON('allowNotifications', allowNotifications);
+        const result = saveJSON('allowNotifications', allowNotifications);
+        if (result) new ToastNotification('settingSuccess'); //popupNotification('setting-success'); // Success Toast
       });
     }
   }
   
   hideNotification('ask-notifications');
   (<HTMLInputElement>document.getElementById('notifications-toggle')).checked = allowNotifications;
-  saveJSON('allowNotifications', allowNotifications);
+  const result = saveJSON('allowNotifications', allowNotifications);
+  if (result) new ToastNotification('settingSuccess'); //popupNotification('setting-success'); // Success Toast
 }
 
 
@@ -587,7 +596,7 @@ function getFileData(file: File, background = false): void { // Gets called when
           if (meta.backgroundMt) spectrumData.backgroundCps = spectrumData.background.map(val => val / meta.backgroundMt);
 
         } else if (!espectrum?.length && !bgspectrum?.length) { // No spectrum
-          new Notification('fileError'); //popupNotification('file-error');
+          new ToastNotification('fileError'); //popupNotification('file-error');
         } else { // Only one spectrum
           const fileData = espectrum?.length ? espectrum : bgspectrum;
           const fileDataTime = (espectrum?.length ? meta.dataMt : meta.backgroundMt)*1000;
@@ -623,7 +632,7 @@ function getFileData(file: File, background = false): void { // Gets called when
       const importData = jsonData[0]; // Workaround for now until NPESv2 launches, might be multiple errors and multiple spectra!!!
 
       if ('code' in importData && 'description' in importData) { // There was some error and the error object got passed instead of some useable data
-        //new Notification('npesError'); //popupNotification('npes-error');
+        //new ToastNotification('npesError'); //popupNotification('npes-error');
         // Pop up modal with more error information instead of just toast with oopsy
         const importErrorModalElement = document.getElementById('importErrorModal')
         const fileImportErrorModal = new (<any>window).bootstrap.Modal(importErrorModalElement);
@@ -723,7 +732,7 @@ function getFileData(file: File, background = false): void { // Gets called when
       Error Msg Problem with RAW Stream selection?
     */
     if (spectrumData.background.length !== spectrumData.data.length && spectrumData.data.length && spectrumData.background.length) {
-      new Notification('dataError'); //popupNotification('data-error');
+      new ToastNotification('dataError'); //popupNotification('data-error');
       removeFile(background ? 'background' : 'data'); // Remove file again
     }
 
@@ -732,7 +741,7 @@ function getFileData(file: File, background = false): void { // Gets called when
   };
 
   reader.onerror = () => {
-    new Notification('fileError'); //popupNotification('file-error');
+    new ToastNotification('fileError'); //popupNotification('file-error');
     return;
   };
 }
@@ -854,7 +863,7 @@ document.getElementById('smaVal')!.oninput = event => changeSma(<HTMLInputElemen
 function changeSma(input: HTMLInputElement): void {
   const parsedInput = parseInt(input.value);
   if (isNaN(parsedInput)) {
-    new Notification('smaError'); //popupNotification('sma-error');
+    new ToastNotification('smaError'); //popupNotification('sma-error');
   } else {
     plot.smaLength = parsedInput;
     plot.updatePlot(spectrumData);
@@ -1021,7 +1030,7 @@ async function toggleCal(enabled: boolean): Promise<void> {
           validArray.push([float1, float2]);
         }
         if (invalid > 1) {
-          new Notification('calibrationApplyError'); //popupNotification('cal-error');
+          new ToastNotification('calibrationApplyError'); //popupNotification('cal-error');
 
           const checkbox = <HTMLInputElement>document.getElementById('apply-cal');
           checkbox.checked = false;
@@ -1175,12 +1184,12 @@ function importCal(file: File): void {
 
     } catch(e) {
       console.error('Calibration Import Error:', e);
-      new Notification('calibrationImportError'); //popupNotification('cal-import-error');
+      new ToastNotification('calibrationImportError'); //popupNotification('cal-import-error');
     }
   };
 
   reader.onerror = () => {
-    new Notification('fileError'); //popupNotification('file-error');
+    new ToastNotification('fileError'); //popupNotification('file-error');
     return;
   };
 }
@@ -1509,7 +1518,7 @@ function generateNPES(): string | undefined {
 
   // Additionally validate the JSON Schema?
   if (!data.resultData.energySpectrum && !data.resultData.backgroundEnergySpectrum) {
-    //new Notification('fileEmptyError'); //popupNotification('file-empty-error');
+    //new ToastNotification('fileEmptyError'); //popupNotification('file-empty-error');
     return undefined;
   }
 
@@ -1534,7 +1543,7 @@ document.getElementById('overwrite-button')!.onclick = () => overwriteFile();
 
 async function overwriteFile(): Promise<void> {
   if (dataFileHandle && backgroundFileHandle) {
-    new Notification('saveMultipleAtOnce');
+    new ToastNotification('saveMultipleAtOnce');
     return;
   }
 
@@ -1557,14 +1566,14 @@ async function overwriteFile(): Promise<void> {
   }
 
   if (!content?.trim()) { // Check empty string
-    new Notification('fileEmptyError'); //popupNotification('file-empty-error');
+    new ToastNotification('fileEmptyError'); //popupNotification('file-empty-error');
     return;
   }
 
   await writable.write(content); // Write the contents of the file to the stream.
   await writable.close(); // Close the file and write the contents to disk.
 
-  new Notification('saveFile');
+  new ToastNotification('saveFile');
 }
 
 
@@ -1597,7 +1606,7 @@ const saveFileTypes: SaveTypeList = {
 
 async function download(filename: string, text: string | undefined, type: DownloadType): Promise<void> {
   if (!text?.trim()) { // Check empty string
-    new Notification('fileEmptyError'); //popupNotification('file-empty-error');
+    new ToastNotification('fileEmptyError'); //popupNotification('file-empty-error');
     return;
   }
 
@@ -1628,7 +1637,7 @@ async function download(filename: string, text: string | undefined, type: Downlo
     await writableStream.write(text); // Write our file
     await writableStream.close(); // Close the file and write the contents to disk.
 
-    new Notification('saveFile');
+    new ToastNotification('saveFile');
   } else { // Fallback old download-only method
     const element = document.createElement('a');
     element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
@@ -1968,7 +1977,7 @@ function bindInputs(): void {
 
 function loadSettingsDefault(): void {
   if (notificationsAvailable) {
-    (<HTMLInputElement>document.getElementById('notifications-toggle')).checked = allowNotifications && (window.Notification.permission === 'granted');
+    (<HTMLInputElement>document.getElementById('notifications-toggle')).checked = allowNotifications && (Notification.permission === 'granted');
   }
   
   (<HTMLInputElement>document.getElementById('custom-url')).value = isoListURL;
@@ -2018,7 +2027,7 @@ function loadSettingsDefault(): void {
 
 function loadSettingsStorage(): void {
   let setting = loadJSON('allowNotifications');
-  if (notificationsAvailable && setting !== null) allowNotifications = setting && (window.Notification.permission === 'granted');
+  if (notificationsAvailable && setting !== null) allowNotifications = setting && (Notification.permission === 'granted');
 
   setting = loadJSON('customURL');
   if (setting) isoListURL = new URL(setting).href;
@@ -2092,7 +2101,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
   let result = false;
 
   if (!element.checkValidity() || !stringValue) {
-    new Notification('settingType'); //popupNotification('setting-type');
+    new ToastNotification('settingType'); //popupNotification('setting-type');
     return;
   }
 
@@ -2115,7 +2124,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
         result = saveJSON(name, isoListURL);
 
       } catch(e) {
-        new Notification('settingError'); //popupNotification('setting-error');
+        new ToastNotification('settingError'); //popupNotification('setting-error');
         console.error('Custom URL Error', e);
       }
       break;
@@ -2267,12 +2276,12 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       break;
     }
     default: {
-      new Notification('settingError'); //popupNotification('setting-error');
+      new ToastNotification('settingError'); //popupNotification('setting-error');
       return;
     }
   }
 
-  if (result) new Notification('settingSuccess'); //popupNotification('setting-success'); // Success Toast
+  if (result) new ToastNotification('settingSuccess'); //popupNotification('setting-success'); // Success Toast
 }
 
 
@@ -2304,7 +2313,7 @@ function selectSerialType(button: HTMLInputElement): void {
 
 function serialConnect(/*event: Event*/): void {
   listSerial();
-  new Notification('serialConnect'); //popupNotification('serial-connect');
+  new ToastNotification('serialConnect'); //popupNotification('serial-connect');
 }
 
 
@@ -2313,7 +2322,7 @@ function serialDisconnect(event: Event): void {
 
   listSerial();
 
-  new Notification('serialDisconnect'); //popupNotification('serial-disconnect');
+  new ToastNotification('serialDisconnect'); //popupNotification('serial-disconnect');
 }
 
 
@@ -2421,7 +2430,7 @@ async function startRecord(pause = false, type: DataType): Promise<void> {
     await serRecorder?.startRecord(pause);
   } catch(err) {
     console.error('Connection Error:', err);
-    new Notification('serialConnectError'); //popupNotification('serial-connect-error');
+    new ToastNotification('serialConnectError'); //popupNotification('serial-connect-error');
     return;
   }
 
@@ -2508,7 +2517,7 @@ async function disconnectPort(stop = false): Promise<void> {
   } catch(error) {
     // Sudden device disconnect can cause this
     console.error('Misc Serial Read Error:', error);
-    new Notification('miscSerialError'); //popupNotification('misc-ser-error');
+    new ToastNotification('miscSerialError'); //popupNotification('misc-ser-error');
   }
 }
 
@@ -2538,7 +2547,7 @@ async function readSerial(): Promise<void> {
     await serRecorder?.showConsole();
   } catch(err) {
     console.error('Connection Error:', err);
-    new Notification('serialConnectError'); //popupNotification('serial-connect-error');
+    new ToastNotification('serialConnectError'); //popupNotification('serial-connect-error');
     return;
   }
 
@@ -2554,7 +2563,7 @@ async function sendSerial(): Promise<void> {
     await serRecorder?.sendString(element.value);
   } catch (err) {
     console.error('Connection Error:', err);
-    new Notification('serialConnectError'); //popupNotification('serial-connect-error');
+    new ToastNotification('serialConnectError'); //popupNotification('serial-connect-error');
     return;
   }
 
@@ -2633,7 +2642,7 @@ function refreshMeta(type: DataType): void {
 
     if (delta.getTime() >= maxRecTime && maxRecTimeEnabled) {
       disconnectPort(true);
-      new Notification('autoStop'); //popupNotification('auto-stop');
+      new ToastNotification('autoStop'); //popupNotification('auto-stop');
     } else {
       const finishDelta = performance.now() - nowTime;
       metaTimeout = setTimeout(refreshMeta, (REFRESH_META_TIME - finishDelta > 0) ? (REFRESH_META_TIME - finishDelta) : 1, type); // Only re-schedule if still available
