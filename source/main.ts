@@ -2488,7 +2488,7 @@ document.getElementById('serialConsoleModal')!.addEventListener('hide.bs.modal',
 async function readSerial(): Promise<void> {
   try {
     const portNumber = selectPort();
-    document.getElementById('serial-console-title')!.innerText = `Serial Console (Port ${portNumber})`;
+    document.getElementById('serial-console-title')!.innerText = `(Port ${portNumber})`;
     await serRecorder?.showConsole();
   } catch(err) {
     console.error('Connection Error:', err);

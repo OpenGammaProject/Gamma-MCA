@@ -168,11 +168,11 @@
 
                   <p>
                     <button class="btn btn-primary btn-sm" id="export-button" type="button" data-bs-toggle="modal" data-bs-target="#exportModal" title="Save file as ...">
-                      <i class="fas fa-file-export"></i> Save As
+                      <i class="fa-solid fa-download"></i> Save As
                     </button>
 
                     <button class="btn btn-primary btn-sm" id="overwrite-button" type="button" title="Save file: Overwrite file(s)!" disabled>
-                      <i class="fas fa-file-export"></i> Save
+                      <i class="fa-solid fa-floppy-disk"></i> Save
                     </button>
                   </p>
 
@@ -663,7 +663,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h3 class="modal-title h4">Record Spectrum</h3>
+            <h3 class="modal-title h4"><i class="fas fa-play me-2 fa-beat-fade animation-very-slow"></i>Record Spectrum</h3>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -684,7 +684,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h3 class="modal-title h4">Save File</h3>
+            <h3 class="modal-title h4"><i class="fa-solid fa-download me-2 fa-beat-fade animation-very-slow"></i>Save File</h3>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -707,7 +707,7 @@
       <div class="modal-dialog modal-dialog-scrollable modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h3 id="serial-console-title" class="modal-title h4 flex-fill">Serial Console</h3>
+            <h3 class="modal-title h4 flex-fill">Serial Console <span id="serial-console-title"></span></h3>
 
             <div class="g-1 pe-2">
               <input type="checkbox" class="btn-check" id="autoscroll-console">
