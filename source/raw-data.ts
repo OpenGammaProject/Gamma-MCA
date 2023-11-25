@@ -219,7 +219,7 @@ export class RawData {
       json = JSON.parse(data);
     } catch (e) {
       console.error(e);
-      return [{error: true, code: 'JSON_PARSE_ERROR', description: 'Unable to parse the JSON format inside the file!'}];
+      return [{error: true, code: 'JSON_PARSE_ERROR', description: 'Some problem with the JSON formatting occured when trying to parse the contents of the file.'}];
     }
 
     try {
