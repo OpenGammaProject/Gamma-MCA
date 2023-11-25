@@ -48,11 +48,11 @@ body {
   cursor: pointer;
 }
 
-.file-import-success {
+.animation-very-slow {
   --fa-animation-duration: 5s;
 }
 
-.notification-beat-slow {
+.animation-slow {
   --fa-animation-duration: 2s;
 }
 
