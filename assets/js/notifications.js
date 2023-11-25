@@ -127,7 +127,7 @@ const notificationContents = {
         body: 'Successfully saved data to the file system.'
     },
 };
-export class Notification {
+export class ToastNotification {
     toastElement;
     toast;
     toastContainer;

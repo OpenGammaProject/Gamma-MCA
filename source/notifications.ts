@@ -163,7 +163,7 @@ const notificationContents: NotificationStorage = {
 	},
 };
 
-export class Notification {
+export class ToastNotification {
 	private toastElement: HTMLElement | undefined;
 	private toast: any | undefined;
 	private toastContainer: HTMLElement | null;
