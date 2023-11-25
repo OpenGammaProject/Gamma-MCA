@@ -1108,6 +1108,21 @@
     -->
     <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3"> <!-- add z-3 for z-index? -->
       
+      <div id="pwa-installer" class="toast text-bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+        <div class="toast-header">
+          <i class="fa-solid fa-download me-2 fa-beat animation-slow"></i>
+          <strong class="me-auto">Install App?</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          <p>Gamma MCA is a progressive web app. You can install it for offline use and quick access like any other native program.</p>
+          <div class="mt-2 pt-2 border-top">
+            <button type="button" class="btn btn-light btn-sm" id="install-pwa-toast-btn" title="Install Gamma MCA">Install</button>
+            <button type="button" class="btn btn-primary btn-sm" title="Dismiss" data-bs-dismiss="toast">No</button>
+          </div>
+        </div>
+      </div>
+
       <div id="ask-notifications" class="toast text-bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
         <div class="toast-header">
           <i class="fa-regular fa-bell fa-shake animation-slow me-2"></i>
@@ -1119,22 +1134,6 @@
           <p>You can always enable or disable them again in the settings.</p>
           <div class="mt-2 pt-2 border-top">
             <button type="button" class="btn btn-light btn-sm" id="notifications-toast-btn" title="Enable notifications">Enable</button>
-            <button type="button" class="btn btn-primary btn-sm" title="Dismiss" data-bs-dismiss="toast">No</button>
-          </div>
-        </div>
-      </div>
-
-      <div id="pwa-installer" class="toast text-bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
-        <div class="toast-header">
-          <i class="fa-solid fa-download me-2"></i>
-          <strong class="me-auto">Install App?</strong>
-          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-        <div class="toast-body">
-          <p>Gamma MCA is a progressive web app! You can install it to use Gamma MCA standalone and offline like any native program.</p>
-          <p>Do you want to install?</p>
-          <div class="mt-2 pt-2 border-top">
-            <button type="button" class="btn btn-light btn-sm" id="install-pwa-toast-btn" title="Install Gamma MCA">Install</button>
             <button type="button" class="btn btn-primary btn-sm" title="Dismiss" data-bs-dismiss="toast">No</button>
           </div>
         </div>
