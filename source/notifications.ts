@@ -91,7 +91,7 @@ const notificationContents: NotificationStorage = {
 		icon: 'fas fa-exclamation-triangle fa-shake',
 		header: 'JSON Import Error',
 		body: 'The file you uploaded is not formatted correctly. It does not validate the NPES JSON Schema!' +
-				'For more information, please head to <a title="GitHub/NPES-JSON" class="link-light" href="https://github.com/OpenGammaProject/NPES-JSON" target="_blank">NPES-JSON</a>.' +
+				'For more information, please head to <a title="GitHub/NPES-JSON" class="link-light link-underline-opacity-50 link-underline-opacity-100-hover" href="https://github.com/OpenGammaProject/NPES-JSON" target="_blank">NPES-JSON</a>.' +
 				'<br> <br>' +
 				'<em>Tip: You can open the browser console to look at the exact errors.</em>'
 	},
@@ -142,8 +142,8 @@ const notificationContents: NotificationStorage = {
 		type: 'primary',
 		icon: 'fas fa-radiation fa-beat animation-slow',
 		header: 'Welcome!',
-		body: '<p>Thank you for using Gamma MCA, please report any bugs or issues on <a title="GitHub/Issues" class="link-light" href="https://github.com/OpenGammaProject/Gamma-MCA/issues" target="_blank"><small><i class="fa-solid fa-link"></i></small> GitHub/Issues</a>.</p>' +
-				'<p>If you\'re new to this, you can have a look at the trailer on <a title="Youtube Trailer" class="link-light" href="https://www.youtube.com/watch?v=dkMhoUwDla0" target="_blank"><small><i class="fa-brands fa-youtube"></i></small> Youtube</a>.</p>'
+		body: '<p>Thank you for using Gamma MCA, please report any bugs or issues on <a title="GitHub/Issues" class="link-light link-underline-opacity-50 link-underline-opacity-100-hover" href="https://github.com/OpenGammaProject/Gamma-MCA/issues" target="_blank"><small><i class="fa-solid fa-link"></i></small> GitHub/Issues</a>.</p>' +
+				'<p>If you\'re new to this, you can have a look at the trailer on <a title="Youtube Trailer" class="link-light link-underline-opacity-50 link-underline-opacity-100-hover" href="https://www.youtube.com/watch?v=dkMhoUwDla0" target="_blank"><small><i class="fa-brands fa-youtube"></i></small> Youtube</a>.</p>'
 	},
 	'saveMultipleAtOnce': {
 		type: 'warning',

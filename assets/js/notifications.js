@@ -107,8 +107,8 @@ const notificationContents = {
         type: 'primary',
         icon: 'fas fa-radiation fa-beat animation-slow',
         header: 'Welcome!',
-        body: '<p>Thank you for using Gamma MCA, please report any bugs or issues on <a title="GitHub/Issues" class="link-light" href="https://github.com/OpenGammaProject/Gamma-MCA/issues" target="_blank"><small><i class="fa-solid fa-link"></i></small> GitHub/Issues</a>.</p>' +
-            '<p>If you\'re new to this, you can have a look at the trailer on <a title="Youtube Trailer" class="link-light" href="https://www.youtube.com/watch?v=dkMhoUwDla0" target="_blank"><small><i class="fa-brands fa-youtube"></i></small> Youtube</a>.</p>'
+        body: '<p>Thank you for using Gamma MCA, please report any bugs or issues on <a title="GitHub/Issues" class="link-light link-underline-opacity-50 link-underline-opacity-100-hover" href="https://github.com/OpenGammaProject/Gamma-MCA/issues" target="_blank"><small><i class="fa-solid fa-link"></i></small> GitHub/Issues</a>.</p>' +
+            '<p>If you\'re new to this, you can have a look at the trailer on <a title="Youtube Trailer" class="link-light link-underline-opacity-50 link-underline-opacity-100-hover" href="https://www.youtube.com/watch?v=dkMhoUwDla0" target="_blank"><small><i class="fa-brands fa-youtube"></i></small> Youtube</a>.</p>'
     },
     'saveMultipleAtOnce': {
         type: 'warning',
