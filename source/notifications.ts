@@ -142,9 +142,8 @@ const notificationContents: NotificationStorage = {
 		type: 'primary',
 		icon: 'fas fa-radiation fa-beat animation-slow',
 		header: 'Welcome!',
-		body: '<p>Thanks for using Gamma MCA, please report any bugs or issues on <a title="GitHub/Issues" class="link-light" href="https://github.com/OpenGammaProject/Gamma-MCA/issues" target="_blank"><small><i class="fa-solid fa-link"></i></small> GitHub/Issues</a>, thank you!</p>' +
-				'<p>If you\'re new to this, you can have a look at the trailer on <a title="Youtube Trailer" class="link-light" href="https://www.youtube.com/watch?v=dkMhoUwDla0" target="_blank"><small><i class="fa-brands fa-youtube"></i></small> Youtube</a>.</p>' +
-				'<p>By using the website and source code, you agree to the <a  title="GitHub/License" class="link-light" href="https://github.com/OpenGammaProject/Gamma-MCA/blob/main/LICENSE" target="_blank"><small><i class="fa-solid fa-link"></i></small> license</a>.</p>'
+		body: '<p>Thank you for using Gamma MCA, please report any bugs or issues on <a title="GitHub/Issues" class="link-light" href="https://github.com/OpenGammaProject/Gamma-MCA/issues" target="_blank"><small><i class="fa-solid fa-link"></i></small> GitHub/Issues</a>.</p>' +
+				'<p>If you\'re new to this, you can have a look at the trailer on <a title="Youtube Trailer" class="link-light" href="https://www.youtube.com/watch?v=dkMhoUwDla0" target="_blank"><small><i class="fa-brands fa-youtube"></i></small> Youtube</a>.</p>'
 	},
 	'saveMultipleAtOnce': {
 		type: 'warning',
