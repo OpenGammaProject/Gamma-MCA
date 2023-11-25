@@ -9,10 +9,10 @@
 */
 
 interface NotificationData {
-	type: string,
-	delay?: number,
-	icon: string,
-	header: string,
+	type: string;
+	delay?: number;
+	icon: string;
+	header: string;
 	body: string
 }
 

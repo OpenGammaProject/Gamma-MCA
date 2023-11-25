@@ -14,68 +14,68 @@ import './external/ZSchema-browser-min.js'; // ZSchema to validate JSON Schemas
 import { CoeffObj } from './plot.js';
 
 export interface NPESv1 {
-  schemaVersion: 'NPESv1',
-  deviceData?: NPESv1DeviceData,
-  sampleInfo?: NPESv1SampleInfo,
+  schemaVersion: 'NPESv1';
+  deviceData?: NPESv1DeviceData;
+  sampleInfo?: NPESv1SampleInfo;
   resultData: NPESv1ResultData
 }
 
 export interface NPESv1Spectrum {
-  numberOfChannels: number,
-  validPulseCount?: number,
-  measurementTime?: number,
+  numberOfChannels: number;
+  validPulseCount?: number;
+  measurementTime?: number;
   energyCalibration?: {
-    polynomialOrder: number,
+    polynomialOrder: number;
     coefficients: number[]
   },
   spectrum: number[]
 }
 
 interface NPESv1ResultData {
-  startTime?: string,
-  endTime?: string,
-  energySpectrum?: NPESv1Spectrum,
+  startTime?: string;
+  endTime?: string;
+  energySpectrum?: NPESv1Spectrum;
   backgroundEnergySpectrum?: NPESv1Spectrum
 }
 
 interface NPESv1DeviceData {
-  deviceName?: string,
+  deviceName?: string;
   softwareName: string
 }
 
 interface NPESv1SampleInfo {
-  name?: string,
-  location?: string,
-  time?: string,
-  weight?: number,
-  volume?: number,
+  name?: string;
+  location?: string;
+  time?: string;
+  weight?: number;
+  volume?: number;
   note?: string
 }
 
 interface JSONParseError {
-  error: boolean,
-  code: string,
+  error: boolean;
+  code: string;
   description: string
 }
 
 interface ImportDataMeta {
-  name: string,
-  location: string,
-  time: string,
-  weight?: number,
-  volume?: number,
-  notes: string,
-  deviceName: string,
-  startTime: string,
-  endTime: string,
-  dataMt: number, // Measurement time for the energy spectrum
+  name: string;
+  location: string;
+  time: string;
+  weight?: number;
+  volume?: number;
+  notes: string;
+  deviceName: string;
+  startTime: string;
+  endTime: string;
+  dataMt: number; // Measurement time for the energy spectrum
   backgroundMt: number // Measurement time for the background energy spectrum
 }
 
 interface XMLImportData {
-  espectrum: number[],
-  bgspectrum: number[],
-  coeff: CoeffObj,
+  espectrum: number[];
+  bgspectrum: number[];
+  coeff: CoeffObj;
   meta: ImportDataMeta
 }
 

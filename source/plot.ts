@@ -12,9 +12,9 @@ import PolynomialRegression from './external/regression/PolynomialRegression.min
 import { SpectrumData, IsotopeList } from './main.js';
 
 export interface CoeffObj {
-  c1: number,
-  c2: number,
-  c3: number,
+  c1: number;
+  c2: number;
+  c3: number;
   [index: string]: number
 }
 
@@ -28,7 +28,7 @@ interface LegacyIsotopeList {
 }
 
 interface GaussData {
-  dataArray: number[][],
+  dataArray: number[][];
   sigma: number
 }
 
@@ -46,7 +46,7 @@ interface Shape {
       width: number;
       dash: string;
   };
-  opacity?: number;
+  opacity?: number
 }
 
 interface Anno {
@@ -70,38 +70,38 @@ interface Anno {
 }
 
 interface CoeffPoints {
-  aFrom: number,
-  aTo: number,
-  bFrom: number,
-  bTo: number,
-  cFrom: number | undefined,
-  cTo: number | undefined,
+  aFrom: number;
+  aTo: number;
+  bFrom: number;
+  bTo: number;
+  cFrom: number | undefined;
+  cTo: number | undefined;
   [index: string]: number | undefined
 }
 
 interface Trace {
-  name: string,
-  stackgroup?: string,
-  x: number[],
-  y: number[],
-  type: 'scatter',
-  yaxis?: string,
-  mode: 'lines' | 'markers' | 'lines+markers' | 'text+markers',
-  fill?: string,
-  opacity?: number,
+  name: string;
+  stackgroup?: string;
+  x: number[];
+  y: number[];
+  type: 'scatter';
+  yaxis?: string;
+  mode: 'lines' | 'markers' | 'lines+markers' | 'text+markers';
+  fill?: string;
+  opacity?: number;
   line?: {
-    color?: string,
-    width?: number,
+    color?: string;
+    width?: number;
     shape?: 'linear' | 'hvh' | 'spline'
-  },
+  };
   marker?: {
-    color?: string,
-    size?: number,
+    color?: string;
+    size?: number;
     symbol?: string
   },
-  width?: number,
-  text?: string[],
-  textposition?: string,
+  width?: number;
+  text?: string[];
+  textposition?: string
 }
 
 /*
