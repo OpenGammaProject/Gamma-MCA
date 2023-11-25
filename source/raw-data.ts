@@ -53,9 +53,15 @@ interface NPESv1SampleInfo {
 }
 
 interface JSONParseError {
-  error: boolean;
   code: string;
   description: string
+}
+
+interface XMLImportData {
+  espectrum: number[];
+  bgspectrum: number[];
+  coeff: CoeffObj;
+  meta: ImportDataMeta
 }
 
 interface ImportDataMeta {
@@ -70,13 +76,6 @@ interface ImportDataMeta {
   endTime: string;
   dataMt: number; // Measurement time for the energy spectrum
   backgroundMt: number // Measurement time for the background energy spectrum
-}
-
-interface XMLImportData {
-  espectrum: number[];
-  bgspectrum: number[];
-  coeff: CoeffObj;
-  meta: ImportDataMeta
 }
 
 export class RawData {
@@ -219,7 +218,7 @@ export class RawData {
       json = JSON.parse(data);
     } catch (e) {
       console.error(e);
-      return [{error: true, code: 'JSON_PARSE_ERROR', description: 'Some problem with the JSON formatting occured when trying to parse the contents of the file.'}];
+      return [{code: 'JSON_PARSE_ERROR', description: 'Some problem with the JSON formatting occured when trying to parse the contents of the file.'}];
     }
 
     try {
@@ -255,7 +254,6 @@ export class RawData {
 
         for (const error of errors) {
           errorMessages.push({
-            'error': true,
             'code': error.code,
             'description': error.message
           });
@@ -269,7 +267,7 @@ export class RawData {
 
     } catch(e) {
       console.error(e);
-      return [{error: true, code: 'UNDEFINED_ERROR', description: 'Some undefined error occured, a detailed error message can be found in the developer console.'}];
+      return [{code: 'UNDEFINED_ERROR', description: 'Some undefined error occured, a detailed error message can be found in the developer console.'}];
     }
   }
 }

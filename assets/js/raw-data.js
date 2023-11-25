@@ -113,7 +113,7 @@ export class RawData {
         }
         catch (e) {
             console.error(e);
-            return [{ error: true, code: 'JSON_PARSE_ERROR', description: 'Some problem with the JSON formatting occured when trying to parse the contents of the file.' }];
+            return [{ code: 'JSON_PARSE_ERROR', description: 'Some problem with the JSON formatting occured when trying to parse the contents of the file.' }];
         }
         try {
             if (!this.jsonSchema) {
@@ -134,7 +134,6 @@ export class RawData {
                 const errorMessages = [];
                 for (const error of errors) {
                     errorMessages.push({
-                        'error': true,
                         'code': error.code,
                         'description': error.message
                     });
@@ -146,7 +145,7 @@ export class RawData {
         }
         catch (e) {
             console.error(e);
-            return [{ error: true, code: 'UNDEFINED_ERROR', description: 'Some undefined error occured, a detailed error message can be found in the developer console.' }];
+            return [{ code: 'UNDEFINED_ERROR', description: 'Some undefined error occured, a detailed error message can be found in the developer console.' }];
         }
     }
 }
