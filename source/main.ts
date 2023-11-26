@@ -16,7 +16,7 @@
     - (?) Hotkeys
     - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with one click
     - (?) Highlight plot lines in ROI selection
-    - (?) Hist mode: First cps value is always zero?
+    - (?) Hist mode: First cps value is always zero?!
     - (?) Check if String.prototype.toWellFormed() yet available to implement
 
     - Automatically close system notifications when the user interacts with the page again
@@ -24,7 +24,11 @@
     - Optional real-time file saving to help with long recordings and crashes via some temp files
     - Calibration n-polynomial regression
 
-    - Implement new NPES version with file selection pop-up window
+    - Add GUI to let user select a specific spectrum from all NPESv2 data packages + let user remove data packages from file in the same context
+    - Save new JSON files with NPESv2 formatting:
+      - "Save As" button keeps creating new files with the current data, just change the formatting to NPESv2
+      - "Save" button will become the "Overwrite" button that keeps the file but only saves the current data in NPESv2 formatting to it
+      - New "Save" button that will append or update a single data package and keep all the other data in the file untouched
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -623,7 +627,8 @@ function getFileData(file: File, background = false): void { // Gets called when
       }
     } else if (fileEnding.toLowerCase() === 'json') { // THIS SECTION MAKES EVERYTHING ASYNC DUE TO THE JSON THING!!!
       const jsonData = await raw.jsonToObject(result);
-      const importData = jsonData[0]; // Workaround for now until NPESv2 launches, might be multiple errors and multiple spectra!!!
+      // TODO: Implement GUI to let the user select a specific spectrum from the NPESv2 data array
+      const importData = jsonData[0]; // Workaround until there is GUI, just select the first data package. Also keeps compat with NPESv1.
 
       if ('code' in importData && 'description' in importData) { // There was some error and the error object got passed instead of some useable data
         //new ToastNotification('npesError'); //popupNotification('npes-error');
