@@ -2026,7 +2026,7 @@ function refreshRender(type, firstLoad = false) {
         document.getElementById('cps').innerText = cpsValue.toFixed(1) + ' cps';
         const mean = cpsValues.reduce((acc, curr) => acc + curr, 0) / cpsValues.length;
         const std = Math.sqrt(cpsValues.reduce((acc, curr) => acc + (curr - mean) ** 2, 0) / (cpsValues.length - 1));
-        document.getElementById('avg-cps').innerHTML = 'Avg: ' + mean.toFixed(1);
+        document.getElementById('avg-cps').innerText = 'Avg: ' + mean.toFixed(1);
         document.getElementById('avg-cps-std').innerHTML = ` &plusmn; ${std.toFixed(1)} cps (&#916; ${Math.round(std / mean * 100)}%)`;
         updateSpectrumCounts();
         const finishDelta = performance.now() - startDelay;

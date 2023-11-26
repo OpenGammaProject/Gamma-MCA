@@ -17,14 +17,13 @@
     - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with one click
     - (?) Highlight plot lines in ROI selection
     - (?) Hist mode: First cps value is always zero?
+    - (?) Check if String.prototype.toWellFormed() yet available to implement
 
     - Automatically close system notifications when the user interacts with the page again
     - Add pulse limit analog to time limit for serial recordings
     - Optional real-time file saving to help with long recordings and crashes via some temp files
     - Calibration n-polynomial regression
-    - Use Compression Streams API to compress files?!
 
-    - Use String.prototype.toWellFormed() function already implemented in line ~1680
     - Implement new NPES version with file selection pop-up window
 
   Known Issues/Problems/Limitations:
@@ -1734,11 +1733,6 @@ async function loadIsotopes(reload = false): Promise<boolean> { // Load Isotope 
         let index = 0; // Index used to avoid HTML id duplicates
 
         const lowercaseName = key.toLowerCase().replace(/[^a-z0-9 -]/gi, '').trim(); // Fixes security issue. Clean everything except for letters, numbers and minus. See GitHub: #2
-        /*
-        if ('toWellFormed' in String.prototype) { // Use new String.prototype.toWellFormed() method too if available
-          lowercaseName = lowercaseName.toWellFormed();
-        }
-        */
         const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1); // Capitalize Name
 
         for (const energy of energyArr) {
@@ -2112,6 +2106,14 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
     }
     case 'customURL': {
       try {
+        /*
+        // Currently not yet supported in this TS version
+        // Use new String.prototype.toWellFormed() method if available to sanitize any ill-formed strings
+        let tmpStringCopy = stringValue;
+        if ('toWellFormed' in String.prototype) {
+          tmpStringCopy = tmpStringCopy.toWellFormed();
+        }
+        */
         isoListURL = new URL(stringValue).href;
 
         loadIsotopes(true);
@@ -2698,7 +2700,7 @@ function refreshRender(type: DataType, firstLoad = false): void {
     const mean = cpsValues.reduce((acc, curr) => acc+curr, 0) / cpsValues.length;
     const std = Math.sqrt(cpsValues.reduce((acc, curr) => acc + (curr - mean)**2, 0) / (cpsValues.length - 1));
 
-    document.getElementById('avg-cps')!.innerHTML = 'Avg: ' + mean.toFixed(1);
+    document.getElementById('avg-cps')!.innerText = 'Avg: ' + mean.toFixed(1);
     document.getElementById('avg-cps-std')!.innerHTML = ` &plusmn; ${std.toFixed(1)} cps (&#916; ${Math.round(std/mean*100)}%)`;
 
     updateSpectrumCounts();
