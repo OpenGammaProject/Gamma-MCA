@@ -23,6 +23,7 @@
     - Add pulse limit analog to time limit for serial recordings
     - Optional real-time file saving to help with long recordings and crashes via some temp files
     - Calibration n-polynomial regression
+    - Launch notifications if window is not focused
 
     - Add GUI to let user select a specific spectrum from all NPESv2 data packages + let user remove data packages from file in the same context
     - Save new JSON files with NPESv2 formatting!
