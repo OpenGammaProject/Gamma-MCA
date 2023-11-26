@@ -40,7 +40,7 @@ import { SpectrumPlot, SeekClosest, DownloadFormat, CalculateFWHM } from './plot
 import { RawData, NPESv1, NPESv1Spectrum } from './raw-data.js';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
 import { WebUSBSerialPort } from './external/webusbserial-min.js'
-import { ToastNotification } from './notifications.js';
+import { ToastNotification, launchSysNotification } from './notifications.js';
 import { applyTheming, autoThemeChange } from './global-theming.js';
 
 export interface IsotopeList {
@@ -178,6 +178,7 @@ document.body.onload = async function(): Promise<void> {
         if (firstInstall) return; // "Update" will always be installed on first load (service worker installation)
 
         new ToastNotification('updateInstalled'); //popupNotification('update-installed');
+        launchSysNotification('New Update!', 'An update has been installed and will be applied once you reload Gamma MCA.');
       });
     }
   }
@@ -344,41 +345,6 @@ document.body.onload = async function(): Promise<void> {
 };
 
 
-document.getElementById('notifications-toggle')!.onclick = event => toggleNotifications((<HTMLInputElement>event.target).checked);
-document.getElementById('notifications-toast-btn')!.onclick = () => toggleNotifications(true);
-
-function toggleNotifications(toggle: boolean) {
-  allowNotifications = toggle;
-
-  if (Notification.permission !== 'granted') {
-    if (allowNotifications) {
-      // Request permission from user to use notifications
-      Notification.requestPermission().then((permission) => {
-        if (permission === 'granted') {
-          new Notification('Success!', {
-            lang: 'en-US', // Notification language code
-            badge: '/assets/notifications/badge.png', // Notification image that shows if there isn't enough space for the notification text
-            body: 'Notifications for Gamma MCA are now enabled.', // Notification body text
-            //image: '/assets/files/json.png', // Large image for notification, not avail in firefox
-            icon: '/assets/notifications/icon.png' // Small image for notification
-          });
-        }
-        allowNotifications = allowNotifications && (permission === 'granted');
-
-        (<HTMLInputElement>document.getElementById('notifications-toggle')).checked = allowNotifications;
-        const result = saveJSON('allowNotifications', allowNotifications);
-        if (result) new ToastNotification('settingSuccess'); //popupNotification('setting-success'); // Success Toast
-      });
-    }
-  }
-  
-  hideNotification('ask-notifications');
-  (<HTMLInputElement>document.getElementById('notifications-toggle')).checked = allowNotifications;
-  const result = saveJSON('allowNotifications', allowNotifications);
-  if (result) new ToastNotification('settingSuccess'); //popupNotification('setting-success'); // Success Toast
-}
-
-
 // Exit website confirmation alert
 window.onbeforeunload = (): string => {
   return 'Are you sure to leave?';
@@ -470,6 +436,35 @@ document.onkeydown = async function(event) {
   }
 };
 */
+
+
+document.getElementById('notifications-toggle')!.onclick = event => toggleNotifications((<HTMLInputElement>event.target).checked);
+document.getElementById('notifications-toast-btn')!.onclick = () => toggleNotifications(true);
+
+function toggleNotifications(toggle: boolean): void {
+  allowNotifications = toggle;
+
+  if (Notification.permission !== 'granted') {
+    if (allowNotifications) {
+      // Request permission from user to use notifications
+      Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+          launchSysNotification('Success!', 'Notifications for Gamma MCA are now enabled.', true);
+        }
+        allowNotifications = allowNotifications && (permission === 'granted');
+
+        (<HTMLInputElement>document.getElementById('notifications-toggle')).checked = allowNotifications;
+        const result = saveJSON('allowNotifications', allowNotifications);
+        new ToastNotification(result ? 'settingSuccess' : 'settingError'); // Success or error toast
+      });
+    }
+  }
+  
+  hideNotification('ask-notifications');
+  (<HTMLInputElement>document.getElementById('notifications-toggle')).checked = allowNotifications;
+  const result = saveJSON('allowNotifications', allowNotifications);
+  new ToastNotification(result ? 'settingSuccess' : 'settingError'); // Success or error toast
+}
 
 
 document.getElementById('data')!.onclick = event => clickFileInput(event, false);
@@ -2518,6 +2513,7 @@ async function disconnectPort(stop = false): Promise<void> {
     // Sudden device disconnect can cause this
     console.error('Misc Serial Read Error:', error);
     new ToastNotification('miscSerialError'); //popupNotification('misc-ser-error');
+    launchSysNotification('Recording Crashed!', 'A fatal error occured with the connected serial device and the recording has stopped.');
   }
 }
 
@@ -2643,6 +2639,7 @@ function refreshMeta(type: DataType): void {
     if (delta.getTime() >= maxRecTime && maxRecTimeEnabled) {
       disconnectPort(true);
       new ToastNotification('autoStop'); //popupNotification('auto-stop');
+      launchSysNotification('Recording Stopped!', 'Your desired recording time has expired and the recording has automatically stopped.');
     } else {
       const finishDelta = performance.now() - nowTime;
       metaTimeout = setTimeout(refreshMeta, (REFRESH_META_TIME - finishDelta > 0) ? (REFRESH_META_TIME - finishDelta) : 1, type); // Only re-schedule if still available

@@ -238,3 +238,17 @@ export class ToastNotification {
 	}
 	*/
 }
+
+
+export function launchSysNotification(title: string, body: string, forceShow: boolean = false): void {
+	// Launch a system notification using the Notifications API
+	if (document.visibilityState === 'hidden' || forceShow) {
+		new Notification(title, {
+			lang: 'en-US', // Notification language code
+			badge: '/assets/notifications/badge.png', // Notification image that shows if there isn't enough space for the notification text
+			body: body, // Notification body text
+			//image: '/assets/files/json.png', // Large image for notification, not avail in firefox
+			icon: '/assets/notifications/icon.png' // Small image for notification
+		});
+	}
+}

@@ -175,4 +175,14 @@ export class ToastNotification {
         this.toast.show();
     }
 }
+export function launchSysNotification(title, body, forceShow = false) {
+    if (document.visibilityState === 'hidden' || forceShow) {
+        new Notification(title, {
+            lang: 'en-US',
+            badge: '/assets/notifications/badge.png',
+            body: body,
+            icon: '/assets/notifications/icon.png'
+        });
+    }
+}
 //# sourceMappingURL=notifications.js.map

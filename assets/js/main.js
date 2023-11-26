@@ -1,7 +1,7 @@
 import { SpectrumPlot, SeekClosest, CalculateFWHM } from './plot.js';
 import { RawData } from './raw-data.js';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
-import { ToastNotification } from './notifications.js';
+import { ToastNotification, launchSysNotification } from './notifications.js';
 import { applyTheming, autoThemeChange } from './global-theming.js';
 export class SpectrumData {
     data = [];
@@ -93,6 +93,7 @@ document.body.onload = async function () {
                 if (firstInstall)
                     return;
                 new ToastNotification('updateInstalled');
+                launchSysNotification('New Update!', 'An update has been installed and will be applied once you reload Gamma MCA.');
             });
         }
     }
@@ -227,35 +228,6 @@ document.body.onload = async function () {
         console.error('Browser does not support Notifications API.');
     }
 };
-document.getElementById('notifications-toggle').onclick = event => toggleNotifications(event.target.checked);
-document.getElementById('notifications-toast-btn').onclick = () => toggleNotifications(true);
-function toggleNotifications(toggle) {
-    allowNotifications = toggle;
-    if (Notification.permission !== 'granted') {
-        if (allowNotifications) {
-            Notification.requestPermission().then((permission) => {
-                if (permission === 'granted') {
-                    new Notification('Success!', {
-                        lang: 'en-US',
-                        badge: '/assets/notifications/badge.png',
-                        body: 'Notifications for Gamma MCA are now enabled.',
-                        icon: '/assets/notifications/icon.png'
-                    });
-                }
-                allowNotifications = allowNotifications && (permission === 'granted');
-                document.getElementById('notifications-toggle').checked = allowNotifications;
-                const result = saveJSON('allowNotifications', allowNotifications);
-                if (result)
-                    new ToastNotification('settingSuccess');
-            });
-        }
-    }
-    hideNotification('ask-notifications');
-    document.getElementById('notifications-toggle').checked = allowNotifications;
-    const result = saveJSON('allowNotifications', allowNotifications);
-    if (result)
-        new ToastNotification('settingSuccess');
-}
 window.onbeforeunload = () => {
     return 'Are you sure to leave?';
 };
@@ -293,6 +265,28 @@ window.addEventListener('onappinstalled', () => {
     hideNotification('pwa-installer');
     document.getElementById('manual-install').classList.add('d-none');
 });
+document.getElementById('notifications-toggle').onclick = event => toggleNotifications(event.target.checked);
+document.getElementById('notifications-toast-btn').onclick = () => toggleNotifications(true);
+function toggleNotifications(toggle) {
+    allowNotifications = toggle;
+    if (Notification.permission !== 'granted') {
+        if (allowNotifications) {
+            Notification.requestPermission().then((permission) => {
+                if (permission === 'granted') {
+                    launchSysNotification('Success!', 'Notifications for Gamma MCA are now enabled.', true);
+                }
+                allowNotifications = allowNotifications && (permission === 'granted');
+                document.getElementById('notifications-toggle').checked = allowNotifications;
+                const result = saveJSON('allowNotifications', allowNotifications);
+                new ToastNotification(result ? 'settingSuccess' : 'settingError');
+            });
+        }
+    }
+    hideNotification('ask-notifications');
+    document.getElementById('notifications-toggle').checked = allowNotifications;
+    const result = saveJSON('allowNotifications', allowNotifications);
+    new ToastNotification(result ? 'settingSuccess' : 'settingError');
+}
 document.getElementById('data').onclick = event => clickFileInput(event, false);
 document.getElementById('background').onclick = event => clickFileInput(event, true);
 const openFileTypes = [
@@ -1904,6 +1898,7 @@ async function disconnectPort(stop = false) {
     catch (error) {
         console.error('Misc Serial Read Error:', error);
         new ToastNotification('miscSerialError');
+        launchSysNotification('Recording Crashed!', 'A fatal error occured with the connected serial device and the recording has stopped.');
     }
 }
 document.getElementById('clear-console-log').onclick = () => clearConsoleLog();
@@ -1995,6 +1990,7 @@ function refreshMeta(type) {
         if (delta.getTime() >= maxRecTime && maxRecTimeEnabled) {
             disconnectPort(true);
             new ToastNotification('autoStop');
+            launchSysNotification('Recording Stopped!', 'Your desired recording time has expired and the recording has automatically stopped.');
         }
         else {
             const finishDelta = performance.now() - nowTime;
