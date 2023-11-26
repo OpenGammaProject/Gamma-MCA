@@ -219,14 +219,14 @@ document.body.onload = async function () {
             sortTableByColumn(isoTable, columnIndex, isoTableSortDirections[columnIndex]);
         });
     });
-    const loadingOverlay = document.getElementById('loading');
-    loadingOverlay.parentNode.removeChild(loadingOverlay);
     if (notificationsAvailable) {
         document.getElementById('notifications-toggle').disabled = false;
     }
     else {
         console.error('Browser does not support Notifications API.');
     }
+    const loadingOverlay = document.getElementById('loading');
+    loadingOverlay.parentNode.removeChild(loadingOverlay);
 };
 window.onbeforeunload = () => {
     return 'Are you sure to leave?';

@@ -333,15 +333,15 @@ document.body.onload = async function(): Promise<void> {
     });
   });
 
-  const loadingOverlay = document.getElementById('loading')!;
-  loadingOverlay.parentNode!.removeChild(loadingOverlay); // Delete Loading Thingymajig
-
   // Activate notification button if the Notifications API is supported by the browser
   if (notificationsAvailable) {
     (<HTMLInputElement>document.getElementById('notifications-toggle')).disabled = false;
   } else {
     console.error('Browser does not support Notifications API.');
   }
+
+  const loadingOverlay = document.getElementById('loading')!;
+  loadingOverlay.parentNode!.removeChild(loadingOverlay); // Delete Loading Thingymajig
 };
 
 
