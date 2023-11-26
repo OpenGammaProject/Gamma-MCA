@@ -15,7 +15,7 @@ export interface CoeffObj {
   c1: number;
   c2: number;
   c3: number;
-  [index: string]: number
+  [index: string]: number;
 }
 
 export type PeakModes = 'gaussian' | 'energy' | 'isotopes' | undefined;
@@ -24,12 +24,12 @@ export type DownloadFormat = 'svg' | 'png' | 'jpeg' | 'webp';
 type ChartType = 'default' | 'evolution' | 'calibration';
 
 interface LegacyIsotopeList {
-  [key: number]: string | undefined
+  [key: number]: string | undefined;
 }
 
 interface GaussData {
   dataArray: number[][];
-  sigma: number
+  sigma: number;
 }
 
 interface Shape {
@@ -46,7 +46,7 @@ interface Shape {
       width: number;
       dash: string;
   };
-  opacity?: number
+  opacity?: number;
 }
 
 interface Anno {
@@ -76,7 +76,7 @@ interface CoeffPoints {
   bTo: number;
   cFrom: number | undefined;
   cTo: number | undefined;
-  [index: string]: number | undefined
+  [index: string]: number | undefined;
 }
 
 interface Trace {
@@ -101,7 +101,7 @@ interface Trace {
   },
   width?: number;
   text?: string[];
-  textposition?: string
+  textposition?: string;
 }
 
 /*

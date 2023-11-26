@@ -43,11 +43,11 @@ import { ToastNotification, launchSysNotification } from './notifications.js';
 import { applyTheming, autoThemeChange } from './global-theming.js';
 
 export interface IsotopeList {
-  [key: string]: number[]
+  [key: string]: number[];
 }
 
 export interface SaveTypeList {
-  [key: string]: FilePickerAcceptType
+  [key: string]: FilePickerAcceptType;
 }
 
 export type DataOrder = 'hist' | 'chron';

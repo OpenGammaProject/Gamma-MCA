@@ -13,11 +13,11 @@ interface NotificationData {
 	delay?: number;
 	icon: string;
 	header: string;
-	body: string
+	body: string;
 }
 
 interface NotificationStorage {
-	[key: string]: NotificationData | undefined
+	[key: string]: NotificationData | undefined;
 }
 
 

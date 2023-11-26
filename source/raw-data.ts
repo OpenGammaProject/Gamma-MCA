@@ -15,14 +15,14 @@ import { CoeffObj } from './plot.js';
 
 export interface NPESv2 {
   schemaVersion: 'NPESv2';
-  data: NPESv1[]
+  data: NPESv1[];
 }
 
 export interface NPESv1 {
   schemaVersion?: 'NPESv1';
   deviceData?: NPESv1DeviceData;
   sampleInfo?: NPESv1SampleInfo;
-  resultData: NPESv1ResultData
+  resultData: NPESv1ResultData;
 }
 
 export interface NPESv1Spectrum {
@@ -31,21 +31,21 @@ export interface NPESv1Spectrum {
   measurementTime?: number;
   energyCalibration?: {
     polynomialOrder: number;
-    coefficients: number[]
+    coefficients: number[];
   };
-  spectrum: number[]
+  spectrum: number[];
 }
 
 interface NPESv1ResultData {
   startTime?: string;
   endTime?: string;
   energySpectrum?: NPESv1Spectrum;
-  backgroundEnergySpectrum?: NPESv1Spectrum
+  backgroundEnergySpectrum?: NPESv1Spectrum;
 }
 
 interface NPESv1DeviceData {
   deviceName?: string;
-  softwareName: string
+  softwareName: string;
 }
 
 interface NPESv1SampleInfo {
@@ -54,19 +54,19 @@ interface NPESv1SampleInfo {
   time?: string;
   weight?: number;
   volume?: number;
-  note?: string
+  note?: string;
 }
 
 interface JSONParseError {
   code: string;
-  description: string
+  description: string;
 }
 
 interface XMLImportData {
   espectrum: number[];
   bgspectrum: number[];
   coeff: CoeffObj;
-  meta: ImportDataMeta
+  meta: ImportDataMeta;
 }
 
 interface ImportDataMeta {
@@ -80,12 +80,12 @@ interface ImportDataMeta {
   startTime: string;
   endTime: string;
   dataMt: number; // Measurement time for the energy spectrum
-  backgroundMt: number // Measurement time for the background energy spectrum
+  backgroundMt: number; // Measurement time for the background energy spectrum
 }
 
 interface SchemaJSONStorage {
-  NPESv1: any,
-  NPESv2: any
+  NPESv1: any;
+  NPESv2: any;
 }
 
 export class RawData {
