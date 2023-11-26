@@ -25,10 +25,10 @@
     - Calibration n-polynomial regression
 
     - Add GUI to let user select a specific spectrum from all NPESv2 data packages + let user remove data packages from file in the same context
-    - Save new JSON files with NPESv2 formatting:
-      - "Save As" button keeps creating new files with the current data, just change the formatting to NPESv2
-      - "Save" button will become the "Overwrite" button that keeps the file but only saves the current data in NPESv2 formatting to it
-      - New "Save" button that will append or update a single data package and keep all the other data in the file untouched
+    - Save new JSON files with NPESv2 formatting!
+      * "Save As" button keeps creating new files with the current data, just change the formatting to NPESv2
+      * "Save" button will become the "Overwrite" button that keeps the file but only saves the current data in NPESv2 formatting to it
+      * New "Save" button that will append or update a single data package and keep all the other data in the file untouched
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
