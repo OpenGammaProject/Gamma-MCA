@@ -12,10 +12,10 @@ import PolynomialRegression from './external/regression/PolynomialRegression.min
 import { SpectrumData, IsotopeList } from './main.js';
 
 export interface CoeffObj {
-  c1: number,
-  c2: number,
-  c3: number,
-  [index: string]: number
+  c1: number;
+  c2: number;
+  c3: number;
+  [index: string]: number;
 }
 
 export type PeakModes = 'gaussian' | 'energy' | 'isotopes' | undefined;
@@ -24,12 +24,12 @@ export type DownloadFormat = 'svg' | 'png' | 'jpeg' | 'webp';
 type ChartType = 'default' | 'evolution' | 'calibration';
 
 interface LegacyIsotopeList {
-  [key: number]: string | undefined
+  [key: number]: string | undefined;
 }
 
 interface GaussData {
-  dataArray: number[][],
-  sigma: number
+  dataArray: number[][];
+  sigma: number;
 }
 
 interface Shape {
@@ -70,38 +70,38 @@ interface Anno {
 }
 
 interface CoeffPoints {
-  aFrom: number,
-  aTo: number,
-  bFrom: number,
-  bTo: number,
-  cFrom: number | undefined,
-  cTo: number | undefined,
-  [index: string]: number | undefined
+  aFrom: number;
+  aTo: number;
+  bFrom: number;
+  bTo: number;
+  cFrom: number | undefined;
+  cTo: number | undefined;
+  [index: string]: number | undefined;
 }
 
 interface Trace {
-  name: string,
-  stackgroup?: string,
-  x: number[],
-  y: number[],
-  type: 'scatter',
-  yaxis?: string,
-  mode: 'lines' | 'markers' | 'lines+markers' | 'text+markers',
-  fill?: string,
-  opacity?: number,
+  name: string;
+  stackgroup?: string;
+  x: number[];
+  y: number[];
+  type: 'scatter';
+  yaxis?: string;
+  mode: 'lines' | 'markers' | 'lines+markers' | 'text+markers';
+  fill?: string;
+  opacity?: number;
   line?: {
-    color?: string,
-    width?: number,
+    color?: string;
+    width?: number;
     shape?: 'linear' | 'hvh' | 'spline'
-  },
+  };
   marker?: {
-    color?: string,
-    size?: number,
+    color?: string;
+    size?: number;
     symbol?: string
   },
-  width?: number,
-  text?: string[],
-  textposition?: string,
+  width?: number;
+  text?: string[];
+  textposition?: string;
 }
 
 /*

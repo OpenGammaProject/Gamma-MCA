@@ -13,64 +13,79 @@
 import './external/ZSchema-browser-min.js'; // ZSchema to validate JSON Schemas
 import { CoeffObj } from './plot.js';
 
+export interface NPESv2 {
+  schemaVersion: 'NPESv2';
+  data: NPESv1[];
+}
+
 export interface NPESv1 {
-  schemaVersion: 'NPESv1',
-  deviceData?: NPESv1DeviceData,
-  sampleInfo?: NPESv1SampleInfo,
-  resultData: NPESv1ResultData
+  schemaVersion?: 'NPESv1';
+  deviceData?: NPESv1DeviceData;
+  sampleInfo?: NPESv1SampleInfo;
+  resultData: NPESv1ResultData;
 }
 
 export interface NPESv1Spectrum {
-  numberOfChannels: number,
-  validPulseCount?: number,
-  measurementTime?: number,
+  numberOfChannels: number;
+  validPulseCount?: number;
+  measurementTime?: number;
   energyCalibration?: {
-    polynomialOrder: number,
-    coefficients: number[]
-  },
-  spectrum: number[]
+    polynomialOrder: number;
+    coefficients: number[];
+  };
+  spectrum: number[];
 }
 
 interface NPESv1ResultData {
-  startTime?: string,
-  endTime?: string,
-  energySpectrum?: NPESv1Spectrum,
-  backgroundEnergySpectrum?: NPESv1Spectrum
+  startTime?: string;
+  endTime?: string;
+  energySpectrum?: NPESv1Spectrum;
+  backgroundEnergySpectrum?: NPESv1Spectrum;
 }
 
 interface NPESv1DeviceData {
-  deviceName?: string,
-  softwareName: string
+  deviceName?: string;
+  softwareName: string;
 }
 
 interface NPESv1SampleInfo {
-  name?: string,
-  location?: string,
-  time?: string,
-  weight?: number,
-  volume?: number,
-  note?: string
+  name?: string;
+  location?: string;
+  time?: string;
+  weight?: number;
+  volume?: number;
+  note?: string;
 }
 
-interface ImportDataMeta {
-  name: string,
-  location: string,
-  time: string,
-  weight?: number,
-  volume?: number,
-  notes: string,
-  deviceName: string,
-  startTime: string,
-  endTime: string,
-  dataMt: number, // Measurement time for the energy spectrum
-  backgroundMt: number // Measurement time for the background energy spectrum
+interface JSONParseError {
+  code: string;
+  description: string;
 }
 
 interface XMLImportData {
-  espectrum: number[],
-  bgspectrum: number[],
-  coeff: CoeffObj,
-  meta: ImportDataMeta
+  espectrum: number[];
+  bgspectrum: number[];
+  coeff: CoeffObj;
+  meta: ImportDataMeta;
+}
+
+interface ImportDataMeta {
+  name: string;
+  location: string;
+  time: string;
+  weight?: number;
+  volume?: number;
+  notes: string;
+  deviceName: string;
+  startTime: string;
+  endTime: string;
+  dataMt: number; // Measurement time for the energy spectrum
+  backgroundMt: number; // Measurement time for the background energy spectrum
+}
+
+interface SchemaJSONStorage {
+  NPESv1: any;
+  NPESv2: any;
 }
 
 export class RawData {
@@ -79,13 +94,19 @@ export class RawData {
   adcChannels = 4096; // For OGD
   fileType: number;
   private tempValIndex: number;
-  private schemaURL = '/assets/npes-1.schema.json';
-  private jsonSchema: any;
+  private schemaURLTable = {
+    NPESv1: '/assets/npes-1.schema.json',
+    NPESv2: '/assets/npes-2.schema.json'
+  };
+  private schemaJSON: SchemaJSONStorage = {
+    NPESv1: undefined,
+    NPESv2: undefined
+  };
 
   constructor(valueIndex: number, delimiter = ',') {
     this.valueIndex = valueIndex;
     this.delimiter = delimiter;
-    this.adcChannels
+    this.adcChannels;
     this.fileType = valueIndex;
     this.tempValIndex = valueIndex;
   }
@@ -206,24 +227,39 @@ export class RawData {
     }
   }
 
-  async jsonToObject(data: string): Promise<NPESv1 | false> {
-    let json: NPESv1;
+  async jsonToObject(data: string): Promise<NPESv1[] | JSONParseError[]> {
+    let json: any;
 
     try {
       json = JSON.parse(data);
     } catch (e) {
       console.error(e);
-      return false;
+      return [{code: 'JSON_PARSE_ERROR', description: `A problem with the JSON formatting occured when trying to parse the contents of the file: ${e}`}];
     }
 
+    let version: 'NPESv1' | 'NPESv2';
+
     try {
-      if (!this.jsonSchema) {
-        const response = await fetch(this.schemaURL);
+      // Detect schemaVersion (either NPESv1 or NPESv2)
+      if (json.schemaVersion === 'NPESv1' || json.schemaVersion === 'NPESv2') {
+        version = json.schemaVersion;
+      } else {
+        throw `schemaVersion is neither NPESv1 nor NPESv2, but ${json.schemaVersion}!`;
+      }
+    } catch(e) {
+      console.error(e);
+      return [{code: 'NPES_VERSION_ERROR', description: `An error occured when trying to parse the schema version: ${e}`}];
+    }
+    
+    try {
+      // Load the correct schema if if hasn't been loaded before
+      if (!this.schemaJSON[version]) {
+        const response = await fetch(this.schemaURLTable[version]);
 
         if (response.ok) {
           const schema = await response.json();
           delete schema['$schema']; // Remove, otherwise it will crash because it cannot resolve the schema URI, wow...
-          this.jsonSchema = schema;
+          this.schemaJSON[version] = schema;
         } else {
           throw 'Could not load the schema file!';
         }
@@ -240,17 +276,33 @@ export class RawData {
       }
       */
       const validator = new (<any>window).ZSchema();
-      validator.validate(json, this.jsonSchema);
+      validator.validate(json, this.schemaJSON[version]);
       const errors = validator.getLastErrors();
 
-      if (errors) throw errors; // Catch validation errors
+      if (errors) {
+        //throw errors; // Catch validation errors
+        const errorMessages: JSONParseError[] = [];
 
-      return json;
+        for (const error of errors) {
+          errorMessages.push({
+            'code': error.code,
+            'description': error.message
+          });
+        }
+
+        console.error(errorMessages);
+        return errorMessages;
+      }
+
+      if (version === 'NPESv1') {
+        return [<NPESv1>json]; // Only a single data package available
+      } else { // NPESv2
+        return (<NPESv2>json).data; // Return all data packages from the file
+      }
 
     } catch(e) {
       console.error(e);
+      return [{code: 'UNDEFINED_ERROR', description: `Some undefined error occured: ${e}`}];
     }
-
-    return false;
   }
 }

@@ -1,7 +1,7 @@
 import { SpectrumPlot, SeekClosest, CalculateFWHM } from './plot.js';
 import { RawData } from './raw-data.js';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
-import { Notification } from './notifications.js';
+import { ToastNotification, launchSysNotification } from './notifications.js';
 import { applyTheming, autoThemeChange } from './global-theming.js';
 export class SpectrumData {
     data = [];
@@ -53,9 +53,11 @@ let isoListURL = 'assets/isotopes_energies_min.json';
 const isoList = {};
 let checkNearIso = false;
 let maxDist = 100;
-const APP_VERSION = '2023-11-03';
+const APP_VERSION = '2023-11-26';
 const localStorageAvailable = 'localStorage' in self;
 const wakeLockAvailable = 'wakeLock' in navigator;
+const notificationsAvailable = 'Notification' in window;
+let allowNotifications = notificationsAvailable;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
 const isoTableSortDirections = ['none', 'none', 'none'];
@@ -81,13 +83,17 @@ document.body.onload = async function () {
     if (localStorageAvailable) {
         loadSettingsStorage();
     }
+    else {
+        console.error('Browser does not support local storage. OOF, it must be ancient. Dude, update your browser. For real.');
+    }
     if (navigator.serviceWorker) {
         const reg = await navigator.serviceWorker.register('/service-worker.js');
         if (localStorageAvailable) {
             reg.addEventListener('updatefound', () => {
                 if (firstInstall)
                     return;
-                new Notification('updateInstalled');
+                new ToastNotification('updateInstalled');
+                launchSysNotification('New Update!', 'An update has been installed and will be applied once you reload Gamma MCA.');
             });
         }
     }
@@ -146,7 +152,9 @@ document.body.onload = async function () {
     document.getElementById('version-tag').innerText += ` ${APP_VERSION}.`;
     if (localStorageAvailable) {
         if (loadJSON('lastVisit') <= 0) {
-            new Notification('welcomeMessage');
+            new ToastNotification('welcomeMessage');
+            if (notificationsAvailable)
+                legacyPopupNotification('ask-notifications');
             firstInstall = true;
         }
         saveJSON('lastVisit', Date.now());
@@ -174,7 +182,7 @@ document.body.onload = async function () {
     else {
         const settingsSaveAlert = document.getElementById('ls-available');
         settingsSaveAlert.parentNode.removeChild(settingsSaveAlert);
-        new Notification('welcomeMessage');
+        new ToastNotification('welcomeMessage');
     }
     loadSettingsDefault();
     sizeCheck();
@@ -211,6 +219,12 @@ document.body.onload = async function () {
             sortTableByColumn(isoTable, columnIndex, isoTableSortDirections[columnIndex]);
         });
     });
+    if (notificationsAvailable) {
+        document.getElementById('notifications-toggle').disabled = false;
+    }
+    else {
+        console.error('Browser does not support Notifications API.');
+    }
     const loadingOverlay = document.getElementById('loading');
     loadingOverlay.parentNode.removeChild(loadingOverlay);
 };
@@ -251,6 +265,28 @@ window.addEventListener('onappinstalled', () => {
     hideNotification('pwa-installer');
     document.getElementById('manual-install').classList.add('d-none');
 });
+document.getElementById('notifications-toggle').onclick = event => toggleNotifications(event.target.checked);
+document.getElementById('notifications-toast-btn').onclick = () => toggleNotifications(true);
+function toggleNotifications(toggle) {
+    allowNotifications = toggle;
+    if (Notification.permission !== 'granted') {
+        if (allowNotifications) {
+            Notification.requestPermission().then((permission) => {
+                if (permission === 'granted') {
+                    launchSysNotification('Success!', 'Notifications for Gamma MCA are now enabled.', true);
+                }
+                allowNotifications = allowNotifications && (permission === 'granted');
+                document.getElementById('notifications-toggle').checked = allowNotifications;
+                const result = saveJSON('allowNotifications', allowNotifications);
+                new ToastNotification(result ? 'settingSuccess' : 'settingError');
+            });
+        }
+    }
+    hideNotification('ask-notifications');
+    document.getElementById('notifications-toggle').checked = allowNotifications;
+    const result = saveJSON('allowNotifications', allowNotifications);
+    new ToastNotification(result ? 'settingSuccess' : 'settingError');
+}
 document.getElementById('data').onclick = event => clickFileInput(event, false);
 document.getElementById('background').onclick = event => clickFileInput(event, true);
 const openFileTypes = [
@@ -350,7 +386,7 @@ function getFileData(file, background = false) {
                         spectrumData.backgroundCps = spectrumData.background.map(val => val / meta.backgroundMt);
                 }
                 else if (!espectrum?.length && !bgspectrum?.length) {
-                    new Notification('fileError');
+                    new ToastNotification('fileError');
                 }
                 else {
                     const fileData = espectrum?.length ? espectrum : bgspectrum;
@@ -380,9 +416,15 @@ function getFileData(file, background = false) {
             }
         }
         else if (fileEnding.toLowerCase() === 'json') {
-            const importData = await raw.jsonToObject(result);
-            if (!importData) {
-                new Notification('npesError');
+            const jsonData = await raw.jsonToObject(result);
+            const importData = jsonData[0];
+            if ('code' in importData && 'description' in importData) {
+                const importErrorModalElement = document.getElementById('importErrorModal');
+                const fileImportErrorModal = new window.bootstrap.Modal(importErrorModalElement);
+                document.getElementById('error-filename').innerText = file.name;
+                document.getElementById('error-code').innerText = importData.code;
+                document.getElementById('error-desc').innerText = importData.description;
+                fileImportErrorModal.show();
                 return;
             }
             document.getElementById('device-name').value = importData?.deviceData?.deviceName ?? '';
@@ -456,14 +498,14 @@ function getFileData(file, background = false) {
         updateSpectrumCounts();
         updateSpectrumTime();
         if (spectrumData.background.length !== spectrumData.data.length && spectrumData.data.length && spectrumData.background.length) {
-            new Notification('dataError');
+            new ToastNotification('dataError');
             removeFile(background ? 'background' : 'data');
         }
         plot.resetPlot(spectrumData);
         bindPlotEvents();
     };
     reader.onerror = () => {
-        new Notification('fileError');
+        new ToastNotification('fileError');
         return;
     };
 }
@@ -561,7 +603,7 @@ document.getElementById('smaVal').oninput = event => changeSma(event.target);
 function changeSma(input) {
     const parsedInput = parseInt(input.value);
     if (isNaN(parsedInput)) {
-        new Notification('smaError');
+        new ToastNotification('smaError');
     }
     else {
         plot.smaLength = parsedInput;
@@ -690,7 +732,7 @@ async function toggleCal(enabled) {
                     validArray.push([float1, float2]);
                 }
                 if (invalid > 1) {
-                    new Notification('calibrationApplyError');
+                    new ToastNotification('calibrationApplyError');
                     const checkbox = document.getElementById('apply-cal');
                     checkbox.checked = false;
                     toggleCal(checkbox.checked);
@@ -808,11 +850,11 @@ function importCal(file) {
         }
         catch (e) {
             console.error('Calibration Import Error:', e);
-            new Notification('calibrationImportError');
+            new ToastNotification('calibrationImportError');
         }
     };
     reader.onerror = () => {
-        new Notification('fileError');
+        new ToastNotification('fileError');
         return;
     };
 }
@@ -1071,7 +1113,7 @@ function downloadData(filename, data) {
 document.getElementById('overwrite-button').onclick = () => overwriteFile();
 async function overwriteFile() {
     if (dataFileHandle && backgroundFileHandle) {
-        new Notification('saveMultipleAtOnce');
+        new ToastNotification('saveMultipleAtOnce');
         return;
     }
     if (!dataFileHandle && !backgroundFileHandle) {
@@ -1090,12 +1132,12 @@ async function overwriteFile() {
         content = generateNPES();
     }
     if (!content?.trim()) {
-        new Notification('fileEmptyError');
+        new ToastNotification('fileEmptyError');
         return;
     }
     await writable.write(content);
     await writable.close();
-    new Notification('saveFile');
+    new ToastNotification('saveFile');
 }
 const saveFileTypes = {
     'CAL': {
@@ -1125,7 +1167,7 @@ const saveFileTypes = {
 };
 async function download(filename, text, type) {
     if (!text?.trim()) {
-        new Notification('fileEmptyError');
+        new ToastNotification('fileEmptyError');
         return;
     }
     if (window.FileSystemHandle && window.showSaveFilePicker) {
@@ -1150,7 +1192,7 @@ async function download(filename, text, type) {
         const writableStream = await newHandle.createWritable();
         await writableStream.write(text);
         await writableStream.close();
-        new Notification('saveFile');
+        new ToastNotification('saveFile');
     }
     else {
         const element = document.createElement('a');
@@ -1410,6 +1452,9 @@ function bindInputs() {
     document.getElementById('theme-select').onchange = event => changeSettings('theme', event.target);
 }
 function loadSettingsDefault() {
+    if (notificationsAvailable) {
+        document.getElementById('notifications-toggle').checked = allowNotifications && (Notification.permission === 'granted');
+    }
     document.getElementById('custom-url').value = isoListURL;
     document.getElementById('edit-plot').checked = plot.editableMode;
     document.getElementById('custom-delimiter').value = raw.delimiter;
@@ -1449,7 +1494,10 @@ function loadSettingsDefault() {
     }
 }
 function loadSettingsStorage() {
-    let setting = loadJSON('customURL');
+    let setting = loadJSON('allowNotifications');
+    if (notificationsAvailable && setting !== null)
+        allowNotifications = setting && (Notification.permission === 'granted');
+    setting = loadJSON('customURL');
     if (setting)
         isoListURL = new URL(setting).href;
     setting = loadJSON('editMode');
@@ -1517,7 +1565,7 @@ function changeSettings(name, element) {
     const stringValue = element.value.trim();
     let result = false;
     if (!element.checkValidity() || !stringValue) {
-        new Notification('settingType');
+        new ToastNotification('settingType');
         return;
     }
     switch (name) {
@@ -1536,7 +1584,7 @@ function changeSettings(name, element) {
                 result = saveJSON(name, isoListURL);
             }
             catch (e) {
-                new Notification('settingError');
+                new ToastNotification('settingError');
                 console.error('Custom URL Error', e);
             }
             break;
@@ -1667,12 +1715,12 @@ function changeSettings(name, element) {
             break;
         }
         default: {
-            new Notification('settingError');
+            new ToastNotification('settingError');
             return;
         }
     }
     if (result)
-        new Notification('settingSuccess');
+        new ToastNotification('settingSuccess');
 }
 document.getElementById('reset-gamma-mca').onclick = () => resetMCA();
 function resetMCA() {
@@ -1689,13 +1737,13 @@ function selectSerialType(button) {
 }
 function serialConnect() {
     listSerial();
-    new Notification('serialConnect');
+    new ToastNotification('serialConnect');
 }
 function serialDisconnect(event) {
     if (serRecorder?.isThisPort(event.target))
         disconnectPort(true);
     listSerial();
-    new Notification('serialDisconnect');
+    new ToastNotification('serialDisconnect');
 }
 document.getElementById('serial-list-btn').onclick = () => listSerial();
 async function listSerial() {
@@ -1785,7 +1833,7 @@ async function startRecord(pause = false, type) {
     }
     catch (err) {
         console.error('Connection Error:', err);
-        new Notification('serialConnectError');
+        new ToastNotification('serialConnectError');
         return;
     }
     if (wakeLockAvailable) {
@@ -1849,7 +1897,8 @@ async function disconnectPort(stop = false) {
     }
     catch (error) {
         console.error('Misc Serial Read Error:', error);
-        new Notification('miscSerialError');
+        new ToastNotification('miscSerialError');
+        launchSysNotification('Recording Crashed!', 'A fatal error occured with the connected serial device and the recording has stopped.');
     }
 }
 document.getElementById('clear-console-log').onclick = () => clearConsoleLog();
@@ -1867,12 +1916,12 @@ document.getElementById('serialConsoleModal').addEventListener('hide.bs.modal', 
 async function readSerial() {
     try {
         const portNumber = selectPort();
-        document.getElementById('serial-console-title').innerText = `Serial Console (Port ${portNumber})`;
+        document.getElementById('serial-console-title').innerText = `(Port ${portNumber})`;
         await serRecorder?.showConsole();
     }
     catch (err) {
         console.error('Connection Error:', err);
-        new Notification('serialConnectError');
+        new ToastNotification('serialConnectError');
         return;
     }
     refreshConsole();
@@ -1885,7 +1934,7 @@ async function sendSerial() {
     }
     catch (err) {
         console.error('Connection Error:', err);
-        new Notification('serialConnectError');
+        new ToastNotification('serialConnectError');
         return;
     }
     element.value = '';
@@ -1940,7 +1989,8 @@ function refreshMeta(type) {
         updateSpectrumTime();
         if (delta.getTime() >= maxRecTime && maxRecTimeEnabled) {
             disconnectPort(true);
-            new Notification('autoStop');
+            new ToastNotification('autoStop');
+            launchSysNotification('Recording Stopped!', 'Your desired recording time has expired and the recording has automatically stopped.');
         }
         else {
             const finishDelta = performance.now() - nowTime;
@@ -1976,7 +2026,7 @@ function refreshRender(type, firstLoad = false) {
         document.getElementById('cps').innerText = cpsValue.toFixed(1) + ' cps';
         const mean = cpsValues.reduce((acc, curr) => acc + curr, 0) / cpsValues.length;
         const std = Math.sqrt(cpsValues.reduce((acc, curr) => acc + (curr - mean) ** 2, 0) / (cpsValues.length - 1));
-        document.getElementById('avg-cps').innerHTML = 'Avg: ' + mean.toFixed(1);
+        document.getElementById('avg-cps').innerText = 'Avg: ' + mean.toFixed(1);
         document.getElementById('avg-cps-std').innerHTML = ` &plusmn; ${std.toFixed(1)} cps (&#916; ${Math.round(std / mean * 100)}%)`;
         updateSpectrumCounts();
         const finishDelta = performance.now() - startDelay;

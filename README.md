@@ -2,7 +2,7 @@
 
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/OpenGammaProject/Gamma-MCA?style=flat-square) ![GitHub](https://img.shields.io/github/license/OpenGammaProject/Gamma-MCA?style=flat-square) ![Website](https://img.shields.io/website?url=https%3A%2F%2Fspectrum.nuclearphoenix.xyz&style=flat-square) ![GitHub deployments](https://img.shields.io/github/deployments/OpenGammaProject/Gamma-MCA/github-pages?label=GitHub%20%20pages&style=flat-square) ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/OpenGammaProject/Gamma-MCA/codeql-analysis.yml?label=CodeQL&style=flat-square)
 
-Progressive web application for gamma spectroscopy including file and live plot support via the serial interface.
+Progressive web application for gamma spectroscopy (multi-channel analyzer/MCA) including file and live plot support via the serial interface.
 
 [![Example spectrum](docs/thumbnail.png)](https://www.youtube.com/watch?v=dkMhoUwDla0) _(Click image for a short trailer video)_
 

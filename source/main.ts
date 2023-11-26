@@ -13,17 +13,22 @@
 
   Possible Future Improvements:
     - (?) Dead time correction for cps
-    - (?) Desktop notifications
     - (?) Hotkeys
     - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with one click
     - (?) Highlight plot lines in ROI selection
-    - (?) Hist mode: First cps value is always zero?
+    - (?) Hist mode: First cps value is always zero?!
+    - (?) Check if String.prototype.toWellFormed() yet available to implement
 
-    - Calibration n-polynomial regression
+    - Automatically close system notifications when the user interacts with the page again
     - Add pulse limit analog to time limit for serial recordings
-    - Optional real-time file saving to help with long recordings and crashes
+    - Optional real-time file saving to help with long recordings and crashes via some temp files
+    - Calibration n-polynomial regression
 
-    - Use String.prototype.toWellFormed() function already implemented in line ~1680
+    - Add GUI to let user select a specific spectrum from all NPESv2 data packages + let user remove data packages from file in the same context
+    - Save new JSON files with NPESv2 formatting!
+      * "Save As" button keeps creating new files with the current data, just change the formatting to NPESv2
+      * "Save" button will become the "Overwrite" button that keeps the file but only saves the current data in NPESv2 formatting to it
+      * New "Save" button that will append or update a single data package and keep all the other data in the file untouched
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -38,15 +43,15 @@ import { SpectrumPlot, SeekClosest, DownloadFormat, CalculateFWHM } from './plot
 import { RawData, NPESv1, NPESv1Spectrum } from './raw-data.js';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
 import { WebUSBSerialPort } from './external/webusbserial-min.js'
-import { Notification } from './notifications.js';
+import { ToastNotification, launchSysNotification } from './notifications.js';
 import { applyTheming, autoThemeChange } from './global-theming.js';
 
 export interface IsotopeList {
-  [key: string]: number[]
+  [key: string]: number[];
 }
 
 export interface SaveTypeList {
-  [key: string]: FilePickerAcceptType
+  [key: string]: FilePickerAcceptType;
 }
 
 export type DataOrder = 'hist' | 'chron';
@@ -120,9 +125,11 @@ const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2023-11-03';
+const APP_VERSION = '2023-11-26';
 const localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 const wakeLockAvailable = 'wakeLock' in navigator; // Test for Screen Wake Lock API
+const notificationsAvailable = 'Notification' in window; // Test for Notifications API
+let allowNotifications = notificationsAvailable;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
 
@@ -162,7 +169,9 @@ document.body.onload = async function(): Promise<void> {
 
   if (localStorageAvailable) {
     loadSettingsStorage();
-  } 
+  } else {
+    console.error('Browser does not support local storage. OOF, it must be ancient. Dude, update your browser. For real.');
+  }
 
   if (navigator.serviceWorker) { // Add service worker for PWA
     const reg = await navigator.serviceWorker.register('/service-worker.js'); // Onload async because of this... good? hmmm.
@@ -171,7 +180,8 @@ document.body.onload = async function(): Promise<void> {
       reg.addEventListener('updatefound', () => {
         if (firstInstall) return; // "Update" will always be installed on first load (service worker installation)
 
-        new Notification('updateInstalled'); //popupNotification('update-installed');
+        new ToastNotification('updateInstalled'); //popupNotification('update-installed');
+        launchSysNotification('New Update!', 'An update has been installed and will be applied once you reload Gamma MCA.');
       });
     }
   }
@@ -243,7 +253,9 @@ document.body.onload = async function(): Promise<void> {
 
   if (localStorageAvailable) {
     if (loadJSON('lastVisit') <= 0) {
-      new Notification('welcomeMessage'); //popupNotification('welcome-msg');
+      new ToastNotification('welcomeMessage'); //popupNotification('welcome-msg');
+      if (notificationsAvailable) legacyPopupNotification('ask-notifications'); // Show notifications notification on first visit
+
       firstInstall = true;
     }
 
@@ -276,7 +288,7 @@ document.body.onload = async function(): Promise<void> {
   } else {
     const settingsSaveAlert = document.getElementById('ls-available')!; // Remove saving alert
     settingsSaveAlert.parentNode!.removeChild(settingsSaveAlert);
-    new Notification('welcomeMessage'); //popupNotification('welcome-msg');
+    new ToastNotification('welcomeMessage'); //popupNotification('welcome-msg');
   }
 
   loadSettingsDefault();
@@ -323,6 +335,13 @@ document.body.onload = async function(): Promise<void> {
       sortTableByColumn(isoTable, columnIndex, isoTableSortDirections[columnIndex]); // Actually sort the table rows
     });
   });
+
+  // Activate notification button if the Notifications API is supported by the browser
+  if (notificationsAvailable) {
+    (<HTMLInputElement>document.getElementById('notifications-toggle')).disabled = false;
+  } else {
+    console.error('Browser does not support Notifications API.');
+  }
 
   const loadingOverlay = document.getElementById('loading')!;
   loadingOverlay.parentNode!.removeChild(loadingOverlay); // Delete Loading Thingymajig
@@ -406,6 +425,7 @@ window.addEventListener('onappinstalled', (): void => {
   document.getElementById('manual-install')!.classList.add('d-none');
 });
 
+
 /*
 document.onkeydown = async function(event) {
   console.log(event.keyCode);
@@ -419,6 +439,35 @@ document.onkeydown = async function(event) {
   }
 };
 */
+
+
+document.getElementById('notifications-toggle')!.onclick = event => toggleNotifications((<HTMLInputElement>event.target).checked);
+document.getElementById('notifications-toast-btn')!.onclick = () => toggleNotifications(true);
+
+function toggleNotifications(toggle: boolean): void {
+  allowNotifications = toggle;
+
+  if (Notification.permission !== 'granted') {
+    if (allowNotifications) {
+      // Request permission from user to use notifications
+      Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+          launchSysNotification('Success!', 'Notifications for Gamma MCA are now enabled.', true);
+        }
+        allowNotifications = allowNotifications && (permission === 'granted');
+
+        (<HTMLInputElement>document.getElementById('notifications-toggle')).checked = allowNotifications;
+        const result = saveJSON('allowNotifications', allowNotifications);
+        new ToastNotification(result ? 'settingSuccess' : 'settingError'); // Success or error toast
+      });
+    }
+  }
+  
+  hideNotification('ask-notifications');
+  (<HTMLInputElement>document.getElementById('notifications-toggle')).checked = allowNotifications;
+  const result = saveJSON('allowNotifications', allowNotifications);
+  new ToastNotification(result ? 'settingSuccess' : 'settingError'); // Success or error toast
+}
 
 
 document.getElementById('data')!.onclick = event => clickFileInput(event, false);
@@ -545,7 +594,7 @@ function getFileData(file: File, background = false): void { // Gets called when
           if (meta.backgroundMt) spectrumData.backgroundCps = spectrumData.background.map(val => val / meta.backgroundMt);
 
         } else if (!espectrum?.length && !bgspectrum?.length) { // No spectrum
-          new Notification('fileError'); //popupNotification('file-error');
+          new ToastNotification('fileError'); //popupNotification('file-error');
         } else { // Only one spectrum
           const fileData = espectrum?.length ? espectrum : bgspectrum;
           const fileDataTime = (espectrum?.length ? meta.dataMt : meta.backgroundMt)*1000;
@@ -576,11 +625,23 @@ function getFileData(file: File, background = false): void { // Gets called when
       } else {
         console.error('No DOM parser in this browser!');
       }
-    } else if (fileEnding.toLowerCase() === 'json') { // THIS SECTION MAKES EVERYTHING ASYNC!!!
-      const importData = await raw.jsonToObject(result);
+    } else if (fileEnding.toLowerCase() === 'json') { // THIS SECTION MAKES EVERYTHING ASYNC DUE TO THE JSON THING!!!
+      const jsonData = await raw.jsonToObject(result);
+      // TODO: Implement GUI to let the user select a specific spectrum from the NPESv2 data array
+      const importData = jsonData[0]; // Workaround until there is GUI, just select the first data package. Also keeps compat with NPESv1.
 
-      if (!importData) { // Data does not validate the schema
-        new Notification('npesError'); //popupNotification('npes-error');
+      if ('code' in importData && 'description' in importData) { // There was some error and the error object got passed instead of some useable data
+        //new ToastNotification('npesError'); //popupNotification('npes-error');
+        // Pop up modal with more error information instead of just toast with oopsy
+        const importErrorModalElement = document.getElementById('importErrorModal')
+        const fileImportErrorModal = new (<any>window).bootstrap.Modal(importErrorModalElement);
+
+        // Change content according to error
+        document.getElementById('error-filename')!.innerText = file.name;
+        document.getElementById('error-code')!.innerText = importData.code;
+        document.getElementById('error-desc')!.innerText = importData.description;
+
+        fileImportErrorModal.show();
         return;
       }
 
@@ -670,7 +731,7 @@ function getFileData(file: File, background = false): void { // Gets called when
       Error Msg Problem with RAW Stream selection?
     */
     if (spectrumData.background.length !== spectrumData.data.length && spectrumData.data.length && spectrumData.background.length) {
-      new Notification('dataError'); //popupNotification('data-error');
+      new ToastNotification('dataError'); //popupNotification('data-error');
       removeFile(background ? 'background' : 'data'); // Remove file again
     }
 
@@ -679,7 +740,7 @@ function getFileData(file: File, background = false): void { // Gets called when
   };
 
   reader.onerror = () => {
-    new Notification('fileError'); //popupNotification('file-error');
+    new ToastNotification('fileError'); //popupNotification('file-error');
     return;
   };
 }
@@ -801,7 +862,7 @@ document.getElementById('smaVal')!.oninput = event => changeSma(<HTMLInputElemen
 function changeSma(input: HTMLInputElement): void {
   const parsedInput = parseInt(input.value);
   if (isNaN(parsedInput)) {
-    new Notification('smaError'); //popupNotification('sma-error');
+    new ToastNotification('smaError'); //popupNotification('sma-error');
   } else {
     plot.smaLength = parsedInput;
     plot.updatePlot(spectrumData);
@@ -968,7 +1029,7 @@ async function toggleCal(enabled: boolean): Promise<void> {
           validArray.push([float1, float2]);
         }
         if (invalid > 1) {
-          new Notification('calibrationApplyError'); //popupNotification('cal-error');
+          new ToastNotification('calibrationApplyError'); //popupNotification('cal-error');
 
           const checkbox = <HTMLInputElement>document.getElementById('apply-cal');
           checkbox.checked = false;
@@ -1122,12 +1183,12 @@ function importCal(file: File): void {
 
     } catch(e) {
       console.error('Calibration Import Error:', e);
-      new Notification('calibrationImportError'); //popupNotification('cal-import-error');
+      new ToastNotification('calibrationImportError'); //popupNotification('cal-import-error');
     }
   };
 
   reader.onerror = () => {
-    new Notification('fileError'); //popupNotification('file-error');
+    new ToastNotification('fileError'); //popupNotification('file-error');
     return;
   };
 }
@@ -1456,7 +1517,7 @@ function generateNPES(): string | undefined {
 
   // Additionally validate the JSON Schema?
   if (!data.resultData.energySpectrum && !data.resultData.backgroundEnergySpectrum) {
-    //new Notification('fileEmptyError'); //popupNotification('file-empty-error');
+    //new ToastNotification('fileEmptyError'); //popupNotification('file-empty-error');
     return undefined;
   }
 
@@ -1481,7 +1542,7 @@ document.getElementById('overwrite-button')!.onclick = () => overwriteFile();
 
 async function overwriteFile(): Promise<void> {
   if (dataFileHandle && backgroundFileHandle) {
-    new Notification('saveMultipleAtOnce');
+    new ToastNotification('saveMultipleAtOnce');
     return;
   }
 
@@ -1504,14 +1565,14 @@ async function overwriteFile(): Promise<void> {
   }
 
   if (!content?.trim()) { // Check empty string
-    new Notification('fileEmptyError'); //popupNotification('file-empty-error');
+    new ToastNotification('fileEmptyError'); //popupNotification('file-empty-error');
     return;
   }
 
   await writable.write(content); // Write the contents of the file to the stream.
   await writable.close(); // Close the file and write the contents to disk.
 
-  new Notification('saveFile');
+  new ToastNotification('saveFile');
 }
 
 
@@ -1544,7 +1605,7 @@ const saveFileTypes: SaveTypeList = {
 
 async function download(filename: string, text: string | undefined, type: DownloadType): Promise<void> {
   if (!text?.trim()) { // Check empty string
-    new Notification('fileEmptyError'); //popupNotification('file-empty-error');
+    new ToastNotification('fileEmptyError'); //popupNotification('file-empty-error');
     return;
   }
 
@@ -1575,7 +1636,7 @@ async function download(filename: string, text: string | undefined, type: Downlo
     await writableStream.write(text); // Write our file
     await writableStream.close(); // Close the file and write the contents to disk.
 
-    new Notification('saveFile');
+    new ToastNotification('saveFile');
   } else { // Fallback old download-only method
     const element = document.createElement('a');
     element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
@@ -1677,11 +1738,6 @@ async function loadIsotopes(reload = false): Promise<boolean> { // Load Isotope 
         let index = 0; // Index used to avoid HTML id duplicates
 
         const lowercaseName = key.toLowerCase().replace(/[^a-z0-9 -]/gi, '').trim(); // Fixes security issue. Clean everything except for letters, numbers and minus. See GitHub: #2
-        /*
-        if ('toWellFormed' in String.prototype) { // Use new String.prototype.toWellFormed() method too if available
-          lowercaseName = lowercaseName.toWellFormed();
-        }
-        */
         const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1); // Capitalize Name
 
         for (const energy of energyArr) {
@@ -1914,6 +1970,10 @@ function bindInputs(): void {
 
 
 function loadSettingsDefault(): void {
+  if (notificationsAvailable) {
+    (<HTMLInputElement>document.getElementById('notifications-toggle')).checked = allowNotifications && (Notification.permission === 'granted');
+  }
+  
   (<HTMLInputElement>document.getElementById('custom-url')).value = isoListURL;
   (<HTMLInputElement>document.getElementById('edit-plot')).checked = plot.editableMode;
   (<HTMLInputElement>document.getElementById('custom-delimiter')).value = raw.delimiter;
@@ -1960,7 +2020,10 @@ function loadSettingsDefault(): void {
 
 
 function loadSettingsStorage(): void {
-  let setting = loadJSON('customURL');
+  let setting = loadJSON('allowNotifications');
+  if (notificationsAvailable && setting !== null) allowNotifications = setting && (Notification.permission === 'granted');
+
+  setting = loadJSON('customURL');
   if (setting) isoListURL = new URL(setting).href;
 
   setting = loadJSON('editMode');
@@ -2032,7 +2095,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
   let result = false;
 
   if (!element.checkValidity() || !stringValue) {
-    new Notification('settingType'); //popupNotification('setting-type');
+    new ToastNotification('settingType'); //popupNotification('setting-type');
     return;
   }
 
@@ -2048,6 +2111,14 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
     }
     case 'customURL': {
       try {
+        /*
+        // Currently not yet supported in this TS version
+        // Use new String.prototype.toWellFormed() method if available to sanitize any ill-formed strings
+        let tmpStringCopy = stringValue;
+        if ('toWellFormed' in String.prototype) {
+          tmpStringCopy = tmpStringCopy.toWellFormed();
+        }
+        */
         isoListURL = new URL(stringValue).href;
 
         loadIsotopes(true);
@@ -2055,7 +2126,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
         result = saveJSON(name, isoListURL);
 
       } catch(e) {
-        new Notification('settingError'); //popupNotification('setting-error');
+        new ToastNotification('settingError'); //popupNotification('setting-error');
         console.error('Custom URL Error', e);
       }
       break;
@@ -2207,12 +2278,12 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       break;
     }
     default: {
-      new Notification('settingError'); //popupNotification('setting-error');
+      new ToastNotification('settingError'); //popupNotification('setting-error');
       return;
     }
   }
 
-  if (result) new Notification('settingSuccess'); //popupNotification('setting-success'); // Success Toast
+  if (result) new ToastNotification('settingSuccess'); //popupNotification('setting-success'); // Success Toast
 }
 
 
@@ -2244,7 +2315,7 @@ function selectSerialType(button: HTMLInputElement): void {
 
 function serialConnect(/*event: Event*/): void {
   listSerial();
-  new Notification('serialConnect'); //popupNotification('serial-connect');
+  new ToastNotification('serialConnect'); //popupNotification('serial-connect');
 }
 
 
@@ -2253,7 +2324,7 @@ function serialDisconnect(event: Event): void {
 
   listSerial();
 
-  new Notification('serialDisconnect'); //popupNotification('serial-disconnect');
+  new ToastNotification('serialDisconnect'); //popupNotification('serial-disconnect');
 }
 
 
@@ -2361,7 +2432,7 @@ async function startRecord(pause = false, type: DataType): Promise<void> {
     await serRecorder?.startRecord(pause);
   } catch(err) {
     console.error('Connection Error:', err);
-    new Notification('serialConnectError'); //popupNotification('serial-connect-error');
+    new ToastNotification('serialConnectError'); //popupNotification('serial-connect-error');
     return;
   }
 
@@ -2448,7 +2519,8 @@ async function disconnectPort(stop = false): Promise<void> {
   } catch(error) {
     // Sudden device disconnect can cause this
     console.error('Misc Serial Read Error:', error);
-    new Notification('miscSerialError'); //popupNotification('misc-ser-error');
+    new ToastNotification('miscSerialError'); //popupNotification('misc-ser-error');
+    launchSysNotification('Recording Crashed!', 'A fatal error occured with the connected serial device and the recording has stopped.');
   }
 }
 
@@ -2474,11 +2546,11 @@ document.getElementById('serialConsoleModal')!.addEventListener('hide.bs.modal',
 async function readSerial(): Promise<void> {
   try {
     const portNumber = selectPort();
-    document.getElementById('serial-console-title')!.innerText = `Serial Console (Port ${portNumber})`;
+    document.getElementById('serial-console-title')!.innerText = `(Port ${portNumber})`;
     await serRecorder?.showConsole();
   } catch(err) {
     console.error('Connection Error:', err);
-    new Notification('serialConnectError'); //popupNotification('serial-connect-error');
+    new ToastNotification('serialConnectError'); //popupNotification('serial-connect-error');
     return;
   }
 
@@ -2494,7 +2566,7 @@ async function sendSerial(): Promise<void> {
     await serRecorder?.sendString(element.value);
   } catch (err) {
     console.error('Connection Error:', err);
-    new Notification('serialConnectError'); //popupNotification('serial-connect-error');
+    new ToastNotification('serialConnectError'); //popupNotification('serial-connect-error');
     return;
   }
 
@@ -2573,7 +2645,8 @@ function refreshMeta(type: DataType): void {
 
     if (delta.getTime() >= maxRecTime && maxRecTimeEnabled) {
       disconnectPort(true);
-      new Notification('autoStop'); //popupNotification('auto-stop');
+      new ToastNotification('autoStop'); //popupNotification('auto-stop');
+      launchSysNotification('Recording Stopped!', 'Your desired recording time has expired and the recording has automatically stopped.');
     } else {
       const finishDelta = performance.now() - nowTime;
       metaTimeout = setTimeout(refreshMeta, (REFRESH_META_TIME - finishDelta > 0) ? (REFRESH_META_TIME - finishDelta) : 1, type); // Only re-schedule if still available
@@ -2632,7 +2705,7 @@ function refreshRender(type: DataType, firstLoad = false): void {
     const mean = cpsValues.reduce((acc, curr) => acc+curr, 0) / cpsValues.length;
     const std = Math.sqrt(cpsValues.reduce((acc, curr) => acc + (curr - mean)**2, 0) / (cpsValues.length - 1));
 
-    document.getElementById('avg-cps')!.innerHTML = 'Avg: ' + mean.toFixed(1);
+    document.getElementById('avg-cps')!.innerText = 'Avg: ' + mean.toFixed(1);
     document.getElementById('avg-cps-std')!.innerHTML = ` &plusmn; ${std.toFixed(1)} cps (&#916; ${Math.round(std/mean*100)}%)`;
 
     updateSpectrumCounts();

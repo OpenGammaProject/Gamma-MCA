@@ -139,7 +139,7 @@
                     #####
                   -->
                   <p>
-                    <label id="data-label" for="data"><strong>Spectrum File:</strong> <i id="data-icon" class="fa-solid fa-circle-check align-baseline text-primary d-none fa-beat file-import-success"></i></label>
+                    <label id="data-label" for="data"><strong>Spectrum File:</strong> <i id="data-icon" class="fa-solid fa-circle-check align-baseline text-primary d-none fa-beat animation-very-slow"></i></label>
                   </p>
 
                   <div class="input-group input-group-sm">
@@ -153,7 +153,7 @@
                   <br>
 
                   <p>
-                    <label id="background-label" for="background"><strong>Background File:</strong> <i id="background-icon" class="fa-solid fa-circle-check align-baseline text-primary d-none fa-beat file-import-success"></i></label>
+                    <label id="background-label" for="background"><strong>Background File:</strong> <i id="background-icon" class="fa-solid fa-circle-check align-baseline text-primary d-none fa-beat animation-very-slow"></i></label>
                   </p>
 
                   <div class="input-group input-group-sm">
@@ -168,11 +168,11 @@
 
                   <p>
                     <button class="btn btn-primary btn-sm" id="export-button" type="button" data-bs-toggle="modal" data-bs-target="#exportModal" title="Save file as ...">
-                      <i class="fas fa-file-export"></i> Save As
+                      <i class="fa-solid fa-download"></i> Save As
                     </button>
 
                     <button class="btn btn-primary btn-sm" id="overwrite-button" type="button" title="Save file: Overwrite file(s)!" disabled>
-                      <i class="fas fa-file-export"></i> Save
+                      <i class="fa-solid fa-floppy-disk"></i> Save
                     </button>
                   </p>
 
@@ -663,7 +663,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h3 class="modal-title h4">Record Spectrum</h3>
+            <h3 class="modal-title h4"><i class="fas fa-play me-2 fa-beat-fade animation-very-slow"></i>Record Spectrum</h3>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -684,7 +684,7 @@
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h3 class="modal-title h4">Save File</h3>
+            <h3 class="modal-title h4"><i class="fa-solid fa-download me-2 fa-beat-fade animation-very-slow"></i>Save File</h3>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -707,7 +707,7 @@
       <div class="modal-dialog modal-dialog-scrollable modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h3 id="serial-console-title" class="modal-title h4 flex-fill">Serial Console</h3>
+            <h3 class="modal-title h4 flex-fill">Serial Console <span id="serial-console-title"></span></h3>
 
             <div class="g-1 pe-2">
               <input type="checkbox" class="btn-check" id="autoscroll-console">
@@ -740,6 +740,32 @@
         </div>
       </div>
     </div>
+
+    <!-- File Import Error Modal -->
+    <div class="modal fade" id="importErrorModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="importErrorModal" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title h4"><i class="fas fa-exclamation-triangle fa-shake me-2 animation-very-slow"></i>Import Error</h3>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>An error occured when trying to import the following file:</strong></p>
+            <div class="alert alert-danger" role="alert">
+              <p><strong><code id="error-filename"></code></strong></p>
+              <p><strong>ERROR CODE: </strong><span id="error-code">ERROR_CODE</span></p>
+              <p id="error-desc">File does not import.</p>
+            </div>
+            <p>There probably is an error with the file formatting. Either it is not valid JSON, or it does not comply with the NPES formatting schema. If the file was generated using a different program, please contact the developers <i class="fa-regular fa-face-smile"></i></p>
+            <p>For more information about the schema, please head to <a title="GitHub/NPES-JSON" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="https://github.com/OpenGammaProject/NPES-JSON" target="_blank">NPES-JSON</a>.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Close </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
     <!--
 
       BOOTSTRAP OFFCANVAS FOR SETTINGS, INFO AND ISOTOPE VIEWER
@@ -829,6 +855,12 @@
                       </select>
                     </div>
                     <p><small>Select a theme for Gamma MCA. <code>System</code> will automatically use your system theme.</small></p>
+
+                    <div class="form-check form-switch">
+                      <input class="form-check-input" type="checkbox" role="switch" id="notifications-toggle" disabled>
+                      <label class="form-check-label" for="notifications-toggle">Enable Notifications</label>
+                    </div>
+                    <p><small>Enable system notifications for serial events and similar (only if the window is not focused).</small></p>
 
                   </div>
                 </div>
@@ -1078,15 +1110,30 @@
       
       <div id="pwa-installer" class="toast text-bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
         <div class="toast-header">
-          <i class="fa-solid fa-download me-2"></i>
+          <i class="fa-solid fa-download me-2 fa-beat animation-slow"></i>
           <strong class="me-auto">Install App?</strong>
           <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
         <div class="toast-body">
-          <p>Gamma MCA is a progressive web app! You can install it to use Gamma MCA standalone and offline like any native program.</p>
-          <p>Do you want to install?</p>
+          <p>Gamma MCA is a progressive web app. You can install it for offline use and quick access like any other native program.</p>
           <div class="mt-2 pt-2 border-top">
             <button type="button" class="btn btn-light btn-sm" id="install-pwa-toast-btn" title="Install Gamma MCA">Install</button>
+            <button type="button" class="btn btn-primary btn-sm" title="Dismiss" data-bs-dismiss="toast">No</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="ask-notifications" class="toast text-bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+        <div class="toast-header">
+          <i class="fa-regular fa-bell fa-shake animation-slow me-2"></i>
+          <strong class="me-auto">Enable Notifications?</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          <p>System notifications will show up for serial recording events and on a few other occasions.</p>
+          <p>You can always enable or disable them again in the settings.</p>
+          <div class="mt-2 pt-2 border-top">
+            <button type="button" class="btn btn-light btn-sm" id="notifications-toast-btn" title="Enable notifications">Enable</button>
             <button type="button" class="btn btn-primary btn-sm" title="Dismiss" data-bs-dismiss="toast">No</button>
           </div>
         </div>

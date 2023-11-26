@@ -5,8 +5,14 @@ export class RawData {
     adcChannels = 4096;
     fileType;
     tempValIndex;
-    schemaURL = '/assets/npes-1.schema.json';
-    jsonSchema;
+    schemaURLTable = {
+        NPESv1: '/assets/npes-1.schema.json',
+        NPESv2: '/assets/npes-2.schema.json'
+    };
+    schemaJSON = {
+        NPESv1: undefined,
+        NPESv2: undefined
+    };
     constructor(valueIndex, delimiter = ',') {
         this.valueIndex = valueIndex;
         this.delimiter = delimiter;
@@ -113,31 +119,58 @@ export class RawData {
         }
         catch (e) {
             console.error(e);
-            return false;
+            return [{ code: 'JSON_PARSE_ERROR', description: `A problem with the JSON formatting occured when trying to parse the contents of the file: ${e}` }];
+        }
+        let version;
+        try {
+            if (json.schemaVersion === 'NPESv1' || json.schemaVersion === 'NPESv2') {
+                version = json.schemaVersion;
+            }
+            else {
+                throw `schemaVersion is neither NPESv1 nor NPESv2, but ${json.schemaVersion}!`;
+            }
+        }
+        catch (e) {
+            console.error(e);
+            return [{ code: 'NPES_VERSION_ERROR', description: `An error occured when trying to parse the schema version: ${e}` }];
         }
         try {
-            if (!this.jsonSchema) {
-                const response = await fetch(this.schemaURL);
+            if (!this.schemaJSON[version]) {
+                const response = await fetch(this.schemaURLTable[version]);
                 if (response.ok) {
                     const schema = await response.json();
                     delete schema['$schema'];
-                    this.jsonSchema = schema;
+                    this.schemaJSON[version] = schema;
                 }
                 else {
                     throw 'Could not load the schema file!';
                 }
             }
             const validator = new window.ZSchema();
-            validator.validate(json, this.jsonSchema);
+            validator.validate(json, this.schemaJSON[version]);
             const errors = validator.getLastErrors();
-            if (errors)
-                throw errors;
-            return json;
+            if (errors) {
+                const errorMessages = [];
+                for (const error of errors) {
+                    errorMessages.push({
+                        'code': error.code,
+                        'description': error.message
+                    });
+                }
+                console.error(errorMessages);
+                return errorMessages;
+            }
+            if (version === 'NPESv1') {
+                return [json];
+            }
+            else {
+                return json.data;
+            }
         }
         catch (e) {
             console.error(e);
+            return [{ code: 'UNDEFINED_ERROR', description: `Some undefined error occured: ${e}` }];
         }
-        return false;
     }
 }
 //# sourceMappingURL=raw-data.js.map
