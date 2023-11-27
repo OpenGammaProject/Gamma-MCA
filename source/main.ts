@@ -21,9 +21,11 @@
 
     - Automatically close system notifications when the user interacts with the page again
     - Add pulse limit analog to time limit for serial recordings
-    - Optional real-time file saving to help with long recordings and crashes via some temp files
+    - Optional real-time file saving to help with long recordings that might crash (create some temp files)
     - Calibration n-polynomial regression
-    - Launch notifications if window is not focused
+    - Optional efficiency compensation using the background spectrum
+    - Analysis report generator (print via window.open(), print.html, window.print())
+    - Remove "Menu" and "Information" headers
 
     - Add GUI to let user select a specific spectrum from all NPESv2 data packages + let user remove data packages from file in the same context
     - Save new JSON files with NPESv2 formatting!
