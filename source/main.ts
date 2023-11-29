@@ -12,18 +12,15 @@
     - Remove all any types
 
   Possible Future Improvements:
+    - (?) Hist mode: First cps value is always zero?
+    - (?) Highlight plot lines in ROI selection
+    - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with a (right-)click
+    - (?) Add pulse limit analog to time limit for serial recordings
     - (?) Dead time correction for cps
     - (?) Hotkeys
-    - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with one click
-    - (?) Highlight plot lines in ROI selection
-    - (?) Hist mode: First cps value is always zero?!
-    - (?) Check if String.prototype.toWellFormed() yet available to implement
 
     - Automatically close system notifications when the user interacts with the page again
-    - Add pulse limit analog to time limit for serial recordings
     - Optional real-time file saving to help with long recordings that might crash (create some temp files)
-    - Calibration n-polynomial regression
-    - Optional efficiency compensation using the background spectrum
     - Analysis report generator (print via window.open(), print.html, window.print())
     - Remove "Menu" and "Information" headers
 
