@@ -19,15 +19,14 @@
     - (?) Dead time correction for cps
     - (?) Hotkeys
 
+    - NPESv2: Let user remove data packages from file in the import selection dialog
+    - NPESv2: Create additional save (append) button that allows users to save multiple data packages in one file
     - Automatically close system notifications when the user interacts with the page again
     - Optional real-time file saving to help with long recordings that might crash (create some temp files)
     - Analysis report generator (print via window.open(), print.html, window.print())
 
-    - Add GUI to let user select a specific spectrum from all NPESv2 data packages + let user remove data packages from file in the same context
-    - Save new JSON files with NPESv2 formatting!
-      * "Save As" button keeps creating new files with the current data, just change the formatting to NPESv2
-      * "Save" button will become the "Overwrite" button that keeps the file but only saves the current data in NPESv2 formatting to it
-      * New "Save" button that will append or update a single data package and keep all the other data in the file untouched
+    - Fix different casings in HTML
+    - Save and Save As Buttons should save in NPESv2 for JSON exports
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -39,7 +38,7 @@
 */
 
 import { SpectrumPlot, SeekClosest, DownloadFormat, CalculateFWHM } from './plot.js';
-import { RawData, NPESv1, NPESv1Spectrum } from './raw-data.js';
+import { RawData, NPESv1, NPESv1Spectrum, JSONParseError } from './raw-data.js';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
 import { WebUSBSerialPort } from './external/webusbserial-min.js'
 import { ToastNotification, launchSysNotification } from './notifications.js';
@@ -51,6 +50,12 @@ export interface IsotopeList {
 
 export interface SaveTypeList {
   [key: string]: FilePickerAcceptType;
+}
+
+interface FileSelectData {
+  'filename': string,
+  'package': NPESv1;
+  'background': boolean;
 }
 
 export type DataOrder = 'hist' | 'chron';
@@ -555,15 +560,20 @@ function getFileData(file: File, background = false): void { // Gets called when
 
   const fileEnding = file.name.split('.')[1];
 
-  document.getElementById(`${background ? 'background' : 'data'}-form-label`)!.innerText = file.name; // Set file name
-
   reader.readAsText(file);
+
+  reader.onerror = () => {
+    new ToastNotification('fileError'); //popupNotification('file-error');
+    return;
+  };
 
   reader.onload = async () => {
     const result = (<string>reader.result).trim(); // A bit unclean for typescript, I'm sorry
 
     if (fileEnding.toLowerCase() === 'xml') {
       if (window.DOMParser) {
+        // Only grabs the first spectrum if there are multiple
+        // Use JSON (NPES) if you want to have the option to select the spectrum to show
         const {espectrum, bgspectrum, coeff, meta} = raw.xmlToArray(result);
 
         (<HTMLInputElement>document.getElementById('sample-name')).value = meta.name;
@@ -626,94 +636,42 @@ function getFileData(file: File, background = false): void { // Gets called when
       }
     } else if (fileEnding.toLowerCase() === 'json') { // THIS SECTION MAKES EVERYTHING ASYNC DUE TO THE JSON THING!!!
       const jsonData = await raw.jsonToObject(result);
-      // TODO: Implement GUI to let the user select a specific spectrum from the NPESv2 data array
-      const importData = jsonData[0]; // Workaround until there is GUI, just select the first data package. Also keeps compat with NPESv1.
 
-      if ('code' in importData && 'description' in importData) { // There was some error and the error object got passed instead of some useable data
-        //new ToastNotification('npesError'); //popupNotification('npes-error');
-        // Pop up modal with more error information instead of just toast with oopsy
-        const importErrorModalElement = document.getElementById('importErrorModal')
-        const fileImportErrorModal = new (<any>window).bootstrap.Modal(importErrorModalElement);
+      // Check if multiple files/errors were imported
+      if (jsonData.length > 1) {
+        const fileSelectModalElement = document.getElementById('fileSelectModal');
+        const fileSelectModal = new (<any>window).bootstrap.Modal(fileSelectModalElement);
+        const selectElement = (<HTMLSelectElement>document.getElementById('select-spectrum'));
 
-        // Change content according to error
-        document.getElementById('error-filename')!.innerText = file.name;
-        document.getElementById('error-code')!.innerText = importData.code;
-        document.getElementById('error-desc')!.innerText = importData.description;
+        // Delete all previous options
+        selectElement.options.length = 0;
 
-        fileImportErrorModal.show();
-        return;
-      }
+        // Fill with all the info and check for errors at the same time
+        for (const dataPackage of jsonData) {
+          // Check if there are any error packages
+          if (checkJSONImportError(file.name, dataPackage)) return;
 
-      (<HTMLInputElement>document.getElementById('device-name')).value = importData?.deviceData?.deviceName ?? '';
-      (<HTMLInputElement>document.getElementById('sample-name')).value = importData?.sampleInfo?.name ?? '';
-      (<HTMLInputElement>document.getElementById('sample-loc')).value = importData?.sampleInfo?.location ?? '';
+          const opt = document.createElement('option');
+          const optionValue: FileSelectData = {
+            'filename': file.name,
+            'package': <NPESv1>dataPackage,
+            'background': background
+          };
 
-      if (importData.sampleInfo?.time) {
-        const date = new Date(importData.sampleInfo.time);
-        const rightDate = new Date(date.getTime() - date.getTimezoneOffset()*60*1000);
-
-        (<HTMLInputElement>document.getElementById('sample-time')).value = rightDate.toISOString().slice(0,16);
-      }
-
-      (<HTMLInputElement>document.getElementById('sample-weight')).value = importData.sampleInfo?.weight?.toString() ?? '';
-      (<HTMLInputElement>document.getElementById('sample-vol')).value = importData.sampleInfo?.volume?.toString() ?? '';
-      (<HTMLInputElement>document.getElementById('add-notes')).value = importData.sampleInfo?.note ?? '';
-
-      const resultData = importData.resultData;
-
-      if (resultData.startTime && resultData.endTime) {
-        startDate = new Date(resultData.startTime);
-        endDate = new Date(resultData.endTime);
-      }
-
-      const espectrum = resultData.energySpectrum;
-      const bgspectrum = resultData.backgroundEnergySpectrum;
-      if (espectrum && bgspectrum) { // Both files ok
-        spectrumData.data = espectrum.spectrum;
-        spectrumData.background = bgspectrum.spectrum;
-
-        const eMeasurementTime = espectrum.measurementTime;
-        if (eMeasurementTime) {
-          spectrumData.dataTime = eMeasurementTime * 1000;
-          spectrumData.dataCps = spectrumData.data.map(val => val / eMeasurementTime);
+          opt.value = JSON.stringify(optionValue);
+          opt.text = `${(<NPESv1>dataPackage).sampleInfo?.name} (${(<NPESv1>dataPackage).resultData.startTime ?? 'Undefined Time'})`;
+          selectElement.add(opt);
         }
-        const bgMeasurementTime = bgspectrum.measurementTime;
-        if (bgMeasurementTime) {
-          spectrumData.backgroundTime = bgMeasurementTime * 1000;
-          spectrumData.backgroundCps = spectrumData.background.map(val => val / bgMeasurementTime);
-        }
-      } else { // Only one spectrum
-        const dataObj = espectrum ?? bgspectrum;
-        const fileData = dataObj?.spectrum ?? [];
-        const fileDataTime = (dataObj?.measurementTime ?? 1) * 1000;
-        const fileDataType = background ? 'background' : 'data';
 
-        spectrumData[fileDataType] = fileData;
-        spectrumData[`${fileDataType}Time`] = fileDataTime;
-        
-        if (fileDataTime) spectrumData[`${fileDataType}Cps`] = spectrumData[fileDataType].map(val => val / fileDataTime * 1000);
-      }
+        fileSelectModal.show();
+        return; // Nothing else to do, continue doing stuff only when the user has finished interacting with the modal
+      } else {
+        const importData = jsonData[0]; // Select first element to probe for errors
 
-      const calDataObj = (espectrum ?? bgspectrum)?.energyCalibration; // Grab calibration preferably from energy spectrum
+        // Check if it's an error
+        if (checkJSONImportError(file.name, importData)) return;
 
-      if (calDataObj) {
-        const coeffArray: number[] = calDataObj.coefficients;
-        const numCoeff: number = calDataObj.polynomialOrder;
-
-        resetCal(); // Reset in case of old calibration
-
-        for (const index in coeffArray) {
-          plot.calibration.coeff[`c${numCoeff-parseInt(index)+1}`] = coeffArray[index];
-        }
-        plot.calibration.imported = true;
-        displayCoeffs();
-
-        const calSettings = document.getElementsByClassName('cal-setting');
-        for (const element of calSettings) {
-          (<HTMLInputElement>element).disabled = true;
-        }
-        addImportLabel();
-        toggleCal(true);
+        npesFileImport(file.name, <NPESv1>importData, background);
       }
     } else if (background) {
       spectrumData.backgroundTime = 1000;
@@ -723,26 +681,153 @@ function getFileData(file: File, background = false): void { // Gets called when
       spectrumData.data = raw.csvToArray(result);
     }
 
-    updateSpectrumCounts();
-    updateSpectrumTime();
-
-    /*
-      Error Msg Problem with RAW Stream selection?
-    */
-    if (spectrumData.background.length !== spectrumData.data.length && spectrumData.data.length && spectrumData.background.length) {
-      new ToastNotification('dataError'); //popupNotification('data-error');
-      removeFile(background ? 'background' : 'data'); // Remove file again
-    }
-
-    plot.resetPlot(spectrumData);
-    bindPlotEvents();
-  };
-
-  reader.onerror = () => {
-    new ToastNotification('fileError'); //popupNotification('file-error');
-    return;
+    finalizeFileImport(file.name, background);
   };
 }
+
+
+function checkJSONImportError(filename: string, data: NPESv1 | JSONParseError): boolean {
+  if ('code' in data && 'description' in data) {
+    //new ToastNotification('npesError'); //popupNotification('npes-error');
+    // Pop up modal with more error information instead of just toast with oopsy
+    const importErrorModalElement = document.getElementById('importErrorModal');
+    const fileImportErrorModal = new (<any>window).bootstrap.Modal(importErrorModalElement);
+
+    // Change content according to error
+    document.getElementById('error-filename')!.innerText = filename;
+    document.getElementById('error-code')!.innerText = data.code;
+    document.getElementById('error-desc')!.innerText = data.description;
+
+    fileImportErrorModal.show();
+    return true;
+  }
+
+  return false;
+}
+
+
+function npesFileImport(filename: string, importData: NPESv1, background: boolean): void {
+  // Import all the data from a JSON spectrum file to the active program
+  (<HTMLInputElement>document.getElementById('device-name')).value = importData?.deviceData?.deviceName ?? '';
+  (<HTMLInputElement>document.getElementById('sample-name')).value = importData?.sampleInfo?.name ?? '';
+  (<HTMLInputElement>document.getElementById('sample-loc')).value = importData?.sampleInfo?.location ?? '';
+
+  if (importData.sampleInfo?.time) {
+    const date = new Date(importData.sampleInfo.time);
+    const rightDate = new Date(date.getTime() - date.getTimezoneOffset()*60*1000);
+
+    (<HTMLInputElement>document.getElementById('sample-time')).value = rightDate.toISOString().slice(0,16);
+  }
+
+  (<HTMLInputElement>document.getElementById('sample-weight')).value = importData.sampleInfo?.weight?.toString() ?? '';
+  (<HTMLInputElement>document.getElementById('sample-vol')).value = importData.sampleInfo?.volume?.toString() ?? '';
+  (<HTMLInputElement>document.getElementById('add-notes')).value = importData.sampleInfo?.note ?? '';
+
+  const resultData = importData.resultData;
+
+  if (resultData.startTime && resultData.endTime) {
+    startDate = new Date(resultData.startTime);
+    endDate = new Date(resultData.endTime);
+  }
+
+  const espectrum = resultData.energySpectrum;
+  const bgspectrum = resultData.backgroundEnergySpectrum;
+  if (espectrum && bgspectrum) { // Both files ok
+    spectrumData.data = espectrum.spectrum;
+    spectrumData.background = bgspectrum.spectrum;
+
+    const eMeasurementTime = espectrum.measurementTime;
+    if (eMeasurementTime) {
+      spectrumData.dataTime = eMeasurementTime * 1000;
+      spectrumData.dataCps = spectrumData.data.map(val => val / eMeasurementTime);
+    }
+    const bgMeasurementTime = bgspectrum.measurementTime;
+    if (bgMeasurementTime) {
+      spectrumData.backgroundTime = bgMeasurementTime * 1000;
+      spectrumData.backgroundCps = spectrumData.background.map(val => val / bgMeasurementTime);
+    }
+  } else { // Only one spectrum
+    const dataObj = espectrum ?? bgspectrum;
+    const fileData = dataObj?.spectrum ?? [];
+    const fileDataTime = (dataObj?.measurementTime ?? 1) * 1000;
+    const fileDataType = background ? 'background' : 'data';
+
+    spectrumData[fileDataType] = fileData;
+    spectrumData[`${fileDataType}Time`] = fileDataTime;
+    
+    if (fileDataTime) spectrumData[`${fileDataType}Cps`] = spectrumData[fileDataType].map(val => val / fileDataTime * 1000);
+  }
+
+  const calDataObj = (espectrum ?? bgspectrum)?.energyCalibration; // Grab calibration preferably from energy spectrum
+
+  if (calDataObj) {
+    const coeffArray: number[] = calDataObj.coefficients;
+    const numCoeff: number = calDataObj.polynomialOrder;
+
+    resetCal(); // Reset in case of old calibration
+
+    for (const index in coeffArray) {
+      plot.calibration.coeff[`c${numCoeff-parseInt(index)+1}`] = coeffArray[index];
+    }
+    plot.calibration.imported = true;
+    displayCoeffs();
+
+    const calSettings = document.getElementsByClassName('cal-setting');
+    for (const element of calSettings) {
+      (<HTMLInputElement>element).disabled = true;
+    }
+    addImportLabel();
+    toggleCal(true);
+  }
+
+  finalizeFileImport(filename, background);
+}
+
+
+function finalizeFileImport(filename: string, background: boolean): void {
+  document.getElementById(`${background ? 'background' : 'data'}-form-label`)!.innerText = filename; // Set file name
+
+  updateSpectrumCounts();
+  updateSpectrumTime();
+
+  /*
+    Error Msg Problem with RAW Stream selection?
+  */
+  if (spectrumData.background.length !== spectrumData.data.length && spectrumData.data.length && spectrumData.background.length) {
+    new ToastNotification('dataError'); //popupNotification('data-error');
+    removeFile(background ? 'background' : 'data'); // Remove file again
+  }
+
+  plot.resetPlot(spectrumData);
+  bindPlotEvents();
+}
+
+
+document.getElementById('spectrum-select-btn')!.onclick = () => getJSONSelectionData();
+
+function getJSONSelectionData(): void {
+  const fileSelectData = <FileSelectData>JSON.parse((<HTMLSelectElement>document.getElementById('select-spectrum')).value);
+
+  npesFileImport(fileSelectData.filename, fileSelectData.package, fileSelectData.background);
+
+  const fileSelectModalElement = document.getElementById('fileSelectModal')!; // Close the modal if the file saving has been successful
+  const closeButton = <HTMLButtonElement>fileSelectModalElement.querySelector('.btn-close'); // Find some close button
+  closeButton.click();
+}
+
+
+/*
+document.getElementById('delete-spectrum')!.onclick = () => deleteJSONSelectionData();
+
+function deleteJSONSelectionData(): void {
+  const selectElement = <HTMLSelectElement>document.getElementById('select-spectrum');
+  const selectedValue = selectElement.value;
+  
+  // Remove from file and save contents
+
+  selectElement.remove(selectElement.selectedIndex);
+}
+*/
 
 
 function sizeCheck(): void {

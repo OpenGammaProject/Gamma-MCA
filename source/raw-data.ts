@@ -13,6 +13,11 @@
 import './external/ZSchema-browser-min.js'; // ZSchema to validate JSON Schemas
 import { CoeffObj } from './plot.js';
 
+export interface JSONParseError {
+  code: string;
+  description: string;
+}
+
 export interface NPESv2 {
   schemaVersion: 'NPESv2';
   data: NPESv1[];
@@ -55,11 +60,6 @@ interface NPESv1SampleInfo {
   weight?: number;
   volume?: number;
   note?: string;
-}
-
-interface JSONParseError {
-  code: string;
-  description: string;
 }
 
 interface XMLImportData {

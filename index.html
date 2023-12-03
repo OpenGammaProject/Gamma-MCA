@@ -761,6 +761,34 @@
         </div>
       </div>
     </div>
+
+    <!-- File Import Spectrum Select Modal -->
+    <div class="modal fade" id="fileSelectModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="fileSelectModal" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title h4"><i class="fa-solid fa-list me-2 fa-beat-fade animation-very-slow"></i>Select Spectrum</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Select a spectrum to load:</strong></p>
+
+            <div class="input-group">
+              <select class="form-select" id="select-spectrum" aria-label="Select Spectrum" title="Select Spectrum"></select>
+              <!--
+              <button class="btn btn-outline-primary" type="button" id="delete-spectrum" title="Delete spectrum from file"><i class="fa-solid fa-trash"></i></button>
+              -->
+            </div>
+
+            <br>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="spectrum-select-btn"> Select </button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Close </button>
+          </div>
+        </div>
+      </div>
+    </div>
     
     <!--
 
