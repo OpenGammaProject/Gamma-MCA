@@ -25,8 +25,6 @@
     - Optional real-time file saving to help with long recordings that might crash (create some temp files)
     - Analysis report generator (print via window.open(), print.html, window.print())
 
-    - Fix different casings in HTML
-
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
     - Plotly.js: Plot updates takes forever, but there is no real way to improve it (?)
@@ -638,7 +636,7 @@ function getFileData(file: File, background = false): void { // Gets called when
 
       // Check if multiple files/errors were imported
       if (jsonData.length > 1) {
-        const fileSelectModalElement = document.getElementById('fileSelectModal');
+        const fileSelectModalElement = document.getElementById('file-select-modal');
         const fileSelectModal = new (<any>window).bootstrap.Modal(fileSelectModalElement);
         const selectElement = (<HTMLSelectElement>document.getElementById('select-spectrum'));
 
@@ -689,7 +687,7 @@ function checkJSONImportError(filename: string, data: NPESv1 | JSONParseError): 
   if ('code' in data && 'description' in data) {
     //new ToastNotification('npesError'); //popupNotification('npes-error');
     // Pop up modal with more error information instead of just toast with oopsy
-    const importErrorModalElement = document.getElementById('importErrorModal');
+    const importErrorModalElement = document.getElementById('import-error-modal');
     const fileImportErrorModal = new (<any>window).bootstrap.Modal(importErrorModalElement);
 
     // Change content according to error
@@ -809,7 +807,7 @@ function getJSONSelectionData(): void {
 
   npesFileImport(fileSelectData.filename, fileSelectData.package, fileSelectData.background);
 
-  const fileSelectModalElement = document.getElementById('fileSelectModal')!; // Close the modal if the file saving has been successful
+  const fileSelectModalElement = document.getElementById('file-select-modal')!; // Close the modal if the file saving has been successful
   const closeButton = <HTMLButtonElement>fileSelectModalElement.querySelector('.btn-close'); // Find some close button
   closeButton.click();
 }
@@ -940,7 +938,7 @@ function toggleSma(value: boolean, thisValue: HTMLInputElement | null = null ): 
 }
 
 
-document.getElementById('smaVal')!.oninput = event => changeSma(<HTMLInputElement>event.target);
+document.getElementById('sma-val')!.oninput = event => changeSma(<HTMLInputElement>event.target);
 
 function changeSma(input: HTMLInputElement): void {
   const parsedInput = parseInt(input.value);
@@ -1736,7 +1734,7 @@ async function download(filename: string, text: string | undefined, type: Downlo
     element.click();
   }
 
-  const exportModalElement = document.getElementById('exportModal')!; // Close the modal if the file saving has been successful
+  const exportModalElement = document.getElementById('export-modal')!; // Close the modal if the file saving has been successful
   const closeButton = <HTMLButtonElement>exportModalElement.querySelector('.btn-close'); // Find some close button
   closeButton.click();
 }
@@ -2009,7 +2007,7 @@ function loadJSON(name: string): any {
 
 function bindInputs(): void {
   const nonSettingsEnterPressElements = {
-    'smaVal': 'sma',
+    'sma-val': 'sma',
     'ser-command': 'send-command'
   }
   for (const [inputId, buttonId] of Object.entries(nonSettingsEnterPressElements)) {
@@ -2081,7 +2079,7 @@ function loadSettingsDefault(): void {
   (<HTMLInputElement>document.getElementById('custom-baud')).value = SerialManager.baudRate.toString();
   (<HTMLInputElement>document.getElementById('eol-char')).value = SerialManager.eolChar;
 
-  (<HTMLInputElement>document.getElementById('smaVal')).value = plot.smaLength.toString();
+  (<HTMLInputElement>document.getElementById('sma-val')).value = plot.smaLength.toString();
 
   (<HTMLInputElement>document.getElementById('new-flags')).checked = plot.peakConfig.newPeakStyle;
   (<HTMLInputElement>document.getElementById('enable-res')).checked = plot.peakConfig.showFWHM;
@@ -2622,11 +2620,11 @@ function clearConsoleLog(): void {
 }
 
 
-document.getElementById('serialConsoleModal')!.addEventListener('show.bs.modal', (/*event: Event*/): void => { // Adjust Plot Size For Main Tab Menu Content Size
+document.getElementById('serial-console-modal')!.addEventListener('show.bs.modal', (/*event: Event*/): void => { // Adjust Plot Size For Main Tab Menu Content Size
   readSerial();
 });
 
-document.getElementById('serialConsoleModal')!.addEventListener('hide.bs.modal', async (/*event: Event*/): Promise<void> => { // Adjust Plot Size For Main Tab Menu Content Size
+document.getElementById('serial-console-modal')!.addEventListener('hide.bs.modal', async (/*event: Event*/): Promise<void> => { // Adjust Plot Size For Main Tab Menu Content Size
   await serRecorder?.hideConsole();
   clearTimeout(consoleTimeout);
 });

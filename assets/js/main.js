@@ -421,7 +421,7 @@ function getFileData(file, background = false) {
         else if (fileEnding.toLowerCase() === 'json') {
             const jsonData = await raw.jsonToObject(result);
             if (jsonData.length > 1) {
-                const fileSelectModalElement = document.getElementById('fileSelectModal');
+                const fileSelectModalElement = document.getElementById('file-select-modal');
                 const fileSelectModal = new window.bootstrap.Modal(fileSelectModalElement);
                 const selectElement = document.getElementById('select-spectrum');
                 selectElement.options.length = 0;
@@ -461,7 +461,7 @@ function getFileData(file, background = false) {
 }
 function checkJSONImportError(filename, data) {
     if ('code' in data && 'description' in data) {
-        const importErrorModalElement = document.getElementById('importErrorModal');
+        const importErrorModalElement = document.getElementById('import-error-modal');
         const fileImportErrorModal = new window.bootstrap.Modal(importErrorModalElement);
         document.getElementById('error-filename').innerText = filename;
         document.getElementById('error-code').innerText = data.code;
@@ -548,7 +548,7 @@ document.getElementById('spectrum-select-btn').onclick = () => getJSONSelectionD
 function getJSONSelectionData() {
     const fileSelectData = JSON.parse(document.getElementById('select-spectrum').value);
     npesFileImport(fileSelectData.filename, fileSelectData.package, fileSelectData.background);
-    const fileSelectModalElement = document.getElementById('fileSelectModal');
+    const fileSelectModalElement = document.getElementById('file-select-modal');
     const closeButton = fileSelectModalElement.querySelector('.btn-close');
     closeButton.click();
 }
@@ -642,7 +642,7 @@ function toggleSma(value, thisValue = null) {
         thisValue.checked = false;
     plot.updatePlot(spectrumData);
 }
-document.getElementById('smaVal').oninput = event => changeSma(event.target);
+document.getElementById('sma-val').oninput = event => changeSma(event.target);
 function changeSma(input) {
     const parsedInput = parseInt(input.value);
     if (isNaN(parsedInput)) {
@@ -1248,7 +1248,7 @@ async function download(filename, text, type) {
         element.style.display = 'none';
         element.click();
     }
-    const exportModalElement = document.getElementById('exportModal');
+    const exportModalElement = document.getElementById('export-modal');
     const closeButton = exportModalElement.querySelector('.btn-close');
     closeButton.click();
 }
@@ -1453,7 +1453,7 @@ function loadJSON(name) {
 }
 function bindInputs() {
     const nonSettingsEnterPressElements = {
-        'smaVal': 'sma',
+        'sma-val': 'sma',
         'ser-command': 'send-command'
     };
     for (const [inputId, buttonId] of Object.entries(nonSettingsEnterPressElements)) {
@@ -1517,7 +1517,7 @@ function loadSettingsDefault() {
     document.getElementById('iso-hover-prox').value = maxDist.toString();
     document.getElementById('custom-baud').value = SerialManager.baudRate.toString();
     document.getElementById('eol-char').value = SerialManager.eolChar;
-    document.getElementById('smaVal').value = plot.smaLength.toString();
+    document.getElementById('sma-val').value = plot.smaLength.toString();
     document.getElementById('new-flags').checked = plot.peakConfig.newPeakStyle;
     document.getElementById('enable-res').checked = plot.peakConfig.showFWHM;
     document.getElementById('fwhm-fast').checked = CalculateFWHM.fastMode;
@@ -1953,10 +1953,10 @@ function clearConsoleLog() {
     document.getElementById('ser-output').innerText = '';
     serRecorder?.flushRawData();
 }
-document.getElementById('serialConsoleModal').addEventListener('show.bs.modal', () => {
+document.getElementById('serial-console-modal').addEventListener('show.bs.modal', () => {
     readSerial();
 });
-document.getElementById('serialConsoleModal').addEventListener('hide.bs.modal', async () => {
+document.getElementById('serial-console-modal').addEventListener('hide.bs.modal', async () => {
     await serRecorder?.hideConsole();
     clearTimeout(consoleTimeout);
 });

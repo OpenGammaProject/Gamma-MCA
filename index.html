@@ -165,7 +165,7 @@
                   <hr>
 
                   <p>
-                    <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#exportModal" title="Create new file with current data.">
+                    <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#export-modal" title="Create new file with current data.">
                       <i class="fa-solid fa-download"></i> Save As
                     </button>
 
@@ -244,7 +244,7 @@
 
                     <div class="clearfix">
 
-                      <button class="btn btn-primary btn-sm ser-settings" id="record-button" type="button" data-bs-toggle="modal" data-bs-target="#recordModal" title="Start recording" disabled> <i class="fas fa-play"></i> Record </button>
+                      <button class="btn btn-primary btn-sm ser-settings" id="record-button" type="button" data-bs-toggle="modal" data-bs-target="#record-modal" title="Start recording" disabled> <i class="fas fa-play"></i> Record </button>
                       <button class="btn btn-primary btn-sm ser-settings d-none" id="pause-button" type="button" title="Pause recording"> <i class="fas fa-pause"></i> Pause </button>
                       <button class="btn btn-primary btn-sm ser-settings d-none" id="resume-button" type="button" title="Resume recording"> <i class="fas fa-play fa-beat-fade"></i> Resume </button>
                       <button class="btn btn-primary btn-sm" id="stop-button" type="button" title="Stop recording" disabled> <i class="fas fa-stop"></i> Stop </button>
@@ -271,7 +271,7 @@
 
                     <div class="clearfix">
 
-                      <button class="btn btn-primary btn-sm ser-settings" type="button" data-bs-toggle="modal" data-bs-target="#serialConsoleModal" title="Serial Console" id="open-console" disabled>
+                      <button class="btn btn-primary btn-sm ser-settings" type="button" data-bs-toggle="modal" data-bs-target="#serial-console-modal" title="Serial Console" id="open-console" disabled>
                         <i class="fa-solid fa-terminal"></i> Console
                       </button>
 
@@ -597,8 +597,8 @@
 
         <div class="col-auto p-1">
           <div class="input-group input-group-sm">
-            <label class="input-group-text" for="smaVal">SMA Length</label>
-            <input class="form-control form-control-sm" type="number" id="smaVal" min="1" max="1000" value="" title="Width of simple moving average">
+            <label class="input-group-text" for="sma-val">SMA Length</label>
+            <input class="form-control form-control-sm" type="number" id="sma-val" min="1" max="1000" value="" title="Width of simple moving average">
 
             <input type="checkbox" class="btn-check" id="sma">
             <label class="btn btn-outline-primary" for="sma" title="Toggle simple moving average">Enable</label>
@@ -655,7 +655,7 @@
 
     -->
     <!-- Record Modal -->
-    <div class="modal fade" id="recordModal" tabindex="-1" aria-labelledby="recordModal" aria-hidden="true">
+    <div class="modal fade" id="record-modal" tabindex="-1" aria-labelledby="record-modal" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -676,7 +676,7 @@
     </div>
 
     <!-- Export Modal -->
-    <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModal" aria-hidden="true">
+    <div class="modal fade" id="export-modal" tabindex="-1" aria-labelledby="export-modal" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -699,7 +699,7 @@
     </div>
 
     <!-- Serial Console Modal -->
-    <div class="modal fade" id="serialConsoleModal" tabindex="-1" aria-labelledby="serialConsoleModal" aria-hidden="true">
+    <div class="modal fade" id="serial-console-modal" tabindex="-1" aria-labelledby="serial-console-modal" aria-hidden="true">
       <div class="modal-dialog modal-dialog-scrollable modal-lg">
         <div class="modal-content">
           <div class="modal-header">
@@ -738,7 +738,7 @@
     </div>
 
     <!-- File Import Error Modal -->
-    <div class="modal fade" id="importErrorModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="importErrorModal" aria-hidden="true">
+    <div class="modal fade" id="import-error-modal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="import-error-modal" aria-hidden="true">
       <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
@@ -763,7 +763,7 @@
     </div>
 
     <!-- File Import Spectrum Select Modal -->
-    <div class="modal fade" id="fileSelectModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="fileSelectModal" aria-hidden="true">
+    <div class="modal fade" id="file-select-modal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="file-select-modal" aria-hidden="true">
       <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
