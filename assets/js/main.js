@@ -53,7 +53,7 @@ let isoListURL = 'assets/isotopes_energies_min.json';
 const isoList = {};
 let checkNearIso = false;
 let maxDist = 100;
-const APP_VERSION = '2023-11-26';
+const APP_VERSION = '2023-12-03';
 const localStorageAvailable = 'localStorage' in self;
 const wakeLockAvailable = 'wakeLock' in navigator;
 const notificationsAvailable = 'Notification' in window;
@@ -355,8 +355,11 @@ function importFile(input, background = false) {
 function getFileData(file, background = false) {
     const reader = new FileReader();
     const fileEnding = file.name.split('.')[1];
-    document.getElementById(`${background ? 'background' : 'data'}-form-label`).innerText = file.name;
     reader.readAsText(file);
+    reader.onerror = () => {
+        new ToastNotification('fileError');
+        return;
+    };
     reader.onload = async () => {
         const result = reader.result.trim();
         if (fileEnding.toLowerCase() === 'xml') {
@@ -417,74 +420,32 @@ function getFileData(file, background = false) {
         }
         else if (fileEnding.toLowerCase() === 'json') {
             const jsonData = await raw.jsonToObject(result);
-            const importData = jsonData[0];
-            if ('code' in importData && 'description' in importData) {
-                const importErrorModalElement = document.getElementById('importErrorModal');
-                const fileImportErrorModal = new window.bootstrap.Modal(importErrorModalElement);
-                document.getElementById('error-filename').innerText = file.name;
-                document.getElementById('error-code').innerText = importData.code;
-                document.getElementById('error-desc').innerText = importData.description;
-                fileImportErrorModal.show();
+            if (jsonData.length > 1) {
+                const fileSelectModalElement = document.getElementById('file-select-modal');
+                const fileSelectModal = new window.bootstrap.Modal(fileSelectModalElement);
+                const selectElement = document.getElementById('select-spectrum');
+                selectElement.options.length = 0;
+                for (const dataPackage of jsonData) {
+                    if (checkJSONImportError(file.name, dataPackage))
+                        return;
+                    const opt = document.createElement('option');
+                    const optionValue = {
+                        'filename': file.name,
+                        'package': dataPackage,
+                        'background': background
+                    };
+                    opt.value = JSON.stringify(optionValue);
+                    opt.text = `${dataPackage.sampleInfo?.name} (${dataPackage.resultData.startTime ?? 'Undefined Time'})`;
+                    selectElement.add(opt);
+                }
+                fileSelectModal.show();
                 return;
             }
-            document.getElementById('device-name').value = importData?.deviceData?.deviceName ?? '';
-            document.getElementById('sample-name').value = importData?.sampleInfo?.name ?? '';
-            document.getElementById('sample-loc').value = importData?.sampleInfo?.location ?? '';
-            if (importData.sampleInfo?.time) {
-                const date = new Date(importData.sampleInfo.time);
-                const rightDate = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
-                document.getElementById('sample-time').value = rightDate.toISOString().slice(0, 16);
-            }
-            document.getElementById('sample-weight').value = importData.sampleInfo?.weight?.toString() ?? '';
-            document.getElementById('sample-vol').value = importData.sampleInfo?.volume?.toString() ?? '';
-            document.getElementById('add-notes').value = importData.sampleInfo?.note ?? '';
-            const resultData = importData.resultData;
-            if (resultData.startTime && resultData.endTime) {
-                startDate = new Date(resultData.startTime);
-                endDate = new Date(resultData.endTime);
-            }
-            const espectrum = resultData.energySpectrum;
-            const bgspectrum = resultData.backgroundEnergySpectrum;
-            if (espectrum && bgspectrum) {
-                spectrumData.data = espectrum.spectrum;
-                spectrumData.background = bgspectrum.spectrum;
-                const eMeasurementTime = espectrum.measurementTime;
-                if (eMeasurementTime) {
-                    spectrumData.dataTime = eMeasurementTime * 1000;
-                    spectrumData.dataCps = spectrumData.data.map(val => val / eMeasurementTime);
-                }
-                const bgMeasurementTime = bgspectrum.measurementTime;
-                if (bgMeasurementTime) {
-                    spectrumData.backgroundTime = bgMeasurementTime * 1000;
-                    spectrumData.backgroundCps = spectrumData.background.map(val => val / bgMeasurementTime);
-                }
-            }
             else {
-                const dataObj = espectrum ?? bgspectrum;
-                const fileData = dataObj?.spectrum ?? [];
-                const fileDataTime = (dataObj?.measurementTime ?? 1) * 1000;
-                const fileDataType = background ? 'background' : 'data';
-                spectrumData[fileDataType] = fileData;
-                spectrumData[`${fileDataType}Time`] = fileDataTime;
-                if (fileDataTime)
-                    spectrumData[`${fileDataType}Cps`] = spectrumData[fileDataType].map(val => val / fileDataTime * 1000);
-            }
-            const calDataObj = (espectrum ?? bgspectrum)?.energyCalibration;
-            if (calDataObj) {
-                const coeffArray = calDataObj.coefficients;
-                const numCoeff = calDataObj.polynomialOrder;
-                resetCal();
-                for (const index in coeffArray) {
-                    plot.calibration.coeff[`c${numCoeff - parseInt(index) + 1}`] = coeffArray[index];
-                }
-                plot.calibration.imported = true;
-                displayCoeffs();
-                const calSettings = document.getElementsByClassName('cal-setting');
-                for (const element of calSettings) {
-                    element.disabled = true;
-                }
-                addImportLabel();
-                toggleCal(true);
+                const importData = jsonData[0];
+                if (checkJSONImportError(file.name, importData))
+                    return;
+                npesFileImport(file.name, importData, background);
             }
         }
         else if (background) {
@@ -495,19 +456,101 @@ function getFileData(file, background = false) {
             spectrumData.dataTime = 1000;
             spectrumData.data = raw.csvToArray(result);
         }
-        updateSpectrumCounts();
-        updateSpectrumTime();
-        if (spectrumData.background.length !== spectrumData.data.length && spectrumData.data.length && spectrumData.background.length) {
-            new ToastNotification('dataError');
-            removeFile(background ? 'background' : 'data');
+        finalizeFileImport(file.name, background);
+    };
+}
+function checkJSONImportError(filename, data) {
+    if ('code' in data && 'description' in data) {
+        const importErrorModalElement = document.getElementById('import-error-modal');
+        const fileImportErrorModal = new window.bootstrap.Modal(importErrorModalElement);
+        document.getElementById('error-filename').innerText = filename;
+        document.getElementById('error-code').innerText = data.code;
+        document.getElementById('error-desc').innerText = data.description;
+        fileImportErrorModal.show();
+        return true;
+    }
+    return false;
+}
+function npesFileImport(filename, importData, background) {
+    document.getElementById('device-name').value = importData?.deviceData?.deviceName ?? '';
+    document.getElementById('sample-name').value = importData?.sampleInfo?.name ?? '';
+    document.getElementById('sample-loc').value = importData?.sampleInfo?.location ?? '';
+    if (importData.sampleInfo?.time) {
+        const date = new Date(importData.sampleInfo.time);
+        const rightDate = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000);
+        document.getElementById('sample-time').value = rightDate.toISOString().slice(0, 16);
+    }
+    document.getElementById('sample-weight').value = importData.sampleInfo?.weight?.toString() ?? '';
+    document.getElementById('sample-vol').value = importData.sampleInfo?.volume?.toString() ?? '';
+    document.getElementById('add-notes').value = importData.sampleInfo?.note ?? '';
+    const resultData = importData.resultData;
+    if (resultData.startTime && resultData.endTime) {
+        startDate = new Date(resultData.startTime);
+        endDate = new Date(resultData.endTime);
+    }
+    const espectrum = resultData.energySpectrum;
+    const bgspectrum = resultData.backgroundEnergySpectrum;
+    if (espectrum && bgspectrum) {
+        spectrumData.data = espectrum.spectrum;
+        spectrumData.background = bgspectrum.spectrum;
+        const eMeasurementTime = espectrum.measurementTime;
+        if (eMeasurementTime) {
+            spectrumData.dataTime = eMeasurementTime * 1000;
+            spectrumData.dataCps = spectrumData.data.map(val => val / eMeasurementTime);
         }
-        plot.resetPlot(spectrumData);
-        bindPlotEvents();
-    };
-    reader.onerror = () => {
-        new ToastNotification('fileError');
-        return;
-    };
+        const bgMeasurementTime = bgspectrum.measurementTime;
+        if (bgMeasurementTime) {
+            spectrumData.backgroundTime = bgMeasurementTime * 1000;
+            spectrumData.backgroundCps = spectrumData.background.map(val => val / bgMeasurementTime);
+        }
+    }
+    else {
+        const dataObj = espectrum ?? bgspectrum;
+        const fileData = dataObj?.spectrum ?? [];
+        const fileDataTime = (dataObj?.measurementTime ?? 1) * 1000;
+        const fileDataType = background ? 'background' : 'data';
+        spectrumData[fileDataType] = fileData;
+        spectrumData[`${fileDataType}Time`] = fileDataTime;
+        if (fileDataTime)
+            spectrumData[`${fileDataType}Cps`] = spectrumData[fileDataType].map(val => val / fileDataTime * 1000);
+    }
+    const calDataObj = (espectrum ?? bgspectrum)?.energyCalibration;
+    if (calDataObj) {
+        const coeffArray = calDataObj.coefficients;
+        const numCoeff = calDataObj.polynomialOrder;
+        resetCal();
+        for (const index in coeffArray) {
+            plot.calibration.coeff[`c${numCoeff - parseInt(index) + 1}`] = coeffArray[index];
+        }
+        plot.calibration.imported = true;
+        displayCoeffs();
+        const calSettings = document.getElementsByClassName('cal-setting');
+        for (const element of calSettings) {
+            element.disabled = true;
+        }
+        addImportLabel();
+        toggleCal(true);
+    }
+    finalizeFileImport(filename, background);
+}
+function finalizeFileImport(filename, background) {
+    document.getElementById(`${background ? 'background' : 'data'}-form-label`).innerText = filename;
+    updateSpectrumCounts();
+    updateSpectrumTime();
+    if (spectrumData.background.length !== spectrumData.data.length && spectrumData.data.length && spectrumData.background.length) {
+        new ToastNotification('dataError');
+        removeFile(background ? 'background' : 'data');
+    }
+    plot.resetPlot(spectrumData);
+    bindPlotEvents();
+}
+document.getElementById('spectrum-select-btn').onclick = () => getJSONSelectionData();
+function getJSONSelectionData() {
+    const fileSelectData = JSON.parse(document.getElementById('select-spectrum').value);
+    npesFileImport(fileSelectData.filename, fileSelectData.package, fileSelectData.background);
+    const fileSelectModalElement = document.getElementById('file-select-modal');
+    const closeButton = fileSelectModalElement.querySelector('.btn-close');
+    closeButton.click();
 }
 function sizeCheck() {
     const minWidth = 1100;
@@ -599,7 +642,7 @@ function toggleSma(value, thisValue = null) {
         thisValue.checked = false;
     plot.updatePlot(spectrumData);
 }
-document.getElementById('smaVal').oninput = event => changeSma(event.target);
+document.getElementById('sma-val').oninput = event => changeSma(event.target);
 function changeSma(input) {
     const parsedInput = parseInt(input.value);
     if (isNaN(parsedInput)) {
@@ -1063,7 +1106,10 @@ function makeJSONSpectrum(type) {
 }
 function generateNPES() {
     const data = {
-        schemaVersion: 'NPESv1',
+        schemaVersion: 'NPESv2',
+        data: []
+    };
+    const dataPackage = {
         deviceData: {
             softwareName: 'Gamma MCA, ' + APP_VERSION,
             deviceName: document.getElementById('device-name').value.trim()
@@ -1077,29 +1123,30 @@ function generateNPES() {
     };
     let val = parseFloat(document.getElementById('sample-weight').value.trim());
     if (val)
-        data.sampleInfo.weight = val;
+        dataPackage.sampleInfo.weight = val;
     val = parseFloat(document.getElementById('sample-vol').value.trim());
     if (val)
-        data.sampleInfo.volume = val;
+        dataPackage.sampleInfo.volume = val;
     const tval = document.getElementById('sample-time').value.trim();
     if (tval.length && new Date(tval))
-        data.sampleInfo.time = toLocalIsoString(new Date(tval));
+        dataPackage.sampleInfo.time = toLocalIsoString(new Date(tval));
     if (startDate) {
-        data.resultData.startTime = toLocalIsoString(startDate);
+        dataPackage.resultData.startTime = toLocalIsoString(startDate);
         if (endDate && endDate.getTime() - startDate.getTime() >= 0) {
-            data.resultData.endTime = toLocalIsoString(endDate);
+            dataPackage.resultData.endTime = toLocalIsoString(endDate);
         }
         else {
-            data.resultData.endTime = toLocalIsoString(new Date());
+            dataPackage.resultData.endTime = toLocalIsoString(new Date());
         }
     }
     if (spectrumData.data.length && spectrumData.getTotalCounts('data'))
-        data.resultData.energySpectrum = makeJSONSpectrum('data');
+        dataPackage.resultData.energySpectrum = makeJSONSpectrum('data');
     if (spectrumData.background.length && spectrumData.getTotalCounts('background'))
-        data.resultData.backgroundEnergySpectrum = makeJSONSpectrum('background');
-    if (!data.resultData.energySpectrum && !data.resultData.backgroundEnergySpectrum) {
+        dataPackage.resultData.backgroundEnergySpectrum = makeJSONSpectrum('background');
+    if (!dataPackage.resultData.energySpectrum && !dataPackage.resultData.backgroundEnergySpectrum) {
         return undefined;
     }
+    data.data.push(dataPackage);
     return JSON.stringify(data);
 }
 document.getElementById('download-spectrum-btn').onclick = () => downloadData('spectrum', 'data');
@@ -1153,7 +1200,7 @@ const saveFileTypes = {
         }
     },
     'JSON': {
-        description: 'Combination data file (NPESv1, small size)',
+        description: 'Combination data file (NPESv2, smaller size)',
         accept: {
             'application/json': ['.json']
         }
@@ -1201,7 +1248,7 @@ async function download(filename, text, type) {
         element.style.display = 'none';
         element.click();
     }
-    const exportModalElement = document.getElementById('exportModal');
+    const exportModalElement = document.getElementById('export-modal');
     const closeButton = exportModalElement.querySelector('.btn-close');
     closeButton.click();
 }
@@ -1406,7 +1453,7 @@ function loadJSON(name) {
 }
 function bindInputs() {
     const nonSettingsEnterPressElements = {
-        'smaVal': 'sma',
+        'sma-val': 'sma',
         'ser-command': 'send-command'
     };
     for (const [inputId, buttonId] of Object.entries(nonSettingsEnterPressElements)) {
@@ -1470,7 +1517,7 @@ function loadSettingsDefault() {
     document.getElementById('iso-hover-prox').value = maxDist.toString();
     document.getElementById('custom-baud').value = SerialManager.baudRate.toString();
     document.getElementById('eol-char').value = SerialManager.eolChar;
-    document.getElementById('smaVal').value = plot.smaLength.toString();
+    document.getElementById('sma-val').value = plot.smaLength.toString();
     document.getElementById('new-flags').checked = plot.peakConfig.newPeakStyle;
     document.getElementById('enable-res').checked = plot.peakConfig.showFWHM;
     document.getElementById('fwhm-fast').checked = CalculateFWHM.fastMode;
@@ -1906,10 +1953,10 @@ function clearConsoleLog() {
     document.getElementById('ser-output').innerText = '';
     serRecorder?.flushRawData();
 }
-document.getElementById('serialConsoleModal').addEventListener('show.bs.modal', () => {
+document.getElementById('serial-console-modal').addEventListener('show.bs.modal', () => {
     readSerial();
 });
-document.getElementById('serialConsoleModal').addEventListener('hide.bs.modal', async () => {
+document.getElementById('serial-console-modal').addEventListener('hide.bs.modal', async () => {
     await serRecorder?.hideConsole();
     clearTimeout(consoleTimeout);
 });

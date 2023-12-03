@@ -82,9 +82,7 @@
     <div class="container-fluid flex-column d-flex vh-100 pb-1 p-1 lh-sm main" id="main"> <!-- pb-1 needed for vertical scroll bar -->
       <div class="row border border-1 border-dark border-bottom-0 rounded-top-3 border-mode border-theme">
 
-        <div class="col-md-auto p-2 text-center">
-
-          <h2 class="fs-4">Menu</h2>
+        <div class="col-md-auto p-2 text-center mt-2">
 
           <nav class="nav nav-pills flex-column" id="main-tabs" role="tablist" aria-orientation="vertical">
             <button class="nav-link active mb-1 fw-semibold border border-1 rounded-1 border-primary shadow-sm" id="file-import-tab" data-bs-toggle="pill" data-bs-target="#v-file" type="button" role="tab" aria-controls="v-file" aria-selected="true" title="Select File Import Tab">
@@ -167,11 +165,11 @@
                   <hr>
 
                   <p>
-                    <button class="btn btn-primary btn-sm" id="export-button" type="button" data-bs-toggle="modal" data-bs-target="#exportModal" title="Save file as ...">
+                    <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#export-modal" title="Create new file with current data.">
                       <i class="fa-solid fa-download"></i> Save As
                     </button>
 
-                    <button class="btn btn-primary btn-sm" id="overwrite-button" type="button" title="Save file: Overwrite file(s)!" disabled>
+                    <button class="btn btn-primary btn-sm" id="overwrite-button" type="button" title="Overwrite file(s) with current data." disabled>
                       <i class="fa-solid fa-floppy-disk"></i> Save
                     </button>
                   </p>
@@ -189,16 +187,16 @@
                     COL 2
                     #####
                   -->
-                  <p><strong>File Type (CSVs only):</strong></p>
+                  <p><strong>File Type (CSV-related only):</strong></p>
 
                   <p>
                     <input id="r1" class="form-check-input" type="radio" value="2" name="filetype">
-                    <label class="form-check-label align-middle" for="r1">Chronological Stream (e.g. Serial)</label>
+                    <label class="form-check-label align-middle" for="r1">Chronological Stream (e.g. serial data)</label>
                   </p>
 
                   <p>
                     <input id="r2" class="form-check-input" type="radio" value="1" name="filetype" checked="checked">
-                    <label class="form-check-label align-middle" for="r2">Histogram (e.g. CSV, TKA, XML, JSON)</label>
+                    <label class="form-check-label align-middle" for="r2">Histogram (e.g. CSV, TKA, TXT)</label>
                   </p>
 
                 </div>
@@ -246,7 +244,7 @@
 
                     <div class="clearfix">
 
-                      <button class="btn btn-primary btn-sm ser-settings" id="record-button" type="button" data-bs-toggle="modal" data-bs-target="#recordModal" title="Start recording" disabled> <i class="fas fa-play"></i> Record </button>
+                      <button class="btn btn-primary btn-sm ser-settings" id="record-button" type="button" data-bs-toggle="modal" data-bs-target="#record-modal" title="Start recording" disabled> <i class="fas fa-play"></i> Record </button>
                       <button class="btn btn-primary btn-sm ser-settings d-none" id="pause-button" type="button" title="Pause recording"> <i class="fas fa-pause"></i> Pause </button>
                       <button class="btn btn-primary btn-sm ser-settings d-none" id="resume-button" type="button" title="Resume recording"> <i class="fas fa-play fa-beat-fade"></i> Resume </button>
                       <button class="btn btn-primary btn-sm" id="stop-button" type="button" title="Stop recording" disabled> <i class="fas fa-stop"></i> Stop </button>
@@ -273,7 +271,7 @@
 
                     <div class="clearfix">
 
-                      <button class="btn btn-primary btn-sm ser-settings" type="button" data-bs-toggle="modal" data-bs-target="#serialConsoleModal" title="Serial Console" id="open-console" disabled>
+                      <button class="btn btn-primary btn-sm ser-settings" type="button" data-bs-toggle="modal" data-bs-target="#serial-console-modal" title="Serial Console" id="open-console" disabled>
                         <i class="fa-solid fa-terminal"></i> Console
                       </button>
 
@@ -527,11 +525,9 @@
           <hr class="d-md-none m-0">
         </div>
 
-        <div class="col-md-2 p-2">
+        <div class="col-md-2 p-2 mt-2">
 
           <div id="static-info">
-            <h2 class="fs-4">Information</h2>
-
             <strong>Click Position:</strong>
             <p><span id="click-data">None</span></p>
 
@@ -601,8 +597,8 @@
 
         <div class="col-auto p-1">
           <div class="input-group input-group-sm">
-            <label class="input-group-text" for="smaVal">SMA Length</label>
-            <input class="form-control form-control-sm" type="number" id="smaVal" min="1" max="1000" value="" title="Width of simple moving average">
+            <label class="input-group-text" for="sma-val">SMA Length</label>
+            <input class="form-control form-control-sm" type="number" id="sma-val" min="1" max="1000" value="" title="Width of simple moving average">
 
             <input type="checkbox" class="btn-check" id="sma">
             <label class="btn btn-outline-primary" for="sma" title="Toggle simple moving average">Enable</label>
@@ -659,11 +655,11 @@
 
     -->
     <!-- Record Modal -->
-    <div class="modal fade" id="recordModal" tabindex="-1" aria-labelledby="recordModal" aria-hidden="true">
+    <div class="modal fade" id="record-modal" tabindex="-1" aria-labelledby="record-modal" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h3 class="modal-title h4"><i class="fas fa-play me-2 fa-beat-fade animation-very-slow"></i>Record Spectrum</h3>
+            <h2 class="modal-title h4"><i class="fas fa-play me-2 fa-beat-fade animation-very-slow"></i>Record Spectrum</h2>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -680,11 +676,11 @@
     </div>
 
     <!-- Export Modal -->
-    <div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModal" aria-hidden="true">
+    <div class="modal fade" id="export-modal" tabindex="-1" aria-labelledby="export-modal" aria-hidden="true">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
-            <h3 class="modal-title h4"><i class="fa-solid fa-download me-2 fa-beat-fade animation-very-slow"></i>Save File</h3>
+            <h2 class="modal-title h4"><i class="fa-solid fa-download me-2 fa-beat-fade animation-very-slow"></i>Save File</h2>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -703,11 +699,11 @@
     </div>
 
     <!-- Serial Console Modal -->
-    <div class="modal fade" id="serialConsoleModal" tabindex="-1" aria-labelledby="serialConsoleModal" aria-hidden="true">
+    <div class="modal fade" id="serial-console-modal" tabindex="-1" aria-labelledby="serial-console-modal" aria-hidden="true">
       <div class="modal-dialog modal-dialog-scrollable modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h3 class="modal-title h4 flex-fill">Serial Console <span id="serial-console-title"></span></h3>
+            <h2 class="modal-title h4 flex-fill">Serial Console <span id="serial-console-title"></span></h2>
 
             <div class="g-1 pe-2">
               <input type="checkbox" class="btn-check" id="autoscroll-console">
@@ -742,11 +738,11 @@
     </div>
 
     <!-- File Import Error Modal -->
-    <div class="modal fade" id="importErrorModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="importErrorModal" aria-hidden="true">
+    <div class="modal fade" id="import-error-modal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="import-error-modal" aria-hidden="true">
       <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
-            <h3 class="modal-title h4"><i class="fas fa-exclamation-triangle fa-shake me-2 animation-very-slow"></i>Import Error</h3>
+            <h2 class="modal-title h4"><i class="fas fa-exclamation-triangle fa-shake me-2 animation-very-slow"></i>Import Error</h2>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
@@ -760,6 +756,34 @@
             <p>For more information about the schema, please head to <a title="GitHub/NPES-JSON" class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="https://github.com/OpenGammaProject/NPES-JSON" target="_blank">NPES-JSON</a>.</p>
           </div>
           <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Close </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- File Import Spectrum Select Modal -->
+    <div class="modal fade" id="file-select-modal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="file-select-modal" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2 class="modal-title h4"><i class="fa-solid fa-list me-2 fa-beat-fade animation-very-slow"></i>Select Spectrum</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Select a spectrum to load:</strong></p>
+
+            <div class="input-group">
+              <select class="form-select" id="select-spectrum" aria-label="Select Spectrum" title="Select Spectrum"></select>
+              <!--
+              <button class="btn btn-outline-primary" type="button" id="delete-spectrum" title="Delete spectrum from file"><i class="fa-solid fa-trash"></i></button>
+              -->
+            </div>
+
+            <br>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="spectrum-select-btn"> Select </button>
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"> Close </button>
           </div>
         </div>
@@ -790,9 +814,9 @@
           <div class="tab-pane fade show active me-2" id="isotopes" role="tabpanel" aria-labelledby="isotopes">
             <br>
 
-            <h4 class="fs-5">
+            <h3 class="fs-5">
               Common Gamma-Ray Energies <button type="button" class="btn btn-outline-primary btn-sm float-end" id="reload-isos-btn" title="Reload Isotope List"><i class="fa-solid fa-arrow-rotate-right"></i></button>
-            </h4>
+            </h3>
             <br>
 
             <div class="text-center">
@@ -838,11 +862,11 @@
 
             <div class="accordion accordion-flush">
               <div class="accordion-item">
-                <h4 class="accordion-header" id="panel0-heading">
+                <h3 class="accordion-header" id="panel0-heading">
                   <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panel0-collaps" aria-expanded="true" aria-controls="panel0-collaps">
                     General
                   </button>
-                </h4>
+                </h3>
                 <div id="panel0-collaps" class="accordion-collapse collapse" aria-labelledby="panel0-heading">
                   <div class="accordion-body">
 
@@ -866,11 +890,11 @@
                 </div>
               </div>
               <div class="accordion-item">
-                <h4 class="accordion-header" id="panel1-heading">
+                <h3 class="accordion-header" id="panel1-heading">
                   <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panel1-collaps" aria-expanded="true" aria-controls="panel1-collaps">
                     Plot
                   </button>
-                </h4>
+                </h3>
                 <div id="panel1-collaps" class="accordion-collapse collapse" aria-labelledby="panel1-heading">
                   <div class="accordion-body">
 
@@ -916,11 +940,11 @@
                 </div>
               </div>
               <div class="accordion-item">
-                <h4 class="accordion-header" id="panel2-heading">
+                <h3 class="accordion-header" id="panel2-heading">
                   <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panel2-collapse" aria-expanded="false" aria-controls="panel2-collapse">
                     File Import
                   </button>
-                </h4>
+                </h3>
                 <div id="panel2-collapse" class="accordion-collapse collapse" aria-labelledby="panel2-heading">
                   <div class="accordion-body">
 
@@ -942,11 +966,11 @@
                 </div>
               </div>
               <div class="accordion-item">
-                <h4 class="accordion-header" id="panel3-heading">
+                <h3 class="accordion-header" id="panel3-heading">
                   <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panel3-collapse" aria-expanded="false" aria-controls="panel3-collapse">
                     Serial Connection
                   </button>
-                </h4>
+                </h3>
                 <div id="panel3-collapse" class="accordion-collapse collapse" aria-labelledby="panel3-heading">
                   <div class="accordion-body">
 
@@ -1005,11 +1029,11 @@
                 </div>
               </div>
               <div class="accordion-item">
-                <h4 class="accordion-header" id="panel4-heading">
+                <h3 class="accordion-header" id="panel4-heading">
                   <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panel4-collapse" aria-expanded="false" aria-controls="panel4-collapse">
                     Energy Peak Detection
                   </button>
-                </h4>
+                </h3>
                 <div id="panel4-collapse" class="accordion-collapse collapse" aria-labelledby="panel4-heading">
                   <div class="accordion-body">
 
