@@ -1106,7 +1106,10 @@ function makeJSONSpectrum(type) {
 }
 function generateNPES() {
     const data = {
-        schemaVersion: 'NPESv1',
+        schemaVersion: 'NPESv2',
+        data: []
+    };
+    const dataPackage = {
         deviceData: {
             softwareName: 'Gamma MCA, ' + APP_VERSION,
             deviceName: document.getElementById('device-name').value.trim()
@@ -1120,29 +1123,30 @@ function generateNPES() {
     };
     let val = parseFloat(document.getElementById('sample-weight').value.trim());
     if (val)
-        data.sampleInfo.weight = val;
+        dataPackage.sampleInfo.weight = val;
     val = parseFloat(document.getElementById('sample-vol').value.trim());
     if (val)
-        data.sampleInfo.volume = val;
+        dataPackage.sampleInfo.volume = val;
     const tval = document.getElementById('sample-time').value.trim();
     if (tval.length && new Date(tval))
-        data.sampleInfo.time = toLocalIsoString(new Date(tval));
+        dataPackage.sampleInfo.time = toLocalIsoString(new Date(tval));
     if (startDate) {
-        data.resultData.startTime = toLocalIsoString(startDate);
+        dataPackage.resultData.startTime = toLocalIsoString(startDate);
         if (endDate && endDate.getTime() - startDate.getTime() >= 0) {
-            data.resultData.endTime = toLocalIsoString(endDate);
+            dataPackage.resultData.endTime = toLocalIsoString(endDate);
         }
         else {
-            data.resultData.endTime = toLocalIsoString(new Date());
+            dataPackage.resultData.endTime = toLocalIsoString(new Date());
         }
     }
     if (spectrumData.data.length && spectrumData.getTotalCounts('data'))
-        data.resultData.energySpectrum = makeJSONSpectrum('data');
+        dataPackage.resultData.energySpectrum = makeJSONSpectrum('data');
     if (spectrumData.background.length && spectrumData.getTotalCounts('background'))
-        data.resultData.backgroundEnergySpectrum = makeJSONSpectrum('background');
-    if (!data.resultData.energySpectrum && !data.resultData.backgroundEnergySpectrum) {
+        dataPackage.resultData.backgroundEnergySpectrum = makeJSONSpectrum('background');
+    if (!dataPackage.resultData.energySpectrum && !dataPackage.resultData.backgroundEnergySpectrum) {
         return undefined;
     }
+    data.data.push(dataPackage);
     return JSON.stringify(data);
 }
 document.getElementById('download-spectrum-btn').onclick = () => downloadData('spectrum', 'data');
@@ -1196,7 +1200,7 @@ const saveFileTypes = {
         }
     },
     'JSON': {
-        description: 'Combination data file (NPESv1, small size)',
+        description: 'Combination data file (NPESv2, smaller size)',
         accept: {
             'application/json': ['.json']
         }

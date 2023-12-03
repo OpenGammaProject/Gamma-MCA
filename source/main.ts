@@ -26,7 +26,6 @@
     - Analysis report generator (print via window.open(), print.html, window.print())
 
     - Fix different casings in HTML
-    - Save and Save As Buttons should save in NPESv2 for JSON exports
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -38,7 +37,7 @@
 */
 
 import { SpectrumPlot, SeekClosest, DownloadFormat, CalculateFWHM } from './plot.js';
-import { RawData, NPESv1, NPESv1Spectrum, JSONParseError } from './raw-data.js';
+import { RawData, NPESv1, NPESv1Spectrum, JSONParseError, NPESv2 } from './raw-data.js';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
 import { WebUSBSerialPort } from './external/webusbserial-min.js'
 import { ToastNotification, launchSysNotification } from './notifications.js';
@@ -1563,8 +1562,12 @@ function makeJSONSpectrum(type: DataType): NPESv1Spectrum {
 
 
 function generateNPES(): string | undefined {
-  const data: NPESv1 = {
-    schemaVersion: 'NPESv1',
+  const data: NPESv2 = {
+    schemaVersion: 'NPESv2',
+    data: []
+  }
+
+  const dataPackage: NPESv1 = {
     deviceData: {
       softwareName: 'Gamma MCA, ' + APP_VERSION,
       deviceName: (<HTMLInputElement>document.getElementById('device-name')).value.trim()
@@ -1578,32 +1581,34 @@ function generateNPES(): string | undefined {
   }
 
   let val = parseFloat((<HTMLInputElement>document.getElementById('sample-weight')).value.trim());
-  if (val) data.sampleInfo!.weight = val;
+  if (val) dataPackage.sampleInfo!.weight = val;
 
   val = parseFloat((<HTMLInputElement>document.getElementById('sample-vol')).value.trim());
-  if (val) data.sampleInfo!.volume = val;
+  if (val) dataPackage.sampleInfo!.volume = val;
 
   const tval = (<HTMLInputElement>document.getElementById('sample-time')).value.trim();
-  if (tval.length && new Date(tval)) data.sampleInfo!.time = toLocalIsoString(new Date(tval));
+  if (tval.length && new Date(tval)) dataPackage.sampleInfo!.time = toLocalIsoString(new Date(tval));
 
   if (startDate) {
-    data.resultData.startTime = toLocalIsoString(startDate);
+    dataPackage.resultData.startTime = toLocalIsoString(startDate);
 
     if (endDate && endDate.getTime() - startDate.getTime() >= 0) {
-      data.resultData.endTime = toLocalIsoString(endDate);
+      dataPackage.resultData.endTime = toLocalIsoString(endDate);
     } else {
-      data.resultData.endTime = toLocalIsoString(new Date());
+      dataPackage.resultData.endTime = toLocalIsoString(new Date());
     }
   }
 
-  if (spectrumData.data.length && spectrumData.getTotalCounts('data')) data.resultData.energySpectrum = makeJSONSpectrum('data');
-  if (spectrumData.background.length && spectrumData.getTotalCounts('background')) data.resultData.backgroundEnergySpectrum = makeJSONSpectrum('background');
+  if (spectrumData.data.length && spectrumData.getTotalCounts('data')) dataPackage.resultData.energySpectrum = makeJSONSpectrum('data');
+  if (spectrumData.background.length && spectrumData.getTotalCounts('background')) dataPackage.resultData.backgroundEnergySpectrum = makeJSONSpectrum('background');
 
   // Additionally validate the JSON Schema?
-  if (!data.resultData.energySpectrum && !data.resultData.backgroundEnergySpectrum) {
+  if (!dataPackage.resultData.energySpectrum && !dataPackage.resultData.backgroundEnergySpectrum) {
     //new ToastNotification('fileEmptyError'); //popupNotification('file-empty-error');
     return undefined;
   }
+
+  data.data.push(dataPackage);
 
   return JSON.stringify(data);
 }
@@ -1674,7 +1679,7 @@ const saveFileTypes: SaveTypeList = {
     }
   },
   'JSON': {
-    description: 'Combination data file (NPESv1, small size)',
+    description: 'Combination data file (NPESv2, smaller size)',
     accept: {
       'application/json': ['.json']
     }
