@@ -145,7 +145,7 @@ export class SpectrumPlot {
     peakConfig = {
         enabled: false,
         mode: undefined,
-        thres: 0.005,
+        thres: 0.008,
         lag: 50,
         seekWidth: 2,
         showFWHM: true,

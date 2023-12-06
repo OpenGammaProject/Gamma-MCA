@@ -294,7 +294,7 @@ export class SpectrumPlot {
   peakConfig = {
     enabled: false,
     mode: <PeakModes>undefined, // Gaussian Correlation: 0, Energy: 1 and Isotope: 2 modes
-    thres: 0.005,
+    thres: 0.008,
     lag: 50,
     seekWidth: 2,
     showFWHM: true,
