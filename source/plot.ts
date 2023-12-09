@@ -1265,15 +1265,17 @@ export class SpectrumPlot {
       CPS enabled
     */
     if (this.cps) {
-      if (Math.max(...data[0].y) < 1) { // Less than 1 cps at max, switch to cpm
-        for (const trace of data) {
-          trace.y = trace.y.map(value => value * 60);
+      if (data.length > 0) { // Check before, otherwise it will crash recordings instantly when they start!
+        if (Math.max(...data[0].y) < 1) { // Less than 1 cps at max, switch to cpm
+          for (const trace of data) {
+            trace.y = trace.y.map(value => value * 60);
+          }
+          layout.yaxis.title = 'Counts Per Minute [60 s<sup>-1</sup>]';
+          layout.yaxis.ticksuffix = 'cpm';
+        } else { // Enough counts for cpm
+          layout.yaxis.title = 'Counts Per Second [s<sup>-1</sup>]';
+          layout.yaxis.ticksuffix = 'cps';
         }
-        layout.yaxis.title = 'Counts Per Minute [60 s<sup>-1</sup>]';
-        layout.yaxis.ticksuffix = 'cpm';
-      } else { // Enough counts for cpm
-        layout.yaxis.title = 'Counts Per Second [s<sup>-1</sup>]';
-        layout.yaxis.ticksuffix = 'cps';
       }
     }
 

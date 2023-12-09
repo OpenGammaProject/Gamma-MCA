@@ -943,16 +943,18 @@ export class SpectrumPlot {
             ]
         };
         if (this.cps) {
-            if (Math.max(...data[0].y) < 1) {
-                for (const trace of data) {
-                    trace.y = trace.y.map(value => value * 60);
+            if (data.length > 0) {
+                if (Math.max(...data[0].y) < 1) {
+                    for (const trace of data) {
+                        trace.y = trace.y.map(value => value * 60);
+                    }
+                    layout.yaxis.title = 'Counts Per Minute [60 s<sup>-1</sup>]';
+                    layout.yaxis.ticksuffix = 'cpm';
                 }
-                layout.yaxis.title = 'Counts Per Minute [60 s<sup>-1</sup>]';
-                layout.yaxis.ticksuffix = 'cpm';
-            }
-            else {
-                layout.yaxis.title = 'Counts Per Second [s<sup>-1</sup>]';
-                layout.yaxis.ticksuffix = 'cps';
+                else {
+                    layout.yaxis.title = 'Counts Per Second [s<sup>-1</sup>]';
+                    layout.yaxis.ticksuffix = 'cps';
+                }
             }
         }
         if (this.peakConfig.enabled && data.length) {
