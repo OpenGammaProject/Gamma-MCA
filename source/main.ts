@@ -17,11 +17,12 @@
     - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with a (right-)click
     - (?) Add pulse limit analog to time limit for serial recordings
     - (?) Dead time correction for cps
-    - (?) Hotkeys
+    - (?) Sound card spectrometry prove of concept in browser (POSSIBLY HUGE POTENTIAL)
 
     - NPESv2: Let user remove data packages from file in the import selection dialog
     - NPESv2: Create additional save (append) button that allows users to save multiple data packages in one file
     - Automatically close system notifications when the user interacts with the page again
+    - Hotkeys
     - Optional real-time file saving to help with long recordings that might crash (create some temp files)
     - Analysis report generator (print via window.open(), print.html, window.print())
 
