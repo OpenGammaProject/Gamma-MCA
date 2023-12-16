@@ -507,7 +507,9 @@ export class SpectrumPlot {
   /*
     Show any peaks that have been found by marking in the plot
   */
-  drawPeakFinder(xAxis: number[], peakArray: number[], heightAxis: number[]): void {
+  drawPeakFinder(xAxisLength: number, peakArray: number[], heightAxis: number[]): void {
+    const xAxis = this.getXAxis(xAxisLength);
+
     for (let result of peakArray) {
       const resultBin = Math.round(result);
       const height = heightAxis[resultBin];
@@ -532,8 +534,10 @@ export class SpectrumPlot {
   /*
     Find peaks in the height data by using two different moving averages
   */
-  peakFinder(xAxis: number[], heightData: number[]): number[] {
+  peakFinder(xAxisLength: number, heightData: number[]): number[] {
     this.clearPeakFinder();
+
+    const xAxis = this.getXAxis(xAxisLength);
 
     const longData = this.computeMovingAverage(heightData, this.peakConfig.lag);
 
@@ -1315,8 +1319,8 @@ export class SpectrumPlot {
         }
       };
 
-      const peaks = this.peakFinder(this.getXAxis(gaussData.length), gaussData);
-      this.drawPeakFinder(this.getXAxis(gaussData.length), peaks, data[0].y);
+      const peaks = this.peakFinder(gaussData.length, gaussData);
+      this.drawPeakFinder(gaussData.length, peaks, data[0].y);
 
       if (this.peakConfig.showFWHM) {
         const peakResolutions = new CalculateFWHM(this.peakConfig.lines, data[0].x, data[0].y).getResolution();

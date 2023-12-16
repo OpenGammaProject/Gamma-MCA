@@ -318,7 +318,8 @@ export class SpectrumPlot {
             this.peakConfig.lines = [];
         }
     }
-    drawPeakFinder(xAxis, peakArray, heightAxis) {
+    drawPeakFinder(xAxisLength, peakArray, heightAxis) {
+        const xAxis = this.getXAxis(xAxisLength);
         for (let result of peakArray) {
             const resultBin = Math.round(result);
             const height = heightAxis[resultBin];
@@ -341,8 +342,9 @@ export class SpectrumPlot {
             }
         }
     }
-    peakFinder(xAxis, heightData) {
+    peakFinder(xAxisLength, heightData) {
         this.clearPeakFinder();
+        const xAxis = this.getXAxis(xAxisLength);
         const longData = this.computeMovingAverage(heightData, this.peakConfig.lag);
         const maxVal = Math.max(...heightData);
         const peakLines = [];
@@ -978,8 +980,8 @@ export class SpectrumPlot {
                     color: 'black',
                 }
             };
-            const peaks = this.peakFinder(this.getXAxis(gaussData.length), gaussData);
-            this.drawPeakFinder(this.getXAxis(gaussData.length), peaks, data[0].y);
+            const peaks = this.peakFinder(gaussData.length, gaussData);
+            this.drawPeakFinder(gaussData.length, peaks, data[0].y);
             if (this.peakConfig.showFWHM) {
                 const peakResolutions = new CalculateFWHM(this.peakConfig.lines, data[0].x, data[0].y).getResolution();
                 for (const anno of this.annotations) {
