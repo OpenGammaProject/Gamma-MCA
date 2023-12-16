@@ -1,5 +1,6 @@
 import PolynomialRegression from './external/regression/PolynomialRegression.min.js';
 export class SeekClosest {
+    static seekWidth = 2;
     isoList;
     constructor(list) {
         const conversionList = {};
@@ -12,7 +13,7 @@ export class SeekClosest {
         }
         this.isoList = conversionList;
     }
-    seek(value, maxDist = 100) {
+    seek(value, maxDist = SeekClosest.seekWidth) {
         const closeVals = Object.keys(this.isoList).filter(energy => energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
         const closeValsNum = closeVals.map(energy => parseFloat(energy));
         if (closeValsNum.length) {
@@ -147,7 +148,6 @@ export class SpectrumPlot {
         mode: undefined,
         thres: 0.008,
         lag: 50,
-        seekWidth: 2,
         showFWHM: true,
         newPeakStyle: true,
         lines: []
@@ -318,57 +318,61 @@ export class SpectrumPlot {
             this.peakConfig.lines = [];
         }
     }
-    peakFinder(xAxis, yAxis, heightAxis) {
+    drawPeakFinder(xAxis, peakArray, heightAxis) {
+        for (let result of peakArray) {
+            const resultBin = Math.round(result);
+            const height = heightAxis[resultBin];
+            if (this.calibration.enabled)
+                result = this.getCalAxis(xAxis.length)[resultBin];
+            if (height >= 0) {
+                if (this.peakConfig.mode === 'energy') {
+                    this.toggleLine(result, Math.round(result).toString(), true, height);
+                    this.peakConfig.lines.push(result);
+                }
+                else if (this.peakConfig.mode === 'isotopes') {
+                    if (!this.isotopeSeeker)
+                        throw 'No isotope seeker found!';
+                    const { energy, name } = this.isotopeSeeker.seek(result);
+                    if (energy && name) {
+                        this.toggleLine(energy, name, true, height);
+                        this.peakConfig.lines.push(energy);
+                    }
+                }
+            }
+        }
+    }
+    peakFinder(xAxis, heightData) {
         this.clearPeakFinder();
-        const longData = this.computeMovingAverage(yAxis, this.peakConfig.lag);
-        const maxVal = Math.max(...yAxis);
+        const longData = this.computeMovingAverage(heightData, this.peakConfig.lag);
+        const maxVal = Math.max(...heightData);
         const peakLines = [];
-        const shortLen = yAxis.length;
+        const shortLen = heightData.length;
         for (let i = 0; i < shortLen; i++) {
-            if (yAxis[i] - longData[i] > this.peakConfig.thres * maxVal)
+            if (heightData[i] - longData[i] > this.peakConfig.thres * maxVal)
                 peakLines.push(xAxis[i]);
         }
         let values = [];
         peakLines.push(0);
         const peakLen = peakLines.length;
+        const peakArray = [];
         for (let i = 0; i < peakLen; i++) {
             values.push(peakLines[i]);
             if (Math.abs(peakLines[i + 1] - peakLines[i]) > 2) {
                 let result = 0;
-                let size;
                 if (values.length === 1) {
                     result = peakLines[i];
-                    size = this.peakConfig.seekWidth;
                 }
                 else {
                     for (const val of values) {
                         result += val;
                     }
                     result /= values.length;
-                    size = this.peakConfig.seekWidth * (Math.max(...values) - Math.min(...values));
                 }
-                const resultBin = Math.round(result);
-                const height = heightAxis[resultBin];
-                if (this.calibration.enabled)
-                    result = this.getCalAxis(xAxis.length)[resultBin];
-                if (height >= 0) {
-                    if (this.peakConfig.mode === 'energy') {
-                        this.toggleLine(result, Math.round(result).toString(), true, height);
-                        this.peakConfig.lines.push(result);
-                    }
-                    else if (this.peakConfig.mode === 'isotopes') {
-                        if (!this.isotopeSeeker)
-                            throw 'No isotope seeker found!';
-                        const { energy, name } = this.isotopeSeeker.seek(result, size);
-                        if (energy && name) {
-                            this.toggleLine(energy, name, true, height);
-                            this.peakConfig.lines.push(energy);
-                        }
-                    }
-                }
+                peakArray.push(result);
                 values = [];
             }
         }
+        return peakArray;
     }
     resetPlot(spectrumData, cpsValues = []) {
         if (this.type === 'calibration')
@@ -974,7 +978,8 @@ export class SpectrumPlot {
                     color: 'black',
                 }
             };
-            this.peakFinder(this.getXAxis(gaussData.length), gaussData, data[0].y);
+            const peaks = this.peakFinder(this.getXAxis(gaussData.length), gaussData);
+            this.drawPeakFinder(this.getXAxis(gaussData.length), peaks, data[0].y);
             if (this.peakConfig.showFWHM) {
                 const peakResolutions = new CalculateFWHM(this.peakConfig.lines, data[0].x, data[0].y).getResolution();
                 for (const anno of this.annotations) {
