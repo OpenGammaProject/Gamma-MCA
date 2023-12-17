@@ -268,6 +268,7 @@ export class SpectrumPlot {
   private gridColorDark = '#515151';
   private annoBgLight = 'rgba(255,255,255,0.4)';
   private annoBgDark = 'rgba(0,0,0,0.4)';
+  cpsSwitchLimit = 1; // Limit of cps below which plot will switch to cpm
   sma = false; // Simple Moving Average
   smaLength = 8;
   calibration = {
@@ -507,13 +508,11 @@ export class SpectrumPlot {
   /*
     Show any peaks that have been found by marking in the plot
   */
-  drawPeakFinder(xAxisLength: number, peakArray: number[], heightAxis: number[]): void {
-    const xAxis = this.getXAxis(xAxisLength);
-
+  private drawPeakFinder(xAxis: number[], peakArray: number[], heightAxis: number[]): void {
     for (let result of peakArray) {
       const resultBin = Math.round(result);
       const height = heightAxis[resultBin];
-      if (this.calibration.enabled) result = this.getCalAxis(xAxis.length)[resultBin];
+      if (this.calibration.enabled) result = xAxis[resultBin];
 
       if (height >= 0) {
         if (this.peakConfig.mode === 'energy') {
@@ -534,10 +533,10 @@ export class SpectrumPlot {
   /*
     Find peaks in the height data by using two different moving averages
   */
-  peakFinder(xAxisLength: number, heightData: number[]): number[] {
+  peakFinder(heightData: number[]): number[] {
     this.clearPeakFinder();
 
-    const xAxis = this.getXAxis(xAxisLength);
+    const blankXAxis = this.getXAxis(heightData.length);
 
     const longData = this.computeMovingAverage(heightData, this.peakConfig.lag);
 
@@ -547,7 +546,7 @@ export class SpectrumPlot {
     const shortLen = heightData.length;
 
     for (let i = 0; i < shortLen; i++) {
-      if (heightData[i] - longData[i] > this.peakConfig.thres * maxVal) peakLines.push(xAxis[i]);
+      if (heightData[i] - longData[i] > this.peakConfig.thres * maxVal) peakLines.push(blankXAxis[i]);
     }
 
     let values: number[] = [];
@@ -1059,11 +1058,9 @@ export class SpectrumPlot {
     (<any>window).Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, markersTrace], layout, config);
   }
   /*
-    Plot All The Data
+    Compute data for pulse height histogram with cps, sma, gauss filter and others
   */
-  private plotData(dataObj: SpectrumData, update: boolean): void {
-    if (this.type !== 'default') return; // Ignore this if the calibration chart is currently shown
-
+  computePulseHeightData(dataObj: SpectrumData): Trace[] {
     const data: Trace[] = [];
 
     if (dataObj.data.length) {
@@ -1136,7 +1133,54 @@ export class SpectrumPlot {
         element.y = this.computeMovingAverage(element.y);
       }
     }
-    
+
+    /*
+      Calibration enabled
+    */
+    if (this.calibration.enabled) {
+      for (const element of data) {
+        element.x = this.getCalAxis(element.x.length);
+      }
+    }
+
+    /*
+      Peak Detection Stuff
+    */
+    if (this.peakConfig.enabled && data.length) {
+      // Gaussian Correlation Filter
+      const gaussData = this.gaussianCorrel(data[0].y, this.gaussSigma);
+
+      const eTrace: Trace = {
+        name: 'Gaussian Correlation',
+        //stackgroup: 'data', // Stack line charts on top of each other
+        x: data[0].x,
+        y: gaussData,
+        //yaxis: 'y2',
+        type: 'scatter',
+        mode: 'lines', // Remove lines, "lines", "none"
+        //fill: 'tozeroy',
+        //opacity: 0.8,
+        line: {
+          color: 'black',
+          width: 0.6,
+          shape: this.linePlot ? 'linear' : 'hvh',
+        },
+        marker: {
+          color: 'black',
+        }
+      };
+
+      data.unshift(eTrace);
+    }
+
+    return data;
+  }
+  /*
+    Plot All The Data
+  */
+  private plotData(dataObj: SpectrumData, update: boolean): void {
+    if (this.type !== 'default') return; // Ignore this if the calibration chart is currently shown
+
     /*
       All The Layout Stuff
     */
@@ -1246,9 +1290,6 @@ export class SpectrumPlot {
       Set calibrated x-axis
     */
     if (this.calibration.enabled) {
-      for (const element of data) {
-        element.x = this.getCalAxis(element.x.length);
-      }
       layout.xaxis.title = 'Energy [keV]';
       layout.xaxis.ticksuffix = ' keV';
     }
@@ -1274,12 +1315,14 @@ export class SpectrumPlot {
       ]
     };
 
+    const data = this.computePulseHeightData(dataObj); // Get all trace data
+
     /*
       CPS enabled
     */
     if (this.cps) {
       if (data.length > 0) { // Check before, otherwise it will crash recordings instantly when they start!
-        if (Math.max(...data[0].y) < 1) { // Less than 1 cps at max, switch to cpm
+        if (Math.max(...data[0].y) < this.cpsSwitchLimit) { // Less than 1 cps at max, switch to cpm
           for (const trace of data) {
             trace.y = trace.y.map(value => value * 60);
           }
@@ -1295,35 +1338,15 @@ export class SpectrumPlot {
     /*
       Peak Detection Stuff
     */
-    if (this.peakConfig.enabled && data.length) {
-      // Gaussian Correlation Filter
-      const gaussData = this.gaussianCorrel(data[0].y, this.gaussSigma);
+    if (this.peakConfig.enabled && data.length > 1) {
+      const gaussDataX = data[0].x; // Gauss data will always be the first trace
+      const gaussDataY = data[0].y;
 
-      const eTrace: Trace = {
-        name: 'Gaussian Correlation',
-        //stackgroup: 'data', // Stack line charts on top of each other
-        x: data[0].x,
-        y: gaussData,
-        //yaxis: 'y2',
-        type: 'scatter',
-        mode: 'lines', // Remove lines, "lines", "none"
-        //fill: 'tozeroy',
-        //opacity: 0.8,
-        line: {
-          color: 'black',
-          width: 0.6,
-          shape: this.linePlot ? 'linear' : 'hvh',
-        },
-        marker: {
-          color: 'black',
-        }
-      };
-
-      const peaks = this.peakFinder(gaussData.length, gaussData);
-      this.drawPeakFinder(gaussData.length, peaks, data[0].y);
+      const peaks = this.peakFinder(gaussDataY);
+      this.drawPeakFinder(gaussDataX, peaks, data[1].y);
 
       if (this.peakConfig.showFWHM) {
-        const peakResolutions = new CalculateFWHM(this.peakConfig.lines, data[0].x, data[0].y).getResolution();
+        const peakResolutions = new CalculateFWHM(this.peakConfig.lines, data[1].x, data[1].y).getResolution();
         
         for (const anno of this.annotations) {
           const fwhmValue = peakResolutions[anno.x];
@@ -1331,8 +1354,6 @@ export class SpectrumPlot {
           if (fwhmValue > 0 && fwhmValue < 0.9 * CalculateFWHM.resolutionLimit) anno.text += `<br>${(fwhmValue * 100).toFixed(1)}%`;
         }
       }
-
-      data.unshift(eTrace);
     }
 
     if (!this.peakConfig.enabled || !data.length || data.length >= 3) data.reverse(); // Change/Fix data order
