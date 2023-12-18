@@ -1,5 +1,6 @@
 import PolynomialRegression from './external/regression/PolynomialRegression.min.js';
 export class SeekClosest {
+    static seekWidth = 2;
     isoList;
     constructor(list) {
         const conversionList = {};
@@ -12,7 +13,7 @@ export class SeekClosest {
         }
         this.isoList = conversionList;
     }
-    seek(value, maxDist = 100) {
+    seek(value, maxDist = SeekClosest.seekWidth) {
         const closeVals = Object.keys(this.isoList).filter(energy => energy ? (Math.abs(parseFloat(energy) - value) <= maxDist) : false);
         const closeValsNum = closeVals.map(energy => parseFloat(energy));
         if (closeValsNum.length) {
@@ -118,6 +119,7 @@ export class SpectrumPlot {
     gridColorDark = '#515151';
     annoBgLight = 'rgba(255,255,255,0.4)';
     annoBgDark = 'rgba(0,0,0,0.4)';
+    cpsSwitchLimit = 1;
     sma = false;
     smaLength = 8;
     calibration = {
@@ -145,9 +147,8 @@ export class SpectrumPlot {
     peakConfig = {
         enabled: false,
         mode: undefined,
-        thres: 0.005,
+        thres: 0.008,
         lag: 50,
-        seekWidth: 2,
         showFWHM: true,
         newPeakStyle: true,
         lines: []
@@ -318,57 +319,62 @@ export class SpectrumPlot {
             this.peakConfig.lines = [];
         }
     }
-    peakFinder(xAxis, yAxis, heightAxis) {
+    drawPeakFinder(xAxis, peakArray, heightAxis) {
+        for (let result of peakArray) {
+            const resultBin = Math.round(result);
+            const height = heightAxis[resultBin];
+            if (this.calibration.enabled)
+                result = xAxis[resultBin];
+            if (height >= 0) {
+                if (this.peakConfig.mode === 'energy') {
+                    this.toggleLine(result, Math.round(result).toString(), true, height);
+                    this.peakConfig.lines.push(result);
+                }
+                else if (this.peakConfig.mode === 'isotopes') {
+                    if (!this.isotopeSeeker)
+                        throw 'No isotope seeker found!';
+                    const { energy, name } = this.isotopeSeeker.seek(result);
+                    if (energy && name) {
+                        this.toggleLine(energy, name, true, height);
+                        this.peakConfig.lines.push(energy);
+                    }
+                }
+            }
+        }
+    }
+    peakFinder(heightData) {
         this.clearPeakFinder();
-        const longData = this.computeMovingAverage(yAxis, this.peakConfig.lag);
-        const maxVal = Math.max(...yAxis);
+        const blankXAxis = this.getXAxis(heightData.length);
+        const longData = this.computeMovingAverage(heightData, this.peakConfig.lag);
+        const maxVal = Math.max(...heightData);
         const peakLines = [];
-        const shortLen = yAxis.length;
+        const shortLen = heightData.length;
         for (let i = 0; i < shortLen; i++) {
-            if (yAxis[i] - longData[i] > this.peakConfig.thres * maxVal)
-                peakLines.push(xAxis[i]);
+            if (heightData[i] - longData[i] > this.peakConfig.thres * maxVal)
+                peakLines.push(blankXAxis[i]);
         }
         let values = [];
         peakLines.push(0);
         const peakLen = peakLines.length;
+        const peakArray = [];
         for (let i = 0; i < peakLen; i++) {
             values.push(peakLines[i]);
             if (Math.abs(peakLines[i + 1] - peakLines[i]) > 2) {
                 let result = 0;
-                let size;
                 if (values.length === 1) {
                     result = peakLines[i];
-                    size = this.peakConfig.seekWidth;
                 }
                 else {
                     for (const val of values) {
                         result += val;
                     }
                     result /= values.length;
-                    size = this.peakConfig.seekWidth * (Math.max(...values) - Math.min(...values));
                 }
-                const resultBin = Math.round(result);
-                const height = heightAxis[resultBin];
-                if (this.calibration.enabled)
-                    result = this.getCalAxis(xAxis.length)[resultBin];
-                if (height >= 0) {
-                    if (this.peakConfig.mode === 'energy') {
-                        this.toggleLine(result, Math.round(result).toString(), true, height);
-                        this.peakConfig.lines.push(result);
-                    }
-                    else if (this.peakConfig.mode === 'isotopes') {
-                        if (!this.isotopeSeeker)
-                            throw 'No isotope seeker found!';
-                        const { energy, name } = this.isotopeSeeker.seek(result, size);
-                        if (energy && name) {
-                            this.toggleLine(energy, name, true, height);
-                            this.peakConfig.lines.push(energy);
-                        }
-                    }
-                }
+                peakArray.push(result);
                 values = [];
             }
         }
+        return peakArray;
     }
     resetPlot(spectrumData, cpsValues = []) {
         if (this.type === 'calibration')
@@ -776,9 +782,7 @@ export class SpectrumPlot {
         };
         window.Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, markersTrace], layout, config);
     }
-    plotData(dataObj, update) {
-        if (this.type !== 'default')
-            return;
+    computePulseHeightData(dataObj) {
         const data = [];
         if (dataObj.data.length) {
             const trace = {
@@ -832,6 +836,35 @@ export class SpectrumPlot {
                 element.y = this.computeMovingAverage(element.y);
             }
         }
+        if (this.calibration.enabled) {
+            for (const element of data) {
+                element.x = this.getCalAxis(element.x.length);
+            }
+        }
+        if (this.peakConfig.enabled && data.length) {
+            const gaussData = this.gaussianCorrel(data[0].y, this.gaussSigma);
+            const eTrace = {
+                name: 'Gaussian Correlation',
+                x: data[0].x,
+                y: gaussData,
+                type: 'scatter',
+                mode: 'lines',
+                line: {
+                    color: 'black',
+                    width: 0.6,
+                    shape: this.linePlot ? 'linear' : 'hvh',
+                },
+                marker: {
+                    color: 'black',
+                }
+            };
+            data.unshift(eTrace);
+        }
+        return data;
+    }
+    plotData(dataObj, update) {
+        if (this.type !== 'default')
+            return;
         const layout = {
             uirevision: 1,
             autosize: true,
@@ -917,9 +950,6 @@ export class SpectrumPlot {
             annotations: [],
         };
         if (this.calibration.enabled) {
-            for (const element of data) {
-                element.x = this.getCalAxis(element.x.length);
-            }
             layout.xaxis.title = 'Energy [keV]';
             layout.xaxis.ticksuffix = ' keV';
         }
@@ -942,46 +972,35 @@ export class SpectrumPlot {
                 [this.customFullscreenButton]
             ]
         };
+        const data = this.computePulseHeightData(dataObj);
         if (this.cps) {
-            if (Math.max(...data[0].y) < 1) {
-                for (const trace of data) {
-                    trace.y = trace.y.map(value => value * 60);
+            if (data.length > 0) {
+                if (Math.max(...data[0].y) < this.cpsSwitchLimit) {
+                    for (const trace of data) {
+                        trace.y = trace.y.map(value => value * 60);
+                    }
+                    layout.yaxis.title = 'Counts Per Minute [60 s<sup>-1</sup>]';
+                    layout.yaxis.ticksuffix = 'cpm';
                 }
-                layout.yaxis.title = 'Counts Per Minute [60 s<sup>-1</sup>]';
-                layout.yaxis.ticksuffix = 'cpm';
-            }
-            else {
-                layout.yaxis.title = 'Counts Per Second [s<sup>-1</sup>]';
-                layout.yaxis.ticksuffix = 'cps';
+                else {
+                    layout.yaxis.title = 'Counts Per Second [s<sup>-1</sup>]';
+                    layout.yaxis.ticksuffix = 'cps';
+                }
             }
         }
-        if (this.peakConfig.enabled && data.length) {
-            const gaussData = this.gaussianCorrel(data[0].y, this.gaussSigma);
-            const eTrace = {
-                name: 'Gaussian Correlation',
-                x: data[0].x,
-                y: gaussData,
-                type: 'scatter',
-                mode: 'lines',
-                line: {
-                    color: 'black',
-                    width: 0.6,
-                    shape: this.linePlot ? 'linear' : 'hvh',
-                },
-                marker: {
-                    color: 'black',
-                }
-            };
-            this.peakFinder(this.getXAxis(gaussData.length), gaussData, data[0].y);
+        if (this.peakConfig.enabled && data.length > 1) {
+            const gaussDataX = data[0].x;
+            const gaussDataY = data[0].y;
+            const peaks = this.peakFinder(gaussDataY);
+            this.drawPeakFinder(gaussDataX, peaks, data[1].y);
             if (this.peakConfig.showFWHM) {
-                const peakResolutions = new CalculateFWHM(this.peakConfig.lines, data[0].x, data[0].y).getResolution();
+                const peakResolutions = new CalculateFWHM(this.peakConfig.lines, data[1].x, data[1].y).getResolution();
                 for (const anno of this.annotations) {
                     const fwhmValue = peakResolutions[anno.x];
                     if (fwhmValue > 0 && fwhmValue < 0.9 * CalculateFWHM.resolutionLimit)
                         anno.text += `<br>${(fwhmValue * 100).toFixed(1)}%`;
                 }
             }
-            data.unshift(eTrace);
         }
         if (!this.peakConfig.enabled || !data.length || data.length >= 3)
             data.reverse();
