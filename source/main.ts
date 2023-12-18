@@ -24,7 +24,6 @@
     - Automatically close system notifications when the user interacts with the page again
     - Hotkeys
     - Optional real-time file saving to help with long recordings that might crash (create some temp files)
-    - Analysis report generator (print via window.open(), print.html, window.print())
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
