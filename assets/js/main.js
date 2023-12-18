@@ -1356,7 +1356,7 @@ function printReport() {
             window.Plotly.toImage(plot.plotDiv, { format: 'png', height: 400, width: 1000 }).then(function (url) {
                 const img = printDocument.getElementById('plot-image');
                 img.src = url;
-                printWindow.print();
+                img.onload = () => printWindow.print();
             });
         };
         printWindow.onafterprint = () => printWindow.close();

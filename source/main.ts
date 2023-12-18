@@ -1879,7 +1879,7 @@ function printReport(): void {
           const img = <HTMLImageElement>printDocument.getElementById('plot-image');
           img.src = url;
 
-          printWindow.print(); // Finally print the window if the image has been loaded
+          img.onload = () => printWindow.print(); // Finally print the window if the image has been loaded
         }
       );
     };
