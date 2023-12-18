@@ -66,6 +66,12 @@ const faSortClasses = {
     asc: 'fa-sort-up',
     desc: 'fa-sort-down'
 };
+const hotkeys = {
+    'r': 'reset-plot',
+    'k': 'sma',
+    'x': 'xAxis',
+    'y': 'yAxis'
+};
 window.addEventListener('DOMContentLoaded', () => {
     if (localStorageAvailable) {
         plot.darkMode = applyTheming() === 'dark';
@@ -225,6 +231,7 @@ document.body.onload = async function () {
     else {
         console.error('Browser does not support Notifications API.');
     }
+    bindHotkeys();
     const loadingOverlay = document.getElementById('loading');
     loadingOverlay.parentNode.removeChild(loadingOverlay);
 };
@@ -1558,6 +1565,17 @@ async function findPeaks(button) {
         useGaussPeakMode(button);
     }
     plot.updatePlot(spectrumData);
+}
+function bindHotkeys() {
+    for (const [key, buttonId] of Object.entries(hotkeys)) {
+        document.addEventListener('keydown', (event) => {
+            if (event.ctrlKey && event.key === key) {
+                event.preventDefault();
+                if (!event.repeat)
+                    document.getElementById(buttonId)?.click();
+            }
+        });
+    }
 }
 function saveJSON(name, value) {
     if (localStorageAvailable) {

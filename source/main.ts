@@ -22,7 +22,6 @@
     - NPESv2: Let user remove data packages from file in the import selection dialog
     - NPESv2: Create additional save (append) button that allows users to save multiple data packages in one file
     - Automatically close system notifications when the user interacts with the page again
-    - Hotkeys
     - Optional real-time file saving to help with long recordings that might crash (create some temp files)
 
   Known Issues/Problems/Limitations:
@@ -140,6 +139,14 @@ const faSortClasses: {[key: string]: string} = {
   none: 'fa-sort',
   asc: 'fa-sort-up',
   desc: 'fa-sort-down'
+};
+
+// Key combinations for hotkey function: CTRL+OBJ_KEY
+const hotkeys = {
+  'r': 'reset-plot',
+  'k': 'sma',
+  'x': 'xAxis',
+  'y': 'yAxis'
 };
 
 
@@ -343,6 +350,8 @@ document.body.onload = async function(): Promise<void> {
   } else {
     console.error('Browser does not support Notifications API.');
   }
+
+  bindHotkeys();
 
   const loadingOverlay = document.getElementById('loading')!;
   loadingOverlay.parentNode!.removeChild(loadingOverlay); // Delete Loading Thingymajig
@@ -2142,6 +2151,18 @@ async function findPeaks(button: HTMLButtonElement): Promise<void> {
   }
 
   plot.updatePlot(spectrumData);
+}
+
+
+function bindHotkeys(): void {
+  for (const [key, buttonId] of Object.entries(hotkeys)) {
+    document.addEventListener('keydown', (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.key === key) {
+        event.preventDefault(); // Prevent the browser default action from popping up
+        if (!event.repeat) document.getElementById(buttonId)?.click(); // Call the function to handle the hotkey action only once per keydown
+      }
+    });
+  }
 }
 
 /*
