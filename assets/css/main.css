@@ -56,6 +56,10 @@ body {
   --fa-animation-duration: 2s;
 }
 
+.print-logo {
+  height: 40px;
+}
+
 .logo {
   width: 27%;
   height: auto;

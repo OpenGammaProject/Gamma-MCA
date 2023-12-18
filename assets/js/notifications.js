@@ -125,6 +125,13 @@ const notificationContents = {
         header: 'Saved File',
         body: 'Successfully saved data to the file system.'
     },
+    'reportError': {
+        type: 'warning',
+        delay: 5000,
+        icon: 'fas fa-exclamation-triangle fa-shake',
+        header: 'Missing Data',
+        body: 'Cannot generate a report since there is no data. Please try again when there is data to analyze.'
+    },
 };
 export class ToastNotification {
     toastElement;

@@ -743,9 +743,9 @@ function selectEvent(data) {
         start = binPoints[0];
         end = binPoints[1];
     }
-    const net = spectrumData.getTotalCounts('data', start, end);
+    const total = spectrumData.getTotalCounts('data', start, end);
     const bg = spectrumData.getTotalCounts('background', start, end);
-    const total = net + bg;
+    const net = total - bg;
     document.getElementById('total-counts').innerText = total.toString();
     document.getElementById('net-counts').innerText = net.toString();
     document.getElementById('bg-counts').innerText = bg.toString();
@@ -1259,6 +1259,112 @@ function resetSampleInfo() {
         element.value = '';
     }
 }
+document.getElementById('print-report').onclick = () => printReport();
+function printReport() {
+    const copyPeakFlag = plot.peakConfig.enabled;
+    if (!copyPeakFlag)
+        useGaussPeakMode(document.getElementById('peak-finder-btn'));
+    const dataArray = plot.computePulseHeightData(spectrumData);
+    const metaDataString = generateNPES();
+    if (!copyPeakFlag)
+        useIdlePeakMode(document.getElementById('peak-finder-btn'));
+    if (!dataArray.length || !metaDataString) {
+        console.error('Nothing to analyze, no data found. Cannot print report!');
+        new ToastNotification('reportError');
+        return;
+    }
+    const printWindow = window.open('/print.html', '_blank');
+    if (printWindow) {
+        printWindow.onload = () => {
+            const printDocument = printWindow.document;
+            const metaData = JSON.parse(metaDataString).data[0];
+            printDocument.getElementById('sample-name').innerText = metaData.sampleInfo?.name || 'N/A';
+            printDocument.getElementById('sample-loc').innerText = metaData.sampleInfo?.location || 'N/A';
+            printDocument.getElementById('sample-time').innerText = metaData.sampleInfo?.time || 'N/A';
+            printDocument.getElementById('note').innerText = metaData.sampleInfo?.note || 'N/A';
+            printDocument.getElementById('device-name').innerText = metaData.deviceData?.deviceName || 'N/A';
+            printDocument.getElementById('software-name').innerText = metaData.deviceData?.softwareName || 'N/A';
+            printDocument.getElementById('start-time').innerText = metaData.resultData.startTime ?? 'N/A';
+            printDocument.getElementById('end-time').innerText = metaData.resultData.endTime ?? 'N/A';
+            printDocument.getElementById('total-time-gross').innerText = metaData.resultData.energySpectrum?.measurementTime?.toString() || 'N/A';
+            printDocument.getElementById('total-time-bg').innerText = metaData.resultData.backgroundEnergySpectrum?.measurementTime?.toString() || 'N/A';
+            printDocument.getElementById('cal-coeffs').innerText = JSON.stringify(plot.calibration.enabled ? plot.calibration.coeff : { c1: 0, c2: 0, c3: 0 }) || 'N/A';
+            const tableHeadRow = printDocument.getElementById('peak-table-head-row');
+            const cell1 = document.createElement('th');
+            cell1.innerHTML = 'Peak Number <br>[1]';
+            tableHeadRow.appendChild(cell1);
+            const cell2 = document.createElement('th');
+            cell2.innerHTML = `Energy <br>[${plot.calibration.enabled ? 'keV' : 'bin'}]`;
+            tableHeadRow.appendChild(cell2);
+            const cell3 = document.createElement('th');
+            cell3.innerHTML = 'Net Peak Area <br>(3&sigma;) [cts]';
+            tableHeadRow.appendChild(cell3);
+            const cell4 = document.createElement('th');
+            cell4.innerHTML = 'Background Peak Area <br>(3&sigma;) [cts]';
+            tableHeadRow.appendChild(cell4);
+            const cell5 = document.createElement('th');
+            cell5.innerHTML = `FWHM <br>[${plot.calibration.enabled ? 'keV' : 'bin'}]`;
+            tableHeadRow.appendChild(cell5);
+            const cell6 = document.createElement('th');
+            cell6.innerHTML = 'FWHM <br>[%]';
+            tableHeadRow.appendChild(cell6);
+            const cell7 = document.createElement('th');
+            cell7.innerHTML = 'Net Peak Counts/s <br>(3&sigma;) [cps]';
+            tableHeadRow.appendChild(cell7);
+            const tableBody = printDocument.getElementById('peak-table-body');
+            const dataX = dataArray[0].x;
+            const dataY = dataArray[0].y;
+            const peaks = plot.peakFinder(dataY);
+            let index = 1;
+            for (const peak of peaks) {
+                const xPosition = dataX[Math.round(peak)];
+                if (xPosition < 0)
+                    continue;
+                const peakFWHM = new CalculateFWHM([xPosition], dataArray[1].x, dataArray[1].y).compute()[xPosition];
+                const energyResolution = new CalculateFWHM([xPosition], dataArray[1].x, dataArray[1].y).getResolution()[xPosition];
+                const sigmaMaxCenterDistance = 2 * peakFWHM / (2 * Math.sqrt(2 * Math.LN2));
+                const peakCounterXMin = xPosition - sigmaMaxCenterDistance;
+                const peakCounterXMax = xPosition + sigmaMaxCenterDistance;
+                let spectrumValue = 0;
+                let backgroundValue = 0;
+                for (const i in dataX) {
+                    const xPos = dataX[i];
+                    if (xPos >= peakCounterXMin && xPos <= peakCounterXMax) {
+                        spectrumValue += dataArray[1].y[i];
+                        if (dataArray.length > 2)
+                            backgroundValue += dataArray[2].y[i];
+                    }
+                }
+                const row = tableBody.insertRow();
+                const cell1 = document.createElement('th');
+                cell1.innerText = index.toString();
+                row.appendChild(cell1);
+                const cell2 = row.insertCell();
+                cell2.innerText = xPosition.toFixed(2);
+                const cell3 = row.insertCell();
+                cell3.innerText = (peakFWHM > 0 && peakFWHM < 0.9 * CalculateFWHM.resolutionLimit * xPosition) ? (spectrumValue * (plot.cps ? metaData.resultData.energySpectrum?.measurementTime ?? 1 : 1)).toFixed(0) : 'N/A';
+                const cell4 = row.insertCell();
+                cell4.innerText = (peakFWHM > 0 && peakFWHM < 0.9 * CalculateFWHM.resolutionLimit * xPosition) ? (backgroundValue * (plot.cps ? metaData.resultData.backgroundEnergySpectrum?.measurementTime ?? 1 : 1)).toFixed(0) : 'N/A';
+                const cell5 = row.insertCell();
+                cell5.innerText = (peakFWHM > 0 && peakFWHM < 0.9 * CalculateFWHM.resolutionLimit * xPosition) ? peakFWHM.toFixed(3) : 'OVF';
+                const cell6 = row.insertCell();
+                cell6.innerText = (energyResolution > 0 && energyResolution < 0.9 * CalculateFWHM.resolutionLimit) ? (energyResolution * 100).toFixed(2) : 'OVF';
+                const cell7 = row.insertCell();
+                cell7.innerText = (peakFWHM > 0 && peakFWHM < 0.9 * CalculateFWHM.resolutionLimit * xPosition) ? (plot.cps ? spectrumValue : spectrumValue / (metaData.resultData.energySpectrum?.measurementTime ?? 1)).toExponential(3) : 'N/A';
+                index++;
+            }
+            window.Plotly.toImage(plot.plotDiv, { format: 'png', height: 400, width: 1000 }).then(function (url) {
+                const img = printDocument.getElementById('plot-image');
+                img.src = url;
+                printWindow.print();
+            });
+        };
+        printWindow.onafterprint = () => printWindow.close();
+    }
+    else {
+        console.error('Unable to open a new window for printing.');
+    }
+}
 function legacyPopupNotification(id) {
     const toast = new window.bootstrap.Toast(document.getElementById(id));
     if (!toast.isShown())
@@ -1413,31 +1519,43 @@ function selectAll(selectBox) {
         plot.clearAnnos();
     plot.updatePlot(spectrumData);
 }
+function useIdlePeakMode(button) {
+    plot.clearPeakFinder();
+    plot.peakConfig.enabled = false;
+    button.innerText = 'None';
+}
+function useGaussPeakMode(button) {
+    plot.peakConfig.enabled = true;
+    plot.peakConfig.mode = 'gaussian';
+    button.innerText = 'Gaussian';
+}
+function useEnergyPeakMode(button) {
+    plot.peakConfig.mode = 'energy';
+    button.innerText = 'Energy';
+}
+async function useIsotopePeakMode(button) {
+    plot.clearPeakFinder();
+    await loadIsotopes();
+    plot.peakConfig.mode = 'isotopes';
+    button.innerText = 'Isotopes';
+}
 document.getElementById('peak-finder-btn').onclick = event => findPeaks(event.target);
 async function findPeaks(button) {
     if (plot.peakConfig.enabled) {
         switch (plot.peakConfig.mode) {
             case 'gaussian':
-                plot.peakConfig.mode = 'energy';
-                button.innerText = 'Energy';
+                useEnergyPeakMode(button);
                 break;
             case 'energy':
-                plot.clearPeakFinder();
-                await loadIsotopes();
-                plot.peakConfig.mode = 'isotopes';
-                button.innerText = 'Isotopes';
+                await useIsotopePeakMode(button);
                 break;
             case 'isotopes':
-                plot.clearPeakFinder();
-                plot.peakConfig.enabled = false;
-                button.innerText = 'None';
+                useIdlePeakMode(button);
                 break;
         }
     }
     else {
-        plot.peakConfig.enabled = true;
-        plot.peakConfig.mode = 'gaussian';
-        button.innerText = 'Gaussian';
+        useGaussPeakMode(button);
     }
     plot.updatePlot(spectrumData);
 }
@@ -1523,7 +1641,7 @@ function loadSettingsDefault() {
     document.getElementById('fwhm-fast').checked = CalculateFWHM.fastMode;
     document.getElementById('peak-thres').value = plot.peakConfig.thres.toString();
     document.getElementById('peak-lag').value = plot.peakConfig.lag.toString();
-    document.getElementById('seek-width').value = plot.peakConfig.seekWidth.toString();
+    document.getElementById('seek-width').value = SeekClosest.seekWidth.toString();
     document.getElementById('gauss-sigma').value = plot.gaussSigma.toString();
     const formatSelector = document.getElementById('download-format');
     const formatLen = formatSelector.options.length;
@@ -1591,7 +1709,7 @@ function loadSettingsStorage() {
         plot.peakConfig.lag = setting;
     setting = loadJSON('seekWidth');
     if (setting !== null)
-        plot.peakConfig.seekWidth = setting;
+        SeekClosest.seekWidth = setting;
     setting = loadJSON('plotDownload');
     if (setting !== null)
         plot.downloadFormat = setting;
@@ -1716,7 +1834,7 @@ function changeSettings(name, element) {
         }
         case 'seekWidth': {
             const numVal = parseFloat(stringValue);
-            plot.peakConfig.seekWidth = numVal;
+            SeekClosest.seekWidth = numVal;
             plot.updatePlot(spectrumData);
             result = saveJSON(name, numVal);
             break;

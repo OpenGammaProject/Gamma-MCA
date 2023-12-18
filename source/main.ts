@@ -1065,10 +1065,10 @@ function selectEvent(data: any): void {
     start = binPoints[0];
     end = binPoints[1];
   }
-  
-  const net = spectrumData.getTotalCounts('data', start, end);
+
+  const total = spectrumData.getTotalCounts('data', start, end);
   const bg = spectrumData.getTotalCounts('background', start, end);
-  const total = net + bg;
+  const net = total - bg;
 
   document.getElementById('total-counts')!.innerText = total.toString();
   document.getElementById('net-counts')!.innerText = net.toString();
@@ -1751,6 +1751,147 @@ function resetSampleInfo(): void {
 }
 
 
+document.getElementById('print-report')!.onclick = () => printReport();
+
+function printReport(): void {
+  // If Gaussian mode is not enabled, enable it to better find peaks
+  const copyPeakFlag = plot.peakConfig.enabled;
+  if (!copyPeakFlag) useGaussPeakMode(<HTMLButtonElement>document.getElementById('peak-finder-btn'));
+
+  const dataArray = plot.computePulseHeightData(spectrumData); // Generate data with current settings + force enabled Gaussian
+  const metaDataString = generateNPES();
+
+  // After collecting the data, click twice on the button to get back to the 
+  if (!copyPeakFlag) useIdlePeakMode(<HTMLButtonElement>document.getElementById('peak-finder-btn'));
+
+  if (!dataArray.length || !metaDataString) {
+    console.error('Nothing to analyze, no data found. Cannot print report!');
+    new ToastNotification('reportError');
+    return;
+  }
+
+  // Open a new tab, generate the report and print it
+  const printWindow = window.open('/print.html', '_blank');
+  if (printWindow) {
+    // Wait for the document to be fully loaded before triggering everything else
+    printWindow.onload = () => {
+      const printDocument = printWindow.document;
+      
+      const metaData = (<NPESv2>JSON.parse(metaDataString)).data[0];
+
+      printDocument.getElementById('sample-name')!.innerText = metaData.sampleInfo?.name || 'N/A';
+      printDocument.getElementById('sample-loc')!.innerText = metaData.sampleInfo?.location || 'N/A';
+      printDocument.getElementById('sample-time')!.innerText = metaData.sampleInfo?.time || 'N/A';
+      printDocument.getElementById('note')!.innerText = metaData.sampleInfo?.note || 'N/A';
+      printDocument.getElementById('device-name')!.innerText = metaData.deviceData?.deviceName || 'N/A';
+      printDocument.getElementById('software-name')!.innerText = metaData.deviceData?.softwareName || 'N/A';
+      printDocument.getElementById('start-time')!.innerText = metaData.resultData.startTime ?? 'N/A';
+      printDocument.getElementById('end-time')!.innerText = metaData.resultData.endTime ?? 'N/A';
+      printDocument.getElementById('total-time-gross')!.innerText = metaData.resultData.energySpectrum?.measurementTime?.toString() || 'N/A';
+      printDocument.getElementById('total-time-bg')!.innerText = metaData.resultData.backgroundEnergySpectrum?.measurementTime?.toString() || 'N/A';
+      printDocument.getElementById('cal-coeffs')!.innerText = JSON.stringify(plot.calibration.enabled ? plot.calibration.coeff : {c1:0,c2:0,c3:0}) || 'N/A';
+
+      // Generate table and populate with data
+      const tableHeadRow = <HTMLTableRowElement>printDocument.getElementById('peak-table-head-row');
+
+      const cell1 = document.createElement('th');
+      cell1.innerHTML = 'Peak Number <br>[1]';
+      tableHeadRow.appendChild(cell1);
+      const cell2 = document.createElement('th');
+      cell2.innerHTML = `Energy <br>[${plot.calibration.enabled ? 'keV' : 'bin'}]`;
+      tableHeadRow.appendChild(cell2);
+      const cell3 = document.createElement('th');
+      cell3.innerHTML = 'Net Peak Area <br>(3&sigma;) [cts]';
+      tableHeadRow.appendChild(cell3);
+      const cell4 = document.createElement('th');
+      cell4.innerHTML = 'Background Peak Area <br>(3&sigma;) [cts]';
+      tableHeadRow.appendChild(cell4);
+      const cell5 = document.createElement('th');
+      cell5.innerHTML = `FWHM <br>[${plot.calibration.enabled ? 'keV' : 'bin'}]`;
+      tableHeadRow.appendChild(cell5);
+      const cell6 = document.createElement('th');
+      cell6.innerHTML = 'FWHM <br>[%]';
+      tableHeadRow.appendChild(cell6);
+      const cell7 = document.createElement('th');
+      cell7.innerHTML = 'Net Peak Counts/s <br>(3&sigma;) [cps]';
+      tableHeadRow.appendChild(cell7);
+
+      const tableBody = <HTMLTableElement>printDocument.getElementById('peak-table-body');
+
+      // Compute data for analysis
+      const dataX = dataArray[0].x; // Will be Gauss data, net spectrum or background in this order
+      const dataY = dataArray[0].y;
+
+      const peaks = plot.peakFinder(dataY);
+      let index = 1;
+
+      for (const peak of peaks) {
+        const xPosition = dataX[Math.round(peak)];
+
+        if (xPosition < 0) continue;
+
+        const peakFWHM = new CalculateFWHM([xPosition], dataArray[1].x, dataArray[1].y).compute()[xPosition];
+        const energyResolution = new CalculateFWHM([xPosition], dataArray[1].x, dataArray[1].y).getResolution()[xPosition];
+
+        const sigmaMaxCenterDistance = 2 * peakFWHM / (2 * Math.sqrt(2 * Math.LN2)) // Max distance to peak center for 4 sigma of all peaks, approx total count number inside this range
+        const peakCounterXMin = xPosition - sigmaMaxCenterDistance;
+        const peakCounterXMax = xPosition + sigmaMaxCenterDistance;
+
+        let spectrumValue = 0;
+        let backgroundValue = 0;
+
+        for (const i in dataX) {
+          const xPos = dataX[i];
+          if (xPos >= peakCounterXMin && xPos <= peakCounterXMax) {
+            spectrumValue += dataArray[1].y[i];
+            if (dataArray.length > 2) backgroundValue += dataArray[2].y[i];
+          }
+        }
+
+        const row = tableBody.insertRow();
+        const cell1 = document.createElement('th');
+        cell1.innerText = index.toString();
+        row.appendChild(cell1);
+
+        const cell2 = row.insertCell();
+        cell2.innerText = xPosition.toFixed(2);
+
+        const cell3 = row.insertCell();
+        cell3.innerText = (peakFWHM > 0 && peakFWHM < 0.9 * CalculateFWHM.resolutionLimit * xPosition) ? (spectrumValue * (plot.cps ? metaData.resultData.energySpectrum?.measurementTime ?? 1 : 1)).toFixed(0) : 'N/A';
+
+        const cell4 = row.insertCell();
+        cell4.innerText = (peakFWHM > 0 && peakFWHM < 0.9 * CalculateFWHM.resolutionLimit * xPosition) ? (backgroundValue * (plot.cps ? metaData.resultData.backgroundEnergySpectrum?.measurementTime ?? 1 : 1)).toFixed(0) : 'N/A';
+
+        const cell5 = row.insertCell();
+        cell5.innerText = (peakFWHM > 0 && peakFWHM < 0.9 * CalculateFWHM.resolutionLimit * xPosition) ? peakFWHM.toFixed(3) : 'OVF';
+
+        const cell6 = row.insertCell();
+        cell6.innerText = (energyResolution > 0 && energyResolution < 0.9 * CalculateFWHM.resolutionLimit) ? (energyResolution * 100).toFixed(2) : 'OVF';
+
+        const cell7 = row.insertCell();
+        cell7.innerText = (peakFWHM > 0 && peakFWHM < 0.9 * CalculateFWHM.resolutionLimit * xPosition) ? (plot.cps ? spectrumValue : spectrumValue / (metaData.resultData.energySpectrum?.measurementTime ?? 1)).toExponential(3) : 'N/A';
+
+        index++;
+      }
+
+      // Last step: Create an image element of the saved plot
+      (<any>window).Plotly.toImage(plot.plotDiv,{format: 'png', height: 400, width: 1000}).then(
+        function (url: string) {
+          const img = <HTMLImageElement>printDocument.getElementById('plot-image');
+          img.src = url;
+
+          printWindow.print(); // Finally print the window if the image has been loaded
+        }
+      );
+    };
+
+    printWindow.onafterprint = () => printWindow.close(); // Close the new print tab after printing
+  } else {
+    console.error('Unable to open a new window for printing.');
+  }
+}
+
+
 function legacyPopupNotification(id: string): void { // Uses Bootstrap Toasts already defined in HTML
   const toast = new (<any>window).bootstrap.Toast(document.getElementById(id));
   if (!toast.isShown()) toast.show();
@@ -1952,33 +2093,53 @@ function selectAll(selectBox: HTMLInputElement): void {
 }
 
 
+function useIdlePeakMode(button: HTMLButtonElement): void {
+  plot.clearPeakFinder(); // Delete all old lines
+  plot.peakConfig.enabled = false;
+  button.innerText = 'None';
+}
+
+
+function useGaussPeakMode(button: HTMLButtonElement): void {
+  plot.peakConfig.enabled = true;
+  plot.peakConfig.mode = 'gaussian';
+  button.innerText = 'Gaussian';
+}
+
+
+function useEnergyPeakMode(button: HTMLButtonElement): void {
+  plot.peakConfig.mode = 'energy';
+  button.innerText = 'Energy';
+}
+
+
+async function useIsotopePeakMode(button: HTMLButtonElement): Promise<void> {
+  plot.clearPeakFinder(); // Delete all old lines
+  await loadIsotopes();
+  plot.peakConfig.mode = 'isotopes';
+  button.innerText = 'Isotopes';
+}
+
+
 document.getElementById('peak-finder-btn')!.onclick = event => findPeaks(<HTMLButtonElement>event.target);
 
 async function findPeaks(button: HTMLButtonElement): Promise<void> {
   if (plot.peakConfig.enabled) {
     switch(plot.peakConfig.mode) {
       case 'gaussian': // Second Mode: Energy
-        plot.peakConfig.mode = 'energy';
-        button.innerText = 'Energy';
+        useEnergyPeakMode(button);
         break;
         
       case 'energy': // Third Mode: Isotopes
-        plot.clearPeakFinder(); // Delete all old lines
-        await loadIsotopes();
-        plot.peakConfig.mode = 'isotopes';
-        button.innerText = 'Isotopes';
+        await useIsotopePeakMode(button);
         break;
 
       case 'isotopes':
-        plot.clearPeakFinder(); // Delete all old lines
-        plot.peakConfig.enabled = false;
-        button.innerText = 'None';
+        useIdlePeakMode(button);
         break;
     }
   } else { // First Mode: Gauss
-    plot.peakConfig.enabled = true;
-    plot.peakConfig.mode = 'gaussian';
-    button.innerText = 'Gaussian';
+    useGaussPeakMode(button);
   }
 
   plot.updatePlot(spectrumData);
@@ -2088,7 +2249,7 @@ function loadSettingsDefault(): void {
 
   (<HTMLInputElement>document.getElementById('peak-thres')).value = plot.peakConfig.thres.toString();
   (<HTMLInputElement>document.getElementById('peak-lag')).value = plot.peakConfig.lag.toString();
-  (<HTMLInputElement>document.getElementById('seek-width')).value = plot.peakConfig.seekWidth.toString();
+  (<HTMLInputElement>document.getElementById('seek-width')).value = SeekClosest.seekWidth.toString();
   (<HTMLInputElement>document.getElementById('gauss-sigma')).value = plot.gaussSigma.toString();
 
   const formatSelector = <HTMLSelectElement>document.getElementById('download-format');
@@ -2157,7 +2318,7 @@ function loadSettingsStorage(): void {
   if (setting !== null) plot.peakConfig.lag = setting;
 
   setting = loadJSON('seekWidth');
-  if (setting !== null) plot.peakConfig.seekWidth = setting;
+  if (setting !== null) SeekClosest.seekWidth = setting;
 
   setting = loadJSON('plotDownload');
   if (setting !== null) plot.downloadFormat = setting;
@@ -2312,7 +2473,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
     }
     case 'seekWidth': {
       const numVal = parseFloat(stringValue);
-      plot.peakConfig.seekWidth = numVal;
+      SeekClosest.seekWidth = numVal;
       plot.updatePlot(spectrumData);
 
       result = saveJSON(name, numVal);
