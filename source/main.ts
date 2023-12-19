@@ -383,21 +383,6 @@ document.body.onresize = (): void => {
 };
 
 
-/*
-window.addEventListener('hidden.bs.collapse', (event: Event) => {
-  if ((<HTMLButtonElement>event.target).getAttribute('id') === 'collapse-tabs') {
-    plot.updatePlot(spectrumData);
-  }
-});
-
-
-window.addEventListener('shown.bs.collapse', (event: Event) => {
-  if ((<HTMLButtonElement>event.target).getAttribute('id') === 'collapse-tabs') {
-    plot.updatePlot(spectrumData);
-  }
-});
-*/
-
 // User changed from browser window to PWA (after installation) or backwards
 window.matchMedia('(display-mode: standalone)').addEventListener('change', (/*event*/): void => {
   /*
@@ -2182,6 +2167,7 @@ function bindHotkeys(): void {
 */
 // These functions are REALLY ugly and a nightmare to maintain, but I don't know how to make it
 // better without nuking everything related to the settings and starting again from the ground up.
+// I'll probably have to do a complete re-write of the whole settings at one point...
 
 function saveJSON(name: string, value: string | boolean | number): boolean {
   if (localStorageAvailable) {
