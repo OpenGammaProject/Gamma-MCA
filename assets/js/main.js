@@ -68,9 +68,17 @@ const faSortClasses = {
 };
 const hotkeys = {
     'r': 'reset-plot',
-    'k': 'sma',
+    's': 'sma-label',
     'x': 'xAxis',
-    'y': 'yAxis'
+    'y': 'yAxis',
+    'c': 'plot-cps',
+    't': 'plot-type',
+    'i': 'iso-hover-label',
+    'p': 'peak-finder-btn',
+    '1': 'file-import-tab',
+    '2': 'serial-tab',
+    '3': 'calibration-tab',
+    '4': 'metadata-tab',
 };
 window.addEventListener('DOMContentLoaded', () => {
     if (localStorageAvailable) {
@@ -835,9 +843,9 @@ document.getElementById('select-c').onclick = event => toggleCalClick('c', event
 function toggleCalClick(point, value) {
     calClick[point] = value;
 }
-document.getElementById('plotType').onclick = () => changeType();
+document.getElementById('plot-type').onclick = () => changeType();
 function changeType() {
-    const button = document.getElementById('plotType');
+    const button = document.getElementById('plot-type');
     if (plot.linePlot) {
         button.innerHTML = '<i class="fas fa-chart-bar"></i> Bar';
     }
@@ -1567,14 +1575,30 @@ async function findPeaks(button) {
     plot.updatePlot(spectrumData);
 }
 function bindHotkeys() {
+    document.addEventListener('keydown', (event) => {
+        if (event.key.toLowerCase() === 'escape') {
+            const offcanvasElement = document.getElementById('offcanvas');
+            if (offcanvasElement && !offcanvasElement.classList.contains('show')) {
+                if (!offcanvasElement.classList.contains('showing')) {
+                    new window.bootstrap.Offcanvas(offcanvasElement).show();
+                }
+            }
+        }
+    });
+    const settingsButton = document.getElementById('toggle-menu');
+    if (settingsButton)
+        settingsButton.title += ' (ESC)';
     for (const [key, buttonId] of Object.entries(hotkeys)) {
+        const button = document.getElementById(buttonId);
         document.addEventListener('keydown', (event) => {
-            if (event.ctrlKey && event.key === key) {
+            if (event.altKey && event.key.toLowerCase() === key.toLowerCase()) {
                 event.preventDefault();
                 if (!event.repeat)
-                    document.getElementById(buttonId)?.click();
+                    button?.click();
             }
         });
+        if (button)
+            button.title += ` (ALT+${key.toUpperCase()})`;
     }
 }
 function saveJSON(name, value) {

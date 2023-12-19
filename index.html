@@ -605,7 +605,7 @@
             <input class="form-control form-control-sm" type="number" id="sma-val" min="1" max="1000" value="" title="Width of simple moving average">
 
             <input type="checkbox" class="btn-check" id="sma">
-            <label class="btn btn-outline-primary" for="sma" title="Toggle simple moving average">Enable</label>
+            <label class="btn btn-outline-primary" id="sma-label" for="sma" title="Toggle simple moving average">Enable</label>
           </div>
         </div>
 
@@ -616,7 +616,7 @@
         <div class="col-auto p-1">
           <div class="input-group input-group-sm">
             <span class="input-group-text">Type</span>
-            <button class="btn btn-primary btn-sm" type="button" id="plotType" title="Switch plot type"><i class="fas fa-chart-bar"></i> Bar</button>
+            <button class="btn btn-primary btn-sm" type="button" id="plot-type" title="Switch plot type"><i class="fas fa-chart-bar"></i> Bar</button>
           </div>
         </div>
 
@@ -638,7 +638,7 @@
         <div class="col-auto p-1">
           <div class="input-group input-group-sm">
             <span class="input-group-text">Peaks</span>
-            <button class="btn btn-primary btn-sm" type="button" id="peak-finder-btn" title="Toggle between Gaussian Correlation Filter, energy and isotope peak finder.">None</button>
+            <button class="btn btn-primary btn-sm" type="button" id="peak-finder-btn" title="Toggle between Gaussian Correlation Filter, energy and isotope peak finder">None</button>
           </div>
         </div>
 
@@ -648,7 +648,7 @@
 
         <div class="col-auto p-1">
           <input type="checkbox" class="btn-check" id="iso-hover">
-          <label class="btn btn-outline-primary btn-sm" title="Show closest isotope when hovering" for="iso-hover"> <i class="fa-solid fa-magnifying-glass"></i> Isotopes </label>
+          <label class="btn btn-outline-primary btn-sm" title="Show closest isotope when hovering" id="iso-hover-label" for="iso-hover"> <i class="fa-solid fa-magnifying-glass"></i> Isotopes </label>
         </div>
 
       </div>

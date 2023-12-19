@@ -141,12 +141,20 @@ const faSortClasses: {[key: string]: string} = {
   desc: 'fa-sort-down'
 };
 
-// Key combinations for hotkey function: CTRL+OBJ_KEY
+// Key combinations for hotkey function: ALT+KEY
 const hotkeys = {
   'r': 'reset-plot',
-  'k': 'sma',
+  's': 'sma-label',
   'x': 'xAxis',
-  'y': 'yAxis'
+  'y': 'yAxis',
+  'c': 'plot-cps',
+  't': 'plot-type',
+  'i': 'iso-hover-label',
+  'p': 'peak-finder-btn',
+  '1': 'file-import-tab',
+  '2': 'serial-tab',
+  '3': 'calibration-tab',
+  '4': 'metadata-tab',
 };
 
 
@@ -434,21 +442,6 @@ window.addEventListener('onappinstalled', (): void => {
   hideNotification('pwa-installer');
   document.getElementById('manual-install')!.classList.add('d-none');
 });
-
-
-/*
-document.onkeydown = async function(event) {
-  console.log(event.keyCode);
-  if (event.keyCode === 27) { // ESC
-    const offcanvasElement = document.getElementById('offcanvas');
-    const offcanvas = new bootstrap.Offcanvas(offcanvasElement);
-
-    //event.preventDefault();
-
-    await offcanvas.toggle();
-  }
-};
-*/
 
 
 document.getElementById('notifications-toggle')!.onclick = event => toggleNotifications((<HTMLInputElement>event.target).checked);
@@ -1191,10 +1184,10 @@ function toggleCalClick(point: CalType, value: boolean): void {
 }
 
 
-document.getElementById('plotType')!.onclick = () => changeType();
+document.getElementById('plot-type')!.onclick = () => changeType();
 
 function changeType(): void {
-  const button = <HTMLButtonElement>document.getElementById('plotType');
+  const button = <HTMLButtonElement>document.getElementById('plot-type');
   if (plot.linePlot) {
     button.innerHTML = '<i class="fas fa-chart-bar"></i> Bar';
   } else {
@@ -2155,13 +2148,30 @@ async function findPeaks(button: HTMLButtonElement): Promise<void> {
 
 
 function bindHotkeys(): void {
+  // Bind ESCAPE key to the settings offcanvas
+  document.addEventListener('keydown', (event: KeyboardEvent) => {
+    if (event.key.toLowerCase() === 'escape') {
+      const offcanvasElement = document.getElementById('offcanvas');
+      if (offcanvasElement && !offcanvasElement.classList.contains('show')) { // Exists and is not shown currently
+        if (!offcanvasElement.classList.contains('showing')) { // Don't toggle while in transition
+          new (<any>window).bootstrap.Offcanvas(offcanvasElement).show(); // Offcanvas is closed, open it
+        }
+      }
+    }
+  });
+  const settingsButton = document.getElementById('toggle-menu');
+  if (settingsButton) settingsButton.title += ' (ESC)'; // Add hotkey hint to settings button
+
+  // Bind all other standard hotkeys
   for (const [key, buttonId] of Object.entries(hotkeys)) {
+    const button = document.getElementById(buttonId);
     document.addEventListener('keydown', (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.key === key) {
+      if (event.altKey && event.key.toLowerCase() === key.toLowerCase()) {
         event.preventDefault(); // Prevent the browser default action from popping up
-        if (!event.repeat) document.getElementById(buttonId)?.click(); // Call the function to handle the hotkey action only once per keydown
+        if (!event.repeat) button?.click(); // Call the function to handle the hotkey action only once per keydown
       }
     });
+    if (button) button.title += ` (ALT+${key.toUpperCase()})`; // Add hotkey hint to button titles
   }
 }
 
