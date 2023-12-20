@@ -618,13 +618,11 @@ function removeFile(type) {
     else {
         removeType = [type];
     }
-    console.log(removeType);
     for (const id of removeType) {
         spectrumData[id] = [];
         spectrumData[`${id}Time`] = 0;
         document.getElementById(id).value = '';
         document.getElementById(`${id}-form-label`).innerText = 'No File Chosen';
-        console.log(document.getElementById(`${id}-form-label`));
         if (id === 'data')
             dataFileHandle = undefined;
         if (id === 'background')
@@ -2105,6 +2103,7 @@ async function startRecord(pause = false, type) {
     recordingType = type;
     if (!pause) {
         removeFile(type);
+        document.getElementById(`${type}-form-label`).innerText = 'Serial Recording';
         startDate = new Date();
     }
     document.getElementById('toggle-evolution-chart').disabled = false;

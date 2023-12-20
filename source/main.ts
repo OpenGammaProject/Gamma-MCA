@@ -25,7 +25,6 @@
     - Automatically close system notifications when the user interacts with the page again
 
     - Webmanifest vertical images (narrow form_factor)
-    - Add serial recording label to file labels
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -788,7 +787,7 @@ function finalizeFileImport(filename: string, type: FileImportType): void {
   console.log('hello');
   
   if (type === 'both') { // Set file name(s) to the openers
-    document.getElementById('data-form-label')!.innerText = filename; 
+    document.getElementById('data-form-label')!.innerText = filename;
     document.getElementById('background-form-label')!.innerText = filename;
   } else {
     document.getElementById(`${type}-form-label`)!.innerText = filename;
@@ -891,15 +890,11 @@ function removeFile(type: FileImportType): void {
     removeType = [type];
   }
 
-  console.log(removeType);
-  
-
   for (const id of removeType) {
     spectrumData[id] = [];
     spectrumData[`${id}Time`] = 0;
     (<HTMLInputElement>document.getElementById(id)).value = '';
     document.getElementById(`${id}-form-label`)!.innerText = 'No File Chosen';
-    console.log(document.getElementById(`${id}-form-label`));
 
     if (id === 'data') dataFileHandle = undefined; // Reset File System Access API handlers
     if (id === 'background') backgroundFileHandle = undefined;
@@ -2792,6 +2787,7 @@ async function startRecord(pause = false, type: DataType): Promise<void> {
 
   if (!pause) {
     removeFile(type); // Remove old spectrum
+    document.getElementById(`${type}-form-label`)!.innerText = 'Serial Recording';
     startDate = new Date();
   }
 
