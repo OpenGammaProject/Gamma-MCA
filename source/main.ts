@@ -17,12 +17,15 @@
     - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with a (right-)click
     - (?) Add pulse limit analog to time limit for serial recordings
     - (?) Dead time correction for cps
+    - (?) Use Window Controls Overlay API
     - (?) Sound card spectrometry prove of concept in browser (POSSIBLY HUGE POTENTIAL)
 
     - NPESv2: Let user remove data packages from file in the import selection dialog
     - NPESv2: Create additional save (append) button that allows users to save multiple data packages in one file
     - Automatically close system notifications when the user interacts with the page again
-    - Optional real-time file saving to help with long recordings that might crash (create some temp files)
+
+    - Webmanifest vertical images (narrow form_factor)
+    - Label both file selectors when a file imports spectrum and bg spectrum
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -117,6 +120,7 @@ let maxRecTimeEnabled = false;
 let maxRecTime = 1800000; // 30 minutes
 const REFRESH_META_TIME = 200; // Milliseconds
 const CONSOLE_REFRESH = 200; // Milliseconds
+const AUTOSAVE_TIME = 900_000; // Milliseconds === 15 minutes
 
 let cpsValues: number[] = [];
 
@@ -361,15 +365,24 @@ document.body.onload = async function(): Promise<void> {
 
   bindHotkeys();
 
+  if (localStorageAvailable) checkAutosave(); // Check for the last autosaved spectrum
+
   const loadingOverlay = document.getElementById('loading')!;
   loadingOverlay.parentNode!.removeChild(loadingOverlay); // Delete Loading Thingymajig
 };
 
 
 // Exit website confirmation alert
-window.onbeforeunload = (): string => {
-  return 'Are you sure to leave?';
+window.onbeforeunload = (event): string => {
+  event.preventDefault();
+  return event.returnValue = 'Are you sure you want to exit?';
 };
+
+
+window.onpagehide = (): void => {
+  // Delete autosave data when user deliberately leaves the page without saving
+  localStorage.removeItem('autosave');
+}
 
 
 // Needed For Responsiveness! DO NOT REMOVE OR THE LAYOUT GOES TO SHIT!!!
@@ -797,6 +810,40 @@ function getJSONSelectionData(): void {
   const fileSelectModalElement = document.getElementById('file-select-modal')!; // Close the modal if the file saving has been successful
   const closeButton = <HTMLButtonElement>fileSelectModalElement.querySelector('.btn-close'); // Find some close button
   closeButton.click();
+}
+
+
+function checkAutosave(): void {
+  const data: string | undefined = loadJSON('autosave');
+
+  if (data) legacyPopupNotification('autosave-dialog'); // Show notification on first visit
+}
+
+
+document.getElementById('restore-data-btn')!.onclick = () => loadAutosave(true);
+document.getElementById('discard-data-btn')!.onclick = () => loadAutosave(false);
+
+async function loadAutosave(restore: boolean): Promise<void> {
+  const data: string | undefined = loadJSON('autosave');
+
+  if (data) {
+    localStorage.removeItem('autosave'); // Delete autosave data
+
+    if (restore) {
+      const objData = await raw.jsonToObject(data);
+
+      if (objData.length) {
+        const importData = objData[0]; // Select first element to probe for errors
+
+        // TODO: Check if it's an error?
+        //if (checkJSONImportError(file.name, importData)) return;
+
+        npesFileImport('Autosave Data', <NPESv1>importData, false);
+      } else {
+        console.error('Could not load autosaved data!');
+      }
+    }
+  }
 }
 
 
@@ -1720,6 +1767,8 @@ async function download(filename: string, text: string | undefined, type: Downlo
     element.style.display = 'none';
     element.click();
   }
+
+  localStorage.removeItem('autosave'); // Delete autosave data
 
   const exportModalElement = document.getElementById('export-modal')!; // Close the modal if the file saving has been successful
   const closeButton = <HTMLButtonElement>exportModalElement.querySelector('.btn-close'); // Find some close button
@@ -2737,6 +2786,7 @@ async function startRecord(pause = false, type: DataType): Promise<void> {
 
   refreshRender(type, !pause); // Start updating the plot
   refreshMeta(type); // Start updating the meta data
+  autoSaveData(); // Start data autosaving
 
   // Check if pause ? Last cps value after pausing is always 0, remove! : Empty if just started to record
   pause ? cpsValues.pop() : cpsValues = [];
@@ -2772,6 +2822,7 @@ async function disconnectPort(stop = false): Promise<void> {
   });
 
   try {
+    clearTimeout(autosaveTimeout);
     clearTimeout(refreshTimeout);
     clearTimeout(metaTimeout);
     clearTimeout(consoleTimeout);
@@ -2867,6 +2918,36 @@ function refreshConsole(): void {
 
     if (autoscrollEnabled) document.getElementById('ser-output')!.scrollIntoView({behavior: 'smooth', block: 'end'});
   }
+}
+
+
+let autosaveTimeout: number;
+
+function autoSaveData(): void {
+  const autosaveBadgeElement = document.getElementById('autosave-badge')!;
+  const data = generateNPES();
+
+  if (data) {
+    if(saveJSON('autosave', data)) {
+      const formatOptions: Intl.DateTimeFormatOptions = {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: false, // Set to false for 24-hour format
+      };
+    
+      const formatter = new Intl.DateTimeFormat('en-US', formatOptions);
+      const currentDateTimeString = formatter.format(new Date());
+
+      autosaveBadgeElement.title = `The data was last saved automatically on ${currentDateTimeString}.`;
+      autosaveBadgeElement.innerHTML = `<i class="fa-solid fa-check"></i> Autosaved ${currentDateTimeString}`;
+    }
+  }
+
+  autosaveBadgeElement?.classList.toggle('d-none', data ? false : true);
+  
+  autosaveTimeout = setTimeout(autoSaveData, AUTOSAVE_TIME);
 }
 
 

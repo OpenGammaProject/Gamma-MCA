@@ -48,6 +48,7 @@ let maxRecTimeEnabled = false;
 let maxRecTime = 1800000;
 const REFRESH_META_TIME = 200;
 const CONSOLE_REFRESH = 200;
+const AUTOSAVE_TIME = 900000;
 let cpsValues = [];
 let isoListURL = 'assets/isotopes_energies_min.json';
 const isoList = {};
@@ -240,11 +241,17 @@ document.body.onload = async function () {
         console.error('Browser does not support Notifications API.');
     }
     bindHotkeys();
+    if (localStorageAvailable)
+        checkAutosave();
     const loadingOverlay = document.getElementById('loading');
     loadingOverlay.parentNode.removeChild(loadingOverlay);
 };
-window.onbeforeunload = () => {
-    return 'Are you sure to leave?';
+window.onbeforeunload = (event) => {
+    event.preventDefault();
+    return event.returnValue = 'Are you sure you want to exit?';
+};
+window.onpagehide = () => {
+    localStorage.removeItem('autosave');
 };
 document.body.onresize = () => {
     plot.updatePlot(spectrumData);
@@ -566,6 +573,29 @@ function getJSONSelectionData() {
     const fileSelectModalElement = document.getElementById('file-select-modal');
     const closeButton = fileSelectModalElement.querySelector('.btn-close');
     closeButton.click();
+}
+function checkAutosave() {
+    const data = loadJSON('autosave');
+    if (data)
+        legacyPopupNotification('autosave-dialog');
+}
+document.getElementById('restore-data-btn').onclick = () => loadAutosave(true);
+document.getElementById('discard-data-btn').onclick = () => loadAutosave(false);
+async function loadAutosave(restore) {
+    const data = loadJSON('autosave');
+    if (data) {
+        localStorage.removeItem('autosave');
+        if (restore) {
+            const objData = await raw.jsonToObject(data);
+            if (objData.length) {
+                const importData = objData[0];
+                npesFileImport('Autosave Data', importData, false);
+            }
+            else {
+                console.error('Could not load autosaved data!');
+            }
+        }
+    }
 }
 function sizeCheck() {
     const minWidth = 1100;
@@ -1263,6 +1293,7 @@ async function download(filename, text, type) {
         element.style.display = 'none';
         element.click();
     }
+    localStorage.removeItem('autosave');
     const exportModalElement = document.getElementById('export-modal');
     const closeButton = exportModalElement.querySelector('.btn-close');
     closeButton.click();
@@ -2072,6 +2103,7 @@ async function startRecord(pause = false, type) {
     }
     refreshRender(type, !pause);
     refreshMeta(type);
+    autoSaveData();
     pause ? cpsValues.pop() : cpsValues = [];
 }
 document.getElementById('pause-button').onclick = () => disconnectPort();
@@ -2092,6 +2124,7 @@ async function disconnectPort(stop = false) {
         wakeLock = null;
     });
     try {
+        clearTimeout(autosaveTimeout);
         clearTimeout(refreshTimeout);
         clearTimeout(metaTimeout);
         clearTimeout(consoleTimeout);
@@ -2166,6 +2199,28 @@ function refreshConsole() {
         if (autoscrollEnabled)
             document.getElementById('ser-output').scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
+}
+let autosaveTimeout;
+function autoSaveData() {
+    const autosaveBadgeElement = document.getElementById('autosave-badge');
+    const data = generateNPES();
+    if (data) {
+        if (saveJSON('autosave', data)) {
+            const formatOptions = {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric',
+                hour12: false,
+            };
+            const formatter = new Intl.DateTimeFormat('en-US', formatOptions);
+            const currentDateTimeString = formatter.format(new Date());
+            autosaveBadgeElement.title = `The data was last saved automatically on ${currentDateTimeString}.`;
+            autosaveBadgeElement.innerHTML = `<i class="fa-solid fa-check"></i> Autosaved ${currentDateTimeString}`;
+        }
+    }
+    autosaveBadgeElement?.classList.toggle('d-none', data ? false : true);
+    autosaveTimeout = setTimeout(autoSaveData, AUTOSAVE_TIME);
 }
 function getRecordTimeStamp(time) {
     const dateTime = new Date(time);

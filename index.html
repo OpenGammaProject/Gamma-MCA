@@ -232,6 +232,7 @@
                    -->
                     <p>
                       <strong>Select Port:</strong>
+                      <span class="badge rounded-pill text-bg-success float-end d-none" id="autosave-badge" title="Last autosaved"></span>
                     </p>
 
                     <div class="input-group input-group-sm">
@@ -1163,6 +1164,22 @@
           <div class="mt-2 pt-2 border-top">
             <button type="button" class="btn btn-light btn-sm" id="notifications-toast-btn" title="Enable notifications">Enable</button>
             <button type="button" class="btn btn-primary btn-sm" title="Dismiss" data-bs-dismiss="toast">No</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="autosave-dialog" class="toast text-bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+        <div class="toast-header">
+          <i class="fa-solid fa-clock-rotate-left me-2 fa-beat animation-slow"></i>
+          <strong class="me-auto">Restore Data?</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          <p>Autosaved data has been found. The app or the browser might have crashed or maybe you forgot to save data before closing.</p>
+          <p>Do you want to restore your data?</p>
+          <div class="mt-2 pt-2 border-top">
+            <button type="button" class="btn btn-light btn-sm" id="restore-data-btn" title="Restore data" data-bs-dismiss="toast">Restore</button>
+            <button type="button" class="btn btn-primary btn-sm" id="discard-data-btn" title="Discard data" data-bs-dismiss="toast">Discard</button>
           </div>
         </div>
       </div>
