@@ -137,7 +137,7 @@
                     #####
                   -->
                   <p>
-                    <label id="data-label" for="data"><strong>Spectrum File:</strong> <i id="data-icon" class="fa-solid fa-circle-check align-baseline text-primary d-none fa-beat animation-very-slow"></i></label>
+                    <label id="data-label" for="data"><strong>Spectrum Data:</strong> <i id="data-icon" class="fa-solid fa-circle-check align-baseline text-primary d-none fa-beat animation-very-slow"></i></label>
                   </p>
 
                   <div class="input-group input-group-sm">
@@ -151,7 +151,7 @@
                   <br>
 
                   <p>
-                    <label id="background-label" for="background"><strong>Background File:</strong> <i id="background-icon" class="fa-solid fa-circle-check align-baseline text-primary d-none fa-beat animation-very-slow"></i></label>
+                    <label id="background-label" for="background"><strong>Background Data:</strong> <i id="background-icon" class="fa-solid fa-circle-check align-baseline text-primary d-none fa-beat animation-very-slow"></i></label>
                   </p>
 
                   <div class="input-group input-group-sm">
@@ -232,6 +232,7 @@
                    -->
                     <p>
                       <strong>Select Port:</strong>
+                      <span class="badge rounded-pill text-bg-success float-end d-none" id="autosave-badge" title="Last autosaved"></span>
                     </p>
 
                     <div class="input-group input-group-sm">
@@ -605,7 +606,7 @@
             <input class="form-control form-control-sm" type="number" id="sma-val" min="1" max="1000" value="" title="Width of simple moving average">
 
             <input type="checkbox" class="btn-check" id="sma">
-            <label class="btn btn-outline-primary" for="sma" title="Toggle simple moving average">Enable</label>
+            <label class="btn btn-outline-primary" id="sma-label" for="sma" title="Toggle simple moving average">Enable</label>
           </div>
         </div>
 
@@ -616,7 +617,7 @@
         <div class="col-auto p-1">
           <div class="input-group input-group-sm">
             <span class="input-group-text">Type</span>
-            <button class="btn btn-primary btn-sm" type="button" id="plotType" title="Switch plot type"><i class="fas fa-chart-bar"></i> Bar</button>
+            <button class="btn btn-primary btn-sm" type="button" id="plot-type" title="Switch plot type"><i class="fas fa-chart-bar"></i> Bar</button>
           </div>
         </div>
 
@@ -638,7 +639,7 @@
         <div class="col-auto p-1">
           <div class="input-group input-group-sm">
             <span class="input-group-text">Peaks</span>
-            <button class="btn btn-primary btn-sm" type="button" id="peak-finder-btn" title="Toggle between Gaussian Correlation Filter, energy and isotope peak finder.">None</button>
+            <button class="btn btn-primary btn-sm" type="button" id="peak-finder-btn" title="Toggle between Gaussian Correlation Filter, energy and isotope peak finder">None</button>
           </div>
         </div>
 
@@ -648,7 +649,7 @@
 
         <div class="col-auto p-1">
           <input type="checkbox" class="btn-check" id="iso-hover">
-          <label class="btn btn-outline-primary btn-sm" title="Show closest isotope when hovering" for="iso-hover"> <i class="fa-solid fa-magnifying-glass"></i> Isotopes </label>
+          <label class="btn btn-outline-primary btn-sm" title="Show closest isotope when hovering" id="iso-hover-label" for="iso-hover"> <i class="fa-solid fa-magnifying-glass"></i> Isotopes </label>
         </div>
 
       </div>
@@ -1163,6 +1164,22 @@
           <div class="mt-2 pt-2 border-top">
             <button type="button" class="btn btn-light btn-sm" id="notifications-toast-btn" title="Enable notifications">Enable</button>
             <button type="button" class="btn btn-primary btn-sm" title="Dismiss" data-bs-dismiss="toast">No</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="autosave-dialog" class="toast text-bg-primary" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+        <div class="toast-header">
+          <i class="fa-solid fa-clock-rotate-left me-2 fa-beat animation-slow"></i>
+          <strong class="me-auto">Restore Data?</strong>
+          <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+          <p>Autosaved data has been found. The app or the browser might have crashed or maybe you forgot to save data before closing.</p>
+          <p>Do you want to restore your data?</p>
+          <div class="mt-2 pt-2 border-top">
+            <button type="button" class="btn btn-light btn-sm" id="restore-data-btn" title="Restore data" data-bs-dismiss="toast">Restore</button>
+            <button type="button" class="btn btn-primary btn-sm" id="discard-data-btn" title="Discard data" data-bs-dismiss="toast">Discard</button>
           </div>
         </div>
       </div>
