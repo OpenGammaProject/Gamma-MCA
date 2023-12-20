@@ -23,7 +23,6 @@
     - NPESv2: Let user remove data packages from file in the import selection dialog
     - NPESv2: Create additional save (append) button that allows users to save multiple data packages in one file
     - Automatically close system notifications when the user interacts with the page again
-
     - Webmanifest vertical images (narrow form_factor)
 
   Known Issues/Problems/Limitations:
