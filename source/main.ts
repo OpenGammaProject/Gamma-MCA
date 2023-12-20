@@ -25,7 +25,7 @@
     - Automatically close system notifications when the user interacts with the page again
 
     - Webmanifest vertical images (narrow form_factor)
-    - Label both file selectors when a file imports spectrum and bg spectrum
+    - Add serial recording label to file labels
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -54,7 +54,7 @@ export interface SaveTypeList {
 interface FileSelectData {
   'filename': string,
   'package': NPESv1;
-  'background': boolean;
+  'type': FileImportType;
 }
 
 export type DataOrder = 'hist' | 'chron';
@@ -63,6 +63,7 @@ type DataType = 'data' | 'background';
 type PortList = (WebSerial | WebUSBSerial | undefined)[];
 type DownloadType = 'CAL' | 'XML' | 'JSON' | 'CSV';
 type SortTypes = 'asc' | 'desc' | 'none';
+type FileImportType = DataType | 'both';
 
 export class SpectrumData { // Will hold the measurement data globally.
   data: number[] = [];
@@ -259,7 +260,7 @@ document.body.onload = async function(): Promise<void> {
         }
 
         const spectrumEndings = ['csv', 'tka', 'xml', 'txt', 'json'];
-        if (spectrumEndings.includes(fileEnding)) getFileData(file);
+        if (spectrumEndings.includes(fileEnding)) getFileData(file, 'data');
         /* else if (fileEnding === 'json') {
           importCal(file);
         } */
@@ -471,8 +472,8 @@ function toggleNotifications(toggle: boolean): void {
 }
 
 
-document.getElementById('data')!.onclick = event => clickFileInput(event, false);
-document.getElementById('background')!.onclick = event => clickFileInput(event, true);
+document.getElementById('data')!.onclick = event => clickFileInput(event, 'data');
+document.getElementById('background')!.onclick = event => clickFileInput(event, 'background');
 
 const openFileTypes: FilePickerAcceptType[] = [
   {
@@ -494,7 +495,7 @@ const openFileTypes: FilePickerAcceptType[] = [
 let dataFileHandle: FileSystemFileHandle | undefined;
 let backgroundFileHandle: FileSystemFileHandle | undefined;
 
-async function clickFileInput(event: MouseEvent, background: boolean): Promise<void> {
+async function clickFileInput(event: MouseEvent, type: DataType): Promise<void> {
   //(<HTMLInputElement>event.target).value = ''; // No longer necessary?
 
   if (window.FileSystemHandle && window.showOpenFilePicker) { // Try to use the File System Access API if possible
@@ -516,11 +517,7 @@ async function clickFileInput(event: MouseEvent, background: boolean): Promise<v
     
     const file = await fileHandle.getFile();
 
-    if (background) {
-      getFileData(file, true);
-    } else {
-      getFileData(file, false);
-    }
+    getFileData(file, type);
 
     const fileExtension = file.name.split('.')[1].toLowerCase();
 
@@ -530,7 +527,7 @@ async function clickFileInput(event: MouseEvent, background: boolean): Promise<v
     }
 
     // File System Access API specific stuff
-    if (background) {
+    if (type === 'background') {
       backgroundFileHandle = fileHandle;
     } else {
       dataFileHandle = fileHandle;
@@ -543,16 +540,16 @@ async function clickFileInput(event: MouseEvent, background: boolean): Promise<v
 }
 
 
-document.getElementById('data')!.onchange = event => importFile(<HTMLInputElement>event.target);
-document.getElementById('background')!.onchange = event => importFile(<HTMLInputElement>event.target, true);
+document.getElementById('data')!.onchange = event => importFile(<HTMLInputElement>event.target, 'data');
+document.getElementById('background')!.onchange = event => importFile(<HTMLInputElement>event.target, 'background');
 
-function importFile(input: HTMLInputElement, background = false): void {
+function importFile(input: HTMLInputElement, type: DataType): void {
   if (!input.files?.length) return; // File selection has been canceled
-  getFileData(input.files[0], background);
+  getFileData(input.files[0], type);
 }
 
 
-function getFileData(file: File, background = false): void { // Gets called when a file has been selected.
+function getFileData(file: File, type: FileImportType): void { // Gets called when a file has been selected.
   const reader = new FileReader();
 
   const fileEnding = file.name.split('.')[1];
@@ -599,12 +596,14 @@ function getFileData(file: File, background = false): void { // Gets called when
           if (meta.dataMt) spectrumData.dataCps = spectrumData.data.map(val => val / meta.dataMt);
           if (meta.backgroundMt) spectrumData.backgroundCps = spectrumData.background.map(val => val / meta.backgroundMt);
 
+          type = 'both'; // Update type to reflect that both spectra have been loaded
+
         } else if (!espectrum?.length && !bgspectrum?.length) { // No spectrum
           new ToastNotification('fileError'); //popupNotification('file-error');
-        } else { // Only one spectrum
+        } else if (type !== 'both') { // Only one spectrum
           const fileData = espectrum?.length ? espectrum : bgspectrum;
           const fileDataTime = (espectrum?.length ? meta.dataMt : meta.backgroundMt)*1000;
-          const fileDataType = background ? 'background' : 'data';
+          const fileDataType = type;
 
           spectrumData[fileDataType] = fileData;
           spectrumData[`${fileDataType}Time`] = fileDataTime;
@@ -652,7 +651,7 @@ function getFileData(file: File, background = false): void { // Gets called when
           const optionValue: FileSelectData = {
             'filename': file.name,
             'package': <NPESv1>dataPackage,
-            'background': background
+            'type': type,
           };
 
           opt.value = JSON.stringify(optionValue);
@@ -661,16 +660,17 @@ function getFileData(file: File, background = false): void { // Gets called when
         }
 
         fileSelectModal.show();
-        return; // Nothing else to do, continue doing stuff only when the user has finished interacting with the modal
+        
       } else {
         const importData = jsonData[0]; // Select first element to probe for errors
 
         // Check if it's an error
         if (checkJSONImportError(file.name, importData)) return;
 
-        npesFileImport(file.name, <NPESv1>importData, background);
+        npesFileImport(file.name, <NPESv1>importData, type);
       }
-    } else if (background) {
+      return; // Nothing else to do, imported successfully or continue doing stuff when the user has finished interacting with the modal
+    } else if (type === 'background') {
       spectrumData.backgroundTime = 1000;
       spectrumData.background = raw.csvToArray(result);
     } else {
@@ -678,7 +678,7 @@ function getFileData(file: File, background = false): void { // Gets called when
       spectrumData.data = raw.csvToArray(result);
     }
 
-    finalizeFileImport(file.name, background);
+    finalizeFileImport(file.name, type);
   };
 }
 
@@ -703,7 +703,7 @@ function checkJSONImportError(filename: string, data: NPESv1 | JSONParseError): 
 }
 
 
-function npesFileImport(filename: string, importData: NPESv1, background: boolean): void {
+function npesFileImport(filename: string, importData: NPESv1, type: FileImportType): void {
   // Import all the data from a JSON spectrum file to the active program
   (<HTMLInputElement>document.getElementById('device-name')).value = importData?.deviceData?.deviceName ?? '';
   (<HTMLInputElement>document.getElementById('sample-name')).value = importData?.sampleInfo?.name ?? '';
@@ -743,11 +743,14 @@ function npesFileImport(filename: string, importData: NPESv1, background: boolea
       spectrumData.backgroundTime = bgMeasurementTime * 1000;
       spectrumData.backgroundCps = spectrumData.background.map(val => val / bgMeasurementTime);
     }
-  } else { // Only one spectrum
+
+    type = 'both'; // Update type to reflect that both spectra have been loaded
+
+  } else if (type !== 'both') { // Only one spectrum
     const dataObj = espectrum ?? bgspectrum;
     const fileData = dataObj?.spectrum ?? [];
     const fileDataTime = (dataObj?.measurementTime ?? 1) * 1000;
-    const fileDataType = background ? 'background' : 'data';
+    const fileDataType = type;
 
     spectrumData[fileDataType] = fileData;
     spectrumData[`${fileDataType}Time`] = fileDataTime;
@@ -777,12 +780,19 @@ function npesFileImport(filename: string, importData: NPESv1, background: boolea
     toggleCal(true);
   }
 
-  finalizeFileImport(filename, background);
+  finalizeFileImport(filename, type);
 }
 
 
-function finalizeFileImport(filename: string, background: boolean): void {
-  document.getElementById(`${background ? 'background' : 'data'}-form-label`)!.innerText = filename; // Set file name
+function finalizeFileImport(filename: string, type: FileImportType): void {
+  console.log('hello');
+  
+  if (type === 'both') { // Set file name(s) to the openers
+    document.getElementById('data-form-label')!.innerText = filename; 
+    document.getElementById('background-form-label')!.innerText = filename;
+  } else {
+    document.getElementById(`${type}-form-label`)!.innerText = filename;
+  } 
 
   updateSpectrumCounts();
   updateSpectrumTime();
@@ -792,7 +802,7 @@ function finalizeFileImport(filename: string, background: boolean): void {
   */
   if (spectrumData.background.length !== spectrumData.data.length && spectrumData.data.length && spectrumData.background.length) {
     new ToastNotification('dataError'); //popupNotification('data-error');
-    removeFile(background ? 'background' : 'data'); // Remove file again
+    removeFile(type); // Remove file again
   }
 
   plot.resetPlot(spectrumData);
@@ -805,7 +815,7 @@ document.getElementById('spectrum-select-btn')!.onclick = () => getJSONSelection
 function getJSONSelectionData(): void {
   const fileSelectData = <FileSelectData>JSON.parse((<HTMLSelectElement>document.getElementById('select-spectrum')).value);
 
-  npesFileImport(fileSelectData.filename, fileSelectData.package, fileSelectData.background);
+  npesFileImport(fileSelectData.filename, fileSelectData.package, fileSelectData.type);
 
   const fileSelectModalElement = document.getElementById('file-select-modal')!; // Close the modal if the file saving has been successful
   const closeButton = <HTMLButtonElement>fileSelectModalElement.querySelector('.btn-close'); // Find some close button
@@ -838,7 +848,7 @@ async function loadAutosave(restore: boolean): Promise<void> {
         // TODO: Check if it's an error?
         //if (checkJSONImportError(file.name, importData)) return;
 
-        npesFileImport('Autosave Data', <NPESv1>importData, false);
+        npesFileImport('Autosave Data', <NPESv1>importData, 'data');
       } else {
         console.error('Could not load autosaved data!');
       }
@@ -873,22 +883,35 @@ function sizeCheck(): void {
 document.getElementById('clear-data')!.onclick = () => removeFile('data');
 document.getElementById('clear-bg')!.onclick = () => removeFile('background');
 
-function removeFile(id: DataType): void {
-  spectrumData[id] = [];
-  spectrumData[`${id}Time`] = 0;
-  (<HTMLInputElement>document.getElementById(id)).value = '';
-  document.getElementById(`${id}-form-label`)!.innerText = 'No File Chosen';
+function removeFile(type: FileImportType): void {
+  let removeType: DataType[];
+  if (type === 'both') {
+    removeType = ['data', 'background'];
+  } else {
+    removeType = [type];
+  }
 
-  if (id === 'data') dataFileHandle = undefined; // Reset File System Access API handlers
-  if (id === 'background') backgroundFileHandle = undefined;
-  if (!dataFileHandle && !backgroundFileHandle && fileSystemWritableAvail) {
-    (<HTMLButtonElement>document.getElementById('overwrite-button')).disabled = true; // Disable save button again, if it could be used
+  console.log(removeType);
+  
+
+  for (const id of removeType) {
+    spectrumData[id] = [];
+    spectrumData[`${id}Time`] = 0;
+    (<HTMLInputElement>document.getElementById(id)).value = '';
+    document.getElementById(`${id}-form-label`)!.innerText = 'No File Chosen';
+    console.log(document.getElementById(`${id}-form-label`));
+
+    if (id === 'data') dataFileHandle = undefined; // Reset File System Access API handlers
+    if (id === 'background') backgroundFileHandle = undefined;
+    if (!dataFileHandle && !backgroundFileHandle && fileSystemWritableAvail) {
+      (<HTMLButtonElement>document.getElementById('overwrite-button')).disabled = true; // Disable save button again, if it could be used
+    }
+
+    document.getElementById(id + '-icon')!.classList.add('d-none');
   }
 
   updateSpectrumCounts();
   updateSpectrumTime();
-
-  document.getElementById(id + '-icon')!.classList.add('d-none');
 
   plot.resetPlot(spectrumData);
   bindPlotEvents();

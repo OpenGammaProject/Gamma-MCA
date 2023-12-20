@@ -159,7 +159,7 @@ document.body.onload = async function () {
             }
             const spectrumEndings = ['csv', 'tka', 'xml', 'txt', 'json'];
             if (spectrumEndings.includes(fileEnding))
-                getFileData(file);
+                getFileData(file, 'data');
             console.warn('File could not be imported!');
         });
     }
@@ -309,8 +309,8 @@ function toggleNotifications(toggle) {
     const result = saveJSON('allowNotifications', allowNotifications);
     new ToastNotification(result ? 'settingSuccess' : 'settingError');
 }
-document.getElementById('data').onclick = event => clickFileInput(event, false);
-document.getElementById('background').onclick = event => clickFileInput(event, true);
+document.getElementById('data').onclick = event => clickFileInput(event, 'data');
+document.getElementById('background').onclick = event => clickFileInput(event, 'background');
 const openFileTypes = [
     {
         description: 'Combination data file',
@@ -330,7 +330,7 @@ const openFileTypes = [
 ];
 let dataFileHandle;
 let backgroundFileHandle;
-async function clickFileInput(event, background) {
+async function clickFileInput(event, type) {
     if (window.FileSystemHandle && window.showOpenFilePicker) {
         event.preventDefault();
         const openFilePickerOptions = {
@@ -346,17 +346,12 @@ async function clickFileInput(event, background) {
             return;
         }
         const file = await fileHandle.getFile();
-        if (background) {
-            getFileData(file, true);
-        }
-        else {
-            getFileData(file, false);
-        }
+        getFileData(file, type);
         const fileExtension = file.name.split('.')[1].toLowerCase();
         if (fileExtension !== 'json' && fileExtension !== 'xml') {
             return;
         }
-        if (background) {
+        if (type === 'background') {
             backgroundFileHandle = fileHandle;
         }
         else {
@@ -367,14 +362,14 @@ async function clickFileInput(event, background) {
         }
     }
 }
-document.getElementById('data').onchange = event => importFile(event.target);
-document.getElementById('background').onchange = event => importFile(event.target, true);
-function importFile(input, background = false) {
+document.getElementById('data').onchange = event => importFile(event.target, 'data');
+document.getElementById('background').onchange = event => importFile(event.target, 'background');
+function importFile(input, type) {
     if (!input.files?.length)
         return;
-    getFileData(input.files[0], background);
+    getFileData(input.files[0], type);
 }
-function getFileData(file, background = false) {
+function getFileData(file, type) {
     const reader = new FileReader();
     const fileEnding = file.name.split('.')[1];
     reader.readAsText(file);
@@ -409,14 +404,15 @@ function getFileData(file, background = false) {
                         spectrumData.dataCps = spectrumData.data.map(val => val / meta.dataMt);
                     if (meta.backgroundMt)
                         spectrumData.backgroundCps = spectrumData.background.map(val => val / meta.backgroundMt);
+                    type = 'both';
                 }
                 else if (!espectrum?.length && !bgspectrum?.length) {
                     new ToastNotification('fileError');
                 }
-                else {
+                else if (type !== 'both') {
                     const fileData = espectrum?.length ? espectrum : bgspectrum;
                     const fileDataTime = (espectrum?.length ? meta.dataMt : meta.backgroundMt) * 1000;
-                    const fileDataType = background ? 'background' : 'data';
+                    const fileDataType = type;
                     spectrumData[fileDataType] = fileData;
                     spectrumData[`${fileDataType}Time`] = fileDataTime;
                     if (fileDataTime)
@@ -454,23 +450,23 @@ function getFileData(file, background = false) {
                     const optionValue = {
                         'filename': file.name,
                         'package': dataPackage,
-                        'background': background
+                        'type': type,
                     };
                     opt.value = JSON.stringify(optionValue);
                     opt.text = `${dataPackage.sampleInfo?.name} (${dataPackage.resultData.startTime ?? 'Undefined Time'})`;
                     selectElement.add(opt);
                 }
                 fileSelectModal.show();
-                return;
             }
             else {
                 const importData = jsonData[0];
                 if (checkJSONImportError(file.name, importData))
                     return;
-                npesFileImport(file.name, importData, background);
+                npesFileImport(file.name, importData, type);
             }
+            return;
         }
-        else if (background) {
+        else if (type === 'background') {
             spectrumData.backgroundTime = 1000;
             spectrumData.background = raw.csvToArray(result);
         }
@@ -478,7 +474,7 @@ function getFileData(file, background = false) {
             spectrumData.dataTime = 1000;
             spectrumData.data = raw.csvToArray(result);
         }
-        finalizeFileImport(file.name, background);
+        finalizeFileImport(file.name, type);
     };
 }
 function checkJSONImportError(filename, data) {
@@ -493,7 +489,7 @@ function checkJSONImportError(filename, data) {
     }
     return false;
 }
-function npesFileImport(filename, importData, background) {
+function npesFileImport(filename, importData, type) {
     document.getElementById('device-name').value = importData?.deviceData?.deviceName ?? '';
     document.getElementById('sample-name').value = importData?.sampleInfo?.name ?? '';
     document.getElementById('sample-loc').value = importData?.sampleInfo?.location ?? '';
@@ -525,12 +521,13 @@ function npesFileImport(filename, importData, background) {
             spectrumData.backgroundTime = bgMeasurementTime * 1000;
             spectrumData.backgroundCps = spectrumData.background.map(val => val / bgMeasurementTime);
         }
+        type = 'both';
     }
-    else {
+    else if (type !== 'both') {
         const dataObj = espectrum ?? bgspectrum;
         const fileData = dataObj?.spectrum ?? [];
         const fileDataTime = (dataObj?.measurementTime ?? 1) * 1000;
-        const fileDataType = background ? 'background' : 'data';
+        const fileDataType = type;
         spectrumData[fileDataType] = fileData;
         spectrumData[`${fileDataType}Time`] = fileDataTime;
         if (fileDataTime)
@@ -553,15 +550,22 @@ function npesFileImport(filename, importData, background) {
         addImportLabel();
         toggleCal(true);
     }
-    finalizeFileImport(filename, background);
+    finalizeFileImport(filename, type);
 }
-function finalizeFileImport(filename, background) {
-    document.getElementById(`${background ? 'background' : 'data'}-form-label`).innerText = filename;
+function finalizeFileImport(filename, type) {
+    console.log('hello');
+    if (type === 'both') {
+        document.getElementById('data-form-label').innerText = filename;
+        document.getElementById('background-form-label').innerText = filename;
+    }
+    else {
+        document.getElementById(`${type}-form-label`).innerText = filename;
+    }
     updateSpectrumCounts();
     updateSpectrumTime();
     if (spectrumData.background.length !== spectrumData.data.length && spectrumData.data.length && spectrumData.background.length) {
         new ToastNotification('dataError');
-        removeFile(background ? 'background' : 'data');
+        removeFile(type);
     }
     plot.resetPlot(spectrumData);
     bindPlotEvents();
@@ -569,7 +573,7 @@ function finalizeFileImport(filename, background) {
 document.getElementById('spectrum-select-btn').onclick = () => getJSONSelectionData();
 function getJSONSelectionData() {
     const fileSelectData = JSON.parse(document.getElementById('select-spectrum').value);
-    npesFileImport(fileSelectData.filename, fileSelectData.package, fileSelectData.background);
+    npesFileImport(fileSelectData.filename, fileSelectData.package, fileSelectData.type);
     const fileSelectModalElement = document.getElementById('file-select-modal');
     const closeButton = fileSelectModalElement.querySelector('.btn-close');
     closeButton.click();
@@ -589,7 +593,7 @@ async function loadAutosave(restore) {
             const objData = await raw.jsonToObject(data);
             if (objData.length) {
                 const importData = objData[0];
-                npesFileImport('Autosave Data', importData, false);
+                npesFileImport('Autosave Data', importData, 'data');
             }
             else {
                 console.error('Could not load autosaved data!');
@@ -606,21 +610,32 @@ function sizeCheck() {
 }
 document.getElementById('clear-data').onclick = () => removeFile('data');
 document.getElementById('clear-bg').onclick = () => removeFile('background');
-function removeFile(id) {
-    spectrumData[id] = [];
-    spectrumData[`${id}Time`] = 0;
-    document.getElementById(id).value = '';
-    document.getElementById(`${id}-form-label`).innerText = 'No File Chosen';
-    if (id === 'data')
-        dataFileHandle = undefined;
-    if (id === 'background')
-        backgroundFileHandle = undefined;
-    if (!dataFileHandle && !backgroundFileHandle && fileSystemWritableAvail) {
-        document.getElementById('overwrite-button').disabled = true;
+function removeFile(type) {
+    let removeType;
+    if (type === 'both') {
+        removeType = ['data', 'background'];
+    }
+    else {
+        removeType = [type];
+    }
+    console.log(removeType);
+    for (const id of removeType) {
+        spectrumData[id] = [];
+        spectrumData[`${id}Time`] = 0;
+        document.getElementById(id).value = '';
+        document.getElementById(`${id}-form-label`).innerText = 'No File Chosen';
+        console.log(document.getElementById(`${id}-form-label`));
+        if (id === 'data')
+            dataFileHandle = undefined;
+        if (id === 'background')
+            backgroundFileHandle = undefined;
+        if (!dataFileHandle && !backgroundFileHandle && fileSystemWritableAvail) {
+            document.getElementById('overwrite-button').disabled = true;
+        }
+        document.getElementById(id + '-icon').classList.add('d-none');
     }
     updateSpectrumCounts();
     updateSpectrumTime();
-    document.getElementById(id + '-icon').classList.add('d-none');
     plot.resetPlot(spectrumData);
     bindPlotEvents();
 }
