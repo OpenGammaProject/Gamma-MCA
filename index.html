@@ -56,7 +56,7 @@
 
     -->
     <div id="loading" class="vh-100 vw-100 fixed-top">
-      <div id="text-window" class="position-absolute top-50 start-50 translate-middle mx-auto pt-3 pb-3 ps-5 pe-5 text-center text-bg-light border border-2 rounded-2 border-primary">
+      <div id="text-window" class="position-absolute top-50 start-50 translate-middle mx-auto pt-3 pb-3 ps-5 pe-5 text-center border border-2 rounded-2 border-primary bg-body">
 
         <noscript>
           <p class="fs-3 text-bg-danger text-center">
@@ -215,10 +215,10 @@
               -->
               <div class="alert alert-warning" role="alert" id="serial-error">
                 <p>Oh no! Looks like neither the <a class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="https://caniuse.com/web-serial" target="_blank" title="CanIUse? Web Serial API"> Web Serial API</a>, 
-                  nor <a class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="https://caniuse.com/webusb" target="_blank" title="CanIUse? WebUSB">WebUSB</a> are not supported in your browser.</p>
+                  nor <a class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" href="https://caniuse.com/webusb" target="_blank" title="CanIUse? WebUSB">WebUSB</a> are supported in your browser.</p>
                 
                 <p>Please switch to the latest Chromium-based browser (e.g. Chrome, Edge, etc.) or enable one of the features in your browser's settings if possible.
-                  Otherwise you cannot use any serial devices.</p>
+                  Otherwise it's not possible to connect to serial devices.</p>
               </div>
 
               <div id="serial-div" class="h-100">

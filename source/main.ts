@@ -12,16 +12,16 @@
     - Remove all any types
 
   Possible Future Improvements:
-    - (?) Hist mode: First cps value is always zero?
     - (?) Highlight plot lines in ROI selection
     - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with a (right-)click
     - (?) Add pulse limit analog to time limit for serial recordings
-    - (?) Dead time correction for cps
     - (?) Use Window Controls Overlay API
+    - (?) Dead time correction for cps
     - (?) Sound card spectrometry prove of concept in browser (POSSIBLY HUGE POTENTIAL)
+    - (?) Hist mode: First cps value is always zero?
 
-    - NPESv2: Let user remove data packages from file in the import selection dialog
     - NPESv2: Create additional save (append) button that allows users to save multiple data packages in one file
+    - NPESv2: Let user remove data packages from file in the import selection dialog
     - Automatically close system notifications when the user interacts with the page again
     - Webmanifest vertical images (narrow form_factor)
 
