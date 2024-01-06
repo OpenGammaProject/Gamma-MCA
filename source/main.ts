@@ -17,12 +17,13 @@
     - (?) Add pulse limit analog to time limit for serial recordings
     - (?) Use Window Controls Overlay API
     - (?) Dead time correction for cps
-    - (?) Sound card spectrometry prove of concept in browser (POSSIBLY HUGE POTENTIAL)
     - (?) Hist mode: First cps value is always zero?
 
     - NPESv2: Create additional save (append) button that allows users to save multiple data packages in one file
     - NPESv2: Let user remove data packages from file in the import selection dialog
     - Automatically close system notifications when the user interacts with the page again
+
+    - Sound card spectrometry prove of concept
     - Webmanifest vertical images (narrow form_factor)
 
   Known Issues/Problems/Limitations:
@@ -783,8 +784,6 @@ function npesFileImport(filename: string, importData: NPESv1, type: FileImportTy
 
 
 function finalizeFileImport(filename: string, type: FileImportType): void {
-  console.log('hello');
-  
   if (type === 'both') { // Set file name(s) to the openers
     document.getElementById('data-form-label')!.innerText = filename;
     document.getElementById('background-form-label')!.innerText = filename;
