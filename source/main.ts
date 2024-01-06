@@ -2627,7 +2627,7 @@ function resetMCA(): void {
 
 /*
 =========================================
-  SERIAL DATA
+  SERIAL CONNECTION DATA
 =========================================
 */
 
@@ -3077,3 +3077,11 @@ function refreshRender(type: DataType, firstLoad = false): void {
     refreshTimeout = setTimeout(refreshRender, (refreshRate - finishDelta > 0) ? (refreshRate - finishDelta) : 1, type);
   }
 }
+
+/*
+=========================================
+  SOUNDCARD CONNECTION DATA
+=========================================
+*/
+
+// Looks to be a PITA just to get the raw data/volume/amplitude from the microphone in the browser
