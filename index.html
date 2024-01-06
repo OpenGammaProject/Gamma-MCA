@@ -85,11 +85,11 @@
         <div class="col-md-auto p-2 text-center mt-2">
 
           <nav class="nav nav-pills flex-column" id="main-tabs" role="tablist" aria-orientation="vertical">
-            <button class="nav-link active mb-1 fw-semibold border border-1 rounded-1 border-primary shadow-sm" id="file-import-tab" data-bs-toggle="pill" data-bs-target="#v-file" type="button" role="tab" aria-controls="v-file" aria-selected="true" title="Select File Import Tab">
+            <button class="nav-link active mb-1 fw-semibold border border-1 rounded-1 border-primary shadow-sm" id="file-import-tab" data-bs-toggle="pill" data-bs-target="#v-file" type="button" role="tab" aria-controls="v-file" aria-selected="true" title="File Import Tab">
               <i class="fa-solid fa-file-import"></i> File Control
             </button>
 
-            <button class="nav-link mb-1 fw-semibold border border-1 rounded-1 border-primary shadow-sm" id="serial-tab" data-bs-toggle="pill" data-bs-target="#v-serial" type="button" role="tab" aria-controls="v-serial" aria-selected="false" title="Select Serial Connection Tab">
+            <button class="nav-link mb-1 fw-semibold border border-1 rounded-1 border-primary shadow-sm" id="serial-tab" data-bs-toggle="pill" data-bs-target="#v-serial" type="button" role="tab" aria-controls="v-serial" aria-selected="false" title="Serial Connection Tab">
               <i class="fa-solid fa-network-wired"></i> Serial Connection
 
               <span class="align-middle border border-light rounded-circle spinner-grow spinner-grow-sm recording-spinner text-danger d-none" role="status">
@@ -98,18 +98,22 @@
 
             </button>
 
-            <button class="nav-link mb-1 fw-semibold border border-1 rounded-1 border-primary shadow-sm" id="calibration-tab" data-bs-toggle="pill" data-bs-target="#v-calibration" type="button" role="tab" aria-controls="v-calibration" aria-selected="false" title="Select Calibration Tab">
+            <button class="nav-link mb-1 fw-semibold border border-1 rounded-1 border-primary shadow-sm" id="sound-tab" data-bs-toggle="pill" data-bs-target="#v-sound" type="button" role="tab" aria-controls="v-sound" aria-selected="false" title="Soundcard Connection Tab">
+              <i class="fa-solid fa-microphone"></i> Sound Connection
+            </button>
+
+            <button class="nav-link mb-1 fw-semibold border border-1 rounded-1 border-primary shadow-sm" id="calibration-tab" data-bs-toggle="pill" data-bs-target="#v-calibration" type="button" role="tab" aria-controls="v-calibration" aria-selected="false" title="Calibration Tab">
               <i class="fa-solid fa-calculator"></i> Calibration
             </button>
 
-            <button class="nav-link fw-semibold border border-1 rounded-1 border-primary shadow-sm" id="metadata-tab" data-bs-toggle="pill" data-bs-target="#v-metadata" type="button" role="tab" aria-controls="v-metadata" aria-selected="false" title="Select Sample Information Tab">
+            <button class="nav-link fw-semibold border border-1 rounded-1 border-primary shadow-sm" id="metadata-tab" data-bs-toggle="pill" data-bs-target="#v-metadata" type="button" role="tab" aria-controls="v-metadata" aria-selected="false" title="Sample Information Tab">
               <i class="fa-solid fa-circle-info"></i> Sample Info
             </button>
           </nav>
 
           <hr>
 
-          <button class="btn btn-sm btn-outline-primary rounded-1 w-100 fw-semibold shadow-sm" id="toggle-menu" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvas" aria-controls="offcanvas" title="Open Settings Menu">
+          <button class="btn btn-sm btn-outline-primary rounded-1 w-100 fw-semibold shadow-sm" id="toggle-menu" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvas" aria-controls="offcanvas" title="Settings Menu">
             <i class="fa-solid fa-gear"></i> Settings
           </button>
 
@@ -326,6 +330,41 @@
 
               </div>
 
+            </div>
+            <div class="tab-pane fade h-100" id="v-sound" role="tabpanel" aria-labelledby="sound-tab">
+              <!--
+               #####################
+               SERIAL CONNECTION TAB
+               #####################
+              -->
+              <div class="row h-100">
+                <div class="col">
+                  <!--
+                    #####
+                    COL 1
+                    #####
+                  -->
+
+                  <p>Hello!</p>
+
+                </div>
+
+                <div class="col-lg-auto g-0">
+                  <div class="vr h-100 d-none d-lg-block"></div>
+                  <hr class="d-lg-none">
+                </div>
+
+                <div class="col">
+                  <!--
+                    #####
+                    COL 2
+                    #####
+                  -->
+
+                  <p>Hello!</p>
+
+                </div>
+              </div>
             </div>
             <div class="tab-pane fade h-100" id="v-calibration" role="tabpanel" aria-labelledby="calibration-tab">
               <!--
