@@ -784,8 +784,6 @@ function npesFileImport(filename: string, importData: NPESv1, type: FileImportTy
 
 
 function finalizeFileImport(filename: string, type: FileImportType): void {
-  console.log('hello');
-  
   if (type === 'both') { // Set file name(s) to the openers
     document.getElementById('data-form-label')!.innerText = filename;
     document.getElementById('background-form-label')!.innerText = filename;

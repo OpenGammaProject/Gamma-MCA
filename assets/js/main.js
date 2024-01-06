@@ -553,7 +553,6 @@ function npesFileImport(filename, importData, type) {
     finalizeFileImport(filename, type);
 }
 function finalizeFileImport(filename, type) {
-    console.log('hello');
     if (type === 'both') {
         document.getElementById('data-form-label').innerText = filename;
         document.getElementById('background-form-label').innerText = filename;
