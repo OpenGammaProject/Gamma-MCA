@@ -24,7 +24,6 @@
     - Automatically close system notifications when the user interacts with the page again
 
     - Sound card spectrometry prove of concept
-    - Webmanifest vertical images (narrow form_factor)
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.

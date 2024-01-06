@@ -44,53 +44,95 @@
   "categories": ["nuclear physics","radiation","gamma spectroscopy","science","gamma-ray","physics","geiger","spectrometry","education","tool","mca","analyzer"],
   "screenshots": [
     {
-      "src": "/assets/screenshots/browser.PNG",
-      "sizes": "1380x862",
+      "src": "/assets/screenshots/browser.png",
+      "sizes": "1320x883",
       "type": "image/png",
       "form_factor": "wide",
       "label": "Start screen of the browser app"
     },
     {
-      "src": "/assets/screenshots/pwa.PNG",
-      "sizes": "1380x862",
+      "src": "/assets/screenshots/pwa.png",
+      "sizes": "1320x883",
       "type": "image/png",
       "form_factor": "wide",
       "label": "Start screen of the installed PWA"
     },
     {
-      "src": "/assets/screenshots/file.PNG",
-      "sizes": "1380x862",
+      "src": "/assets/screenshots/file.png",
+      "sizes": "1320x883",
       "type": "image/png",
       "form_factor": "wide",
       "label": "JSON spectrum file imported into the PWA and plotted"
     },
     {
-      "src": "/assets/screenshots/serial.PNG",
-      "sizes": "1380x862",
+      "src": "/assets/screenshots/serial.png",
+      "sizes": "1320x883",
       "type": "image/png",
       "form_factor": "wide",
       "label": "Recording a spectrum using the serial port"
     },
     {
-      "src": "/assets/screenshots/settings.PNG",
-      "sizes": "1380x862",
+      "src": "/assets/screenshots/settings.png",
+      "sizes": "1320x883",
       "type": "image/png",
       "form_factor": "wide",
       "label": "Opened settings panel with three menu points"
     },
     {
-      "src": "/assets/screenshots/calibration.PNG",
-      "sizes": "1380x862",
+      "src": "/assets/screenshots/calibration.png",
+      "sizes": "1320x883",
       "type": "image/png",
       "form_factor": "wide",
       "label": "Imported calibration from a JSON file"
     },
     {
       "src": "/assets/screenshots/dark_file.png",
-      "sizes": "1380x862",
+      "sizes": "1320x883",
       "type": "image/png",
       "form_factor": "wide",
       "label": "JSON spectrum file imported into the PWA and plotted in dark mode"
+    },
+    {
+      "src": "/assets/screenshots/dark_phone.png",
+      "sizes": "1290x2796",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": ""
+    },
+    {
+      "src": "/assets/screenshots/light_phone.png",
+      "sizes": "1290x2796",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": ""
+    },
+    {
+      "src": "/assets/screenshots/serial_phone.png",
+      "sizes": "1290x2796",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": ""
+    },
+    {
+      "src": "/assets/screenshots/calibration_phone.png",
+      "sizes": "1290x2796",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": ""
+    },
+    {
+      "src": "/assets/screenshots/file_phone.png",
+      "sizes": "1290x2796",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": ""
+    },
+    {
+      "src": "/assets/screenshots/sample_phone.png",
+      "sizes": "1290x2796",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": ""
     }
   ],
   "file_handlers": [
