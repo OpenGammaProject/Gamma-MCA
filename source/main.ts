@@ -128,7 +128,7 @@ const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2023-12-20';
+const APP_VERSION = '2024-01-10';
 const localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 const wakeLockAvailable = 'wakeLock' in navigator; // Test for Screen Wake Lock API
 const notificationsAvailable = 'Notification' in window; // Test for Notifications API
