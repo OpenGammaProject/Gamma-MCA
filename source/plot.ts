@@ -799,7 +799,7 @@ export class SpectrumPlot {
       name: 'Radiation Evolution',
       x: xAxis,
       y: yAxis,
-      mode: 'lines+markers', // Remove lines, "lines", "none"
+      mode: 'lines',
       type: 'scatter',
       //fill: 'tozeroy',
       //opacity: 0.8,
@@ -814,7 +814,7 @@ export class SpectrumPlot {
       name: 'Moving Average',
       x: xAxis,
       y: this.computeMovingAverage(yAxis),
-      mode: 'lines', // Remove lines, "lines", "none"
+      mode: 'lines',
       type: 'scatter',
       //fill: 'tozeroy',
       //opacity: 0.8,
@@ -1390,7 +1390,7 @@ export class SpectrumPlot {
         anno.hovertext += layout.xaxis.ticksuffix;
       }
     }
-    
+
     (<any>window).Plotly[update ? 'react' : 'newPlot'](this.plotDiv, data, layout, config);
   }
 }
