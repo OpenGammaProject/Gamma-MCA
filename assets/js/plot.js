@@ -120,6 +120,7 @@ export class SpectrumPlot {
     annoBgLight = 'rgba(255,255,255,0.4)';
     annoBgDark = 'rgba(0,0,0,0.4)';
     cpsSwitchLimit = 1;
+    evolutionPointLimit = 10000;
     sma = false;
     smaLength = 8;
     calibration = {
@@ -223,9 +224,9 @@ export class SpectrumPlot {
     constructor(divId) {
         this.plotDiv = document.getElementById(divId);
     }
-    getXAxis(len) {
+    getXAxis(len, step = 1) {
         const xArray = [];
-        for (let i = 0; i < len; i++) {
+        for (let i = 0; i < len; i += step) {
             xArray.push(i);
         }
         return xArray;
@@ -524,11 +525,27 @@ export class SpectrumPlot {
         correlValues.forEach((value, index, array) => array[index] = value * scalingFactor);
         return correlValues;
     }
+    limitArraySize(originalArray, targetSize) {
+        if (targetSize <= 1) {
+            return originalArray;
+        }
+        const resultArray = [];
+        const originalSize = originalArray.length;
+        for (let i = 0; i < originalSize; i += targetSize) {
+            const chunk = originalArray.slice(i, i + targetSize);
+            const average = chunk.reduce((sum, value) => sum + value, 0) / chunk.length;
+            resultArray.push(average);
+        }
+        return resultArray;
+    }
     plotEvolution(cpsValues, update) {
+        const targetSize = Math.ceil(cpsValues.length / this.evolutionPointLimit);
+        const xAxis = this.getXAxis(cpsValues.length, targetSize);
+        const yAxis = this.limitArraySize(cpsValues, targetSize);
         const trace = {
             name: 'Radiation Evolution',
-            x: this.getXAxis(cpsValues.length),
-            y: cpsValues,
+            x: xAxis,
+            y: yAxis,
             mode: 'lines+markers',
             type: 'scatter',
             line: {
@@ -539,8 +556,8 @@ export class SpectrumPlot {
         };
         const averageTrace = {
             name: 'Moving Average',
-            x: this.getXAxis(cpsValues.length),
-            y: this.computeMovingAverage(cpsValues),
+            x: xAxis,
+            y: this.computeMovingAverage(yAxis),
             mode: 'lines',
             type: 'scatter',
             line: {

@@ -269,6 +269,7 @@ export class SpectrumPlot {
   private annoBgLight = 'rgba(255,255,255,0.4)';
   private annoBgDark = 'rgba(0,0,0,0.4)';
   cpsSwitchLimit = 1; // Limit of cps below which plot will switch to cpm
+  evolutionPointLimit = 10_000; // Limits the number of points for the evolution chart to help performance
   sma = false; // Simple Moving Average
   smaLength = 8;
   calibration = {
@@ -384,9 +385,9 @@ export class SpectrumPlot {
   /*
     Get An Array with Length == Data.length containing ascending numbers
   */
-  private getXAxis(len: number): number[] {
+  private getXAxis(len: number, step: number = 1): number[] {
     const xArray: number[] = [];
-    for (let i = 0; i < len; i++) {
+    for (let i = 0; i < len; i += step) {
       xArray.push(i);
     }
     return xArray;
@@ -768,13 +769,36 @@ export class SpectrumPlot {
     return correlValues;
   }
   /*
+    Limit array size by decreasing resolution/number of points to boost performance of plot refreshs
+  */
+  private limitArraySize(originalArray: number[], targetSize: number): number[] {
+    if (targetSize <= 1) {
+      return originalArray; // The original array is small enough to be printed without reducing resolution
+    }
+  
+    const resultArray: number[] = [];
+    const originalSize = originalArray.length;
+  
+    for (let i = 0; i < originalSize; i += targetSize) {
+      const chunk = originalArray.slice(i, i + targetSize);
+      const average = chunk.reduce((sum, value) => sum + value, 0) / chunk.length;
+      resultArray.push(average);
+    }
+  
+    return resultArray;
+  }
+  /*
     Plot Radiation Evolution Chart
   */
   private plotEvolution(cpsValues: number[], update: boolean): void {
+    const targetSize = Math.ceil(cpsValues.length / this.evolutionPointLimit);
+    const xAxis = this.getXAxis(cpsValues.length, targetSize);
+    const yAxis = this.limitArraySize(cpsValues, targetSize);
+
     const trace: Trace = {
       name: 'Radiation Evolution',
-      x: this.getXAxis(cpsValues.length),
-      y: cpsValues,
+      x: xAxis,
+      y: yAxis,
       mode: 'lines+markers', // Remove lines, "lines", "none"
       type: 'scatter',
       //fill: 'tozeroy',
@@ -788,8 +812,8 @@ export class SpectrumPlot {
 
     const averageTrace: Trace = {
       name: 'Moving Average',
-      x: this.getXAxis(cpsValues.length),
-      y: this.computeMovingAverage(cpsValues),
+      x: xAxis,
+      y: this.computeMovingAverage(yAxis),
       mode: 'lines', // Remove lines, "lines", "none"
       type: 'scatter',
       //fill: 'tozeroy',
