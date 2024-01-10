@@ -546,7 +546,7 @@ export class SpectrumPlot {
             name: 'Radiation Evolution',
             x: xAxis,
             y: yAxis,
-            mode: 'lines+markers',
+            mode: 'lines',
             type: 'scatter',
             line: {
                 color: 'orangered',
