@@ -7,12 +7,13 @@
   https://nuclearphoenix.xyz
 
 */
-const APP_VERSION = '2023-02-20';
+const APP_VERSION = '2024-01-10';
 const CACHE_NAME = 'gamma-static'; // A random name for the cache
 
 const OFFLINE_RESOURCES = ['/',
                           '/index.html',
                           '/404.html',
+                          '/print.html',
                           '/assets/css/bootstrap.min.css',
                           '/assets/css/all.min.css',
                           '/assets/css/main.css',
@@ -39,7 +40,10 @@ const OFFLINE_RESOURCES = ['/',
                           '/assets/favicon/favicon-32x32.png',
                           '/assets/favicon/favicon.ico',
                           '/assets/isotopes_energies_min.json',
-                          '/assets/npes-1.schema.json'];
+                          '/assets/notifications/badge.png',
+                          '/assets/notifications/icon.png',
+                          '/assets/npes-1.schema.json',
+                          '/assets/npes-2.schema.json'];
 
 
 self.addEventListener('install', event => { // First time install of a worker

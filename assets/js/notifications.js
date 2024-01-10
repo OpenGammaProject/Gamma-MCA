@@ -1,7 +1,7 @@
 const notificationContents = {
     'updateInstalled': {
         type: 'info',
-        icon: 'fa-solid fa-cloud-arrow-down fa-beat notification-beat-slow',
+        icon: 'fa-solid fa-cloud-arrow-down fa-beat animation-slow',
         header: 'Installed Update',
         body: 'An update has been found and installed. You must reload Gamma MCA for the changes to take effect. <br><br>' +
             '<em>You can also continue on this page without reloading for now.</em>'
@@ -30,7 +30,7 @@ const notificationContents = {
     'settingSuccess': {
         type: 'success',
         delay: 2000,
-        icon: 'fas fa-check-circle fa-beat notification-beat-slow',
+        icon: 'fas fa-check-circle fa-beat animation-slow',
         header: 'Changed Setting',
         body: 'A settings value has been changed successfully.'
     },
@@ -51,25 +51,15 @@ const notificationContents = {
     'serialDisconnect': {
         type: 'info',
         delay: 5000,
-        icon: 'fas fa-info-circle fa-beat notification-beat-slow',
+        icon: 'fas fa-info-circle fa-beat animation-slow',
         header: 'Serial Disconnect',
         body: 'A serial device was removed.'
     },
     'autoStop': {
         type: 'info',
-        icon: 'fas fa-info-circle fa-beat notification-beat-slow',
+        icon: 'fas fa-info-circle fa-beat animation-slow',
         header: 'Recording Stopped',
         body: 'Your set time-limit has run out. The recording has been automatically stopped. Changing this limit can be done in the settings.'
-    },
-    'npesError': {
-        type: 'danger',
-        delay: 6000,
-        icon: 'fas fa-exclamation-triangle fa-shake',
-        header: 'JSON Import Error',
-        body: 'The file you uploaded is not formatted correctly. It does not validate the NPES JSON Schema!' +
-            'For more information, please head to <a title="GitHub/NPES-JSON" class="link-light" href="https://github.com/OpenGammaProject/NPES-JSON" target="_blank">NPES-JSON</a>.' +
-            '<br> <br>' +
-            '<em>Tip: You can open the browser console to look at the exact errors.</em>'
     },
     'dataError': {
         type: 'danger',
@@ -109,16 +99,16 @@ const notificationContents = {
     'serialConnect': {
         type: 'info',
         delay: 5000,
-        icon: 'fas fa-info-circle fa-beat notification-beat-slow',
+        icon: 'fas fa-info-circle fa-beat animation-slow',
         header: 'Serial Connect',
         body: 'Detected a new serial device.'
     },
     'welcomeMessage': {
         type: 'primary',
-        icon: 'fas fa-radiation fa-beat notification-beat-slow',
+        icon: 'fas fa-radiation fa-beat animation-slow',
         header: 'Welcome!',
-        body: '<p>Thanks for using Gamma MCA, please report any bugs or issues on <a title="GitHub/Issues" class="link-light" href="https://github.com/OpenGammaProject/Gamma-MCA/issues" target="_blank"><small><i class="fa-solid fa-link"></i></small> GitHub/Issues</a>. Thank you.</p>' +
-            '<p>By using the website and source code, you agree to the <a  title="GitHub/License" class="link-light" href="https://github.com/OpenGammaProject/Gamma-MCA/blob/main/LICENSE" target="_blank"><small><i class="fa-solid fa-link"></i></small> license</a>.</p>'
+        body: '<p>Thank you for using Gamma MCA, please report any bugs or issues on <a title="GitHub/Issues" class="link-light link-underline-opacity-50 link-underline-opacity-100-hover" href="https://github.com/OpenGammaProject/Gamma-MCA/issues" target="_blank"><small><i class="fa-solid fa-link"></i></small> GitHub/Issues</a>.</p>' +
+            '<p>If you\'re new to this, you can have a look at the trailer on <a title="Youtube Trailer" class="link-light link-underline-opacity-50 link-underline-opacity-100-hover" href="https://www.youtube.com/watch?v=dkMhoUwDla0" target="_blank"><small><i class="fa-brands fa-youtube"></i></small> Youtube</a>.</p>'
     },
     'saveMultipleAtOnce': {
         type: 'warning',
@@ -127,9 +117,23 @@ const notificationContents = {
         header: 'File Save Error',
         body: '<p>You tried to save (overwrite) multiple files at once. This is not supported due to the risk of data loss.</p>' +
             '<p>If you want to combine and save data from different files, please use the <code>Save As</code> function.</p>'
-    }
+    },
+    'saveFile': {
+        type: 'success',
+        delay: 3000,
+        icon: 'fas fa-check-circle fa-beat animation-slow',
+        header: 'Saved File',
+        body: 'Successfully saved data to the file system.'
+    },
+    'reportError': {
+        type: 'warning',
+        delay: 5000,
+        icon: 'fas fa-exclamation-triangle fa-shake',
+        header: 'Missing Data',
+        body: 'Cannot generate a report since there is no data. Please try again when there is data to analyze.'
+    },
 };
-export class Notification {
+export class ToastNotification {
     toastElement;
     toast;
     toastContainer;
@@ -160,6 +164,7 @@ export class Notification {
         root.appendChild(toastHeader);
         toastHeader.className = 'toast-header';
         toastHeader.innerHTML = `<i class="${content.icon} me-2"></i> <strong class="me-auto">${content.header}</strong>` +
+            `<small>${new Date().toLocaleString()}</small>` +
             '<button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>';
         const toastBody = document.createElement('div');
         root.appendChild(toastBody);
@@ -175,6 +180,16 @@ export class Notification {
         });
         this.toast = new window.bootstrap.Toast(root);
         this.toast.show();
+    }
+}
+export function launchSysNotification(title, body, forceShow = false) {
+    if (document.visibilityState === 'hidden' || forceShow) {
+        new Notification(title, {
+            lang: 'en-US',
+            badge: '/assets/notifications/badge.png',
+            body: body,
+            icon: '/assets/notifications/icon.png'
+        });
     }
 }
 //# sourceMappingURL=notifications.js.map

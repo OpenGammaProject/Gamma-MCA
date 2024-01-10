@@ -12,41 +12,47 @@
     - Remove all any types
 
   Possible Future Improvements:
-    - (?) Add dead time correction for cps
-    - (?) Add desktop notifications
-    - (?) Hotkeys
-    - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with one click
+    - (?) Highlight plot lines in ROI selection
+    - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with a (right-)click
+    - (?) Add pulse limit analog to time limit for serial recordings
+    - (?) Use Window Controls Overlay API
+    - (?) Dead time correction for cps
+    - (?) Hist mode: First cps value is always zero?
 
-    - Calibration n-polynomial regression
-    - Highlight plot lines in ROI selection
-    
-    - Dark Mode -> Bootstrap v5.3
-    - FWHM calculation in peak finder
-    - ROI with stats (total counts, max, min, FWHM, range,...)
-    - Autoswitch CPS to CPM if too low count rate
+    - NPESv2: Create additional save (append) button that allows users to save multiple data packages in one file
+    - NPESv2: Let user remove data packages from file in the import selection dialog
+    - Automatically close system notifications when the user interacts with the page again
 
-  Known Issue:
-    - Plot: Gaussian Correlation Filtering still has pretty bad performance
-    - Plot: Plotly Update takes forever, but there is no real way to improve it
+    - Sound card spectrometry prove of concept
+
+  Known Issues/Problems/Limitations:
+    - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
+    - Plotly.js: Plot updates takes forever, but there is no real way to improve it (?)
+    - Plotly.js: Would love to use ScatterGL (WebGL) that VASTLY improves performance, but stackgroups don't work there: https://github.com/plotly/plotly.js/issues/5365
+    - Plotly.js: Selection Box is technically not supported on scatter traces w/o text or markers, that's why it's spamming errors : https://github.com/plotly/plotly.js/issues/170
     - Service Worker: Somehow fetching and caching the hits tracker does not work in Edge for me (hits.seeyoufarm.com). Works fine with FF.
 
 */
 
-import { SpectrumPlot, SeekClosest, DownloadFormat } from './plot.js';
-import { RawData, NPESv1, NPESv1Spectrum } from './raw-data.js';
+import { SpectrumPlot, SeekClosest, DownloadFormat, CalculateFWHM } from './plot.js';
+import { RawData, NPESv1, NPESv1Spectrum, JSONParseError, NPESv2 } from './raw-data.js';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
 import { WebUSBSerialPort } from './external/webusbserial-min.js'
-import { Notification } from './notifications.js';
+import { ToastNotification, launchSysNotification } from './notifications.js';
+import { applyTheming, autoThemeChange } from './global-theming.js';
 
 export interface IsotopeList {
-  [key: number]: string | undefined;
+  [key: string]: number[];
 }
 
-interface OpenPickerAcceptType {
-  description: string,
-  accept: {
-    [key: string]: string[]
-  }
+export interface SaveTypeList {
+  [key: string]: FilePickerAcceptType;
+}
+
+interface FileSelectData {
+  'filename': string,
+  'package': NPESv1;
+  'type': FileImportType;
 }
 
 export type DataOrder = 'hist' | 'chron';
@@ -54,6 +60,8 @@ type CalType = 'a' | 'b' | 'c';
 type DataType = 'data' | 'background';
 type PortList = (WebSerial | WebUSBSerial | undefined)[];
 type DownloadType = 'CAL' | 'XML' | 'JSON' | 'CSV';
+type SortTypes = 'asc' | 'desc' | 'none';
+type FileImportType = DataType | 'both';
 
 export class SpectrumData { // Will hold the measurement data globally.
   data: number[] = [];
@@ -65,9 +73,16 @@ export class SpectrumData { // Will hold the measurement data globally.
 
   getTotalCounts(type: DataType, start = 0, end = this[type].length - 1): number {
     //return this[type].reduce((acc,curr) => acc + curr, 0);
+    const dataArr = this[type];
     let sum = 0;
+
+    if (start < 0 || start >= dataArr.length || end < 0 || end >= dataArr.length || start > end) {
+      console.warn('Invalid sum range! Return default 0.');
+      return sum;
+    }
+
     for (let i = start; i <= end; i++) {
-      sum += this[type][i];
+      sum += dataArr[i];
     }
     return sum;
   }
@@ -104,6 +119,7 @@ let maxRecTimeEnabled = false;
 let maxRecTime = 1800000; // 30 minutes
 const REFRESH_META_TIME = 200; // Milliseconds
 const CONSOLE_REFRESH = 200; // Milliseconds
+const AUTOSAVE_TIME = 900_000; // Milliseconds === 15 minutes
 
 let cpsValues: number[] = [];
 
@@ -112,29 +128,70 @@ const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2023-02-20';
-let localStorageAvailable = false;
+const APP_VERSION = '2024-01-10';
+const localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
+const wakeLockAvailable = 'wakeLock' in navigator; // Test for Screen Wake Lock API
+const notificationsAvailable = 'Notification' in window; // Test for Notifications API
+let allowNotifications = notificationsAvailable;
 let fileSystemWritableAvail = false;
 let firstInstall = false;
 
 // Isotope table variables
-const isoTableSortDirections = ['none', 'none', 'asc'];
+const isoTableSortDirections: SortTypes[] = ['none', 'none', 'none'];
 const faSortClasses: {[key: string]: string} = {
   none: 'fa-sort',
   asc: 'fa-sort-up',
   desc: 'fa-sort-down'
 };
 
+// Key combinations for hotkey function: ALT+KEY
+const hotkeys = {
+  'r': 'reset-plot',
+  's': 'sma-label',
+  'x': 'xAxis',
+  'y': 'yAxis',
+  'c': 'plot-cps',
+  't': 'plot-type',
+  'i': 'iso-hover-label',
+  'p': 'peak-finder-btn',
+  '1': 'file-import-tab',
+  '2': 'serial-tab',
+  '3': 'sound-tab',
+  '4': 'calibration-tab',
+  '5': 'metadata-tab',
+};
+
+
+/*
+  Theming-related function calls
+*/
+window.addEventListener('DOMContentLoaded', () => {
+  if (localStorageAvailable) {
+    plot.darkMode = applyTheming() === 'dark';
+    resetPlot(false);
+  }
+});
+
+
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if (localStorageAvailable) {
+    plot.darkMode = autoThemeChange() === 'dark';
+    resetPlot(false);
+  }
+});
+
+
 /*
   Startup of the page
 */
 document.body.onload = async function(): Promise<void> {
-  localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
+  fileSystemWritableAvail = (window.FileSystemHandle && 'createWritable' in FileSystemFileHandle.prototype); // Test for File System Access API
 
   if (localStorageAvailable) {
     loadSettingsStorage();
-    //toggleDarkMode(); // Load from settings
-  } 
+  } else {
+    console.error('Browser does not support local storage. OOF, it must be ancient. Dude, update your browser. For real.');
+  }
 
   if (navigator.serviceWorker) { // Add service worker for PWA
     const reg = await navigator.serviceWorker.register('/service-worker.js'); // Onload async because of this... good? hmmm.
@@ -143,7 +200,8 @@ document.body.onload = async function(): Promise<void> {
       reg.addEventListener('updatefound', () => {
         if (firstInstall) return; // "Update" will always be installed on first load (service worker installation)
 
-        new Notification('updateInstalled'); //popupNotification('update-installed');
+        new ToastNotification('updateInstalled'); //popupNotification('update-installed');
+        launchSysNotification('New Update!', 'An update has been installed and will be applied once you reload Gamma MCA.');
       });
     }
   }
@@ -151,6 +209,13 @@ document.body.onload = async function(): Promise<void> {
   if ('standalone' in window.navigator || window.matchMedia('(display-mode: standalone)').matches) { // Standalone PWA mode
     document.title += ' PWA';
     document.getElementById('main')!.classList.remove('p-1');
+
+    const borderModeElements = document.getElementsByClassName('border-mode');
+    for (const element of borderModeElements) {
+      element.classList.add('border-0');
+    }
+
+    document.getElementById('plot-tab')!.classList.add('border-start-0', 'border-end-0');
   } else { // Default browser window
     document.getElementById('main')!.classList.remove('pb-1');
     document.title += ' web application';
@@ -184,19 +249,22 @@ document.body.onload = async function(): Promise<void> {
         if (!launchParams.files.length) return;
 
         const file: File = await launchParams.files[0].getFile();
-
         const fileEnding = file.name.split('.')[1].toLowerCase();
+
+        if (fileSystemWritableAvail) { // Try to use the File System Access API if possible
+          if (fileEnding === 'json' || fileEnding === 'xml') {
+            dataFileHandle = launchParams.files[0];
+            (<HTMLButtonElement>document.getElementById('overwrite-button')).disabled = false;
+          }
+        }
+
         const spectrumEndings = ['csv', 'tka', 'xml', 'txt', 'json'];
-        if (spectrumEndings.includes(fileEnding)) getFileData(file);
+        if (spectrumEndings.includes(fileEnding)) getFileData(file, 'data');
         /* else if (fileEnding === 'json') {
           importCal(file);
         } */
         console.warn('File could not be imported!');
       });
-  }
-
-  if (window.FileSystemHandle && 'createWritable' in FileSystemFileHandle.prototype) {
-    fileSystemWritableAvail = true;
   }
 
   resetPlot(); // Set up plot window
@@ -205,7 +273,9 @@ document.body.onload = async function(): Promise<void> {
 
   if (localStorageAvailable) {
     if (loadJSON('lastVisit') <= 0) {
-      new Notification('welcomeMessage'); //popupNotification('welcome-msg');
+      new ToastNotification('welcomeMessage'); //popupNotification('welcome-msg');
+      if (notificationsAvailable) legacyPopupNotification('ask-notifications'); // Show notifications notification on first visit
+
       firstInstall = true;
     }
 
@@ -238,7 +308,7 @@ document.body.onload = async function(): Promise<void> {
   } else {
     const settingsSaveAlert = document.getElementById('ls-available')!; // Remove saving alert
     settingsSaveAlert.parentNode!.removeChild(settingsSaveAlert);
-    new Notification('welcomeMessage'); //popupNotification('welcome-msg');
+    new ToastNotification('welcomeMessage'); //popupNotification('welcome-msg');
   }
 
   loadSettingsDefault();
@@ -248,12 +318,15 @@ document.body.onload = async function(): Promise<void> {
 
   const menuElements = document.getElementById('main-tabs')!.getElementsByTagName('button');
   for (const button of menuElements) {
-    button.addEventListener('shown.bs.tab', (event: Event): void => {
+    button.addEventListener('shown.bs.tab', (/*event: Event*/): void => {
       const toggleCalChartElement = <HTMLInputElement>document.getElementById('toggle-calibration-chart');
+      const toggleEvolChartElement = <HTMLInputElement>document.getElementById('toggle-evolution-chart');
 
-      if ((<HTMLButtonElement>event.target).id !== 'calibration-tab' && toggleCalChartElement.checked) { // Leave cal chart when leaving cal tab
+      if (toggleCalChartElement.checked || toggleEvolChartElement.checked) { // Leave cal/evol chart when changing tabs
         toggleCalChartElement.checked = false;
+        toggleEvolChartElement.checked = false;
         toggleCalChart(false);
+        toogleEvolChart(false);
       } else {
         plot.updatePlot(spectrumData); // Adjust Plot Size For Main Tab Menu Content Size
       }
@@ -283,15 +356,33 @@ document.body.onload = async function(): Promise<void> {
     });
   });
 
-  const loadingSpinner = document.getElementById('loading')!;
-  loadingSpinner.parentNode!.removeChild(loadingSpinner); // Delete Loading Thingymajig
+  // Activate notification button if the Notifications API is supported by the browser
+  if (notificationsAvailable) {
+    (<HTMLInputElement>document.getElementById('notifications-toggle')).disabled = false;
+  } else {
+    console.error('Browser does not support Notifications API.');
+  }
+
+  bindHotkeys();
+
+  if (localStorageAvailable) checkAutosave(); // Check for the last autosaved spectrum
+
+  const loadingOverlay = document.getElementById('loading')!;
+  loadingOverlay.parentNode!.removeChild(loadingOverlay); // Delete Loading Thingymajig
 };
 
 
 // Exit website confirmation alert
-window.onbeforeunload = (): string => {
-  return 'Are you sure to leave?';
+window.onbeforeunload = (event): string => {
+  event.preventDefault();
+  return event.returnValue = 'Are you sure you want to exit?';
 };
+
+
+window.onpagehide = (): void => {
+  // Delete autosave data when user deliberately leaves the page without saving
+  localStorage.removeItem('autosave');
+}
 
 
 // Needed For Responsiveness! DO NOT REMOVE OR THE LAYOUT GOES TO SHIT!!!
@@ -304,33 +395,6 @@ document.body.onresize = (): void => {
   }
 };
 
-/*
-document.getElementById()!.onclick = () => toggleDarkMode();
-
-function toggleDarkMode(): void {
-  const themeElements = document.getElementsByClassName('theme-mode');
-  for (const element of themeElements) {
-    element.classList.remove('text-bg-light', 'text-bg-white', 'table-light');
-    element.classList.add('text-bg-dark'); // TODO: add table-dark
-    // TODO: Change font color, reset to light mode, save to settings
-  }
-}
-*/
-
-/*
-window.addEventListener('hidden.bs.collapse', (event: Event) => {
-  if ((<HTMLButtonElement>event.target).getAttribute('id') === 'collapse-tabs') {
-    plot.updatePlot(spectrumData);
-  }
-});
-
-
-window.addEventListener('shown.bs.collapse', (event: Event) => {
-  if ((<HTMLButtonElement>event.target).getAttribute('id') === 'collapse-tabs') {
-    plot.updatePlot(spectrumData);
-  }
-});
-*/
 
 // User changed from browser window to PWA (after installation) or backwards
 window.matchMedia('(display-mode: standalone)').addEventListener('change', (/*event*/): void => {
@@ -377,34 +441,49 @@ window.addEventListener('onappinstalled', (): void => {
   document.getElementById('manual-install')!.classList.add('d-none');
 });
 
-/*
-document.onkeydown = async function(event) {
-  console.log(event.keyCode);
-  if (event.keyCode === 27) { // ESC
-    const offcanvasElement = document.getElementById('offcanvas');
-    const offcanvas = new bootstrap.Offcanvas(offcanvasElement);
 
-    //event.preventDefault();
+document.getElementById('notifications-toggle')!.onclick = event => toggleNotifications((<HTMLInputElement>event.target).checked);
+document.getElementById('notifications-toast-btn')!.onclick = () => toggleNotifications(true);
 
-    await offcanvas.toggle();
+function toggleNotifications(toggle: boolean): void {
+  allowNotifications = toggle;
+
+  if (Notification.permission !== 'granted') {
+    if (allowNotifications) {
+      // Request permission from user to use notifications
+      Notification.requestPermission().then((permission) => {
+        if (permission === 'granted') {
+          launchSysNotification('Success!', 'Notifications for Gamma MCA are now enabled.', true);
+        }
+        allowNotifications = allowNotifications && (permission === 'granted');
+
+        (<HTMLInputElement>document.getElementById('notifications-toggle')).checked = allowNotifications;
+        const result = saveJSON('allowNotifications', allowNotifications);
+        new ToastNotification(result ? 'settingSuccess' : 'settingError'); // Success or error toast
+      });
+    }
   }
-};
-*/
+  
+  hideNotification('ask-notifications');
+  (<HTMLInputElement>document.getElementById('notifications-toggle')).checked = allowNotifications;
+  const result = saveJSON('allowNotifications', allowNotifications);
+  new ToastNotification(result ? 'settingSuccess' : 'settingError'); // Success or error toast
+}
 
 
-document.getElementById('data')!.onclick = event => clickFileInput(event, false);
-document.getElementById('background')!.onclick = event => clickFileInput(event, true);
+document.getElementById('data')!.onclick = event => clickFileInput(event, 'data');
+document.getElementById('background')!.onclick = event => clickFileInput(event, 'background');
 
-const openFileTypes: OpenPickerAcceptType[] = [
+const openFileTypes: FilePickerAcceptType[] = [
   {
-    description: 'Combination Files',
+    description: 'Combination data file',
     accept: {
       'application/json': ['.json'],
       'application/xml': ['.xml']
     }
   },
   {
-    description: 'Single Spectrum Files',
+    description: 'Single spectrum file',
     accept: {
       'text/csv': ['.csv'],
       'text/txt': ['.txt'],
@@ -415,7 +494,7 @@ const openFileTypes: OpenPickerAcceptType[] = [
 let dataFileHandle: FileSystemFileHandle | undefined;
 let backgroundFileHandle: FileSystemFileHandle | undefined;
 
-async function clickFileInput(event: MouseEvent, background: boolean): Promise<void> {
+async function clickFileInput(event: MouseEvent, type: DataType): Promise<void> {
   //(<HTMLInputElement>event.target).value = ''; // No longer necessary?
 
   if (window.FileSystemHandle && window.showOpenFilePicker) { // Try to use the File System Access API if possible
@@ -437,11 +516,7 @@ async function clickFileInput(event: MouseEvent, background: boolean): Promise<v
     
     const file = await fileHandle.getFile();
 
-    if (background) {
-      getFileData(file, true);
-    } else {
-      getFileData(file, false);
-    }
+    getFileData(file, type);
 
     const fileExtension = file.name.split('.')[1].toLowerCase();
 
@@ -451,7 +526,7 @@ async function clickFileInput(event: MouseEvent, background: boolean): Promise<v
     }
 
     // File System Access API specific stuff
-    if (background) {
+    if (type === 'background') {
       backgroundFileHandle = fileHandle;
     } else {
       dataFileHandle = fileHandle;
@@ -464,29 +539,34 @@ async function clickFileInput(event: MouseEvent, background: boolean): Promise<v
 }
 
 
-document.getElementById('data')!.onchange = event => importFile(<HTMLInputElement>event.target);
-document.getElementById('background')!.onchange = event => importFile(<HTMLInputElement>event.target, true);
+document.getElementById('data')!.onchange = event => importFile(<HTMLInputElement>event.target, 'data');
+document.getElementById('background')!.onchange = event => importFile(<HTMLInputElement>event.target, 'background');
 
-function importFile(input: HTMLInputElement, background = false): void {
+function importFile(input: HTMLInputElement, type: DataType): void {
   if (!input.files?.length) return; // File selection has been canceled
-  getFileData(input.files[0], background);
+  getFileData(input.files[0], type);
 }
 
 
-function getFileData(file: File, background = false): void { // Gets called when a file has been selected.
+function getFileData(file: File, type: FileImportType): void { // Gets called when a file has been selected.
   const reader = new FileReader();
 
   const fileEnding = file.name.split('.')[1];
 
-  document.getElementById(`${background ? 'background' : 'data'}-form-label`)!.innerText = file.name; // Set file name
-
   reader.readAsText(file);
+
+  reader.onerror = () => {
+    new ToastNotification('fileError'); //popupNotification('file-error');
+    return;
+  };
 
   reader.onload = async () => {
     const result = (<string>reader.result).trim(); // A bit unclean for typescript, I'm sorry
 
     if (fileEnding.toLowerCase() === 'xml') {
       if (window.DOMParser) {
+        // Only grabs the first spectrum if there are multiple
+        // Use JSON (NPES) if you want to have the option to select the spectrum to show
         const {espectrum, bgspectrum, coeff, meta} = raw.xmlToArray(result);
 
         (<HTMLInputElement>document.getElementById('sample-name')).value = meta.name;
@@ -515,12 +595,14 @@ function getFileData(file: File, background = false): void { // Gets called when
           if (meta.dataMt) spectrumData.dataCps = spectrumData.data.map(val => val / meta.dataMt);
           if (meta.backgroundMt) spectrumData.backgroundCps = spectrumData.background.map(val => val / meta.backgroundMt);
 
+          type = 'both'; // Update type to reflect that both spectra have been loaded
+
         } else if (!espectrum?.length && !bgspectrum?.length) { // No spectrum
-          new Notification('fileError'); //popupNotification('file-error');
-        } else { // Only one spectrum
+          new ToastNotification('fileError'); //popupNotification('file-error');
+        } else if (type !== 'both') { // Only one spectrum
           const fileData = espectrum?.length ? espectrum : bgspectrum;
           const fileDataTime = (espectrum?.length ? meta.dataMt : meta.backgroundMt)*1000;
-          const fileDataType = background ? 'background' : 'data';
+          const fileDataType = type;
 
           spectrumData[fileDataType] = fileData;
           spectrumData[`${fileDataType}Time`] = fileDataTime;
@@ -542,89 +624,52 @@ function getFileData(file: File, background = false): void { // Gets called when
           }
 
           addImportLabel();
+          toggleCal(true);
         }
       } else {
         console.error('No DOM parser in this browser!');
       }
-    } else if (fileEnding.toLowerCase() === 'json') { // THIS SECTION MAKES EVERYTHING ASYNC!!!
-      const importData = await raw.jsonToObject(result);
+    } else if (fileEnding.toLowerCase() === 'json') { // THIS SECTION MAKES EVERYTHING ASYNC DUE TO THE JSON THING!!!
+      const jsonData = await raw.jsonToObject(result);
 
-      if (!importData) { // Data does not validate the schema
-        new Notification('npesError'); //popupNotification('npes-error');
-        return;
-      }
+      // Check if multiple files/errors were imported
+      if (jsonData.length > 1) {
+        const fileSelectModalElement = document.getElementById('file-select-modal');
+        const fileSelectModal = new (<any>window).bootstrap.Modal(fileSelectModalElement);
+        const selectElement = (<HTMLSelectElement>document.getElementById('select-spectrum'));
 
-      (<HTMLInputElement>document.getElementById('device-name')).value = importData?.deviceData?.deviceName ?? '';
-      (<HTMLInputElement>document.getElementById('sample-name')).value = importData?.sampleInfo?.name ?? '';
-      (<HTMLInputElement>document.getElementById('sample-loc')).value = importData?.sampleInfo?.location ?? '';
+        // Delete all previous options
+        selectElement.options.length = 0;
 
-      if (importData.sampleInfo?.time) {
-        const date = new Date(importData.sampleInfo.time);
-        const rightDate = new Date(date.getTime() - date.getTimezoneOffset()*60*1000);
+        // Fill with all the info and check for errors at the same time
+        for (const dataPackage of jsonData) {
+          // Check if there are any error packages
+          if (checkJSONImportError(file.name, dataPackage)) return;
 
-        (<HTMLInputElement>document.getElementById('sample-time')).value = rightDate.toISOString().slice(0,16);
-      }
+          const opt = document.createElement('option');
+          const optionValue: FileSelectData = {
+            'filename': file.name,
+            'package': <NPESv1>dataPackage,
+            'type': type,
+          };
 
-      (<HTMLInputElement>document.getElementById('sample-weight')).value = importData.sampleInfo?.weight?.toString() ?? '';
-      (<HTMLInputElement>document.getElementById('sample-vol')).value = importData.sampleInfo?.volume?.toString() ?? '';
-      (<HTMLInputElement>document.getElementById('add-notes')).value = importData.sampleInfo?.note ?? '';
-
-      const resultData = importData.resultData;
-
-      if (resultData.startTime && resultData.endTime) {
-        startDate = new Date(resultData.startTime);
-        endDate = new Date(resultData.endTime);
-      }
-
-      const espectrum = resultData.energySpectrum;
-      const bgspectrum = resultData.backgroundEnergySpectrum;
-      if (espectrum && bgspectrum) { // Both files ok
-        spectrumData.data = espectrum.spectrum;
-        spectrumData.background = bgspectrum.spectrum;
-
-        const eMeasurementTime = espectrum.measurementTime;
-        if (eMeasurementTime) {
-          spectrumData.dataTime = eMeasurementTime * 1000;
-          spectrumData.dataCps = spectrumData.data.map(val => val / eMeasurementTime);
+          opt.value = JSON.stringify(optionValue);
+          opt.text = `${(<NPESv1>dataPackage).sampleInfo?.name} (${(<NPESv1>dataPackage).resultData.startTime ?? 'Undefined Time'})`;
+          selectElement.add(opt);
         }
-        const bgMeasurementTime = bgspectrum.measurementTime;
-        if (bgMeasurementTime) {
-          spectrumData.backgroundTime = bgMeasurementTime * 1000;
-          spectrumData.backgroundCps = spectrumData.background.map(val => val / bgMeasurementTime);
-        }
-      } else { // Only one spectrum
-        const dataObj = espectrum ?? bgspectrum;
-        const fileData = dataObj?.spectrum ?? [];
-        const fileDataTime = (dataObj?.measurementTime ?? 1) * 1000;
-        const fileDataType = background ? 'background' : 'data';
 
-        spectrumData[fileDataType] = fileData;
-        spectrumData[`${fileDataType}Time`] = fileDataTime;
+        fileSelectModal.show();
         
-        if (fileDataTime) spectrumData[`${fileDataType}Cps`] = spectrumData[fileDataType].map(val => val / fileDataTime * 1000);
+      } else {
+        const importData = jsonData[0]; // Select first element to probe for errors
+
+        // Check if it's an error
+        if (checkJSONImportError(file.name, importData)) return;
+
+        npesFileImport(file.name, <NPESv1>importData, type);
       }
-
-      const calDataObj = (espectrum ?? bgspectrum)?.energyCalibration; // Grab calibration preferably from energy spectrum
-
-      if (calDataObj) {
-        const coeffArray: number[] = calDataObj.coefficients;
-        const numCoeff: number = calDataObj.polynomialOrder;
-
-        resetCal(); // Reset in case of old calibration
-
-        for (const index in coeffArray) {
-          plot.calibration.coeff[`c${numCoeff-parseInt(index)+1}`] = coeffArray[index];
-        }
-        plot.calibration.imported = true;
-        displayCoeffs();
-
-        const calSettings = document.getElementsByClassName('cal-setting');
-        for (const element of calSettings) {
-          (<HTMLInputElement>element).disabled = true;
-        }
-        addImportLabel();
-      }
-    } else if (background) {
+      return; // Nothing else to do, imported successfully or continue doing stuff when the user has finished interacting with the modal
+    } else if (type === 'background') {
       spectrumData.backgroundTime = 1000;
       spectrumData.background = raw.csvToArray(result);
     } else {
@@ -632,26 +677,195 @@ function getFileData(file: File, background = false): void { // Gets called when
       spectrumData.data = raw.csvToArray(result);
     }
 
-    updateSpectrumCounts();
-    updateSpectrumTime();
-
-    /*
-      Error Msg Problem with RAW Stream selection?
-    */
-    if (spectrumData.background.length !== spectrumData.data.length && spectrumData.data.length && spectrumData.background.length) {
-      new Notification('dataError'); //popupNotification('data-error');
-      removeFile(background ? 'background' : 'data'); // Remove file again
-    }
-
-    plot.resetPlot(spectrumData);
-    bindPlotEvents();
-  };
-
-  reader.onerror = () => {
-    new Notification('fileError'); //popupNotification('file-error');
-    return;
+    finalizeFileImport(file.name, type);
   };
 }
+
+
+function checkJSONImportError(filename: string, data: NPESv1 | JSONParseError): boolean {
+  if ('code' in data && 'description' in data) {
+    //new ToastNotification('npesError'); //popupNotification('npes-error');
+    // Pop up modal with more error information instead of just toast with oopsy
+    const importErrorModalElement = document.getElementById('import-error-modal');
+    const fileImportErrorModal = new (<any>window).bootstrap.Modal(importErrorModalElement);
+
+    // Change content according to error
+    document.getElementById('error-filename')!.innerText = filename;
+    document.getElementById('error-code')!.innerText = data.code;
+    document.getElementById('error-desc')!.innerText = data.description;
+
+    fileImportErrorModal.show();
+    return true;
+  }
+
+  return false;
+}
+
+
+function npesFileImport(filename: string, importData: NPESv1, type: FileImportType): void {
+  // Import all the data from a JSON spectrum file to the active program
+  (<HTMLInputElement>document.getElementById('device-name')).value = importData?.deviceData?.deviceName ?? '';
+  (<HTMLInputElement>document.getElementById('sample-name')).value = importData?.sampleInfo?.name ?? '';
+  (<HTMLInputElement>document.getElementById('sample-loc')).value = importData?.sampleInfo?.location ?? '';
+
+  if (importData.sampleInfo?.time) {
+    const date = new Date(importData.sampleInfo.time);
+    const rightDate = new Date(date.getTime() - date.getTimezoneOffset()*60*1000);
+
+    (<HTMLInputElement>document.getElementById('sample-time')).value = rightDate.toISOString().slice(0,16);
+  }
+
+  (<HTMLInputElement>document.getElementById('sample-weight')).value = importData.sampleInfo?.weight?.toString() ?? '';
+  (<HTMLInputElement>document.getElementById('sample-vol')).value = importData.sampleInfo?.volume?.toString() ?? '';
+  (<HTMLInputElement>document.getElementById('add-notes')).value = importData.sampleInfo?.note ?? '';
+
+  const resultData = importData.resultData;
+
+  if (resultData.startTime && resultData.endTime) {
+    startDate = new Date(resultData.startTime);
+    endDate = new Date(resultData.endTime);
+  }
+
+  const espectrum = resultData.energySpectrum;
+  const bgspectrum = resultData.backgroundEnergySpectrum;
+  if (espectrum && bgspectrum) { // Both files ok
+    spectrumData.data = espectrum.spectrum;
+    spectrumData.background = bgspectrum.spectrum;
+
+    const eMeasurementTime = espectrum.measurementTime;
+    if (eMeasurementTime) {
+      spectrumData.dataTime = eMeasurementTime * 1000;
+      spectrumData.dataCps = spectrumData.data.map(val => val / eMeasurementTime);
+    }
+    const bgMeasurementTime = bgspectrum.measurementTime;
+    if (bgMeasurementTime) {
+      spectrumData.backgroundTime = bgMeasurementTime * 1000;
+      spectrumData.backgroundCps = spectrumData.background.map(val => val / bgMeasurementTime);
+    }
+
+    type = 'both'; // Update type to reflect that both spectra have been loaded
+
+  } else if (type !== 'both') { // Only one spectrum
+    const dataObj = espectrum ?? bgspectrum;
+    const fileData = dataObj?.spectrum ?? [];
+    const fileDataTime = (dataObj?.measurementTime ?? 1) * 1000;
+    const fileDataType = type;
+
+    spectrumData[fileDataType] = fileData;
+    spectrumData[`${fileDataType}Time`] = fileDataTime;
+    
+    if (fileDataTime) spectrumData[`${fileDataType}Cps`] = spectrumData[fileDataType].map(val => val / fileDataTime * 1000);
+  }
+
+  const calDataObj = (espectrum ?? bgspectrum)?.energyCalibration; // Grab calibration preferably from energy spectrum
+
+  if (calDataObj) {
+    const coeffArray: number[] = calDataObj.coefficients;
+    const numCoeff: number = calDataObj.polynomialOrder;
+
+    resetCal(); // Reset in case of old calibration
+
+    for (const index in coeffArray) {
+      plot.calibration.coeff[`c${numCoeff-parseInt(index)+1}`] = coeffArray[index];
+    }
+    plot.calibration.imported = true;
+    displayCoeffs();
+
+    const calSettings = document.getElementsByClassName('cal-setting');
+    for (const element of calSettings) {
+      (<HTMLInputElement>element).disabled = true;
+    }
+    addImportLabel();
+    toggleCal(true);
+  }
+
+  finalizeFileImport(filename, type);
+}
+
+
+function finalizeFileImport(filename: string, type: FileImportType): void {
+  if (type === 'both') { // Set file name(s) to the openers
+    document.getElementById('data-form-label')!.innerText = filename;
+    document.getElementById('background-form-label')!.innerText = filename;
+  } else {
+    document.getElementById(`${type}-form-label`)!.innerText = filename;
+  } 
+
+  updateSpectrumCounts();
+  updateSpectrumTime();
+
+  /*
+    Error Msg Problem with RAW Stream selection?
+  */
+  if (spectrumData.background.length !== spectrumData.data.length && spectrumData.data.length && spectrumData.background.length) {
+    new ToastNotification('dataError'); //popupNotification('data-error');
+    removeFile(type); // Remove file again
+  }
+
+  plot.resetPlot(spectrumData);
+  bindPlotEvents();
+}
+
+
+document.getElementById('spectrum-select-btn')!.onclick = () => getJSONSelectionData();
+
+function getJSONSelectionData(): void {
+  const fileSelectData = <FileSelectData>JSON.parse((<HTMLSelectElement>document.getElementById('select-spectrum')).value);
+
+  npesFileImport(fileSelectData.filename, fileSelectData.package, fileSelectData.type);
+
+  const fileSelectModalElement = document.getElementById('file-select-modal')!; // Close the modal if the file saving has been successful
+  const closeButton = <HTMLButtonElement>fileSelectModalElement.querySelector('.btn-close'); // Find some close button
+  closeButton.click();
+}
+
+
+function checkAutosave(): void {
+  const data: string | undefined = loadJSON('autosave');
+
+  if (data) legacyPopupNotification('autosave-dialog'); // Show notification on first visit
+}
+
+
+document.getElementById('restore-data-btn')!.onclick = () => loadAutosave(true);
+document.getElementById('discard-data-btn')!.onclick = () => loadAutosave(false);
+
+async function loadAutosave(restore: boolean): Promise<void> {
+  const data: string | undefined = loadJSON('autosave');
+
+  if (data) {
+    localStorage.removeItem('autosave'); // Delete autosave data
+
+    if (restore) {
+      const objData = await raw.jsonToObject(data);
+
+      if (objData.length) {
+        const importData = objData[0]; // Select first element to probe for errors
+
+        // TODO: Check if it's an error?
+        //if (checkJSONImportError(file.name, importData)) return;
+
+        npesFileImport('Autosave Data', <NPESv1>importData, 'data');
+      } else {
+        console.error('Could not load autosaved data!');
+      }
+    }
+  }
+}
+
+
+/*
+document.getElementById('delete-spectrum')!.onclick = () => deleteJSONSelectionData();
+
+function deleteJSONSelectionData(): void {
+  const selectElement = <HTMLSelectElement>document.getElementById('select-spectrum');
+  const selectedValue = selectElement.value;
+  
+  // Remove from file and save contents
+
+  selectElement.remove(selectElement.selectedIndex);
+}
+*/
 
 
 function sizeCheck(): void {
@@ -666,22 +880,31 @@ function sizeCheck(): void {
 document.getElementById('clear-data')!.onclick = () => removeFile('data');
 document.getElementById('clear-bg')!.onclick = () => removeFile('background');
 
-function removeFile(id: DataType): void {
-  spectrumData[id] = [];
-  spectrumData[`${id}Time`] = 0;
-  (<HTMLInputElement>document.getElementById(id)).value = '';
-  document.getElementById(`${id}-form-label`)!.innerText = 'No File Chosen';
+function removeFile(type: FileImportType): void {
+  let removeType: DataType[];
+  if (type === 'both') {
+    removeType = ['data', 'background'];
+  } else {
+    removeType = [type];
+  }
 
-  if (id === 'data') dataFileHandle = undefined; // Reset File System Access API handlers
-  if (id === 'background') backgroundFileHandle = undefined;
-  if (!dataFileHandle && !backgroundFileHandle && fileSystemWritableAvail) {
-    (<HTMLButtonElement>document.getElementById('overwrite-button')).disabled = true; // Disable save button again, if it could be used
+  for (const id of removeType) {
+    spectrumData[id] = [];
+    spectrumData[`${id}Time`] = 0;
+    (<HTMLInputElement>document.getElementById(id)).value = '';
+    document.getElementById(`${id}-form-label`)!.innerText = 'No File Chosen';
+
+    if (id === 'data') dataFileHandle = undefined; // Reset File System Access API handlers
+    if (id === 'background') backgroundFileHandle = undefined;
+    if (!dataFileHandle && !backgroundFileHandle && fileSystemWritableAvail) {
+      (<HTMLButtonElement>document.getElementById('overwrite-button')).disabled = true; // Disable save button again, if it could be used
+    }
+
+    document.getElementById(id + '-icon')!.classList.add('d-none');
   }
 
   updateSpectrumCounts();
   updateSpectrumTime();
-
-  document.getElementById(id + '-icon')!.classList.add('d-none');
 
   plot.resetPlot(spectrumData);
   bindPlotEvents();
@@ -723,10 +946,12 @@ function selectFileType(button: HTMLInputElement): void {
 
 document.getElementById('reset-plot')!.onclick = () => resetPlot();
 
-function resetPlot(): void {
-  if (plot.xAxis === 'log') changeAxis(<HTMLButtonElement>document.getElementById('xAxis'));
-  if (plot.yAxis === 'log') changeAxis(<HTMLButtonElement>document.getElementById('yAxis'));
-  if (plot.sma) toggleSma(false, <HTMLInputElement>document.getElementById('sma'));
+function resetPlot(hardReset = true): void {
+  if (hardReset) {
+    if (plot.xAxis === 'log') changeAxis(<HTMLButtonElement>document.getElementById('xAxis'));
+    if (plot.yAxis === 'log') changeAxis(<HTMLButtonElement>document.getElementById('yAxis'));
+    if (plot.sma) toggleSma(false, <HTMLInputElement>document.getElementById('sma'));
+  }
 
   plot.clearAnnos();
   (<HTMLInputElement>document.getElementById('check-all-isos')).checked = false; // reset "select all" checkbox
@@ -763,12 +988,12 @@ function toggleSma(value: boolean, thisValue: HTMLInputElement | null = null ): 
 }
 
 
-document.getElementById('smaVal')!.oninput = event => changeSma(<HTMLInputElement>event.target);
+document.getElementById('sma-val')!.oninput = event => changeSma(<HTMLInputElement>event.target);
 
 function changeSma(input: HTMLInputElement): void {
   const parsedInput = parseInt(input.value);
   if (isNaN(parsedInput)) {
-    new Notification('smaError'); //popupNotification('sma-error');
+    new ToastNotification('smaError'); //popupNotification('sma-error');
   } else {
     plot.smaLength = parsedInput;
     plot.updatePlot(spectrumData);
@@ -829,13 +1054,13 @@ function clickEvent(data: any): void {
     }
   }
 
-  if (data.event.which === 1) { // Left-click. spawn a line in the plot and delete the last line
-    if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
-    const newLine: number = Math.round(data.points[0].x);
+  if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false); // Delete the last line
+
+  if (data.event.button === 0) { // Left-click. spawn a line in the plot
+    const newLine = Math.round(data.points[0].x);
     plot.toggleLine(newLine, newLine.toString(), true);
     prevClickLine = newLine;
-  } else if (data.event.which === 3) { // Right-click, delete all clicked lines
-    if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false);
+  } else if (data.event.button === 2) { // Right-click, delete old line
     prevClickLine = undefined;
   }
   plot.updatePlot(spectrumData);
@@ -852,29 +1077,52 @@ function selectEvent(data: any): void {
     return;
   }
 
-  console.log(data);
-
   roiElement.classList.remove('d-none');
   infoElement.classList.add('d-none');
 
   let range: number[] = data.range.x;
   range = range.map(value => Math.round(value));
 
-  const start = range[0];
-  const end = range[1];
+  let start = range[0];
+  let end = range[1];
 
   document.getElementById('roi-range')!.innerText = `${start.toString()} - ${end.toString()}`;
   document.getElementById('roi-range-unit')!.innerText = plot.calibration.enabled ? ' keV' : '';
   
-  const net = spectrumData.getTotalCounts('data', start, end); // ONLY WORKS FOR BINS! CONVERT BACK ENERGY INTO BINS!
+  if (plot.calibration.enabled) { // Convert the keV points back to bins
+    const max = Math.max(spectrumData.data.length, spectrumData.background.length);
+    const calAxis = plot.getCalAxis(max);
+    const axisLength = calAxis.length;
+
+    const findPoints = [start, end];
+    const numberOfPoints = findPoints.length;
+    const binPoints: number[] = [];
+    let compareIndex = 0;
+
+    for (let i = 0; i < axisLength; i++) {
+      const value = calAxis[i];
+      const compareValue = findPoints[compareIndex];
+
+      if (value > compareValue) {
+        binPoints.push(i); // Can be off by +1, doesn't really matter too much though.
+        compareIndex++;
+
+        if (compareIndex >= numberOfPoints) break;
+      }
+    }
+
+    start = binPoints[0];
+    end = binPoints[1];
+  }
+
+  const total = spectrumData.getTotalCounts('data', start, end);
   const bg = spectrumData.getTotalCounts('background', start, end);
-  const total = net + bg;
+  const net = total - bg;
 
   document.getElementById('total-counts')!.innerText = total.toString();
   document.getElementById('net-counts')!.innerText = net.toString();
   document.getElementById('bg-counts')!.innerText = bg.toString();
-
-  //const roiResolutionEle = document.getElementById('roi-res')!;
+  document.getElementById('bg-ratio')!.innerText = (net / bg * 100).toFixed();
 }
 
 
@@ -884,6 +1132,8 @@ async function toggleCal(enabled: boolean): Promise<void> {
   const button = document.getElementById('calibration-label')!;
 
   button.innerHTML = enabled ? '<i class="fa-solid fa-rotate-left"></i> Reset' : '<i class="fa-solid fa-check"></i> Calibrate';
+
+  (<HTMLInputElement>document.getElementById('apply-cal')).checked = enabled;
   /*
     Reset Plot beforehand, to prevent x-range from dying when zoomed?
   */
@@ -910,7 +1160,7 @@ async function toggleCal(enabled: boolean): Promise<void> {
           validArray.push([float1, float2]);
         }
         if (invalid > 1) {
-          new Notification('calibrationApplyError'); //popupNotification('cal-error');
+          new ToastNotification('calibrationApplyError'); //popupNotification('cal-error');
 
           const checkbox = <HTMLInputElement>document.getElementById('apply-cal');
           checkbox.checked = false;
@@ -982,10 +1232,10 @@ function toggleCalClick(point: CalType, value: boolean): void {
 }
 
 
-document.getElementById('plotType')!.onclick = () => changeType();
+document.getElementById('plot-type')!.onclick = () => changeType();
 
 function changeType(): void {
-  const button = <HTMLButtonElement>document.getElementById('plotType');
+  const button = <HTMLButtonElement>document.getElementById('plot-type');
   if (plot.linePlot) {
     button.innerHTML = '<i class="fas fa-chart-bar"></i> Bar';
   } else {
@@ -1064,12 +1314,12 @@ function importCal(file: File): void {
 
     } catch(e) {
       console.error('Calibration Import Error:', e);
-      new Notification('calibrationImportError'); //popupNotification('cal-import-error');
+      new ToastNotification('calibrationImportError'); //popupNotification('cal-import-error');
     }
   };
 
   reader.onerror = () => {
-    new Notification('fileError'); //popupNotification('file-error');
+    new ToastNotification('fileError'); //popupNotification('file-error');
     return;
   };
 }
@@ -1081,7 +1331,21 @@ function toggleCalChart(enabled: boolean): void {
   const buttonLabel = document.getElementById('toggle-cal-chart-label')!;
   buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Chart' : '<i class="fa-solid fa-eye"></i> Show Chart';
 
-  plot.toggleCalibrationChart(spectrumData, enabled);
+  plot.setChartType(enabled ? 'calibration' : 'default', spectrumData);
+
+  if (!enabled) bindPlotEvents(); // Above call is equivalent to a full reset, so we need to bind the events again!
+}
+
+
+document.getElementById('toggle-evolution-chart')!.onclick = event => toogleEvolChart((<HTMLInputElement>event.target).checked);
+
+function toogleEvolChart(enabled: boolean): void {
+  const buttonLabel = document.getElementById('toggle-evol-chart-label')!;
+  buttonLabel.innerHTML = enabled ? '<i class="fa-solid fa-eye-slash fa-beat-fade"></i> Hide Evolution' : '<i class="fa-solid fa-eye"></i> Show Evolution';
+
+  plot.setChartType(enabled ? 'evolution' : 'default', spectrumData, cpsValues);
+
+  if (!enabled) bindPlotEvents(); // Above call is equivalent to a full reset, so we need to bind the events again!
 }
 
 
@@ -1346,8 +1610,12 @@ function makeJSONSpectrum(type: DataType): NPESv1Spectrum {
 
 
 function generateNPES(): string | undefined {
-  const data: NPESv1 = {
-    schemaVersion: 'NPESv1',
+  const data: NPESv2 = {
+    schemaVersion: 'NPESv2',
+    data: []
+  }
+
+  const dataPackage: NPESv1 = {
     deviceData: {
       softwareName: 'Gamma MCA, ' + APP_VERSION,
       deviceName: (<HTMLInputElement>document.getElementById('device-name')).value.trim()
@@ -1361,32 +1629,34 @@ function generateNPES(): string | undefined {
   }
 
   let val = parseFloat((<HTMLInputElement>document.getElementById('sample-weight')).value.trim());
-  if (val) data.sampleInfo!.weight = val;
+  if (val) dataPackage.sampleInfo!.weight = val;
 
   val = parseFloat((<HTMLInputElement>document.getElementById('sample-vol')).value.trim());
-  if (val) data.sampleInfo!.volume = val;
+  if (val) dataPackage.sampleInfo!.volume = val;
 
   const tval = (<HTMLInputElement>document.getElementById('sample-time')).value.trim();
-  if (tval.length && new Date(tval)) data.sampleInfo!.time = toLocalIsoString(new Date(tval));
+  if (tval.length && new Date(tval)) dataPackage.sampleInfo!.time = toLocalIsoString(new Date(tval));
 
   if (startDate) {
-    data.resultData.startTime = toLocalIsoString(startDate);
+    dataPackage.resultData.startTime = toLocalIsoString(startDate);
 
     if (endDate && endDate.getTime() - startDate.getTime() >= 0) {
-      data.resultData.endTime = toLocalIsoString(endDate);
+      dataPackage.resultData.endTime = toLocalIsoString(endDate);
     } else {
-      data.resultData.endTime = toLocalIsoString(new Date());
+      dataPackage.resultData.endTime = toLocalIsoString(new Date());
     }
   }
 
-  if (spectrumData.data.length && spectrumData.getTotalCounts('data')) data.resultData.energySpectrum = makeJSONSpectrum('data');
-  if (spectrumData.background.length && spectrumData.getTotalCounts('background')) data.resultData.backgroundEnergySpectrum = makeJSONSpectrum('background');
+  if (spectrumData.data.length && spectrumData.getTotalCounts('data')) dataPackage.resultData.energySpectrum = makeJSONSpectrum('data');
+  if (spectrumData.background.length && spectrumData.getTotalCounts('background')) dataPackage.resultData.backgroundEnergySpectrum = makeJSONSpectrum('background');
 
   // Additionally validate the JSON Schema?
-  if (!data.resultData.energySpectrum && !data.resultData.backgroundEnergySpectrum) {
-    //new Notification('fileEmptyError'); //popupNotification('file-empty-error');
+  if (!dataPackage.resultData.energySpectrum && !dataPackage.resultData.backgroundEnergySpectrum) {
+    //new ToastNotification('fileEmptyError'); //popupNotification('file-empty-error');
     return undefined;
   }
+
+  data.data.push(dataPackage);
 
   return JSON.stringify(data);
 }
@@ -1409,7 +1679,7 @@ document.getElementById('overwrite-button')!.onclick = () => overwriteFile();
 
 async function overwriteFile(): Promise<void> {
   if (dataFileHandle && backgroundFileHandle) {
-    new Notification('saveMultipleAtOnce');
+    new ToastNotification('saveMultipleAtOnce');
     return;
   }
 
@@ -1432,36 +1702,38 @@ async function overwriteFile(): Promise<void> {
   }
 
   if (!content?.trim()) { // Check empty string
-    new Notification('fileEmptyError'); //popupNotification('file-empty-error');
+    new ToastNotification('fileEmptyError'); //popupNotification('file-empty-error');
     return;
   }
 
   await writable.write(content); // Write the contents of the file to the stream.
   await writable.close(); // Close the file and write the contents to disk.
+
+  new ToastNotification('saveFile');
 }
 
 
-const saveFileTypes = {
+const saveFileTypes: SaveTypeList = {
   'CAL': {
-    description: 'Calibration Data File',
+    description: 'Calibration data file',
     accept: {
       'application/json': ['.json']
     }
   },
   'XML': {
-    description: 'Combination Data File',
+    description: 'Combination data file (XML)',
     accept: {
       'application/xml': ['.xml']
     }
   },
   'JSON': {
-    description: 'Combination Data File (NPES)',
+    description: 'Combination data file (NPESv2, smaller size)',
     accept: {
       'application/json': ['.json']
     }
   },
   'CSV': {
-    description: 'Single Spectrum File',
+    description: 'Single spectrum file',
     accept: {
       'text/csv': ['.csv']
     }
@@ -1470,7 +1742,7 @@ const saveFileTypes = {
 
 async function download(filename: string, text: string | undefined, type: DownloadType): Promise<void> {
   if (!text?.trim()) { // Check empty string
-    new Notification('fileEmptyError'); //popupNotification('file-empty-error');
+    new ToastNotification('fileEmptyError'); //popupNotification('file-empty-error');
     return;
   }
 
@@ -1488,11 +1760,20 @@ async function download(filename: string, text: string | undefined, type: Downlo
       console.warn('File SaveAs error:', error);
       return;
     }
+
+    // Update FileHandle for "Save" button
+    if (dataFileHandle) {
+      dataFileHandle = newHandle;
+    } else if (backgroundFileHandle) {
+      backgroundFileHandle = newHandle;
+    }
     
     const writableStream = await newHandle.createWritable(); // Create a FileSystemWritableFileStream to write to
 
     await writableStream.write(text); // Write our file
     await writableStream.close(); // Close the file and write the contents to disk.
+
+    new ToastNotification('saveFile');
   } else { // Fallback old download-only method
     const element = document.createElement('a');
     element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(text)}`);
@@ -1503,7 +1784,9 @@ async function download(filename: string, text: string | undefined, type: Downlo
     element.click();
   }
 
-  const exportModalElement = document.getElementById('exportModal')!; // Close the modal if the file saving has been successful
+  localStorage.removeItem('autosave'); // Delete autosave data
+
+  const exportModalElement = document.getElementById('export-modal')!; // Close the modal if the file saving has been successful
   const closeButton = <HTMLButtonElement>exportModalElement.querySelector('.btn-close'); // Find some close button
   closeButton.click();
 }
@@ -1515,6 +1798,147 @@ function resetSampleInfo(): void {
   const toBeReset = <HTMLCollectionOf<HTMLInputElement>>document.getElementsByClassName('sample-info');
   for (const element of toBeReset) {
     element.value = '';
+  }
+}
+
+
+document.getElementById('print-report')!.onclick = () => printReport();
+
+function printReport(): void {
+  // If Gaussian mode is not enabled, enable it to better find peaks
+  const copyPeakFlag = plot.peakConfig.enabled;
+  if (!copyPeakFlag) useGaussPeakMode(<HTMLButtonElement>document.getElementById('peak-finder-btn'));
+
+  const dataArray = plot.computePulseHeightData(spectrumData); // Generate data with current settings + force enabled Gaussian
+  const metaDataString = generateNPES();
+
+  // After collecting the data, click twice on the button to get back to the 
+  if (!copyPeakFlag) useIdlePeakMode(<HTMLButtonElement>document.getElementById('peak-finder-btn'));
+
+  if (!dataArray.length || !metaDataString) {
+    console.error('Nothing to analyze, no data found. Cannot print report!');
+    new ToastNotification('reportError');
+    return;
+  }
+
+  // Open a new tab, generate the report and print it
+  const printWindow = window.open('/print.html', '_blank');
+  if (printWindow) {
+    // Wait for the document to be fully loaded before triggering everything else
+    printWindow.onload = () => {
+      const printDocument = printWindow.document;
+      
+      const metaData = (<NPESv2>JSON.parse(metaDataString)).data[0];
+
+      printDocument.getElementById('sample-name')!.innerText = metaData.sampleInfo?.name || 'N/A';
+      printDocument.getElementById('sample-loc')!.innerText = metaData.sampleInfo?.location || 'N/A';
+      printDocument.getElementById('sample-time')!.innerText = metaData.sampleInfo?.time || 'N/A';
+      printDocument.getElementById('note')!.innerText = metaData.sampleInfo?.note || 'N/A';
+      printDocument.getElementById('device-name')!.innerText = metaData.deviceData?.deviceName || 'N/A';
+      printDocument.getElementById('software-name')!.innerText = metaData.deviceData?.softwareName || 'N/A';
+      printDocument.getElementById('start-time')!.innerText = metaData.resultData.startTime ?? 'N/A';
+      printDocument.getElementById('end-time')!.innerText = metaData.resultData.endTime ?? 'N/A';
+      printDocument.getElementById('total-time-gross')!.innerText = metaData.resultData.energySpectrum?.measurementTime?.toString() || 'N/A';
+      printDocument.getElementById('total-time-bg')!.innerText = metaData.resultData.backgroundEnergySpectrum?.measurementTime?.toString() || 'N/A';
+      printDocument.getElementById('cal-coeffs')!.innerText = JSON.stringify(plot.calibration.enabled ? plot.calibration.coeff : {c1:0,c2:0,c3:0}) || 'N/A';
+
+      // Generate table and populate with data
+      const tableHeadRow = <HTMLTableRowElement>printDocument.getElementById('peak-table-head-row');
+
+      const cell1 = document.createElement('th');
+      cell1.innerHTML = 'Peak Number <br>[1]';
+      tableHeadRow.appendChild(cell1);
+      const cell2 = document.createElement('th');
+      cell2.innerHTML = `Energy <br>[${plot.calibration.enabled ? 'keV' : 'bin'}]`;
+      tableHeadRow.appendChild(cell2);
+      const cell3 = document.createElement('th');
+      cell3.innerHTML = 'Net Peak Area <br>(3&sigma;) [cts]';
+      tableHeadRow.appendChild(cell3);
+      const cell4 = document.createElement('th');
+      cell4.innerHTML = 'Background Peak Area <br>(3&sigma;) [cts]';
+      tableHeadRow.appendChild(cell4);
+      const cell5 = document.createElement('th');
+      cell5.innerHTML = `FWHM <br>[${plot.calibration.enabled ? 'keV' : 'bin'}]`;
+      tableHeadRow.appendChild(cell5);
+      const cell6 = document.createElement('th');
+      cell6.innerHTML = 'FWHM <br>[%]';
+      tableHeadRow.appendChild(cell6);
+      const cell7 = document.createElement('th');
+      cell7.innerHTML = 'Net Peak Counts/s <br>(3&sigma;) [cps]';
+      tableHeadRow.appendChild(cell7);
+
+      const tableBody = <HTMLTableElement>printDocument.getElementById('peak-table-body');
+
+      // Compute data for analysis
+      const dataX = dataArray[0].x; // Will be Gauss data, net spectrum or background in this order
+      const dataY = dataArray[0].y;
+
+      const peaks = plot.peakFinder(dataY);
+      let index = 1;
+
+      for (const peak of peaks) {
+        const xPosition = dataX[Math.round(peak)];
+
+        if (xPosition < 0) continue;
+
+        const peakFWHM = new CalculateFWHM([xPosition], dataArray[1].x, dataArray[1].y).compute()[xPosition];
+        const energyResolution = new CalculateFWHM([xPosition], dataArray[1].x, dataArray[1].y).getResolution()[xPosition];
+
+        const sigmaMaxCenterDistance = 2 * peakFWHM / (2 * Math.sqrt(2 * Math.LN2)) // Max distance to peak center for 4 sigma of all peaks, approx total count number inside this range
+        const peakCounterXMin = xPosition - sigmaMaxCenterDistance;
+        const peakCounterXMax = xPosition + sigmaMaxCenterDistance;
+
+        let spectrumValue = 0;
+        let backgroundValue = 0;
+
+        for (const i in dataX) {
+          const xPos = dataX[i];
+          if (xPos >= peakCounterXMin && xPos <= peakCounterXMax) {
+            spectrumValue += dataArray[1].y[i];
+            if (dataArray.length > 2) backgroundValue += dataArray[2].y[i];
+          }
+        }
+
+        const row = tableBody.insertRow();
+        const cell1 = document.createElement('th');
+        cell1.innerText = index.toString();
+        row.appendChild(cell1);
+
+        const cell2 = row.insertCell();
+        cell2.innerText = xPosition.toFixed(2);
+
+        const cell3 = row.insertCell();
+        cell3.innerText = (peakFWHM > 0 && peakFWHM < 0.9 * CalculateFWHM.resolutionLimit * xPosition) ? (spectrumValue * (plot.cps ? metaData.resultData.energySpectrum?.measurementTime ?? 1 : 1)).toFixed(0) : 'N/A';
+
+        const cell4 = row.insertCell();
+        cell4.innerText = (peakFWHM > 0 && peakFWHM < 0.9 * CalculateFWHM.resolutionLimit * xPosition) ? (backgroundValue * (plot.cps ? metaData.resultData.backgroundEnergySpectrum?.measurementTime ?? 1 : 1)).toFixed(0) : 'N/A';
+
+        const cell5 = row.insertCell();
+        cell5.innerText = (peakFWHM > 0 && peakFWHM < 0.9 * CalculateFWHM.resolutionLimit * xPosition) ? peakFWHM.toFixed(3) : 'OVF';
+
+        const cell6 = row.insertCell();
+        cell6.innerText = (energyResolution > 0 && energyResolution < 0.9 * CalculateFWHM.resolutionLimit) ? (energyResolution * 100).toFixed(2) : 'OVF';
+
+        const cell7 = row.insertCell();
+        cell7.innerText = (peakFWHM > 0 && peakFWHM < 0.9 * CalculateFWHM.resolutionLimit * xPosition) ? (plot.cps ? spectrumValue : spectrumValue / (metaData.resultData.energySpectrum?.measurementTime ?? 1)).toExponential(3) : 'N/A';
+
+        index++;
+      }
+
+      // Last step: Create an image element of the saved plot
+      (<any>window).Plotly.toImage(plot.plotDiv,{format: 'png', height: 400, width: 1000}).then(
+        function (url: string) {
+          const img = <HTMLImageElement>printDocument.getElementById('plot-image');
+          img.src = url;
+
+          img.onload = () => printWindow.print(); // Finally print the window if the image has been loaded
+        }
+      );
+    };
+
+    printWindow.onafterprint = () => printWindow.close(); // Close the new print tab after printing
+  } else {
+    console.error('Unable to open a new window for printing.');
   }
 }
 
@@ -1531,7 +1955,7 @@ function hideNotification(id: string): void {
 }
 
 
-function sortTableByColumn(table: HTMLTableElement, columnIndex: number, sortDirection: string) {
+function sortTableByColumn(table: HTMLTableElement, columnIndex: number, sortDirection: SortTypes) {
   const tbody = table.tBodies[0];
   const rows = Array.from(tbody.rows);
 
@@ -1583,58 +2007,74 @@ async function loadIsotopes(reload = false): Promise<boolean> { // Load Isotope 
     const response = await fetch(isoListURL, options);
 
     if (response.ok) { // If HTTP-status is 200-299
-      const json = await response.json();
+      const json: IsotopeList = await response.json();
       loadedIsos = true;
 
-      const tableElement = <HTMLTableElement>document.getElementById('iso-table');
+      const table = <HTMLTableElement>document.getElementById('table');
+      const tableElement = <HTMLTableElement>table.querySelector('#iso-table');
       tableElement.innerHTML = ''; // Delete old table
 
-      const intKeys = Object.keys(json);
-      intKeys.sort((a, b) => parseFloat(a) - parseFloat(b)); // Sort Energies numerically, ascending
+      for (const [key, energyArr] of Object.entries(json)) {
+        let index = 0; // Index used to avoid HTML id duplicates
 
-      let index = 0; // Index used to avoid HTML id duplicates
+        const lowercaseName = key.toLowerCase().replace(/[^a-z0-9 -]/gi, '').trim(); // Fixes security issue. Clean everything except for letters, numbers and minus. See GitHub: #2
+        const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1); // Capitalize Name
 
-      for (const key of intKeys) {
-        index++;
-        isoList[parseFloat(key)] = json[key];
+        for (const energy of energyArr) {
+          if (isNaN(energy)) continue; // Not a number, ignore this one
 
-        const row = tableElement.insertRow();
-        const cell1 = row.insertCell(0);
-        const cell2 = row.insertCell(1);
-        const cell3 = row.insertCell(2);
+          if (isoList[name]) {
+            isoList[name].push(energy);
+          } else {
+            isoList[name] = [energy];
+          }
 
-        cell1.onclick = () => (<HTMLInputElement>cell1.firstChild).click();
-        cell2.onclick = () => (<HTMLInputElement>cell1.firstChild).click();
-        cell3.onclick = () => (<HTMLInputElement>cell1.firstChild).click();
+          const uniqueName = name + '-' + index; // Append index number
+          index++;
 
-        cell1.style.cursor = 'pointer'; // Change cursor pointer to "click-ready"
-        cell2.style.cursor = 'pointer';
-        cell3.style.cursor = 'pointer';
+          const row = tableElement.insertRow();
+          const cell1 = row.insertCell(0);
+          const cell2 = row.insertCell(1);
+          const cell3 = row.insertCell(2);
 
-        const energy = parseFloat(key.trim());
-        const lowercaseName = json[key].toLowerCase().replace(/[^a-z0-9 -]/gi, '').trim(); // Fixes security issue. Clean everything except for letters, numbers and minus. See GitHub: #2
-        const name = lowercaseName.charAt(0).toUpperCase() + lowercaseName.slice(1) + '-' + index; // Capitalize Name and append index number
+          cell1.onclick = () => (<HTMLInputElement>cell1.firstChild).click();
+          cell2.onclick = () => (<HTMLInputElement>cell1.firstChild).click();
+          cell3.onclick = () => (<HTMLInputElement>cell1.firstChild).click();
 
-        cell1.innerHTML = `<input class="form-check-input iso-table-label" id="${name}" type="checkbox" value="${energy}">`;
-        cell3.innerText = energy.toFixed(2); //`<label for="${name}">${energy.toFixed(2)}</label>`;
+          cell1.style.cursor = 'pointer'; // Change cursor pointer to "click-ready"
+          cell2.style.cursor = 'pointer';
+          cell3.style.cursor = 'pointer';
 
-        const clickBox = <HTMLInputElement>document.getElementById(name);
-        clickBox.onclick = () => plotIsotope(clickBox);
+          cell1.innerHTML = `<input class="form-check-input iso-table-label" id="${uniqueName}" type="checkbox" value="${energy}">`; // keV to eV
+          cell3.innerText = energy.toFixed(2); //`<label for="${uniqueName}">${energy.toFixed(2)}</label>`;
 
-        const strArr = name.split('-');
+          const clickBox = <HTMLInputElement>document.getElementById(uniqueName);
+          clickBox.onclick = () => plotIsotope(clickBox);
 
-        cell2.innerHTML = `<sup>${strArr[1]}</sup>${strArr[0]}`; //`<label for="${name}"><sup>${strArr[1]}</sup>${strArr[0]}</label>`;
+          const strArr = name.split('-');
+
+          cell2.innerHTML = `<sup>${strArr[1]}</sup>${strArr[0]}`; //`<label for="${uniqueName}"><sup>${strArr[1]}</sup>${strArr[0]}</label>`;
+        }
+      }
+
+      if (isoTableSortDirections[2] !== 'asc') { // Default sort is ascending by isotope energy
+        const sortButton = <HTMLTableCellElement>table.querySelector('th[data-sort-by="2"]');
+        sortButton.click();
+      } else {
+        sortTableByColumn(table, 2, 'asc');
       }
 
       plot.clearAnnos(); // Delete all isotope lines
       plot.updatePlot(spectrumData);
-      plot.isoList = isoList; // Copy list to plot object
+      plot.isotopeSeeker = new SeekClosest(isoList); // Generate new seeker for the plot with the current list
+      isotopeSeeker = new SeekClosest(isoList);
     } else {
       isoError.innerText = `Could not load isotope list! HTTP Error: ${response.status}. Please try again.`;
       isoError.classList.remove('d-none');
       successFlag = false;
     }
   } catch (err) { // No network connection!
+    console.error(err);
     isoError.innerText = 'Could not load isotope list! Connection refused - you are probably offline.';
     isoError.classList.remove('d-none');
     successFlag = false;
@@ -1647,7 +2087,7 @@ async function loadIsotopes(reload = false): Promise<boolean> { // Load Isotope 
 
 document.getElementById('iso-hover')!.onclick = () => toggleIsoHover();
 
-let prevIso: IsotopeList = {};
+let prevIso: [string, number] | undefined;
 
 function toggleIsoHover(): void {
   checkNearIso = !checkNearIso;
@@ -1655,19 +2095,19 @@ function toggleIsoHover(): void {
 }
 
 
+let isotopeSeeker: SeekClosest | undefined;
+
 async function closestIso(value: number): Promise<void> {
   if (!await loadIsotopes()) return; // User has not yet opened the settings panel
 
-  const { energy, name } = new SeekClosest(isoList).seek(value, maxDist);
+  if (!isotopeSeeker) isotopeSeeker = new SeekClosest(isoList);
+  
+  if (prevIso) plot.toggleLine(prevIso[1], prevIso[0], false); // Remove previous isotope line
 
-  //if (Object.keys(prevIso).length >= 0) { // Always true???
-  const energyVal = parseFloat(Object.keys(prevIso)[0]);
-  if (!isNaN(energyVal)) plot.toggleLine(energyVal, Object.keys(prevIso)[0], false);
-  //}
+  const { energy, name } = isotopeSeeker.seek(value, maxDist);
 
   if (energy && name) {
-    const newIso: IsotopeList = {};
-    newIso[energy] = name;
+    const newIso: [string, number] = [name, energy];
 
     if (prevIso !== newIso) prevIso = newIso;
 
@@ -1704,36 +2144,85 @@ function selectAll(selectBox: HTMLInputElement): void {
 }
 
 
+function useIdlePeakMode(button: HTMLButtonElement): void {
+  plot.clearPeakFinder(); // Delete all old lines
+  plot.peakConfig.enabled = false;
+  button.innerText = 'None';
+}
+
+
+function useGaussPeakMode(button: HTMLButtonElement): void {
+  plot.peakConfig.enabled = true;
+  plot.peakConfig.mode = 'gaussian';
+  button.innerText = 'Gaussian';
+}
+
+
+function useEnergyPeakMode(button: HTMLButtonElement): void {
+  plot.peakConfig.mode = 'energy';
+  button.innerText = 'Energy';
+}
+
+
+async function useIsotopePeakMode(button: HTMLButtonElement): Promise<void> {
+  plot.clearPeakFinder(); // Delete all old lines
+  await loadIsotopes();
+  plot.peakConfig.mode = 'isotopes';
+  button.innerText = 'Isotopes';
+}
+
+
 document.getElementById('peak-finder-btn')!.onclick = event => findPeaks(<HTMLButtonElement>event.target);
 
 async function findPeaks(button: HTMLButtonElement): Promise<void> {
   if (plot.peakConfig.enabled) {
     switch(plot.peakConfig.mode) {
       case 'gaussian': // Second Mode: Energy
-        plot.peakConfig.mode = 'energy';
-        button.innerText = 'Energy';
+        useEnergyPeakMode(button);
         break;
         
       case 'energy': // Third Mode: Isotopes
-        plot.clearPeakFinder(); // Delete all old lines
-        await loadIsotopes();
-        plot.peakConfig.mode = 'isotopes';
-        button.innerText = 'Isotopes';
+        await useIsotopePeakMode(button);
         break;
 
       case 'isotopes':
-        plot.clearPeakFinder(); // Delete all old lines
-        plot.peakConfig.enabled = false;
-        button.innerText = 'None';
+        useIdlePeakMode(button);
         break;
     }
   } else { // First Mode: Gauss
-    plot.peakConfig.enabled = true;
-    plot.peakConfig.mode = 'gaussian';
-    button.innerText = 'Gaussian';
+    useGaussPeakMode(button);
   }
 
   plot.updatePlot(spectrumData);
+}
+
+
+function bindHotkeys(): void {
+  // Bind ESCAPE key to the settings offcanvas
+  document.addEventListener('keydown', (event: KeyboardEvent) => {
+    if (event.key.toLowerCase() === 'escape') {
+      const offcanvasElement = document.getElementById('offcanvas');
+      if (offcanvasElement && !offcanvasElement.classList.contains('show')) { // Exists and is not shown currently
+        if (!offcanvasElement.classList.contains('showing')) { // Don't toggle while in transition
+          new (<any>window).bootstrap.Offcanvas(offcanvasElement).show(); // Offcanvas is closed, open it
+        }
+      }
+    }
+  });
+  const settingsButton = document.getElementById('toggle-menu');
+  if (settingsButton) settingsButton.title += ' (ESC)'; // Add hotkey hint to settings button
+
+  // Bind all other standard hotkeys
+  for (const [key, buttonId] of Object.entries(hotkeys)) {
+    const button = document.getElementById(buttonId);
+    document.addEventListener('keydown', (event: KeyboardEvent) => {
+      if (event.altKey && event.key.toLowerCase() === key.toLowerCase()) {
+        event.preventDefault(); // Prevent the browser default action from popping up
+        if (!event.repeat) button?.click(); // Call the function to handle the hotkey action only once per keydown
+      }
+    });
+    if (button) button.title += ` (ALT+${key.toUpperCase()})`; // Add hotkey hint to button titles
+  }
 }
 
 /*
@@ -1743,6 +2232,7 @@ async function findPeaks(button: HTMLButtonElement): Promise<void> {
 */
 // These functions are REALLY ugly and a nightmare to maintain, but I don't know how to make it
 // better without nuking everything related to the settings and starting again from the ground up.
+// I'll probably have to do a complete re-write of the whole settings at one point...
 
 function saveJSON(name: string, value: string | boolean | number): boolean {
   if (localStorageAvailable) {
@@ -1760,7 +2250,7 @@ function loadJSON(name: string): any {
 
 function bindInputs(): void {
   const nonSettingsEnterPressElements = {
-    'smaVal': 'sma',
+    'sma-val': 'sma',
     'ser-command': 'send-command'
   }
   for (const [inputId, buttonId] of Object.entries(nonSettingsEnterPressElements)) {
@@ -1777,120 +2267,156 @@ function bindInputs(): void {
     'custom-file-adc': 'fileChannels',
     'custom-baud': 'baudRate',
     'eol-char': 'eolChar',
-    'ser-limit': 'timeLimit',
+    'ser-limit-h': 'timeLimit',
+    'ser-limit-m': 'timeLimit',
+    'ser-limit-s': 'timeLimit',
     'custom-ser-refresh': 'plotRefreshRate',
     'custom-ser-buffer': 'serBufferSize',
     'custom-ser-adc': 'serChannels',
     'peak-thres': 'peakThres',
     'peak-lag': 'peakLag',
-    'peak-width': 'peakWidth',
     'seek-width': 'seekWidth',
     'gauss-sigma': 'gaussSigma'
   }
   for (const [inputId, settingsName] of Object.entries(settingsEnterPressElements)) {
     const valueElement = <HTMLInputElement>document.getElementById(inputId);
-    const buttonElement = <HTMLButtonElement>document.getElementById(`${inputId}-btn`);
     valueElement.onkeydown = event => {
-      if (event.key === 'Enter') buttonElement.click(); // Press ENTER key;
+      //if (event.key === 'Enter') buttonElement.click(); // Press ENTER key;
+      if (event.key === 'Enter') changeSettings(settingsName, valueElement);
     };
-    buttonElement.onclick = () => changeSettings(settingsName, valueElement);
+    const buttonElement = <HTMLButtonElement>document.getElementById(`${inputId}-btn`);
+    if (buttonElement) buttonElement.onclick = () => changeSettings(settingsName, valueElement);
   }
 
   // Bind settings button press or onchange events for settings that do not have the default value input element
+  document.getElementById('new-flags')!.onclick = event => changeSettings('newPeakStyle', <HTMLInputElement>event.target); // Checkbox
+  document.getElementById('enable-res')!.onclick = event => changeSettings('showEnergyRes', <HTMLInputElement>event.target); // Checkbox
+  document.getElementById('fwhm-fast')!.onclick = event => changeSettings('useFWHMFast', <HTMLInputElement>event.target); // Checkbox
   document.getElementById('edit-plot')!.onclick = event => changeSettings('editMode', <HTMLInputElement>event.target); // Checkbox
   document.getElementById('toggle-time-limit')!.onclick = event => changeSettings('timeLimitBool', <HTMLInputElement>event.target); // Checkbox
   document.getElementById('download-format')!.onchange = event => changeSettings('plotDownload', <HTMLSelectElement>event.target); // Select
+  document.getElementById('theme-select')!.onchange = event => changeSettings('theme', <HTMLSelectElement>event.target); // Select
 }
 
 
 function loadSettingsDefault(): void {
+  if (notificationsAvailable) {
+    (<HTMLInputElement>document.getElementById('notifications-toggle')).checked = allowNotifications && (Notification.permission === 'granted');
+  }
+  
   (<HTMLInputElement>document.getElementById('custom-url')).value = isoListURL;
   (<HTMLInputElement>document.getElementById('edit-plot')).checked = plot.editableMode;
   (<HTMLInputElement>document.getElementById('custom-delimiter')).value = raw.delimiter;
   (<HTMLInputElement>document.getElementById('custom-file-adc')).value = raw.adcChannels.toString();
-  (<HTMLInputElement>document.getElementById('custom-ser-refresh')).value = (refreshRate / 1000).toString(); // convert ms to s
+  (<HTMLInputElement>document.getElementById('custom-ser-refresh')).value = (refreshRate / 1000).toString(); // Convert ms to s
   (<HTMLInputElement>document.getElementById('custom-ser-buffer')).value = SerialManager.maxSize.toString();
   (<HTMLInputElement>document.getElementById('custom-ser-adc')).value = SerialManager.adcChannels.toString();
-  (<HTMLInputElement>document.getElementById('ser-limit')).value = (maxRecTime / 1000).toString(); // convert ms to s
+  
+  const time = new Date(maxRecTime); // Create a date with the time limit
+  (<HTMLInputElement>document.getElementById('ser-limit-h')).value = (time.getUTCHours() + (time.getUTCDate() - 1) * 24).toString(); // Grab the hours
+  (<HTMLInputElement>document.getElementById('ser-limit-m')).value = time.getUTCMinutes().toString(); // Grab the minutes
+  (<HTMLInputElement>document.getElementById('ser-limit-s')).value = time.getUTCSeconds().toString(); // Grab the seconds
+  
   (<HTMLInputElement>document.getElementById('toggle-time-limit')).checked = maxRecTimeEnabled;
   (<HTMLInputElement>document.getElementById('iso-hover-prox')).value = maxDist.toString();
   (<HTMLInputElement>document.getElementById('custom-baud')).value = SerialManager.baudRate.toString();
   (<HTMLInputElement>document.getElementById('eol-char')).value = SerialManager.eolChar;
 
-  (<HTMLInputElement>document.getElementById('smaVal')).value = plot.smaLength.toString();
+  (<HTMLInputElement>document.getElementById('sma-val')).value = plot.smaLength.toString();
+
+  (<HTMLInputElement>document.getElementById('new-flags')).checked = plot.peakConfig.newPeakStyle;
+  (<HTMLInputElement>document.getElementById('enable-res')).checked = plot.peakConfig.showFWHM;
+  (<HTMLInputElement>document.getElementById('fwhm-fast')).checked = CalculateFWHM.fastMode;
 
   (<HTMLInputElement>document.getElementById('peak-thres')).value = plot.peakConfig.thres.toString();
   (<HTMLInputElement>document.getElementById('peak-lag')).value = plot.peakConfig.lag.toString();
-  (<HTMLInputElement>document.getElementById('peak-width')).value = plot.peakConfig.width.toString();
-  (<HTMLInputElement>document.getElementById('seek-width')).value = plot.peakConfig.seekWidth.toString();
+  (<HTMLInputElement>document.getElementById('seek-width')).value = SeekClosest.seekWidth.toString();
   (<HTMLInputElement>document.getElementById('gauss-sigma')).value = plot.gaussSigma.toString();
 
   const formatSelector = <HTMLSelectElement>document.getElementById('download-format');
-  const len = formatSelector.options.length;
+  const formatLen = formatSelector.options.length;
   const format = plot.downloadFormat;
-  for (let i = 0; i < len; i++) {
+  for (let i = 0; i < formatLen; i++) {
     if (formatSelector.options[i].value === format) formatSelector.selectedIndex = i;
+  }
+
+  const themeSelector = <HTMLSelectElement>document.getElementById('theme-select');
+  const themeLen = themeSelector.options.length;
+  const theme = loadJSON('theme');
+  for (let i = 0; i < themeLen; i++) {
+    if (themeSelector.options[i].value === theme) themeSelector.selectedIndex = i;
   }
 }
 
 
 function loadSettingsStorage(): void {
-  let setting = loadJSON('customURL');
+  let setting = loadJSON('allowNotifications');
+  if (notificationsAvailable && setting !== null) allowNotifications = setting && (Notification.permission === 'granted');
+
+  setting = loadJSON('customURL');
   if (setting) isoListURL = new URL(setting).href;
 
   setting = loadJSON('editMode');
-  if (setting) plot.editableMode = setting;
+  if (setting !== null) plot.editableMode = setting;
 
   setting = loadJSON('fileDelimiter');
-  if (setting) raw.delimiter = setting;
+  if (setting !== null) raw.delimiter = setting;
 
   setting = loadJSON('fileChannels');
-  if (setting) raw.adcChannels = setting;
+  if (setting !== null) raw.adcChannels = setting;
 
   setting = loadJSON('plotRefreshRate');
-  if (setting) refreshRate = setting;
+  if (setting !== null) refreshRate = setting;
 
   setting = loadJSON('serBufferSize');
-  if (setting) SerialManager.maxSize = setting;
+  if (setting !== null) SerialManager.maxSize = setting;
 
   setting = loadJSON('timeLimitBool');
-  if (setting) maxRecTimeEnabled = setting;
+  if (setting !== null) maxRecTimeEnabled = setting;
 
   setting = loadJSON('timeLimit');
-  if (setting) maxRecTime = setting;
+  if (setting !== null) maxRecTime = setting;
 
   setting = loadJSON('maxIsoDist');
-  if (setting) maxDist = setting;
+  if (setting !== null) maxDist = setting;
 
   setting = loadJSON('baudRate');
-  if (setting) SerialManager.baudRate = setting;
+  if (setting !== null) SerialManager.baudRate = setting;
 
   setting = loadJSON('eolChar');
-  if (setting) SerialManager.eolChar = setting;
+  if (setting !== null) SerialManager.eolChar = setting;
 
   setting = loadJSON('serChannels');
-  if (setting) SerialManager.adcChannels = setting;
+  if (setting !== null) SerialManager.adcChannels = setting;
 
   setting = loadJSON('smaLength');
-  if (setting) plot.smaLength = setting;
+  if (setting !== null) plot.smaLength = setting;
 
   setting = loadJSON('peakThres');
-  if (setting) plot.peakConfig.thres = setting;
+  if (setting !== null) plot.peakConfig.thres = setting;
 
   setting = loadJSON('peakLag');
-  if (setting) plot.peakConfig.lag = setting;
-
-  setting = loadJSON('peakWidth');
-  if (setting) plot.peakConfig.width = setting;
+  if (setting !== null) plot.peakConfig.lag = setting;
 
   setting = loadJSON('seekWidth');
-  if (setting) plot.peakConfig.seekWidth = setting;
+  if (setting !== null) SeekClosest.seekWidth = setting;
 
   setting = loadJSON('plotDownload');
-  if (setting) plot.downloadFormat = setting;
+  if (setting !== null) plot.downloadFormat = setting;
+
+  // Setting for dark mode is right at the beginning of the file
 
   setting = loadJSON('gaussSigma');
-  if (setting) plot.gaussSigma = setting;
+  if (setting !== null) plot.gaussSigma = setting;
+
+  setting = loadJSON('showEnergyRes');
+  if (setting !== null) plot.peakConfig.showFWHM = setting;
+
+  setting = loadJSON('useFWHMFast');
+  if (setting !== null) CalculateFWHM.fastMode = setting;
+
+  setting = loadJSON('newPeakStyle');
+  if (setting !== null) plot.peakConfig.newPeakStyle = setting;
 }
 
 
@@ -1899,7 +2425,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
   let result = false;
 
   if (!element.checkValidity() || !stringValue) {
-    new Notification('settingType'); //popupNotification('setting-type');
+    new ToastNotification('settingType'); //popupNotification('setting-type');
     return;
   }
 
@@ -1915,6 +2441,14 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
     }
     case 'customURL': {
       try {
+        /*
+        // Currently not yet supported in this TS version
+        // Use new String.prototype.toWellFormed() method if available to sanitize any ill-formed strings
+        let tmpStringCopy = stringValue;
+        if ('toWellFormed' in String.prototype) {
+          tmpStringCopy = tmpStringCopy.toWellFormed();
+        }
+        */
         isoListURL = new URL(stringValue).href;
 
         loadIsotopes(true);
@@ -1922,7 +2456,7 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
         result = saveJSON(name, isoListURL);
 
       } catch(e) {
-        new Notification('settingError'); //popupNotification('setting-error');
+        new ToastNotification('settingError'); //popupNotification('setting-error');
         console.error('Custom URL Error', e);
       }
       break;
@@ -1948,8 +2482,15 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       break;
     }
     case 'timeLimit': {
-      const numVal = parseFloat(stringValue);
-      maxRecTime = numVal * 1000; // convert s to ms
+      const timeElements = element.id.split('-');
+      const elementIds = ['s', 'm', 'h'];
+      let value = 0;
+      for (const index in elementIds) {
+        value += parseInt((<HTMLInputElement>document.getElementById(`${timeElements[0]}-${timeElements[1]}-${elementIds[index]}`)).value.trim()) * 60**parseInt(index);
+      }
+      value *= 1000; // Convert s to ms
+
+      maxRecTime = value;
 
       result = saveJSON(name, maxRecTime);
       break;
@@ -2011,17 +2552,9 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       result = saveJSON(name, numVal);
       break;
     }
-    case 'peakWidth': {
-      const numVal = parseInt(stringValue);
-      plot.peakConfig.width = numVal;
-      plot.updatePlot(spectrumData);
-
-      result = saveJSON(name, numVal);
-      break;
-    }
     case 'seekWidth': {
       const numVal = parseFloat(stringValue);
-      plot.peakConfig.seekWidth = numVal;
+      SeekClosest.seekWidth = numVal;
       plot.updatePlot(spectrumData);
 
       result = saveJSON(name, numVal);
@@ -2034,6 +2567,14 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       result = saveJSON(name, stringValue);
       break;
     }
+    case 'theme': {
+      result = saveJSON(name, stringValue);
+
+      plot.darkMode = applyTheming() === 'dark';
+      resetPlot(false);
+
+      break;
+    }
     case 'gaussSigma': {
       const numVal = parseInt(stringValue);
       plot.gaussSigma = numVal;
@@ -2042,13 +2583,37 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
       result = saveJSON(name, numVal);
       break;
     }
+    case 'showEnergyRes': {
+      const boolVal = (<HTMLInputElement>element).checked;
+      plot.peakConfig.showFWHM = boolVal;
+      plot.updatePlot(spectrumData);
+
+      result = saveJSON(name, boolVal);
+      break;
+    }
+    case 'useFWHMFast': {
+      const boolVal = (<HTMLInputElement>element).checked;
+      CalculateFWHM.fastMode = boolVal;
+      plot.updatePlot(spectrumData);
+      
+      result = saveJSON(name, boolVal);
+      break;
+    }
+    case 'newPeakStyle': {
+      const boolVal = (<HTMLInputElement>element).checked;
+      plot.peakConfig.newPeakStyle = boolVal;
+      plot.updatePlot(spectrumData);
+      
+      result = saveJSON(name, boolVal);
+      break;
+    }
     default: {
-      new Notification('settingError'); //popupNotification('setting-error');
+      new ToastNotification('settingError'); //popupNotification('setting-error');
       return;
     }
   }
 
-  if (result) new Notification('settingSuccess'); //popupNotification('setting-success'); // Success Toast
+  if (result) new ToastNotification('settingSuccess'); //popupNotification('setting-success'); // Success Toast
 }
 
 
@@ -2062,7 +2627,7 @@ function resetMCA(): void {
 
 /*
 =========================================
-  SERIAL DATA
+  SERIAL CONNECTION DATA
 =========================================
 */
 
@@ -2080,7 +2645,7 @@ function selectSerialType(button: HTMLInputElement): void {
 
 function serialConnect(/*event: Event*/): void {
   listSerial();
-  new Notification('serialConnect'); //popupNotification('serial-connect');
+  new ToastNotification('serialConnect'); //popupNotification('serial-connect');
 }
 
 
@@ -2089,7 +2654,7 @@ function serialDisconnect(event: Event): void {
 
   listSerial();
 
-  new Notification('serialDisconnect'); //popupNotification('serial-disconnect');
+  new ToastNotification('serialDisconnect'); //popupNotification('serial-disconnect');
 }
 
 
@@ -2189,6 +2754,7 @@ document.getElementById('record-bg-btn')!.onclick = () => startRecord(false, 'ba
 let recordingType: DataType;
 let startDate: Date;
 let endDate: Date;
+let wakeLock: WakeLockSentinel | null;
 
 async function startRecord(pause = false, type: DataType): Promise<void> {
   try {
@@ -2196,17 +2762,34 @@ async function startRecord(pause = false, type: DataType): Promise<void> {
     await serRecorder?.startRecord(pause);
   } catch(err) {
     console.error('Connection Error:', err);
-    new Notification('serialConnectError'); //popupNotification('serial-connect-error');
+    new ToastNotification('serialConnectError'); //popupNotification('serial-connect-error');
     return;
+  }
+
+  if (wakeLockAvailable) {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen'); // Acquire Screen Wake Lock
+
+      document.addEventListener('visibilitychange', async () => {
+        if (wakeLock !== null && document.visibilityState === 'visible') {
+          // Reacquire wake lock on visibility change (minimizing and maximizing again)
+          wakeLock = await navigator.wakeLock.request('screen');
+        }
+      });
+    } catch (err) {
+      console.error('Screen Wake Lock Error:', err); // The Wake Lock request has failed - usually system related, such as battery.
+    }
   }
 
   recordingType = type;
 
   if (!pause) {
     removeFile(type); // Remove old spectrum
+    document.getElementById(`${type}-form-label`)!.innerText = 'Serial Recording';
     startDate = new Date();
   }
 
+  (<HTMLInputElement>document.getElementById('toggle-evolution-chart')).disabled = false;
   (<HTMLButtonElement>document.getElementById('stop-button')).disabled = false;
   document.getElementById('pause-button')!.classList.remove('d-none');
   document.getElementById('record-button')!.classList.add('d-none');
@@ -2220,6 +2803,7 @@ async function startRecord(pause = false, type: DataType): Promise<void> {
 
   refreshRender(type, !pause); // Start updating the plot
   refreshMeta(type); // Start updating the meta data
+  autoSaveData(); // Start data autosaving
 
   // Check if pause ? Last cps value after pausing is always 0, remove! : Empty if just started to record
   pause ? cpsValues.pop() : cpsValues = [];
@@ -2241,6 +2825,8 @@ async function disconnectPort(stop = false): Promise<void> {
 
   document.getElementById('resume-button')!.classList.toggle('d-none', stop);
 
+  //(<HTMLInputElement>document.getElementById('toggle-evolution-chart')).disabled = true;
+
   if (stop) {
     (<HTMLButtonElement>document.getElementById('stop-button')).disabled = true;
     document.getElementById('record-button')!.classList.remove('d-none');
@@ -2248,7 +2834,12 @@ async function disconnectPort(stop = false): Promise<void> {
     endDate = new Date();
   }
 
+  wakeLock?.release().then(() => { // Release Screen Wake Lock
+    wakeLock = null;
+  });
+
   try {
+    clearTimeout(autosaveTimeout);
     clearTimeout(refreshTimeout);
     clearTimeout(metaTimeout);
     clearTimeout(consoleTimeout);
@@ -2261,7 +2852,8 @@ async function disconnectPort(stop = false): Promise<void> {
   } catch(error) {
     // Sudden device disconnect can cause this
     console.error('Misc Serial Read Error:', error);
-    new Notification('miscSerialError'); //popupNotification('misc-ser-error');
+    new ToastNotification('miscSerialError'); //popupNotification('misc-ser-error');
+    launchSysNotification('Recording Crashed!', 'A fatal error occured with the connected serial device and the recording has stopped.');
   }
 }
 
@@ -2274,11 +2866,11 @@ function clearConsoleLog(): void {
 }
 
 
-document.getElementById('serialConsoleModal')!.addEventListener('show.bs.modal', (/*event: Event*/): void => { // Adjust Plot Size For Main Tab Menu Content Size
+document.getElementById('serial-console-modal')!.addEventListener('show.bs.modal', (/*event: Event*/): void => { // Adjust Plot Size For Main Tab Menu Content Size
   readSerial();
 });
 
-document.getElementById('serialConsoleModal')!.addEventListener('hide.bs.modal', async (/*event: Event*/): Promise<void> => { // Adjust Plot Size For Main Tab Menu Content Size
+document.getElementById('serial-console-modal')!.addEventListener('hide.bs.modal', async (/*event: Event*/): Promise<void> => { // Adjust Plot Size For Main Tab Menu Content Size
   await serRecorder?.hideConsole();
   clearTimeout(consoleTimeout);
 });
@@ -2287,11 +2879,11 @@ document.getElementById('serialConsoleModal')!.addEventListener('hide.bs.modal',
 async function readSerial(): Promise<void> {
   try {
     const portNumber = selectPort();
-    document.getElementById('serial-console-title')!.innerText = `Serial Console (Port ${portNumber})`;
+    document.getElementById('serial-console-title')!.innerText = `(Port ${portNumber})`;
     await serRecorder?.showConsole();
   } catch(err) {
     console.error('Connection Error:', err);
-    new Notification('serialConnectError'); //popupNotification('serial-connect-error');
+    new ToastNotification('serialConnectError'); //popupNotification('serial-connect-error');
     return;
   }
 
@@ -2307,7 +2899,7 @@ async function sendSerial(): Promise<void> {
     await serRecorder?.sendString(element.value);
   } catch (err) {
     console.error('Connection Error:', err);
-    new Notification('serialConnectError'); //popupNotification('serial-connect-error');
+    new ToastNotification('serialConnectError'); //popupNotification('serial-connect-error');
     return;
   }
 
@@ -2346,9 +2938,39 @@ function refreshConsole(): void {
 }
 
 
+let autosaveTimeout: number;
+
+function autoSaveData(): void {
+  const autosaveBadgeElement = document.getElementById('autosave-badge')!;
+  const data = generateNPES();
+
+  if (data) {
+    if(saveJSON('autosave', data)) {
+      const formatOptions: Intl.DateTimeFormatOptions = {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: false, // Set to false for 24-hour format
+      };
+    
+      const formatter = new Intl.DateTimeFormat('en-US', formatOptions);
+      const currentDateTimeString = formatter.format(new Date());
+
+      autosaveBadgeElement.title = `The data was last saved automatically on ${currentDateTimeString}.`;
+      autosaveBadgeElement.innerHTML = `<i class="fa-solid fa-check"></i> Autosaved ${currentDateTimeString}`;
+    }
+  }
+
+  autosaveBadgeElement?.classList.toggle('d-none', data ? false : true);
+  
+  autosaveTimeout = setTimeout(autoSaveData, AUTOSAVE_TIME);
+}
+
+
 function getRecordTimeStamp(time: number): string {
   const dateTime = new Date(time);
-  return addLeadingZero(dateTime.getUTCHours().toString()) + ':' + addLeadingZero(dateTime.getUTCMinutes().toString()) + ':' + addLeadingZero(dateTime.getUTCSeconds().toString());
+  return addLeadingZero((dateTime.getUTCHours() + (dateTime.getUTCDate() - 1) * 24).toString()) + ':' + addLeadingZero(dateTime.getUTCMinutes().toString()) + ':' + addLeadingZero(dateTime.getUTCSeconds().toString());
 }
 
 
@@ -2367,24 +2989,27 @@ function refreshMeta(type: DataType): void {
     document.getElementById('record-time')!.innerText = getRecordTimeStamp(totalMeasTime);
     const delta = new Date(totalMeasTime);
 
+    const progressBar = document.getElementById('ser-time-progress-bar')!;
+    progressBar.classList.toggle('d-none', !maxRecTimeEnabled);
+
     if (maxRecTimeEnabled) {
       const progressElement = document.getElementById('ser-time-progress')!;
       const progress = Math.round(delta.getTime() / maxRecTime * 100);
       progressElement.style.width = progress + '%';
       progressElement.innerText = progress + '%';
-      progressElement.setAttribute('aria-valuenow', progress.toString())
+      progressBar.setAttribute('aria-valuenow', progress.toString())
 
       totalTimeElement.innerText = ' / ' +  getRecordTimeStamp(maxRecTime);
     } else {
       totalTimeElement.innerText = '';
     }
-    document.getElementById('ser-time-progress-bar')!.classList.toggle('d-none', !maxRecTimeEnabled);
 
     updateSpectrumTime();
 
     if (delta.getTime() >= maxRecTime && maxRecTimeEnabled) {
       disconnectPort(true);
-      new Notification('autoStop'); //popupNotification('auto-stop');
+      new ToastNotification('autoStop'); //popupNotification('auto-stop');
+      launchSysNotification('Recording Stopped!', 'Your desired recording time has expired and the recording has automatically stopped.');
     } else {
       const finishDelta = performance.now() - nowTime;
       metaTimeout = setTimeout(refreshMeta, (REFRESH_META_TIME - finishDelta > 0) ? (REFRESH_META_TIME - finishDelta) : 1, type); // Only re-schedule if still available
@@ -2414,10 +3039,10 @@ function refreshRender(type: DataType, firstLoad = false): void {
     spectrumData[`${type}Cps`] = spectrumData[type].map(val => val / measTime * 1000);
 
     if (firstLoad) {
-      plot.resetPlot(spectrumData); // Prevent the overlay going into the toolbar
+      plot.resetPlot(spectrumData, cpsValues); // Prevent the overlay going into the toolbar
       bindPlotEvents();
     } else {
-      plot.updatePlot(spectrumData);
+      plot.updatePlot(spectrumData, cpsValues);
     }
 
     const deltaLastRefresh = measTime - lastUpdate;
@@ -2426,12 +3051,24 @@ function refreshRender(type: DataType, firstLoad = false): void {
     const cpsValue = ((SerialManager.orderType === 'chron') ? newData.length : newData.reduce((acc, curr) => acc+curr, 0)) / deltaLastRefresh * 1000;
     cpsValues.push(cpsValue);
 
+    /* // Only update whenever counts are received
+    let cpsValue = 0;
+
+    if (newData.length >= 0) { // Only do whenever new data is received
+      const deltaLastRefresh = measTime - lastUpdate;
+      lastUpdate = measTime;
+
+      cpsValue = ((SerialManager.orderType === 'chron') ? newData.length : newData.reduce((acc, curr) => acc+curr, 0)) / deltaLastRefresh * 1000;
+      cpsValues.push(cpsValue);
+    }
+    */
+
     document.getElementById('cps')!.innerText = cpsValue.toFixed(1) + ' cps';
 
     const mean = cpsValues.reduce((acc, curr) => acc+curr, 0) / cpsValues.length;
     const std = Math.sqrt(cpsValues.reduce((acc, curr) => acc + (curr - mean)**2, 0) / (cpsValues.length - 1));
 
-    document.getElementById('avg-cps')!.innerHTML = 'Avg: ' + mean.toFixed(1);
+    document.getElementById('avg-cps')!.innerText = 'Avg: ' + mean.toFixed(1);
     document.getElementById('avg-cps-std')!.innerHTML = ` &plusmn; ${std.toFixed(1)} cps (&#916; ${Math.round(std/mean*100)}%)`;
 
     updateSpectrumCounts();
@@ -2440,3 +3077,11 @@ function refreshRender(type: DataType, firstLoad = false): void {
     refreshTimeout = setTimeout(refreshRender, (refreshRate - finishDelta > 0) ? (refreshRate - finishDelta) : 1, type);
   }
 }
+
+/*
+=========================================
+  SOUNDCARD CONNECTION DATA
+=========================================
+*/
+
+// Looks to be a PITA just to get the raw data/volume/amplitude from the microphone in the browser

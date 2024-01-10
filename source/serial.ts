@@ -157,7 +157,7 @@ export class WebSerial {
   }
 
   getInfo(): string {
-    return `Id: 0x${this.port.getInfo().usbProductId?.toString(16)}`;
+    return `ID: 0x${this.port.getInfo().usbProductId?.toString(16).toUpperCase()}`;
   }
 
   getPort(): SerialPort {
@@ -183,7 +183,8 @@ export class SerialManager {
   static baudRate = 9600; // Default 9600 baud rate
 
   // SECTION: Serial Data
-  private consoleMemory = 1_000_000;
+  private consoleMemory = 1000; // Number of newlines saved before the first newlines gets removed again
+  private consoleMemoryTotal = 100_000; // Number of chars saved before the first chars get removed again
   private rawConsoleData = '';
   private rawData = ''; // Raw String Input from Serial Reading
   private maxHistLength = 2**18 * 2 * 10; // Maximum number of characters for a valid histogram string/number
@@ -289,9 +290,12 @@ export class SerialManager {
     const string = new TextDecoder('utf-8').decode(uintArray); //String.fromCharCode(...uintArray);
     this.rawConsoleData += string;
 
-    if (this.rawConsoleData.length > this.consoleMemory) {
+    const rawLines = this.rawConsoleData.split('\n'); // Split newlines
+    rawLines.pop(); // Last line will always be empty
+
+    if (rawLines.length > this.consoleMemory || this.rawConsoleData.length > this.consoleMemoryTotal) {
       //console.warn('Serial console log is out of memory, deleting old history...');
-      this.rawConsoleData = this.rawConsoleData.slice(this.rawConsoleData.length - this.consoleMemory);
+      this.rawConsoleData = this.rawConsoleData.replace(rawLines[0] + '\n', '');
     }
     if (this.onlyConsole) return;
 

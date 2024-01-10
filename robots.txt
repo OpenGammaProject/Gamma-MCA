@@ -1,1 +1,5 @@
+User-agent: *
+Disallow: /404.html
+Disallow: /print.html
+
 Sitemap: https://spectrum.nuclearphoenix.xyz/sitemap.xml

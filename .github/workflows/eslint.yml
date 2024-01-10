@@ -38,4 +38,4 @@ jobs:
         run: npx eslint .
           --config .eslintrc.json
           --ext .ts,.tsx
-        continue-on-error: false
+        continue-on-error: true

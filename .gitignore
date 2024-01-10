@@ -1,6 +1,7 @@
 # My stuff
 .old
 testdata/
+.vscode/
 
 # Node GitIgnore Template
 # Logs
