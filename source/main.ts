@@ -24,6 +24,7 @@
     - Automatically close system notifications when the user interacts with the page again
 
     - Sound card spectrometry prove of concept
+    - Use Web Worker API to improve performance! (A lot of plot functions, Gaussian correlation)
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
