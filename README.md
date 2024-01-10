@@ -4,25 +4,25 @@
 
 Progressive web application for gamma spectroscopy (multi-channel analyzer/MCA) including file and live plot support via the serial interface.
 
-![Example spectrum](docs/thumbnail.png)
+[![Example spectrum](docs/thumbnail.png)](https://www.youtube.com/watch?v=dkMhoUwDla0) _(Click image for a short trailer video)_
 
 Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://github.com/plotly/plotly.js), [Font Awesome](https://github.com/FortAwesome/Font-Awesome), [Z-Schema](https://github.com/zaggino/z-schema) and some more.
 
 ## Feature Overview
 
-* No installation required - accessible on every internet-connected device
+* No installation required - accessible through every modern browser
 * Can be easily installed for stand-alone offline use
-* Straightforward interface to get down to business
+* Straightforward interface to get down to business, no hidden submenus
+* Probably one of the most beautiful spectrum analyzers out there, includes dark and light modes
 * File import of common data formats (e.g. CSV, TKA, XML, JSON)
-* Export JSON/XML files combining all the spectra, calibration data and sample info
+* Export JSON and XML all-in-one files (includes sample info, calibration, multiple spectra)
 * Live plotting via the serial interface, compatible with any serial device (e.g. Arduino) on [desktop](https://caniuse.com/web-serial)
-* Compatible with serial FTDI chips on [mobile](https://caniuse.com/webusb)
+* Compatible with serial (FTDI) chips on [mobile](https://caniuse.com/webusb)
 * Serial console to control your device
 * Linear and quadratic energy calibration
-* Gaussian correlation filtering for peak detection
-* Customizable list of common isotopes and their gamma-ray energies
+* Gaussian correlation filtering for auto peak detection (energy and isotope)
+* Customizable and comprehensive list of common isotopes and their gamma-ray energies
 * Export interactive graphs of your spectrum to embed it into your website
-* Automatic peak detection (energy and isotope)
 * ... and much more!
 
 ![Example spectrum in dark mode](docs/thumbnail_dark.png)
