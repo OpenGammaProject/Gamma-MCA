@@ -24,7 +24,6 @@
     - Automatically close system notifications when the user interacts with the page again
 
     - Sound card spectrometry prove of concept
-    - Webmanifest vertical images (narrow form_factor)
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -129,7 +128,7 @@ const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2023-12-20';
+const APP_VERSION = '2024-01-10';
 const localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 const wakeLockAvailable = 'wakeLock' in navigator; // Test for Screen Wake Lock API
 const notificationsAvailable = 'Notification' in window; // Test for Notifications API
@@ -157,8 +156,9 @@ const hotkeys = {
   'p': 'peak-finder-btn',
   '1': 'file-import-tab',
   '2': 'serial-tab',
-  '3': 'calibration-tab',
-  '4': 'metadata-tab',
+  '3': 'sound-tab',
+  '4': 'calibration-tab',
+  '5': 'metadata-tab',
 };
 
 
@@ -2627,7 +2627,7 @@ function resetMCA(): void {
 
 /*
 =========================================
-  SERIAL DATA
+  SERIAL CONNECTION DATA
 =========================================
 */
 
@@ -3077,3 +3077,11 @@ function refreshRender(type: DataType, firstLoad = false): void {
     refreshTimeout = setTimeout(refreshRender, (refreshRate - finishDelta > 0) ? (refreshRate - finishDelta) : 1, type);
   }
 }
+
+/*
+=========================================
+  SOUNDCARD CONNECTION DATA
+=========================================
+*/
+
+// Looks to be a PITA just to get the raw data/volume/amplitude from the microphone in the browser

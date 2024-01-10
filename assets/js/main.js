@@ -54,7 +54,7 @@ let isoListURL = 'assets/isotopes_energies_min.json';
 const isoList = {};
 let checkNearIso = false;
 let maxDist = 100;
-const APP_VERSION = '2023-12-20';
+const APP_VERSION = '2024-01-10';
 const localStorageAvailable = 'localStorage' in self;
 const wakeLockAvailable = 'wakeLock' in navigator;
 const notificationsAvailable = 'Notification' in window;
@@ -78,8 +78,9 @@ const hotkeys = {
     'p': 'peak-finder-btn',
     '1': 'file-import-tab',
     '2': 'serial-tab',
-    '3': 'calibration-tab',
-    '4': 'metadata-tab',
+    '3': 'sound-tab',
+    '4': 'calibration-tab',
+    '5': 'metadata-tab',
 };
 window.addEventListener('DOMContentLoaded', () => {
     if (localStorageAvailable) {
