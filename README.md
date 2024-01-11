@@ -64,7 +64,17 @@ Example (4096 channels):
 
 Both modes are currently supported by our [Open Gamma Detector](https://github.com/OpenGammaProject/Open-Gamma-Detector) or any other serial device that has been set up to do so.
 
-**Note:** Both APIs are currently mainly supported by Chromium-based browsers, both on desktop and on mobile! This includes most browsers except for Safari and Firefox. The feature is either enabled by default or you have to enable it in the settings yourself. See [Can I Use? Web Serial API](https://caniuse.com/web-serial) and [Can I Use? WebUSB](https://caniuse.com/webusb).
+## Requirements
+
+**Gamma MCA should work in any modern browser version that is no older than roughly the start of 2023.** If you're using an older browser version (it's highly recommended to update) there are some fallbacks to most of the important the functions. The OS of your device doesn't matter.
+
+Some functions such as the [Web Serial API](https://caniuse.com/web-serial) and [WebUSB](https://caniuse.com/webusb) are only supported in **Chromium-based browsers** (Google Chrome, MS Edge, Opera, ...) and not Safari or Firefox. Support on mobile devices can differ so YMMV.
+
+Most of the progressive web app functionality (PWA) is supported by most browsers (Chrome, Firefox, Safari, ...). However, the **full feature set is unfortunately only available in Google Chrome or MS Edge** at the moment of writing. This might change in the future.
+
+**Weaker systems might experience artifacting, a reduced count rate or even spiking in the count rate when switching tabs, plots or changing settings.** Any reasonably powerful machine in 2023 and beyond should be more than capable to run Gamma MCA in any use case, though. Problems can occur for example on **SBCs, mobile or special mini-PCs**. This mostly happens when a lot of data has been collected, i.e. for long live recordings. Most of the processing power actually goes to refreshing the plot, so increasing the `Data Refresh Time` can be helpful there!
+
+**tl;dr:** Use Chrome or Edge on a machine that can play 1080p60 videos on Youtube in the background without you noticing any performance hits.
 
 ## Using Locally
 
