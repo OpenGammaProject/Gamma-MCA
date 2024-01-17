@@ -989,6 +989,9 @@ function toggleSma(value: boolean, thisValue: HTMLInputElement | null = null ): 
 }
 
 
+document.getElementById('sma-val')!.onkeydown = event => {
+  if (event.key === 'Enter') document.getElementById('sma')?.click(); // ENTER key
+};
 document.getElementById('sma-val')!.oninput = event => changeSma(<HTMLInputElement>event.target);
 
 function changeSma(input: HTMLInputElement): void {
@@ -2250,16 +2253,6 @@ function loadJSON(name: string): any {
 
 
 function bindInputs(): void {
-  const nonSettingsEnterPressElements = {
-    'sma-val': 'sma',
-    'ser-command': 'send-command'
-  }
-  for (const [inputId, buttonId] of Object.entries(nonSettingsEnterPressElements)) {
-    document.getElementById(inputId)!.onkeydown = event => {
-      if (event.key === 'Enter') document.getElementById(buttonId)?.click(); // ENTER key
-    };
-  }
-
   // Bind settings button onclick events and enter press, format: {settingsValueElement: settingsName}
   const settingsEnterPressElements = {
     'iso-hover-prox': 'maxIsoDist',
@@ -2892,6 +2885,38 @@ async function readSerial(): Promise<void> {
 }
 
 
+document.getElementById('ser-command')!.onkeydown = (event) => {
+  if (event.key === 'Enter') document.getElementById('send-command')?.click(); // ENTER key
+  
+  if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+    event.preventDefault();
+    handleArrowKey(event.key);
+  }
+  //event.preventDefault();
+}
+
+
+const consoleHistory = {
+  history: <string[]>[],
+  currentIndex: -1
+}
+
+function handleArrowKey(key: string): void {
+  const element = <HTMLInputElement>document.getElementById('ser-command');
+  if (key === 'ArrowUp' && consoleHistory.currentIndex < consoleHistory.history.length - 1) {
+    consoleHistory.currentIndex++;
+  } else if (key === 'ArrowDown' && consoleHistory.currentIndex > -1) {
+    consoleHistory.currentIndex--;
+  }
+
+  if (consoleHistory.currentIndex >= 0 && consoleHistory.currentIndex < consoleHistory.history.length) {
+    element.value = consoleHistory.history[consoleHistory.currentIndex];
+  } else {
+    element.value = '';
+  }
+}
+
+
 document.getElementById('send-command')!.onclick = () => sendSerial();
 
 async function sendSerial(): Promise<void> {
@@ -2902,6 +2927,14 @@ async function sendSerial(): Promise<void> {
     console.error('Connection Error:', err);
     new ToastNotification('serialConnectError'); //popupNotification('serial-connect-error');
     return;
+  }
+
+  // Add message to console history
+  const inputValue = element.value.trim();
+
+  if (inputValue.length) {
+    consoleHistory.history.unshift(inputValue);
+    consoleHistory.currentIndex = -1;
   }
 
   element.value = '';
