@@ -54,7 +54,7 @@ let isoListURL = 'assets/isotopes_energies_min.json';
 const isoList = {};
 let checkNearIso = false;
 let maxDist = 100;
-const APP_VERSION = '2024-01-10';
+const APP_VERSION = '2024-01-17';
 const localStorageAvailable = 'localStorage' in self;
 const wakeLockAvailable = 'wakeLock' in navigator;
 const notificationsAvailable = 'Notification' in window;
@@ -700,6 +700,10 @@ function toggleSma(value, thisValue = null) {
         thisValue.checked = false;
     plot.updatePlot(spectrumData);
 }
+document.getElementById('sma-val').onkeydown = event => {
+    if (event.key === 'Enter')
+        document.getElementById('sma')?.click();
+};
 document.getElementById('sma-val').oninput = event => changeSma(event.target);
 function changeSma(input) {
     const parsedInput = parseInt(input.value);
@@ -1656,16 +1660,6 @@ function loadJSON(name) {
     return JSON.parse(localStorage.getItem(name));
 }
 function bindInputs() {
-    const nonSettingsEnterPressElements = {
-        'sma-val': 'sma',
-        'ser-command': 'send-command'
-    };
-    for (const [inputId, buttonId] of Object.entries(nonSettingsEnterPressElements)) {
-        document.getElementById(inputId).onkeydown = event => {
-            if (event.key === 'Enter')
-                document.getElementById(buttonId)?.click();
-        };
-    }
     const settingsEnterPressElements = {
         'iso-hover-prox': 'maxIsoDist',
         'custom-url': 'customURL',
@@ -2180,6 +2174,33 @@ async function readSerial() {
     }
     refreshConsole();
 }
+document.getElementById('ser-command').onkeydown = (event) => {
+    if (event.key === 'Enter')
+        document.getElementById('send-command')?.click();
+    if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        event.preventDefault();
+        handleArrowKey(event.key);
+    }
+};
+const consoleHistory = {
+    history: [],
+    currentIndex: -1
+};
+function handleArrowKey(key) {
+    const element = document.getElementById('ser-command');
+    if (key === 'ArrowUp' && consoleHistory.currentIndex < consoleHistory.history.length - 1) {
+        consoleHistory.currentIndex++;
+    }
+    else if (key === 'ArrowDown' && consoleHistory.currentIndex > -1) {
+        consoleHistory.currentIndex--;
+    }
+    if (consoleHistory.currentIndex >= 0 && consoleHistory.currentIndex < consoleHistory.history.length) {
+        element.value = consoleHistory.history[consoleHistory.currentIndex];
+    }
+    else {
+        element.value = '';
+    }
+}
 document.getElementById('send-command').onclick = () => sendSerial();
 async function sendSerial() {
     const element = document.getElementById('ser-command');
@@ -2190,6 +2211,11 @@ async function sendSerial() {
         console.error('Connection Error:', err);
         new ToastNotification('serialConnectError');
         return;
+    }
+    const inputValue = element.value.trim();
+    if (inputValue.length) {
+        consoleHistory.history.unshift(inputValue);
+        consoleHistory.currentIndex = -1;
     }
     element.value = '';
 }
