@@ -26,6 +26,8 @@
     - Sound card spectrometry prove of concept
     - Web Worker for: Isotope Seek, FWHM Calculation, Plot update, Gaussian correlation
 
+    - Add option to save time evolution (CSV)
+
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
     - Plotly.js: Plot updates takes forever, but there is no real way to improve it (?)
