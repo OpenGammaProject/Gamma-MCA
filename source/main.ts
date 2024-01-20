@@ -60,7 +60,7 @@ export type DataOrder = 'hist' | 'chron';
 type CalType = 'a' | 'b' | 'c';
 type DataType = 'data' | 'background';
 type PortList = (WebSerial | WebUSBSerial | undefined)[];
-type DownloadType = 'CAL' | 'XML' | 'JSON' | 'CSV';
+type DownloadType = 'CAL' | 'XML' | 'JSON' | 'EVOL' | 'CSV';
 type SortTypes = 'asc' | 'desc' | 'none';
 type FileImportType = DataType | 'both';
 
@@ -129,7 +129,7 @@ const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2024-01-17';
+const APP_VERSION = '2024-01-20';
 const localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 const wakeLockAvailable = 'wakeLock' in navigator; // Test for Screen Wake Lock API
 const notificationsAvailable = 'Notification' in window; // Test for Notifications API
@@ -1387,14 +1387,32 @@ function toLocalIsoString(date: Date) {
 }
 
 
+document.getElementById('evolution-download-btn')!.onclick = () => downloadEvolution();
+
+function downloadEvolution(): void {
+  if (!cpsValues.length) {
+    console.error('Time evolution is empty. No cps values to export!');
+  }
+
+  download(`evolution_${getDateString()}.csv`, cpsValues.join('\n'), 'EVOL');
+}
+
+
 document.getElementById('calibration-download')!.onclick = () => downloadCal();
 
 function downloadCal(): void {
   const calObj = plot.calibration;
+
+  let outStr = JSON.stringify(calObj);
+
+  if (calObj.coeff.c2 === 0 && calObj.coeff.c3 === 0) {
+    outStr = ''; // Nothing is calibrated, do not save anything
+  }
+
   if (!calObj.points.cFrom) delete calObj.points.cFrom;
   if (!calObj.points.cTo) delete calObj.points.cTo;
 
-  download(`calibration_${getDateString()}.json`, JSON.stringify(calObj), 'CAL');
+  download(`calibration_${getDateString()}.json`, outStr, 'CAL');
 }
 
 
@@ -1734,6 +1752,12 @@ const saveFileTypes: SaveTypeList = {
     description: 'Combination data file (NPESv2, smaller size)',
     accept: {
       'application/json': ['.json']
+    }
+  },
+  'EVOL': {
+    description: 'Count rate time evolution file',
+    accept: {
+      'text/csv': ['.csv']
     }
   },
   'CSV': {

@@ -1391,6 +1391,7 @@ export class SpectrumPlot {
       }
     }
 
+    //setTimeout((<any>window).Plotly[update ? 'react' : 'newPlot'], 1, this.plotDiv, data, layout, config); // Make plot update async
     (<any>window).Plotly[update ? 'react' : 'newPlot'](this.plotDiv, data, layout, config);
   }
 }
