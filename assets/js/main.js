@@ -1004,14 +1004,25 @@ function toLocalIsoString(date) {
     localIsoString += addLeadingZero(tzDate.getHours().toString()) + ':' + addLeadingZero(tzDate.getMinutes().toString());
     return localIsoString;
 }
+document.getElementById('evolution-download-btn').onclick = () => downloadEvolution();
+function downloadEvolution() {
+    if (!cpsValues.length) {
+        console.error('Time evolution is empty. No cps values to export!');
+    }
+    download(`evolution_${getDateString()}.csv`, cpsValues.join('\n'), 'EVOL');
+}
 document.getElementById('calibration-download').onclick = () => downloadCal();
 function downloadCal() {
     const calObj = plot.calibration;
+    let outStr = JSON.stringify(calObj);
+    if (calObj.coeff.c2 === 0 && calObj.coeff.c3 === 0) {
+        outStr = '';
+    }
     if (!calObj.points.cFrom)
         delete calObj.points.cFrom;
     if (!calObj.points.cTo)
         delete calObj.points.cTo;
-    download(`calibration_${getDateString()}.json`, JSON.stringify(calObj), 'CAL');
+    download(`calibration_${getDateString()}.json`, outStr, 'CAL');
 }
 document.getElementById('xml-export-btn').onclick = () => downloadXML();
 function downloadXML() {
@@ -1265,6 +1276,12 @@ const saveFileTypes = {
         description: 'Combination data file (NPESv2, smaller size)',
         accept: {
             'application/json': ['.json']
+        }
+    },
+    'EVOL': {
+        description: 'Count rate time evolution file',
+        accept: {
+            'text/csv': ['.csv']
         }
     },
     'CSV': {
