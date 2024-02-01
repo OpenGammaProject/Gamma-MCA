@@ -908,7 +908,11 @@ function removeFile(type: FileImportType): void {
 
     if (id === 'data') dataFileHandle = undefined; // Reset File System Access API handlers
     if (id === 'background') backgroundFileHandle = undefined;
-    if (!dataFileHandle && !backgroundFileHandle && fileSystemWritableAvail) {
+    if (dataFileHandle) {
+      showSaveButton(dataFileHandle.name);
+    } else if (backgroundFileHandle) {
+      showSaveButton(backgroundFileHandle.name);
+    } else {
       (<HTMLButtonElement>document.getElementById('overwrite-button')).disabled = true; // Disable save button again, if it could be used
     }
 

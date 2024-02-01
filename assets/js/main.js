@@ -635,7 +635,13 @@ function removeFile(type) {
             dataFileHandle = undefined;
         if (id === 'background')
             backgroundFileHandle = undefined;
-        if (!dataFileHandle && !backgroundFileHandle && fileSystemWritableAvail) {
+        if (dataFileHandle) {
+            showSaveButton(dataFileHandle.name);
+        }
+        else if (backgroundFileHandle) {
+            showSaveButton(backgroundFileHandle.name);
+        }
+        else {
             document.getElementById('overwrite-button').disabled = true;
         }
         document.getElementById(id + '-icon').classList.add('d-none');
