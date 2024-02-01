@@ -255,7 +255,7 @@ document.body.onload = async function(): Promise<void> {
         if (fileSystemWritableAvail) { // Try to use the File System Access API if possible
           if (fileEnding === 'json' || fileEnding === 'xml') {
             dataFileHandle = launchParams.files[0];
-            (<HTMLButtonElement>document.getElementById('overwrite-button')).disabled = false;
+            showSaveButton(dataFileHandle.name); // Only show "Save" button if it can be used
           }
         }
 
@@ -472,6 +472,13 @@ function toggleNotifications(toggle: boolean): void {
 }
 
 
+function showSaveButton(filename: string): void {
+  const overwriteButton = <HTMLButtonElement>document.getElementById('overwrite-button');
+  overwriteButton.disabled = false;
+  overwriteButton.title = `Overwrite "${filename}" with current data.`;
+}
+
+
 document.getElementById('data')!.onclick = event => clickFileInput(event, 'data');
 document.getElementById('background')!.onclick = event => clickFileInput(event, 'background');
 
@@ -533,9 +540,8 @@ async function clickFileInput(event: MouseEvent, type: DataType): Promise<void> 
       dataFileHandle = fileHandle;
     }
 
-    if (fileSystemWritableAvail) { // Only enable if it can be used
-      (<HTMLButtonElement>document.getElementById('overwrite-button')).disabled = false;
-    }
+    // Only show "Save" button if it can be used
+    if (fileSystemWritableAvail) showSaveButton(fileHandle.name);
   }
 }
 
@@ -629,6 +635,8 @@ function getFileData(file: File, type: FileImportType): void { // Gets called wh
         }
       } else {
         console.error('No DOM parser in this browser!');
+        (<HTMLButtonElement>document.getElementById('overwrite-button')).disabled = true; // Disable save button again, if it could be used
+        return;
       }
     } else if (fileEnding.toLowerCase() === 'json') { // THIS SECTION MAKES EVERYTHING ASYNC DUE TO THE JSON THING!!!
       const jsonData = await raw.jsonToObject(result);
@@ -665,7 +673,10 @@ function getFileData(file: File, type: FileImportType): void { // Gets called wh
         const importData = jsonData[0]; // Select first element to probe for errors
 
         // Check if it's an error
-        if (checkJSONImportError(file.name, importData)) return;
+        if (checkJSONImportError(file.name, importData)) {
+          (<HTMLButtonElement>document.getElementById('overwrite-button')).disabled = true; // Disable save button again, if it could be used
+          return;
+        }
 
         npesFileImport(file.name, <NPESv1>importData, type);
       }
