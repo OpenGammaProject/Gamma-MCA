@@ -54,7 +54,7 @@ let isoListURL = 'assets/isotopes_energies_min.json';
 const isoList = {};
 let checkNearIso = false;
 let maxDist = 100;
-const APP_VERSION = '2024-01-20';
+const APP_VERSION = '2024-02-01';
 const localStorageAvailable = 'localStorage' in self;
 const wakeLockAvailable = 'wakeLock' in navigator;
 const notificationsAvailable = 'Notification' in window;
@@ -155,7 +155,7 @@ document.body.onload = async function () {
             if (fileSystemWritableAvail) {
                 if (fileEnding === 'json' || fileEnding === 'xml') {
                     dataFileHandle = launchParams.files[0];
-                    document.getElementById('overwrite-button').disabled = false;
+                    showSaveButton(dataFileHandle.name);
                 }
             }
             const spectrumEndings = ['csv', 'tka', 'xml', 'txt', 'json'];
@@ -310,6 +310,11 @@ function toggleNotifications(toggle) {
     const result = saveJSON('allowNotifications', allowNotifications);
     new ToastNotification(result ? 'settingSuccess' : 'settingError');
 }
+function showSaveButton(filename) {
+    const overwriteButton = document.getElementById('overwrite-button');
+    overwriteButton.disabled = false;
+    overwriteButton.title = `Overwrite "${filename}" with current data.`;
+}
 document.getElementById('data').onclick = event => clickFileInput(event, 'data');
 document.getElementById('background').onclick = event => clickFileInput(event, 'background');
 const openFileTypes = [
@@ -358,9 +363,8 @@ async function clickFileInput(event, type) {
         else {
             dataFileHandle = fileHandle;
         }
-        if (fileSystemWritableAvail) {
-            document.getElementById('overwrite-button').disabled = false;
-        }
+        if (fileSystemWritableAvail)
+            showSaveButton(fileHandle.name);
     }
 }
 document.getElementById('data').onchange = event => importFile(event.target, 'data');
@@ -435,6 +439,8 @@ function getFileData(file, type) {
             }
             else {
                 console.error('No DOM parser in this browser!');
+                document.getElementById('overwrite-button').disabled = true;
+                return;
             }
         }
         else if (fileEnding.toLowerCase() === 'json') {
@@ -461,8 +467,10 @@ function getFileData(file, type) {
             }
             else {
                 const importData = jsonData[0];
-                if (checkJSONImportError(file.name, importData))
+                if (checkJSONImportError(file.name, importData)) {
+                    document.getElementById('overwrite-button').disabled = true;
                     return;
+                }
                 npesFileImport(file.name, importData, type);
             }
             return;
@@ -627,7 +635,13 @@ function removeFile(type) {
             dataFileHandle = undefined;
         if (id === 'background')
             backgroundFileHandle = undefined;
-        if (!dataFileHandle && !backgroundFileHandle && fileSystemWritableAvail) {
+        if (dataFileHandle) {
+            showSaveButton(dataFileHandle.name);
+        }
+        else if (backgroundFileHandle) {
+            showSaveButton(backgroundFileHandle.name);
+        }
+        else {
             document.getElementById('overwrite-button').disabled = true;
         }
         document.getElementById(id + '-icon').classList.add('d-none');
