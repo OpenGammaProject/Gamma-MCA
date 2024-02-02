@@ -1087,6 +1087,21 @@ function clickEvent(data: any): void {
 
 
 function selectEvent(data: any): void {
+  /* // Just a reminder on how to modify trace color for a specific selection. Doesn't work as expected though.
+  data.points.forEach(function(pt: any) {
+    x.push(pt.x);
+    y.push(pt.y);
+    colors[pt.pointNumber] = color1;
+  });
+
+  (<any>window).Plotly.restyle(plot.plotDiv, {
+    x: [x, y],
+    xbins: {}
+  }, [1, 2]);
+
+  (<any>window).Plotly.restyle(plot.plotDiv, 'line.color', [colors], [0]);
+  */
+
   const roiElement = document.getElementById('roi-info')!;
   const infoElement = document.getElementById('static-info')!;
 
