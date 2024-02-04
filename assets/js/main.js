@@ -54,7 +54,7 @@ let isoListURL = 'assets/isotopes_energies_min.json';
 const isoList = {};
 let checkNearIso = false;
 let maxDist = 100;
-const APP_VERSION = '2024-02-01';
+const APP_VERSION = '2024-02-04';
 const localStorageAvailable = 'localStorage' in self;
 const wakeLockAvailable = 'wakeLock' in navigator;
 const notificationsAvailable = 'Notification' in window;
@@ -475,13 +475,27 @@ function getFileData(file, type) {
             }
             return;
         }
-        else if (type === 'background') {
-            spectrumData.backgroundTime = 1000;
-            spectrumData.background = raw.csvToArray(result);
+        else if (type === 'background' || type === 'data') {
+            spectrumData[`${type}Time`] = 1000;
+            const csvData = raw.csvToArray(result);
+            spectrumData[type] = csvData.histogramData;
+            if (csvData.calibrationCoefficients) {
+                resetCal();
+                for (const index in csvData.calibrationCoefficients) {
+                    plot.calibration.coeff[`c${parseInt(index) + 1}`] = csvData.calibrationCoefficients[index];
+                }
+                plot.calibration.imported = true;
+                displayCoeffs();
+                const calSettings = document.getElementsByClassName('cal-setting');
+                for (const element of calSettings) {
+                    element.disabled = true;
+                }
+                addImportLabel();
+                toggleCal(true);
+            }
         }
         else {
-            spectrumData.dataTime = 1000;
-            spectrumData.data = raw.csvToArray(result);
+            console.error('Could not import file, some kind of critical mistake happened. This is very bad and should not have happened!');
         }
         finalizeFileImport(file.name, type);
     };

@@ -88,6 +88,11 @@ interface SchemaJSONStorage {
   NPESv2: any;
 }
 
+interface CSVData {
+  histogramData: number[];
+  calibrationCoefficients: number[] | undefined;
+}
+
 export class RawData {
   valueIndex: number;
   delimiter: string;
@@ -134,18 +139,43 @@ export class RawData {
     return xArray;
   }
 
-  csvToArray(data: string): number[] {
+  private parseCalibration(valueArray: string[]): number[] | undefined {
+    // Hard-coded function to get the coefficients for a linear calibration at the moment. Could be better, but it works.
+    if (!this.tempValIndex) return undefined; // Only one column, return no calibration
+    if (valueArray.length < 2) return undefined; // Not enough data to get the coefficients, return no calibration
+
+    const values1 = valueArray[0].split(this.delimiter); // Get the first two lines of the CSV number data
+    const values2 = valueArray[1].split(this.delimiter);
+
+    const float1 = parseFloat(values1[0].trim()); // Select first column to get bin values for calibration
+    const float2 = parseFloat(values2[0].trim());
+
+    const c2 = float2 - float1; // Compute simple linear calibration coefficients
+    const c3 = float1;
+
+    return [0, c2, c3];
+  }
+
+  csvToArray(data: string): CSVData {
     this.tempValIndex = this.valueIndex; // RESET VALUE INDEX
+
+    const returnData: CSVData = {
+      histogramData: [],
+      calibrationCoefficients: undefined
+    };
 
     if (this.fileType === 1) { // HISTOGRAM
       const dataLines = data.split('\n').filter(this.checkLines, this);
 
-      return dataLines.map(this.parseLines, this);
+      returnData.calibrationCoefficients = this.parseCalibration(dataLines); // Get linear calibration data
+      returnData.histogramData = dataLines.map(this.parseLines, this);
     } else { // CHRONOLOGICAL STREAM
       const dataEvents = data.split(this.delimiter).filter(this.checkLines, this);
 
-      return this.histConverter(dataEvents.map(this.parseLines, this));
+      returnData.histogramData = this.histConverter(dataEvents.map(this.parseLines, this));
     }
+
+    return returnData;
   }
 
   xmlToArray(data: string): XMLImportData {

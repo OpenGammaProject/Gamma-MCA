@@ -39,16 +39,35 @@ export class RawData {
         }
         return xArray;
     }
+    parseCalibration(valueArray) {
+        if (!this.tempValIndex)
+            return undefined;
+        if (valueArray.length < 2)
+            return undefined;
+        const values1 = valueArray[0].split(this.delimiter);
+        const values2 = valueArray[1].split(this.delimiter);
+        const float1 = parseFloat(values1[0].trim());
+        const float2 = parseFloat(values2[0].trim());
+        const c2 = float2 - float1;
+        const c3 = float1;
+        return [0, c2, c3];
+    }
     csvToArray(data) {
         this.tempValIndex = this.valueIndex;
+        const returnData = {
+            histogramData: [],
+            calibrationCoefficients: undefined
+        };
         if (this.fileType === 1) {
             const dataLines = data.split('\n').filter(this.checkLines, this);
-            return dataLines.map(this.parseLines, this);
+            returnData.calibrationCoefficients = this.parseCalibration(dataLines);
+            returnData.histogramData = dataLines.map(this.parseLines, this);
         }
         else {
             const dataEvents = data.split(this.delimiter).filter(this.checkLines, this);
-            return this.histConverter(dataEvents.map(this.parseLines, this));
+            returnData.histogramData = this.histConverter(dataEvents.map(this.parseLines, this));
         }
+        return returnData;
     }
     xmlToArray(data) {
         const coeff = {

@@ -25,6 +25,7 @@
 
     - Sound card spectrometry prove of concept
     - Web Worker for: Isotope Seek, FWHM Calculation, Plot update, Gaussian correlation
+    - Add support for IndexedDB API to store spectra locally inside the browser/app without the need for a filesystem
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -129,7 +130,7 @@ const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2024-02-01';
+const APP_VERSION = '2024-02-04';
 const localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 const wakeLockAvailable = 'wakeLock' in navigator; // Test for Screen Wake Lock API
 const notificationsAvailable = 'Notification' in window; // Test for Notifications API
@@ -681,12 +682,29 @@ function getFileData(file: File, type: FileImportType): void { // Gets called wh
         npesFileImport(file.name, <NPESv1>importData, type);
       }
       return; // Nothing else to do, imported successfully or continue doing stuff when the user has finished interacting with the modal
-    } else if (type === 'background') {
-      spectrumData.backgroundTime = 1000;
-      spectrumData.background = raw.csvToArray(result);
+    } else if (type === 'background' || type === 'data') {
+      spectrumData[`${type}Time`] = 1000;
+      const csvData = raw.csvToArray(result);
+      spectrumData[type] = csvData.histogramData;
+
+      if (csvData.calibrationCoefficients) {
+        resetCal(); // Reset in case of old calibration
+
+        for (const index in csvData.calibrationCoefficients) {
+          plot.calibration.coeff[`c${parseInt(index)+1}`] = csvData.calibrationCoefficients[index];
+        }
+        plot.calibration.imported = true;
+        displayCoeffs();
+
+        const calSettings = document.getElementsByClassName('cal-setting');
+        for (const element of calSettings) {
+          (<HTMLInputElement>element).disabled = true;
+        }
+        addImportLabel();
+        toggleCal(true);
+      }
     } else {
-      spectrumData.dataTime = 1000;
-      spectrumData.data = raw.csvToArray(result);
+      console.error('Could not import file, some kind of critical mistake happened. This is very bad and should not have happened!');
     }
 
     finalizeFileImport(file.name, type);
