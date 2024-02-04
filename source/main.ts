@@ -25,6 +25,7 @@
 
     - Sound card spectrometry prove of concept
     - Web Worker for: Isotope Seek, FWHM Calculation, Plot update, Gaussian correlation
+    - Add support for IndexedDB API to store spectra locally inside the browser/app without the need for a filesystem
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
