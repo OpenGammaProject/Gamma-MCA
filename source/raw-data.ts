@@ -10,6 +10,7 @@
 
 */
 
+import PolynomialRegression from './external/regression/PolynomialRegression.min.js';
 import './external/ZSchema-browser-min.js'; // ZSchema to validate JSON Schemas
 import { CoeffObj } from './plot.js';
 
@@ -140,20 +141,26 @@ export class RawData {
   }
 
   private parseCalibration(valueArray: string[]): number[] | undefined {
-    // Hard-coded function to get the coefficients for a linear calibration at the moment. Could be better, but it works.
     if (!this.tempValIndex) return undefined; // Only one column, return no calibration
-    if (valueArray.length < 2) return undefined; // Not enough data to get the coefficients, return no calibration
+    if (valueArray.length < 3) return undefined; // Not enough data to get the coefficients, return no calibration
 
-    const values1 = valueArray[0].split(this.delimiter); // Get the first two lines of the CSV number data
-    const values2 = valueArray[1].split(this.delimiter);
+    const xEnergyData = valueArray.map((value) => parseFloat(value.split(this.delimiter)[0].trim())/*, this*/);
+    const regressionArray: {x: number, y: number}[] = [];
 
-    const float1 = parseFloat(values1[0].trim()); // Select first column to get bin values for calibration
-    const float2 = parseFloat(values2[0].trim());
+    for (const index in xEnergyData) {
+      const newObj  = {
+        x: parseInt(index),
+        y: xEnergyData[index]
+      };
+      regressionArray.push(newObj);
+    }
 
-    const c2 = float2 - float1; // Compute simple linear calibration coefficients
-    const c3 = float1;
+    const model = PolynomialRegression.read(regressionArray, 3); // Degree 3 seems to work better than 2 (quadratic polynomial)
+    const terms = model.getTerms();
+    
+    terms.pop(); // Because we used degree 3 above, remove the fourth coefficient for x^3 (last element)
 
-    return [0, c2, c3];
+    return terms.reverse();
   }
 
   csvToArray(data: string): CSVData {

@@ -1,3 +1,4 @@
+import PolynomialRegression from './external/regression/PolynomialRegression.min.js';
 import './external/ZSchema-browser-min.js';
 export class RawData {
     valueIndex;
@@ -42,15 +43,21 @@ export class RawData {
     parseCalibration(valueArray) {
         if (!this.tempValIndex)
             return undefined;
-        if (valueArray.length < 2)
+        if (valueArray.length < 3)
             return undefined;
-        const values1 = valueArray[0].split(this.delimiter);
-        const values2 = valueArray[1].split(this.delimiter);
-        const float1 = parseFloat(values1[0].trim());
-        const float2 = parseFloat(values2[0].trim());
-        const c2 = float2 - float1;
-        const c3 = float1;
-        return [0, c2, c3];
+        const xEnergyData = valueArray.map((value) => parseFloat(value.split(this.delimiter)[0].trim()));
+        const regressionArray = [];
+        for (const index in xEnergyData) {
+            const newObj = {
+                x: parseInt(index),
+                y: xEnergyData[index]
+            };
+            regressionArray.push(newObj);
+        }
+        const model = PolynomialRegression.read(regressionArray, 3);
+        const terms = model.getTerms();
+        terms.pop();
+        return terms.reverse();
     }
     csvToArray(data) {
         this.tempValIndex = this.valueIndex;
