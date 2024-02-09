@@ -7,10 +7,6 @@
 
   ===============================
 
-  Long Term Todo:
-    - Use Webpack to bundle everything
-    - Remove all any types
-
   Possible Future Improvements:
     - (?) Highlight plot lines in ROI selection
     - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with a (right-)click
@@ -22,10 +18,11 @@
     - NPESv2: Create additional save (append) button that allows users to save multiple data packages in one file
     - NPESv2: Let user remove data packages from file in the import selection dialog
     - Automatically close system notifications when the user interacts with the page again
+    - Web Worker for Isotope Seek, FWHM Calculation, Plot update, Gaussian correlation
 
     - Sound card spectrometry prove of concept
-    - Web Worker for: Isotope Seek, FWHM Calculation, Plot update, Gaussian correlation
     - Add support for IndexedDB API to store spectra locally inside the browser/app without the need for a filesystem
+    - Finish migrating to all npm packages and webpack 
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
