@@ -332,7 +332,7 @@ export class SpectrumPlot {
       //let newConfig = JSON.parse(JSON.stringify(plotElement.config));
       //delete newConfig.modeBarButtonsToAdd; // remove this section, otherwise there will be problems!
 
-      const scriptUrl = new URL('/assets/js/external/plotly-basic.min.js', window.location.origin);
+      const scriptUrl = new URL('https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.29.0/plotly-basic.min.js', window.location.origin);
       const config = {
         responsive: true,
         displaylogo: false,
@@ -343,7 +343,7 @@ export class SpectrumPlot {
 
       const text = `\
       <!DOCTYPE html>
-      <!-- Gamma MCA Interactive Export Version 1.1 by NuclearPhoenix. https://spectrum.nuclearphoenix.xyz. -->
+      <!-- Gamma MCA Interactive Export Version 1.2 by NuclearPhoenix. https://spectrum.nuclearphoenix.xyz. -->
       <html>
         <head>
           <meta charset="utf-8">
