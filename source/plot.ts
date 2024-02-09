@@ -8,8 +8,8 @@
 
 */
 
-import PolynomialRegression from './external/regression/PolynomialRegression.min.js';
-import { SpectrumData, IsotopeList } from './main.js';
+import PolynomialRegression from './external/regression/PolynomialRegression.min';
+import { SpectrumData, IsotopeList } from './main';
 
 export interface CoeffObj {
   c1: number;

@@ -10,9 +10,8 @@
 
 */
 
-import PolynomialRegression from './external/regression/PolynomialRegression.min.js';
-import './external/ZSchema-browser-min.js'; // ZSchema to validate JSON Schemas
-import { CoeffObj } from './plot.js';
+import PolynomialRegression from './external/regression/PolynomialRegression.min';
+import { CoeffObj } from './plot';
 
 export interface JSONParseError {
   code: string;

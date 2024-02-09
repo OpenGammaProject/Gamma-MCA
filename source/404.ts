@@ -8,7 +8,7 @@
 
 */
 
-import { applyTheming, autoThemeChange } from './global-theming.js';
+import { applyTheming, autoThemeChange } from './global-theming';
 
 const localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 

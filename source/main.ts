@@ -36,12 +36,12 @@
 
 */
 
-import { SpectrumPlot, SeekClosest, DownloadFormat, CalculateFWHM } from './plot.js';
-import { RawData, NPESv1, NPESv1Spectrum, JSONParseError, NPESv2 } from './raw-data.js';
-import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
-import { WebUSBSerialPort } from './external/webusbserial-min.js'
-import { ToastNotification, launchSysNotification } from './notifications.js';
-import { applyTheming, autoThemeChange } from './global-theming.js';
+import { SpectrumPlot, SeekClosest, DownloadFormat, CalculateFWHM } from './plot';
+import { RawData, NPESv1, NPESv1Spectrum, JSONParseError, NPESv2 } from './raw-data';
+import { SerialManager, WebSerial, WebUSBSerial } from './serial';
+import { WebUSBSerialPort } from './external/webusbserial-min'
+import { ToastNotification, launchSysNotification } from './notifications';
+import { applyTheming, autoThemeChange } from './global-theming';
 
 export interface IsotopeList {
   [key: string]: number[];
@@ -2905,10 +2905,10 @@ async function disconnectPort(stop = false): Promise<void> {
   });
 
   try {
-    clearTimeout(autosaveTimeout);
-    clearTimeout(refreshTimeout);
-    clearTimeout(metaTimeout);
-    clearTimeout(consoleTimeout);
+    clearTimeout(autosaveTimeout as unknown as number);
+    clearTimeout(refreshTimeout as unknown as number);
+    clearTimeout(metaTimeout as unknown as number);
+    clearTimeout(consoleTimeout as unknown as number);
   } catch (err) {
     console.warn('No timeout to clear. Something might be wrong...', err);
   }
@@ -2938,7 +2938,7 @@ document.getElementById('serial-console-modal')!.addEventListener('show.bs.modal
 
 document.getElementById('serial-console-modal')!.addEventListener('hide.bs.modal', async (/*event: Event*/): Promise<void> => { // Adjust Plot Size For Main Tab Menu Content Size
   await serRecorder?.hideConsole();
-  clearTimeout(consoleTimeout);
+  clearTimeout(consoleTimeout as unknown as number);
 });
 
 
@@ -3017,7 +3017,7 @@ document.getElementById('reconnect-console-log')!.onclick = () => reconnectConso
 
 async function reconnectConsole(): Promise<void> {
   await serRecorder?.hideConsole(); // Same code as closing and re-opening of the console modal
-  clearTimeout(consoleTimeout);
+  clearTimeout(consoleTimeout as unknown as number);
   readSerial();
 }
 
@@ -3032,7 +3032,7 @@ function toggleAutoscroll(enabled: boolean) {
 }
 
 
-let consoleTimeout: number;
+let consoleTimeout: NodeJS.Timer;
 
 function refreshConsole(): void {
   if (serRecorder?.port?.isOpen) {
@@ -3044,7 +3044,7 @@ function refreshConsole(): void {
 }
 
 
-let autosaveTimeout: number;
+let autosaveTimeout: NodeJS.Timer;
 
 function autoSaveData(): void {
   const autosaveBadgeElement = document.getElementById('autosave-badge')!;
@@ -3080,7 +3080,7 @@ function getRecordTimeStamp(time: number): string {
 }
 
 
-let metaTimeout: number;
+let metaTimeout: NodeJS.Timer;
 
 function refreshMeta(type: DataType): void {
   if (serRecorder?.port?.isOpen) {
@@ -3125,7 +3125,7 @@ function refreshMeta(type: DataType): void {
 
 
 let lastUpdate = performance.now();
-let refreshTimeout: number;
+let refreshTimeout: NodeJS.Timer;
 
 function refreshRender(type: DataType, firstLoad = false): void {
   if (serRecorder?.port?.isOpen) {
