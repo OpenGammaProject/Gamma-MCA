@@ -21,4 +21,5 @@ module.exports = {
       },
     ],
   },
+  mode: 'production'
 };
