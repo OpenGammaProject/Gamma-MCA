@@ -39,7 +39,7 @@
 import { SpectrumPlot, SeekClosest, DownloadFormat, CalculateFWHM } from './plot';
 import { RawData, NPESv1, NPESv1Spectrum, JSONParseError, NPESv2 } from './raw-data';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial';
-import { WebUSBSerialPort } from './external/webusbserial-min'
+import { WebUSBSerialPort } from './lib/webusbserial-min'
 import { ToastNotification, launchSysNotification } from './notifications';
 import { applyTheming, autoThemeChange } from './global-theming';
 

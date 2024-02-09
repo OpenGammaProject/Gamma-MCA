@@ -8,7 +8,7 @@
 
 */
 
-import { WebUSBSerialPort } from './external/webusbserial-min';
+import { WebUSBSerialPort } from './lib/webusbserial-min';
 
 export class WebUSBSerial {
   private port: WebUSBSerialPort | undefined;

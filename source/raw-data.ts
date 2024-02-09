@@ -10,7 +10,7 @@
 
 */
 
-import PolynomialRegression from './external/regression/PolynomialRegression.min';
+import PolynomialRegression from './lib/regression/PolynomialRegression.min';
 import { CoeffObj } from './plot';
 
 export interface JSONParseError {

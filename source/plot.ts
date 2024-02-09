@@ -8,7 +8,7 @@
 
 */
 
-import PolynomialRegression from './external/regression/PolynomialRegression.min';
+import PolynomialRegression from './lib/regression/PolynomialRegression.min';
 import { SpectrumData, IsotopeList } from './main';
 
 export interface CoeffObj {
