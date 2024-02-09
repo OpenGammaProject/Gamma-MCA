@@ -2905,10 +2905,10 @@ async function disconnectPort(stop = false): Promise<void> {
   });
 
   try {
-    clearTimeout(autosaveTimeout as unknown as number);
-    clearTimeout(refreshTimeout as unknown as number);
-    clearTimeout(metaTimeout as unknown as number);
-    clearTimeout(consoleTimeout as unknown as number);
+    clearTimeout(autosaveTimeout);
+    clearTimeout(refreshTimeout);
+    clearTimeout(metaTimeout);
+    clearTimeout(consoleTimeout);
   } catch (err) {
     console.warn('No timeout to clear. Something might be wrong...', err);
   }
@@ -2938,7 +2938,7 @@ document.getElementById('serial-console-modal')!.addEventListener('show.bs.modal
 
 document.getElementById('serial-console-modal')!.addEventListener('hide.bs.modal', async (/*event: Event*/): Promise<void> => { // Adjust Plot Size For Main Tab Menu Content Size
   await serRecorder?.hideConsole();
-  clearTimeout(consoleTimeout as unknown as number);
+  clearTimeout(consoleTimeout);
 });
 
 
@@ -3017,7 +3017,7 @@ document.getElementById('reconnect-console-log')!.onclick = () => reconnectConso
 
 async function reconnectConsole(): Promise<void> {
   await serRecorder?.hideConsole(); // Same code as closing and re-opening of the console modal
-  clearTimeout(consoleTimeout as unknown as number);
+  clearTimeout(consoleTimeout);
   readSerial();
 }
 
@@ -3032,7 +3032,7 @@ function toggleAutoscroll(enabled: boolean) {
 }
 
 
-let consoleTimeout: NodeJS.Timer;
+let consoleTimeout: ReturnType<typeof setTimeout>;
 
 function refreshConsole(): void {
   if (serRecorder?.port?.isOpen) {
@@ -3044,7 +3044,7 @@ function refreshConsole(): void {
 }
 
 
-let autosaveTimeout: NodeJS.Timer;
+let autosaveTimeout: ReturnType<typeof setTimeout>;
 
 function autoSaveData(): void {
   const autosaveBadgeElement = document.getElementById('autosave-badge')!;
@@ -3080,7 +3080,7 @@ function getRecordTimeStamp(time: number): string {
 }
 
 
-let metaTimeout: NodeJS.Timer;
+let metaTimeout: ReturnType<typeof setTimeout>;
 
 function refreshMeta(type: DataType): void {
   if (serRecorder?.port?.isOpen) {
@@ -3125,7 +3125,7 @@ function refreshMeta(type: DataType): void {
 
 
 let lastUpdate = performance.now();
-let refreshTimeout: NodeJS.Timer;
+let refreshTimeout: ReturnType<typeof setTimeout>;
 
 function refreshRender(type: DataType, firstLoad = false): void {
   if (serRecorder?.port?.isOpen) {
