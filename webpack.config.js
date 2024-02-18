@@ -26,5 +26,5 @@ module.exports = {
     static: './',
   },
   mode: 'production',
-  devtool: 'source-map'
+  devtool: 'source-map',
 };
