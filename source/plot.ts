@@ -1159,13 +1159,25 @@ export class SpectrumPlot {
     }
 
     /*
-      Calibration enabled
+      Energy calibration enabled
     */
     if (this.calibration.enabled) {
       for (const element of data) {
         element.x = this.getCalAxis(element.x.length);
       }
     }
+
+    /*
+      Efficiency calibration enabled
+    */
+   /*
+    if (this.calibration.enabled) { // TODO: CHANGE variable
+       for (const element of data) {
+         element.y.forEach((val, index) => element.y[index] = 0.00002 * val ** 2 + 0.0045 * val + 0.22); // TODO: CHANGE formula
+         console.log('neu');
+       }
+     }
+     */
 
     /*
       Peak Detection Stuff

@@ -22,7 +22,8 @@
 
     - Sound card spectrometry prove of concept
     - Add support for IndexedDB API to store spectra locally inside the browser/app without the need for a filesystem
-    - Finish migrating to all npm packages and webpack 
+    - Update calibration to n-poly energy calibration and add efficiency calibration
+    - Finish migrating to all npm packages and webpack
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
