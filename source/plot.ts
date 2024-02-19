@@ -273,6 +273,7 @@ export class SpectrumPlot {
     },
   };
   cps = false;
+  enhanceEfficiency = false;
   private shapes: Shape[] = [];
   private annotations: Anno[] = [];
   editableMode = false;
@@ -417,7 +418,7 @@ export class SpectrumPlot {
 
       for (let j = 0; j < Object.keys(this.calibration.coeff).length; j++) {
         const c = this.calibration.coeff[`c${j+1}`] ?? 0;
-        val += c * Math.pow(i, j);
+        val += c * i ** j;
       }
 
       calArray.push(val);
@@ -1135,16 +1136,23 @@ export class SpectrumPlot {
     }
 
     /*
-      Efficiency calibration enabled
+      Qualitative enhancement of detector efficiency
     */
-    /*
-    if (this.calibration.enabled) { // TODO: CHANGE variable
+    if (this.enhanceEfficiency) {
       for (const element of data) {
-        element.y.forEach((val, index) => element.y[index] = 0.00002 * val ** 2 + 0.0045 * val + 0.22); // TODO: CHANGE formula
-        console.log('neu');
+        const coeffArr: number[] = [];
+        for (const value of element.x) {
+          coeffArr.push(0.00002 * value ** 2 + 0.0045 * value + 0.22);
+        }
+
+        const newData: number[] = [];
+        for (const index in element.y) {
+          newData.push(element.y[index] * coeffArr[index]);
+        }
+
+        element.y = newData;
       }
     }
-    */
 
     /*
       Peak Detection Stuff

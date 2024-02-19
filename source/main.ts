@@ -24,7 +24,6 @@
     - Sound card spectrometry prove of concept
     - Add support for IndexedDB API to store spectra locally inside the browser/app without the need for a filesystem
     - Finish migrating to all npm packages and webpack
-    - Qualitative efficiency compensation for peaks (Toolbar)
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -154,6 +153,7 @@ const hotkeys = {
   't': 'plot-type',
   'i': 'iso-hover-label',
   'p': 'peak-finder-btn',
+  'e': 'enhance-eff-label',
   '1': 'file-import-tab',
   '2': 'serial-tab',
   '3': 'sound-tab',
@@ -2429,6 +2429,15 @@ function bindHotkeys(): void {
     });
     if (button) button.title += ` (ALT+${key.toUpperCase()})`; // Add hotkey hint to button titles
   }
+}
+
+
+document.getElementById('enhance-eff')!.onclick = (event) => toggelEfficiencyEnhancer(<HTMLInputElement>event.target);
+
+function toggelEfficiencyEnhancer(target: HTMLInputElement): void {
+  plot.enhanceEfficiency = target.checked;
+
+  plot.updatePlot(spectrumData);
 }
 
 /*
