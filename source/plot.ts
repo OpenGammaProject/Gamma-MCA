@@ -897,10 +897,17 @@ export class SpectrumPlot {
     Plot Calibration Chart
   */
   private plotCalibration(dataObj: SpectrumData, update: boolean): void {
+    let axisSize = dataObj.data.length;
+
+    if (Object.keys(this.calibration.points).length) {
+      const maxBin = Object.keys(this.calibration.points).reduce((max, c) => parseFloat(c) > parseFloat(max) ? c : max);
+      axisSize = Math.max(dataObj.data.length, parseFloat(maxBin)) + 1;
+    }
+
     const trace: Trace = {
       name: 'Calibration',
-      x: this.getXAxis(dataObj.data.length),
-      y: this.getCalAxis(dataObj.data.length),
+      x: this.getXAxis(axisSize),
+      y: this.getCalAxis(axisSize),
       mode: 'lines', // Remove lines, "lines", "none"
       type: 'scatter',
       fill: 'tozeroy',
