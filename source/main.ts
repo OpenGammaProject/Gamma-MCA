@@ -224,15 +224,12 @@ document.body.onload = async function(): Promise<void> {
   isoListURL = new URL(isoListURL, window.location.origin).href;
 
   if (navigator.serial || navigator.usb) { // Web Serial API or fallback Web USB API with FTDx JS driver
-    const serErrDiv = document.getElementById('serial-error')!;
-    serErrDiv.parentNode!.removeChild(serErrDiv); // Delete Serial Not Supported Warning
+    document.getElementById('serial-error')?.remove(); // Delete Serial Not Supported Warning
     navigator[navigator.serial ? 'serial' : 'usb'].addEventListener('connect', serialConnect);
     navigator[navigator.serial ? 'serial' : 'usb'].addEventListener('disconnect', serialDisconnect);
     listSerial(); // List Available Serial Ports
   } else {
-    const serDiv = document.getElementById('serial-div')!;
-    serDiv.parentNode!.removeChild(serDiv); // Delete Serial Control Div
-
+    document.getElementById('serial-div')?.remove(); // Delete Serial Control Div
     const serSettingsElements = document.getElementsByClassName('ser-settings');
     for (const element of serSettingsElements) { // Disable serial settings
       (<HTMLSelectElement | HTMLButtonElement>element).disabled = true;
@@ -297,8 +294,7 @@ document.body.onload = async function(): Promise<void> {
       selectFileType(element);
     }
 
-    const settingsNotSaveAlert = document.getElementById('ls-unavailable')!; // Remove saving alert
-    settingsNotSaveAlert.parentNode!.removeChild(settingsNotSaveAlert);
+    document.getElementById('ls-unavailable')?.remove(); // Remove saving alert
 
     const getAutoScrollValue = loadJSON('consoleAutoscrollEnabled');
     if (getAutoScrollValue) {
@@ -306,8 +302,7 @@ document.body.onload = async function(): Promise<void> {
       (<HTMLInputElement>document.getElementById('autoscroll-console')).checked = getAutoScrollValue;
     }
   } else {
-    const settingsSaveAlert = document.getElementById('ls-available')!; // Remove saving alert
-    settingsSaveAlert.parentNode!.removeChild(settingsSaveAlert);
+    document.getElementById('ls-available')?.remove(); // Remove saving alert
     new ToastNotification('welcomeMessage'); //popupNotification('welcome-msg');
   }
 
@@ -369,8 +364,7 @@ document.body.onload = async function(): Promise<void> {
 
   if (localStorageAvailable) checkAutosave(); // Check for the last autosaved spectrum
 
-  const loadingOverlay = document.getElementById('loading')!;
-  loadingOverlay.parentNode!.removeChild(loadingOverlay); // Delete Loading Thingymajig
+  document.getElementById('loading')?.remove(); // Delete Loading Thingymajig
 };
 
 
@@ -1291,7 +1285,7 @@ function addEnergyCalibrationEntry(numberOffset = 0): void {
     removeBinEntry.classList.add('cal-setting');
 
     removeBinEntry.onclick = () => {
-      masterDivElement.removeChild(headDivElement); // Remove input HTML element
+      headDivElement?.remove(); // Remove input HTML element
       calClick.delete(calNumber); // Remove entry from calClick
       delete oldCalVals[calNumber]; // Remove entry from oldCalVals
       masterCoeffElement.lastElementChild?.remove(); // Remove coefficient HTML element
