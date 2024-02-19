@@ -19,7 +19,7 @@ Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://
 * Live plotting via the serial interface, compatible with any serial device (e.g. Arduino) on [desktop](https://caniuse.com/web-serial)
 * Compatible with serial (FTDI) chips on [mobile](https://caniuse.com/webusb)
 * Serial console to control your device
-* Linear and quadratic energy calibration
+* Polynomial energy calibration (arbitrary n-th degree)
 * Gaussian correlation filtering for auto peak detection (energy and isotope)
 * Customizable and comprehensive list of common isotopes and their gamma-ray energies
 * Export interactive graphs of your spectrum to embed it into your website
