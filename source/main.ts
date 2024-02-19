@@ -317,10 +317,11 @@ document.body.onload = async function(): Promise<void> {
       const toggleCalChartElement = <HTMLInputElement>document.getElementById('toggle-calibration-chart');
       const toggleEvolChartElement = <HTMLInputElement>document.getElementById('toggle-evolution-chart');
 
-      if (toggleCalChartElement.checked || toggleEvolChartElement.checked) { // Leave cal/evol chart when changing tabs
+      if (toggleCalChartElement && toggleCalChartElement.checked) { // Leave cal/evol chart when changing tabs
         toggleCalChartElement.checked = false;
-        toggleEvolChartElement.checked = false;
         toggleCalChart(false);
+      } else if (toggleEvolChartElement && toggleEvolChartElement.checked) {
+        toggleEvolChartElement.checked = false;
         toogleEvolChart(false);
       } else {
         plot.updatePlot(spectrumData); // Adjust Plot Size For Main Tab Menu Content Size
