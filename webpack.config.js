@@ -24,6 +24,8 @@ module.exports = {
   },
   devServer: {
     static: './',
+    liveReload: false,
+    hot: false,
   },
   mode: 'production',
   devtool: 'source-map',
