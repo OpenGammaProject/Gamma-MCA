@@ -8,7 +8,7 @@
 
 */
 
-import { WebUSBSerialPort } from './external/webusbserial-min.js';
+import { WebUSBSerialPort } from './lib/webusbserial-min';
 
 export class WebUSBSerial {
   private port: WebUSBSerialPort | undefined;
@@ -166,7 +166,7 @@ export class WebSerial {
 }
 
 
-import { DataOrder } from './main.js';
+import { DataOrder } from './main';
 
 export class SerialManager {
   // SECTION: Serial Manager

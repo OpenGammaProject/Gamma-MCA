@@ -10,9 +10,9 @@
 
 */
 
-import PolynomialRegression from './external/regression/PolynomialRegression.min.js';
-import './external/ZSchema-browser-min.js'; // ZSchema to validate JSON Schemas
-import { CoeffObj } from './plot.js';
+import PolynomialRegression from './lib/regression/PolynomialRegression.min';
+import { CoeffObj } from './plot';
+import ZSchema = require('z-schema');
 
 export interface JSONParseError {
   code: string;
@@ -155,12 +155,10 @@ export class RawData {
       regressionArray.push(newObj);
     }
 
-    const model = PolynomialRegression.read(regressionArray, 3); // Degree 3 seems to work better than 2 (quadratic polynomial)
+    const model = PolynomialRegression.read(regressionArray, 3); // Use degree 3 for a good default calibration
     const terms = model.getTerms();
-    
-    terms.pop(); // Because we used degree 3 above, remove the fourth coefficient for x^3 (last element)
 
-    return terms.reverse();
+    return terms;
   }
 
   csvToArray(data: string): CSVData {
@@ -235,7 +233,7 @@ export class RawData {
         const coeffNumArray = Array.from(calCoeffs).map(item => parseFloat((item.textContent ?? '0')));
 
         for (const i in coeffNumArray) {
-          coeff['c' + (parseInt(i) + 1).toString()] = coeffNumArray[2 - parseInt(i)];
+          coeff['c' + (parseInt(i) + 1).toString()] = coeffNumArray[parseInt(i)];
         }
       }
 
@@ -302,17 +300,7 @@ export class RawData {
         }
       }
 
-      /* // OLD METHOD
-      const scripts = Array.from(document.querySelectorAll('script')).map(scr => scr.src);
-      if (!scripts.includes('/assets/js/external/ZSchema-browser-min.js')) {
-        const tag = document.createElement('script');
-        tag.src = '/assets/js/external/ZSchema-browser-min.js';
-        tag.async = true;
-        tag.onload =
-        document.getElementsByTagName('head')[0].appendChild(tag);
-      }
-      */
-      const validator = new (<any>window).ZSchema();
+      const validator = new ZSchema({}); // Use empty default options/config
       validator.validate(json, this.schemaJSON[version]);
       const errors = validator.getLastErrors();
 

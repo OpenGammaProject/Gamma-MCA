@@ -221,7 +221,7 @@ export class ToastNotification {
 		*/
 
 		this.toastElement.addEventListener('hidden.bs.toast', () => {
-			if (this.toastElement) this.toastContainer?.removeChild(this.toastElement);
+			if (this.toastElement) this.toastElement.remove();
 			
 			this.toastElement = undefined;
 			this.toast = undefined;

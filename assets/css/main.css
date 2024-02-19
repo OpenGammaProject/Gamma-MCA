@@ -88,6 +88,10 @@ body {
   resize: none;
 }
 
+.calibration-form {
+  max-height: 140px;
+}
+
 /* SEEMS LIKE NOT NEEDED ANYMORE
 .toast-container {
   z-index: 1111;
