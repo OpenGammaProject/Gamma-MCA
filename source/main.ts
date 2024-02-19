@@ -19,11 +19,12 @@
     - NPESv2: Let user remove data packages from file in the import selection dialog
     - Automatically close system notifications when the user interacts with the page again
     - Web Worker for Isotope Seek, FWHM Calculation, Plot update, Gaussian correlation
+    - Fully-fledged efficiency calibration
 
     - Sound card spectrometry prove of concept
     - Add support for IndexedDB API to store spectra locally inside the browser/app without the need for a filesystem
-    - Update calibration to n-poly energy calibration and add efficiency calibration
     - Finish migrating to all npm packages and webpack
+    - Qualitative efficiency compensation for peaks (Toolbar)
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -34,7 +35,7 @@
 
 */
 
-import { SpectrumPlot, SeekClosest, DownloadFormat, CalculateFWHM } from './plot';
+import { SpectrumPlot, SeekClosest, DownloadFormat, CalculateFWHM, CoeffPoints } from './plot';
 import { RawData, NPESv1, NPESv1Spectrum, JSONParseError, NPESv2 } from './raw-data';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial';
 import { WebUSBSerialPort } from './lib/webusbserial-min'
@@ -56,7 +57,6 @@ interface FileSelectData {
 }
 
 export type DataOrder = 'hist' | 'chron';
-type CalType = 'a' | 'b' | 'c';
 type DataType = 'data' | 'background';
 type PortList = (WebSerial | WebUSBSerial | undefined)[];
 type DownloadType = 'CAL' | 'XML' | 'JSON' | 'EVOL' | 'CSV';
@@ -110,8 +110,8 @@ const plot = new SpectrumPlot('plot');
 const raw = new RawData(1); // 2=raw, 1=hist
 
 // Other "global" vars
-const calClick = { a: false, b: false, c: false };
-const oldCalVals = { a: '', b: '', c: ''};
+const calClick = new Set<number>();
+const oldCalVals: { [key: number ]: number | undefined } = {};
 
 let portsAvail: PortList = [];
 let refreshRate = 1000; // Delay in ms between serial plot updates
@@ -364,6 +364,8 @@ document.body.onload = async function(): Promise<void> {
   }
 
   bindHotkeys();
+
+  checkAndIncreaseCalibrationEntries(2); // Add at least two calibration bins for linear calibration
 
   if (localStorageAvailable) checkAutosave(); // Check for the last autosaved spectrum
 
@@ -620,6 +622,9 @@ function getFileData(file: File, type: FileImportType): void { // Gets called wh
 
         if (importedCount >= 2) {
           resetCal(); // Reset in case of old calibration
+
+          checkAndIncreaseCalibrationEntries(importedCount);
+
           plot.calibration.coeff = coeff;
           plot.calibration.imported = true;
           displayCoeffs();
@@ -687,6 +692,8 @@ function getFileData(file: File, type: FileImportType): void { // Gets called wh
 
       if (csvData.calibrationCoefficients) {
         resetCal(); // Reset in case of old calibration
+
+        checkAndIncreaseCalibrationEntries(csvData.calibrationCoefficients.length);
 
         for (const index in csvData.calibrationCoefficients) {
           plot.calibration.coeff[`c${parseInt(index)+1}`] = csvData.calibrationCoefficients[index];
@@ -789,12 +796,13 @@ function npesFileImport(filename: string, importData: NPESv1, type: FileImportTy
 
   if (calDataObj) {
     const coeffArray: number[] = calDataObj.coefficients;
-    const numCoeff: number = calDataObj.polynomialOrder;
 
     resetCal(); // Reset in case of old calibration
 
+    checkAndIncreaseCalibrationEntries(coeffArray.length);
+
     for (const index in coeffArray) {
-      plot.calibration.coeff[`c${numCoeff-parseInt(index)+1}`] = coeffArray[index];
+      plot.calibration.coeff[`c${parseInt(index) + 1}`] = coeffArray[index];
     }
     plot.calibration.imported = true;
     displayCoeffs();
@@ -1052,9 +1060,8 @@ function bindPlotEvents(): void {
 
 
 function hoverEvent(data: any): void {
-  for (const key in calClick) {
-    const castKey = <CalType>key;
-    if (calClick[castKey]) (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = data.points[0].x.toFixed(2);
+  for (const id of calClick) {
+    (<HTMLInputElement>document.getElementById(`bin-${id}`)).value = data.points[0].x.toFixed(2);
   }
 
   if (checkNearIso) closestIso(data.points[0].x);
@@ -1062,9 +1069,8 @@ function hoverEvent(data: any): void {
 
 
 function unHover(/*data: any*/): void {
-  for (const key in calClick) {
-    const castKey = <CalType>key;
-    if (calClick[castKey]) (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = oldCalVals[castKey];
+  for (const id of calClick) {
+    (<HTMLInputElement>document.getElementById(`bin-${id}`)).value = (oldCalVals[id] ?? '').toString();
   }
   /*
   if (Object.keys(prevIso).length > 0) {
@@ -1077,16 +1083,15 @@ function unHover(/*data: any*/): void {
 let prevClickLine: number | undefined;
 
 function clickEvent(data: any): void {
-  document.getElementById('click-data')!.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
+  const xClickData = data.points[0].x.toFixed(2);
 
-  for (const key in calClick) {
-    const castKey = <CalType>key;
-    if (calClick[castKey]) {
-      (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = data.points[0].x.toFixed(2);
-      oldCalVals[castKey] = data.points[0].x.toFixed(2);
-      calClick[castKey] = false;
-      (<HTMLInputElement>document.getElementById(`select-${castKey}`)).checked = calClick[<CalType>key];
-    }
+  document.getElementById('click-data')!.innerText = xClickData + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
+
+  for (const id of calClick) {
+    (<HTMLInputElement>document.getElementById(`bin-${id}`)).value = xClickData;
+    oldCalVals[id] = xClickData;
+    calClick.delete(id);
+    (<HTMLInputElement>document.getElementById(`select-bin-${id}`)).checked = false;
   }
 
   if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false); // Delete the last line
@@ -1176,6 +1181,140 @@ function selectEvent(data: any): void {
 }
 
 
+function checkAndIncreaseCalibrationEntries(order: number): void {
+  const masterDivElement = document.getElementById('calibration-input')!;
+  const childElements = masterDivElement.children;
+
+  // Generate more bin input elements if there aren't enough
+  for (let i = childElements.length; i <= order; i++) {
+    addEnergyCalibrationEntry(i);
+  }
+}
+
+
+document.getElementById('add-new-cal-bin')!.onclick = () => addEnergyCalibrationEntry();
+
+function addEnergyCalibrationEntry(numberOffset = 0): void {
+  const masterDivElement = document.getElementById('calibration-input')!;
+  const masterCoeffElement = document.getElementById('energy-cal-coeff-list')!;
+
+  const calNumber = Math.round(performance.now()) + numberOffset;
+
+  const headDivElement = document.createElement('div');
+  headDivElement.classList.add('hstack', 'gap-2');
+  headDivElement.id = calNumber.toString();
+
+  // GENERATE LEFT SIDE OF THE CALIBRATION HSTACK
+  const binInputGroupElement = document.createElement('div');
+  binInputGroupElement.classList.add('input-group', 'input-group-sm');
+
+  // Create label element
+  const binLabelElement = document.createElement('label');
+  binLabelElement.classList.add('input-group-text');
+  binLabelElement.htmlFor = `bin-${calNumber}`;
+  binLabelElement.textContent = 'Bin:';
+  binInputGroupElement.appendChild(binLabelElement);
+
+  // Create input element
+  const binInputElement = document.createElement('input');
+  binInputElement.classList.add('form-control', 'form-control-sm', 'cal-setting');
+  binInputElement.type = 'number';
+  binInputElement.id = `bin-${calNumber}`;
+  binInputElement.min = '0';
+  binInputElement.value = '';
+  binInputElement.title = 'Input bin number';
+  binInputElement.placeholder = 'Select Bin Number';
+  binInputGroupElement.appendChild(binInputElement);
+
+  // Create checkbox element
+  const checkboxElement = document.createElement('input');
+  checkboxElement.type = 'checkbox';
+  checkboxElement.classList.add('btn-check', 'cal-setting');
+  checkboxElement.id = `select-bin-${calNumber}`;
+  binInputGroupElement.appendChild(checkboxElement);
+
+  // Add function to click event on select element
+  checkboxElement.onclick = () => toggleCalClick(calNumber, checkboxElement.checked);
+
+  // Create label for checkbox
+  const labelForCheckbox = document.createElement('label');
+  labelForCheckbox.classList.add('btn', 'btn-outline-primary');
+  labelForCheckbox.htmlFor = `select-bin-${calNumber}`;
+  labelForCheckbox.title = 'Select from plot';
+  
+  // Create icon inside the label
+  const iconElement = document.createElement('i');
+  iconElement.classList.add('fa-solid', 'fa-arrow-pointer');
+  labelForCheckbox.appendChild(iconElement);
+  
+  binInputGroupElement.appendChild(labelForCheckbox);
+
+  // GENERATE ARROW ICON IN THE MIDDLE OF THE HSTACK
+  const arrowElement = document.createElement('span');
+  arrowElement.innerHTML = '<i class="fa-solid fa-angles-right"></i>';
+
+  // GENERATE RIGHT SIDE OF THE CALIBRATION HSTACK
+  const energyInputGroupElement = document.createElement('div');
+  energyInputGroupElement.classList.add('input-group', 'input-group-sm');
+
+  // Create input element
+  const energyInputElement = document.createElement('input');
+  energyInputElement.classList.add('form-control', 'form-control-sm', 'cal-setting');
+  energyInputElement.type = 'number';
+  energyInputElement.id = `cal-${calNumber}`;
+  energyInputElement.min = '1';
+  energyInputElement.value = '';
+  energyInputElement.title = 'Target energy for bin';
+  energyInputElement.placeholder = 'Target Bin Energy';
+  energyInputGroupElement.appendChild(energyInputElement);
+
+  // Create label element for keV
+  const energyLabelElement = document.createElement('label');
+  energyLabelElement.classList.add('input-group-text');
+  energyLabelElement.htmlFor = `cal-${calNumber}`;
+  energyLabelElement.textContent = 'keV';
+  energyInputGroupElement.appendChild(energyLabelElement);
+
+  // Create button element for bin removal
+  const removeBinEntry = document.createElement('button');
+  removeBinEntry.classList.add('btn', 'btn-sm', 'btn-primary', 'del-cal-btn');
+  removeBinEntry.type = 'button';
+  //removeBinEntry.htmlFor = `cal-${calNumber}`;
+  removeBinEntry.title = 'Remove bin from calibration'
+  removeBinEntry.innerHTML = '<i class="fa-solid fa-circle-minus"></i>';
+  energyInputGroupElement.appendChild(removeBinEntry);
+
+  // Disable buttons if less than two bins are present for calibration (linear!)
+  if (masterDivElement.children.length <= 2) {
+    removeBinEntry.disabled = true;
+  } else {
+    removeBinEntry.classList.add('cal-setting');
+
+    removeBinEntry.onclick = () => {
+      masterDivElement.removeChild(headDivElement); // Remove input HTML element
+      calClick.delete(calNumber); // Remove entry from calClick
+      delete oldCalVals[calNumber]; // Remove entry from oldCalVals
+      masterCoeffElement.lastElementChild?.remove(); // Remove coefficient HTML element
+    }
+  }
+
+  // ADD ALL THREE PARTS
+  headDivElement.appendChild(binInputGroupElement);
+  headDivElement.appendChild(arrowElement);
+  headDivElement.appendChild(energyInputGroupElement);
+
+  // ADD TO HSTACK
+  masterDivElement.insertBefore(headDivElement, document.getElementById('add-new-cal-bin')!.parentElement);
+
+  // GENERATE NEW COEFFICIENT VALUE
+  const coeff = document.createElement('p');
+  coeff.classList.add('mb-1');
+  coeff.innerHTML = `<var>c<sub>${masterCoeffElement.children.length+1}</sub></var>: <span id="coeff-${masterCoeffElement.children.length+1}">0</span>`;
+
+  masterCoeffElement.appendChild(coeff);
+}
+
+
 document.getElementById('apply-cal')!.onclick = event => toggleCal((<HTMLInputElement>event.target).checked);
 
 async function toggleCal(enabled: boolean): Promise<void> {
@@ -1189,48 +1328,50 @@ async function toggleCal(enabled: boolean): Promise<void> {
   */
   if (enabled) {
     if (!plot.calibration.imported) {
+      const masterDivElement = document.getElementById('calibration-input')!;
+      const childElements = masterDivElement.children;
 
-      const readoutArray = [
-        [(<HTMLInputElement>document.getElementById('adc-a')).value, (<HTMLInputElement>document.getElementById('cal-a')).value],
-        [(<HTMLInputElement>document.getElementById('adc-b')).value, (<HTMLInputElement>document.getElementById('cal-b')).value],
-        [(<HTMLInputElement>document.getElementById('adc-c')).value, (<HTMLInputElement>document.getElementById('cal-c')).value]
-      ];
-
-      let invalid = 0;
       const validArray: number[][] = [];
 
-      for (const pair of readoutArray) {
-        const float1 = parseFloat(pair[0]);
-        const float2 = parseFloat(pair[1]);
+      for (const element of childElements) {
+        const id = element.id;
 
-        if (isNaN(float1) || isNaN(float2)) {
-          //validArray.push([-1, -1]);
-          invalid += 1;
-        } else {
-          validArray.push([float1, float2]);
-        }
-        if (invalid > 1) {
-          new ToastNotification('calibrationApplyError'); //popupNotification('cal-error');
+        if (!id) continue; // No idea, skip this element
 
-          const checkbox = <HTMLInputElement>document.getElementById('apply-cal');
-          checkbox.checked = false;
-          toggleCal(checkbox.checked);
+        const binInput = ((<HTMLInputElement>document.getElementById(`bin-${id}`)).value).trim();
+        const energyInput = ((<HTMLInputElement>document.getElementById(`cal-${id}`)).value).trim();
 
-          return;
-        }
+        if (!binInput.length || !energyInput.length) continue; // At least one input is empty
+
+        const bin = parseFloat(binInput);
+        const energy = parseFloat(energyInput);
+
+        if (isNaN(bin) || isNaN(energy)) continue; // Something is not a number
+        
+        validArray.push([bin, energy]);
       }
 
-      plot.calibration.points.aFrom = validArray[0][0];
-      plot.calibration.points.aTo = validArray[0][1];
-      plot.calibration.points.bFrom = validArray[1][0];
-      plot.calibration.points.bTo = validArray[1][1];
+      // Not enough points for at least a linear calibration
+      if (validArray.length < 2) {
+        new ToastNotification('calibrationApplyError'); //popupNotification('cal-error');
 
-      if (validArray.length === 3) {
-        plot.calibration.points.cTo = validArray[2][1];
-        plot.calibration.points.cFrom = validArray[2][0];
-      } else {
-        delete plot.calibration.points.cTo;
-        delete plot.calibration.points.cFrom;
+        const checkbox = <HTMLInputElement>document.getElementById('apply-cal');
+        checkbox.checked = false;
+        toggleCal(checkbox.checked);
+
+        return;
+      }
+
+      // Clear old points
+      for (const key in plot.calibration.points) {
+        delete plot.calibration.points[key];
+      }
+
+      // Add new points
+      for (const index in validArray) {
+        const bin = validArray[index][0];
+        const energy = validArray[index][1];
+        plot.calibration.points[bin] = energy;
       }
 
       await plot.computeCoefficients();
@@ -1245,9 +1386,10 @@ async function toggleCal(enabled: boolean): Promise<void> {
 
 
 function displayCoeffs(): void {
-  const arr = ['c1','c2','c3'];
-  for (const elem of arr) {
-    document.getElementById(`${elem}-coeff`)!.innerText = plot.calibration.coeff[elem].toString();
+  const masterCoeffElement = document.getElementById('energy-cal-coeff-list')!;
+
+  for (let i = 0; i < masterCoeffElement.children.length; i++) {
+    document.getElementById(`coeff-${i+1}`)!.innerText = (plot.calibration.coeff[`c${i+1}`] ?? 0).toString();
   }
 }
 
@@ -1255,15 +1397,28 @@ function displayCoeffs(): void {
 document.getElementById('calibration-reset')!.onclick = () => resetCal();
 
 function resetCal(): void {
-  for (const point in calClick) {
-    calClick[<CalType>point] = false;
-  }
+  calClick.clear(); // Clear all values from set
 
   const calSettings = document.getElementsByClassName('cal-setting');
   for (const element of <HTMLCollectionOf<HTMLInputElement>>calSettings) {
     element.disabled = false;
     element.value = '';
   }
+
+  const masterDivElementChilds = document.getElementById('calibration-input')!.children;
+  const buttonArray: HTMLButtonElement[] = [];
+  for (const child of masterDivElementChilds) {
+    const deleteButtons = child.getElementsByClassName('del-cal-btn');
+    for (const button of deleteButtons) {
+      buttonArray.push(<HTMLButtonElement>button);
+    }
+  }
+
+  for (const button of buttonArray) {
+    button?.click();
+  }
+
+  checkAndIncreaseCalibrationEntries(2); // Add at least two calibration bins for linear calibration
 
   document.getElementById('calibration-title')!.classList.add('d-none');
 
@@ -1272,13 +1427,10 @@ function resetCal(): void {
 }
 
 
-// Pretty ugly, but will get changed when implementing the n-poly calibration
-document.getElementById('select-a')!.onclick = event => toggleCalClick('a', (<HTMLInputElement>event.target).checked);
-document.getElementById('select-b')!.onclick = event => toggleCalClick('b', (<HTMLInputElement>event.target).checked);
-document.getElementById('select-c')!.onclick = event => toggleCalClick('c', (<HTMLInputElement>event.target).checked);
+function toggleCalClick(id: number, add: boolean): void {
+  calClick.delete(id); // Remove value from set
 
-function toggleCalClick(point: CalType, value: boolean): void {
-  calClick[point] = value;
+  if (add) calClick.add(id); // Add value back if needed
 }
 
 
@@ -1324,16 +1476,6 @@ function importCal(file: File): void {
       const result = (<string>reader.result).trim(); // A bit unclean for typescript, I'm sorry
       const obj = JSON.parse(result);
 
-      const readoutArray = [
-        <HTMLInputElement>document.getElementById('adc-a'),
-        <HTMLInputElement>document.getElementById('cal-a'),
-        <HTMLInputElement>document.getElementById('adc-b'),
-        <HTMLInputElement>document.getElementById('cal-b'),
-        <HTMLInputElement>document.getElementById('adc-c'),
-        <HTMLInputElement>document.getElementById('cal-c')
-      ];
-
-
       if (obj.imported) {
 
         const calSettings = document.getElementsByClassName('cal-setting');
@@ -1347,19 +1489,22 @@ function importCal(file: File): void {
         plot.calibration.imported = true;
 
       } else {
+        const masterDivElement = document.getElementById('calibration-input')!;
+        const childElements = masterDivElement.children;
+        
+        checkAndIncreaseCalibrationEntries(Object.keys(obj.points).length);
 
-        const inputArr = ['aFrom', 'aTo', 'bFrom', 'bTo', 'cFrom', 'cTo'];
-        for (const index in inputArr) {
-          if (obj.points === undefined || typeof obj.points === 'number') { // Keep compatability with old calibration files
-            readoutArray[index].value = obj[inputArr[index]];
-          } else { // New calibration files
-            readoutArray[index].value = obj.points[inputArr[index]];
-          }
+        let index = 0;
+
+        for (const [bin, energy] of Object.entries(<CoeffPoints>obj.points)) {
+          const id = childElements[index].id;
+          (<HTMLInputElement>document.getElementById(`bin-${id}`)).value = bin;
+          (<HTMLInputElement>document.getElementById(`cal-${id}`)).value = energy.toString();
+
+          oldCalVals[parseFloat(id)] = parseFloat(bin);
+
+          index++;
         }
-
-        oldCalVals.a = readoutArray[0].value;
-        oldCalVals.b = readoutArray[2].value;
-        oldCalVals.c = readoutArray[4].value;
       }
 
     } catch(e) {
@@ -1451,12 +1596,9 @@ function downloadCal(): void {
 
   let outStr = JSON.stringify(calObj);
 
-  if (calObj.coeff.c2 === 0 && calObj.coeff.c3 === 0) {
+  if (calObj.coeff.c1 === 0 && calObj.coeff.c2 === 0) {
     outStr = ''; // Nothing is calibrated, do not save anything
   }
-
-  if (!calObj.points.cFrom) delete calObj.points.cFrom;
-  if (!calObj.points.cTo) delete calObj.points.cTo;
 
   download(`calibration_${getDateString()}.json`, outStr, 'CAL');
 }
@@ -1488,13 +1630,8 @@ function makeXMLSpectrum(type: DataType, name: string): Element {
 
     const c = document.createElementNS(null, 'Coefficients');
     const coeffs: number[] = [];
-    const coeffObj = plot.calibration.coeff;
-
-    for (const index in coeffObj) {
-      coeffs.push(coeffObj[index]);
-    }
-    const coeffsRev = coeffs.reverse();
-    for (const val of coeffsRev) {
+    Object.values(plot.calibration.coeff).forEach(c => coeffs.push(c ?? 0));
+    for (const val of coeffs) {
       const coeff = document.createElementNS(null, 'Coefficient');
       coeff.textContent = val.toString();
       c.appendChild(coeff);
@@ -1668,8 +1805,8 @@ function makeJSONSpectrum(type: DataType): NPESv1Spectrum {
       polynomialOrder: 0,
       coefficients: <number[]>[]
     }
-    calObj.polynomialOrder = 2;
-    calObj.coefficients = [plot.calibration.coeff.c3, plot.calibration.coeff.c2, plot.calibration.coeff.c1];
+    calObj.polynomialOrder = Object.keys(plot.calibration.coeff).length - 1;
+    Object.values(plot.calibration.coeff).forEach(c => calObj.coefficients.push(c ?? 0));
     spec.energyCalibration = calObj;
   }
 
