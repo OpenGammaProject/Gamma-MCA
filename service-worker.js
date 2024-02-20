@@ -16,7 +16,7 @@ const OFFLINE_RESOURCES = [
                           '/404.html',
                           '/print.html',
                           '/assets/logo.svg',
-                          '/assets/js/plotly-basic.min.js',
+                          '/assets/js/external/plotly-basic.min.js',
                           '/dist/',
                           '/dist/main.css',
                           '/dist/notFound.css',
