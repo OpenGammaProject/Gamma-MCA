@@ -4,6 +4,7 @@ const path = require('path');
 // PLUGIN
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
+const AutoprefixerPlugin = require('autoprefixer');
 
 module.exports = {
   entry: {
@@ -41,7 +42,7 @@ module.exports = {
             loader: 'postcss-loader',
             options: {
               postcssOptions: {
-                plugins: () => [require('autoprefixer')],
+                plugins: () => [AutoprefixerPlugin],
               },
             },
           },
