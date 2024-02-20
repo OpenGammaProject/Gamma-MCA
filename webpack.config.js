@@ -3,6 +3,7 @@ const path = require('path');
 
 // PLUGIN
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 
 module.exports = {
   entry: {
@@ -49,6 +50,13 @@ module.exports = {
           },
         ],
       },
+    ],
+  },
+  optimization: {
+    minimizer: [
+      // Extend existing minimizers (i.e. `terser-webpack-plugin`)
+      '...',
+      new CssMinimizerPlugin(),
     ],
   },
   devServer: {

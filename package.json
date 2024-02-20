@@ -9,6 +9,7 @@
     "@typescript-eslint/parser": "^7.0.2",
     "autoprefixer": "^10.4.17",
     "css-loader": "^6.10.0",
+    "css-minimizer-webpack-plugin": "^6.0.0",
     "eslint": "^8.56.0",
     "mini-css-extract-plugin": "^2.8.0",
     "postcss-loader": "^8.1.0",
