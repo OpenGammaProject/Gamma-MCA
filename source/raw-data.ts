@@ -12,7 +12,7 @@
 
 import PolynomialRegression from './lib/regression/PolynomialRegression.min';
 import { CoeffObj } from './plot';
-import ZSchema = require('z-schema');
+import ZSchema from 'z-schema';
 
 export interface JSONParseError {
   code: string;
