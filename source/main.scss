@@ -1,0 +1,112 @@
+/*
+
+  Some of the extra CSS needed for Gamma MCA.
+
+  Gamma MCA: free, open-source web-MCA for gamma spectroscopy
+  2021, NuclearPhoenix.- Phoenix1747
+  https://nuclearphoenix.xyz
+
+*/
+
+/* Import all of Bootstrap's CSS */
+@import "~bootstrap/scss/bootstrap";
+
+/* Import all of Font Awesome's CSS */
+@import '@fortawesome/fontawesome-free/css/all.css';
+
+body {
+  font-size: 14px;
+}
+
+.main {
+  width: 95%;
+  /*max-width: 2000px;*/
+}
+
+.plot-div {
+  min-height: 400px;
+  /*max-height: 1200px;*/
+}
+
+@media (max-width: 767.98px) { /* bootstrap md breakpoint */
+
+  .plot-div {
+    min-height: 500px;
+    /*max-height: 1200px;*/
+  }
+
+}
+
+.fullscreen{
+  z-index: 999;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: 0px;
+  padding: 0px -10px 0px 10px;
+  overflow: hidden;
+  scrollbar-width: 0px;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.animation-very-slow {
+  --fa-animation-duration: 5s;
+}
+
+.animation-slow {
+  --fa-animation-duration: 2s;
+}
+
+.print-logo {
+  height: 40px;
+}
+
+.logo {
+  width: 27%;
+  height: auto;
+  max-height: 400px;
+}
+
+.logo-404 {
+  width: 10%;
+  max-height: 400px;
+}
+
+.iso-table-label {
+  pointer-events: none;
+}
+
+#loading-spinner {
+  width: 3rem;
+  height: 3rem;
+}
+
+#ser-time-progress-bar {
+  height: 12px;
+}
+
+#add-notes {
+  resize: none;
+}
+
+.calibration-form {
+  max-height: 140px;
+}
+
+/* SEEMS LIKE NOT NEEDED ANYMORE
+.toast-container {
+  z-index: 1111;
+}
+*/
+
+/* Special Settings for PWA */
+@media all and (display-mode: standalone) {
+  .main {
+    width: 100%;
+  }
+}

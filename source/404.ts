@@ -8,6 +8,9 @@
 
 */
 
+// Import the main CSS file
+import './main.scss';
+
 import { applyTheming, autoThemeChange } from './global-theming';
 
 const localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
