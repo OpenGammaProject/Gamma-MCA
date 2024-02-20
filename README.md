@@ -21,6 +21,7 @@ Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://
 * Serial console to control your device
 * Polynomial energy calibration (arbitrary n-th degree)
 * Gaussian correlation filtering for auto peak detection (energy and isotope)
+* Qualitative efficiency compensation for better high-energy peaks
 * Customizable and comprehensive list of common isotopes and their gamma-ray energies
 * Export interactive graphs of your spectrum to embed it into your website
 * ... and much more!
