@@ -38,9 +38,6 @@
 // Import the main CSS file
 import './main.scss';
 
-// Import all of Font Awesome's JS
-import '@fortawesome/fontawesome-free/js/all.js';
-
 // Import Bootstrap plugins
 import { Modal, Offcanvas, Toast } from 'bootstrap';
 
