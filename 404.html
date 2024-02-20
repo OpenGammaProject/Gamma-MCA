@@ -8,8 +8,10 @@
   	<meta name="language" content="English">
     <!--
       CSP: Only allow loading resources from this website.
+      Style-src: unsafe-inline needed for Font Awesome somehow.
     -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self';
+                                                        style-src 'self' 'unsafe-inline';">
 
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon/favicon-32x32.png">
@@ -21,13 +23,8 @@
     <meta name="theme-color" content="#f6bd16">
 
     <title>404 - Gamma MCA</title>
-
-    <link rel="stylesheet" href="/assets/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/assets/css/all.min.css">
-    <link rel="stylesheet" href="/assets/css/main.css">
-
-    <script defer src="/assets/js/bootstrap.min.js"></script>
     
+    <link rel="stylesheet" href="/dist/main.css">
     <script type="module" src="/dist/notFound.bundle.js"></script>
   </head>
   <body>

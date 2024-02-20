@@ -8,6 +8,8 @@
 
 */
 
+import { Toast } from 'bootstrap';
+
 interface NotificationData {
 	type: string;
 	delay?: number;
@@ -171,7 +173,7 @@ const notificationContents: NotificationStorage = {
 
 export class ToastNotification {
 	private toastElement: HTMLElement | undefined;
-	private toast: any | undefined;
+	private toast: Toast | undefined;
 	private toastContainer: HTMLElement | null;
 
 	constructor(type: string) {
@@ -227,7 +229,7 @@ export class ToastNotification {
 			this.toast = undefined;
 		});
 
-		this.toast = new (<any>window).bootstrap.Toast(root);
+		this.toast = new Toast(root);
 		this.toast.show();
 	}
 

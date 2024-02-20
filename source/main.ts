@@ -23,7 +23,8 @@
 
     - Sound card spectrometry prove of concept
     - Add support for IndexedDB API to store spectra locally inside the browser/app without the need for a filesystem
-    - Finish migrating to all npm packages and webpack
+    - Minify webpack dist packages
+    - Migrate Plotly.JS to npm package
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -34,6 +35,16 @@
 
 */
 
+// Import the main CSS file
+import './main.scss';
+
+// Import all of Font Awesome's JS
+import '@fortawesome/fontawesome-free/js/all.js';
+
+// Import Bootstrap plugins
+import { Modal, Offcanvas, Toast } from 'bootstrap';
+
+// Import other TS modules
 import { SpectrumPlot, SeekClosest, DownloadFormat, CalculateFWHM, CoeffPoints } from './plot';
 import { RawData, NPESv1, NPESv1Spectrum, JSONParseError, NPESv2 } from './raw-data';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial';
@@ -342,10 +353,11 @@ document.body.onload = async function(): Promise<void> {
       isoTableSortDirections[columnIndex] = sortDirection === 'asc' ? 'desc' : 'asc';
 
       thList.forEach((loopTableHeader, index) => {
-        const sortIcon = <HTMLElement>loopTableHeader.querySelector('.fa-solid');
-
-        sortIcon.classList.remove(...Object.values(faSortClasses)); // Remove all old icons
-        sortIcon.classList.add(faSortClasses[isoTableSortDirections[index+1]]); // Set new icons
+        const sortIcon = loopTableHeader.querySelector('.fa-solid');
+        if (sortIcon) {
+          sortIcon.classList.remove(...Object.values(faSortClasses)); // Remove all old icons
+          sortIcon.classList.add(faSortClasses[isoTableSortDirections[index+1]]); // Set new icons
+        }
       });
 
       sortTableByColumn(isoTable, columnIndex, isoTableSortDirections[columnIndex]); // Actually sort the table rows
@@ -642,8 +654,8 @@ function getFileData(file: File, type: FileImportType): void { // Gets called wh
 
       // Check if multiple files/errors were imported
       if (jsonData.length > 1) {
-        const fileSelectModalElement = document.getElementById('file-select-modal');
-        const fileSelectModal = new (<any>window).bootstrap.Modal(fileSelectModalElement);
+        const fileSelectModalElement = document.getElementById('file-select-modal')!;
+        const fileSelectModal = new Modal(fileSelectModalElement);
         const selectElement = (<HTMLSelectElement>document.getElementById('select-spectrum'));
 
         // Delete all previous options
@@ -716,8 +728,8 @@ function checkJSONImportError(filename: string, data: NPESv1 | JSONParseError): 
   if ('code' in data && 'description' in data) {
     //new ToastNotification('npesError'); //popupNotification('npes-error');
     // Pop up modal with more error information instead of just toast with oopsy
-    const importErrorModalElement = document.getElementById('import-error-modal');
-    const fileImportErrorModal = new (<any>window).bootstrap.Modal(importErrorModalElement);
+    const importErrorModalElement = document.getElementById('import-error-modal')!;
+    const fileImportErrorModal = new Modal(importErrorModalElement);
 
     // Change content according to error
     document.getElementById('error-filename')!.innerText = filename;
@@ -2150,14 +2162,20 @@ function printReport(): void {
 
 
 function legacyPopupNotification(id: string): void { // Uses Bootstrap Toasts already defined in HTML
-  const toast = new (<any>window).bootstrap.Toast(document.getElementById(id));
-  if (!toast.isShown()) toast.show();
+  const element = document.getElementById(id);
+  if (element) {
+    const toast = new Toast(element);
+    if (!toast.isShown()) toast.show();
+  }
 }
 
 
 function hideNotification(id: string): void {
-  const toast = new (<any>window).bootstrap.Toast(document.getElementById(id));
-  if (toast.isShown()) toast.hide();
+  const element = document.getElementById(id);
+  if (element) {
+    const toast = new Toast(element);
+    if (toast.isShown()) toast.hide();
+  }
 }
 
 
@@ -2410,7 +2428,7 @@ function bindHotkeys(): void {
       const offcanvasElement = document.getElementById('offcanvas');
       if (offcanvasElement && !offcanvasElement.classList.contains('show')) { // Exists and is not shown currently
         if (!offcanvasElement.classList.contains('showing')) { // Don't toggle while in transition
-          new (<any>window).bootstrap.Offcanvas(offcanvasElement).show(); // Offcanvas is closed, open it
+          new Offcanvas(offcanvasElement).show(); // Offcanvas is closed, open it
         }
       }
     }

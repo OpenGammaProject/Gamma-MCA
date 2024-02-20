@@ -10,9 +10,14 @@
 
 */
 
+// Import all of PolynomialRegression's JS
 import PolynomialRegression from './lib/regression/PolynomialRegression.min';
-import { CoeffObj } from './plot';
+
+// Import all of z-schema's JS
 import ZSchema from 'z-schema';
+
+// Import other TS modules
+import { CoeffObj } from './plot';
 
 export interface JSONParseError {
   code: string;
