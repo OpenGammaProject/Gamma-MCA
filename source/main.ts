@@ -23,7 +23,6 @@
 
     - Sound card spectrometry prove of concept
     - Add support for IndexedDB API to store spectra locally inside the browser/app without the need for a filesystem
-    - Minify webpack dist packages
     - Migrate Plotly.JS to npm package
 
   Known Issues/Problems/Limitations:
