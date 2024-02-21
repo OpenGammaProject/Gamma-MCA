@@ -3353,4 +3353,29 @@ function refreshRender(type: DataType, firstLoad = false): void {
 =========================================
 */
 
-// Looks to be a PITA just to get the raw data/volume/amplitude from the microphone in the browser
+/*
+  STILL A LOT TO DO.
+    - See: https://web.dev/articles/media-recording-audio
+    - See: https://developer.mozilla.org/en-US/docs/Web/API/MediaStream
+*/
+async function handleSuccess(stream: MediaStream): Promise<void> {
+  const context = new AudioContext();
+  const source = context.createMediaStreamSource(stream);
+
+  await context.audioWorklet.addModule('./webworker/audio-worker'); // URL DOES NOT WORK! See https://github.com/webpack/webpack/issues/11543
+  
+  const worklet = new AudioWorkletNode(context, 'worklet-processor');
+
+  source.connect(worklet);
+  worklet.connect(context.destination);
+
+  console.log('MediaStream', stream);
+  console.log('AudioTracks', stream.getAudioTracks());
+}
+
+
+document.getElementById('sound-start-btn')!.onclick = () => openMic();
+
+function openMic(): void {
+  navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(handleSuccess);
+}

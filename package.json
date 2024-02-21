@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@types/audioworklet": "^0.0.54",
     "@types/bootstrap": "^5.2.10",
     "@types/dom-screen-wake-lock": "^1.0.3",
     "@types/w3c-web-serial": "^1.0.6",
