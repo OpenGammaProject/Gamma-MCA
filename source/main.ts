@@ -44,7 +44,6 @@ import { Modal, Offcanvas, Toast } from 'bootstrap';
 import { SpectrumPlot, SeekClosest, DownloadFormat, CalculateFWHM, CoeffPoints } from './plot';
 import { RawData, NPESv1, NPESv1Spectrum, JSONParseError, NPESv2 } from './raw-data';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial';
-import { WebUSBSerialPort } from './lib/webusbserial-min'
 import { ToastNotification, launchSysNotification } from './notifications';
 import { applyTheming, autoThemeChange } from './global-theming';
 
