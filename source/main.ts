@@ -23,7 +23,6 @@
 
     - Sound card spectrometry prove of concept
     - Add support for IndexedDB API to store spectra locally inside the browser/app without the need for a filesystem
-    - Migrate Plotly.JS to npm package
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -39,6 +38,9 @@ import './main.scss';
 
 // Import Bootstrap plugins
 import { Modal, Offcanvas, Toast } from 'bootstrap';
+
+// Import Plotly.js
+import Plotly, { PlotHoverEvent, PlotMouseEvent, PlotSelectionEvent, PlotlyHTMLElement } from 'plotly.js-basic-dist-min';
 
 // Import other TS modules
 import { SpectrumPlot, SeekClosest, DownloadFormat, CalculateFWHM, CoeffPoints } from './plot';
@@ -1051,27 +1053,31 @@ function changeSma(input: HTMLInputElement): void {
 function bindPlotEvents(): void {
   if (!plot.plotDiv) return;
 
-  const myPlot = <any>plot.plotDiv; 
+  const myPlot = <PlotlyHTMLElement>plot.plotDiv;
   myPlot.on('plotly_hover', hoverEvent);
   myPlot.on('plotly_unhover', unHover);
   myPlot.on('plotly_click', clickEvent);
   myPlot.on('plotly_selected', selectEvent);
-  myPlot.addEventListener('contextmenu', (event: PointerEvent) => {
+  myPlot.addEventListener('contextmenu', (event: MouseEvent) => {
     event.preventDefault(); // Prevent the context menu from opening inside the plot!
   });
 }
 
 
-function hoverEvent(data: any): void {
-  for (const id of calClick) {
-    (<HTMLInputElement>document.getElementById(`bin-${id}`)).value = data.points[0].x.toFixed(2);
-  }
+function hoverEvent(data: PlotHoverEvent): void {
+  const dataPoint = data.points[0].x;
 
-  if (checkNearIso) closestIso(data.points[0].x);
+  if (typeof dataPoint === 'number') {
+    for (const id of calClick) {
+      (<HTMLInputElement>document.getElementById(`bin-${id}`)).value = dataPoint.toFixed(2);
+    }
+  
+    if (checkNearIso) closestIso(dataPoint);
+  }
 }
 
 
-function unHover(/*data: any*/): void {
+function unHover(/*data: PlotMouseEvent*/): void {
   for (const id of calClick) {
     (<HTMLInputElement>document.getElementById(`bin-${id}`)).value = (oldCalVals[id] ?? '').toString();
   }
@@ -1085,32 +1091,37 @@ function unHover(/*data: any*/): void {
 
 let prevClickLine: number | undefined;
 
-function clickEvent(data: any): void {
-  const xClickData = data.points[0].x.toFixed(2);
+function clickEvent(data: PlotMouseEvent): void {
+  const dataPointX = data.points[0].x;
+  const dataPointY = data.points[0].y;
 
-  document.getElementById('click-data')!.innerText = xClickData + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
+  if (typeof dataPointX === 'number' && typeof dataPointY === 'number') {
+    const xClickData = dataPointX.toFixed(2);
 
-  for (const id of calClick) {
-    (<HTMLInputElement>document.getElementById(`bin-${id}`)).value = xClickData;
-    oldCalVals[id] = xClickData;
-    calClick.delete(id);
-    (<HTMLInputElement>document.getElementById(`select-bin-${id}`)).checked = false;
+    document.getElementById('click-data')!.innerText = xClickData + data.points[0].xaxis.ticksuffix + ': ' + dataPointY.toFixed(2) + data.points[0].yaxis.ticksuffix;
+
+    for (const id of calClick) {
+      (<HTMLInputElement>document.getElementById(`bin-${id}`)).value = xClickData;
+      oldCalVals[id] = dataPointX;
+      calClick.delete(id);
+      (<HTMLInputElement>document.getElementById(`select-bin-${id}`)).checked = false;
+    }
+
+    if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false); // Delete the last line
+
+    if (data.event.button === 0) { // Left-click. spawn a line in the plot
+      const newLine = Math.round(dataPointX);
+      plot.toggleLine(newLine, newLine.toString(), true);
+      prevClickLine = newLine;
+    } else if (data.event.button === 2) { // Right-click, delete old line
+      prevClickLine = undefined;
+    }
+    plot.updatePlot(spectrumData);
   }
-
-  if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false); // Delete the last line
-
-  if (data.event.button === 0) { // Left-click. spawn a line in the plot
-    const newLine = Math.round(data.points[0].x);
-    plot.toggleLine(newLine, newLine.toString(), true);
-    prevClickLine = newLine;
-  } else if (data.event.button === 2) { // Right-click, delete old line
-    prevClickLine = undefined;
-  }
-  plot.updatePlot(spectrumData);
 }
 
 
-function selectEvent(data: any): void {
+function selectEvent(data: PlotSelectionEvent): void {
   /* // Just a reminder on how to modify trace color for a specific selection. Doesn't work as expected though.
   data.points.forEach(function(pt: any) {
     x.push(pt.x);
@@ -2140,14 +2151,16 @@ function printReport(): void {
       }
 
       // Last step: Create an image element of the saved plot
-      (<any>window).Plotly.toImage(plot.plotDiv,{format: 'png', height: 400, width: 1000}).then(
-        function (url: string) {
-          const img = <HTMLImageElement>printDocument.getElementById('plot-image');
-          img.src = url;
-
-          img.onload = () => printWindow.print(); // Finally print the window if the image has been loaded
-        }
-      );
+      if (plot.plotDiv) {
+        Plotly.toImage(plot.plotDiv,{format: 'png', height: 400, width: 1000}).then(
+          function (url: string) {
+            const img = <HTMLImageElement>printDocument.getElementById('plot-image');
+            img.src = url;
+  
+            img.onload = () => printWindow.print(); // Finally print the window if the image has been loaded
+          }
+        );
+      }
     };
 
     printWindow.onafterprint = () => printWindow.close(); // Close the new print tab after printing
