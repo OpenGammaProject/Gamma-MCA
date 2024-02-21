@@ -18,11 +18,11 @@
     - NPESv2: Create additional save (append) button that allows users to save multiple data packages in one file
     - NPESv2: Let user remove data packages from file in the import selection dialog
     - Automatically close system notifications when the user interacts with the page again
-    - Web Worker for Isotope Seek, FWHM Calculation, Plot update, Gaussian correlation
+    - Web Worker for Isotope Seek, FWHM Calculation, Plot update, Gaussian correlation (improved performance?)
     - Fully-fledged efficiency calibration
+    - Add support for IndexedDB API to store spectra locally inside the browser/app without the need for a filesystem (discussions/227)
 
     - Sound card spectrometry prove of concept
-    - Add support for IndexedDB API to store spectra locally inside the browser/app without the need for a filesystem
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
