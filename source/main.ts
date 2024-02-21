@@ -2870,7 +2870,7 @@ function serialConnect(/*event: Event*/): void {
 
 
 function serialDisconnect(event: Event): void {
-  if (serRecorder?.isThisPort(<SerialPort | WebUSBSerialPort>event.target)) disconnectPort(true);
+  if (serRecorder?.isThisPort(<SerialPort | USBDevice>event.target)) disconnectPort(true);
 
   listSerial();
 
@@ -2910,7 +2910,9 @@ async function listSerial(): Promise<void> {
     option.text = `Port ${index} (${portsAvail[index]?.getInfo()})`;
     portSelector.add(option, parseInt(index));
 
-    if (serRecorder?.isThisPort(portsAvail[index]?.getPort())) {
+    const newPort = portsAvail[index]?.getPort();
+
+    if (newPort && serRecorder?.isThisPort(newPort)) {
       selectIndex = parseInt(index);
       option.text = '> ' + option.text;
     }
@@ -2958,9 +2960,17 @@ function selectPort(): number {
   const selectedPort = (<HTMLSelectElement>document.getElementById('port-selector')).selectedIndex;
   const newport = portsAvail[selectedPort];
 
-  if (newport && !serRecorder?.isThisPort(newport.getPort())) { // serRecorder?.port != newport
-    serRecorder = new SerialManager(newport);
-    clearConsoleLog(); // Clear serial console history
+  if (newport) {
+    const newPortPort = newport.getPort();
+
+    if (!serRecorder?.isThisPort(newPortPort)) { // serRecorder?.port != newport
+      if (serRecorder?.recording) disconnectPort(true); // Important for serial console: Stop recording when opening another device in the console
+
+      serRecorder = new SerialManager(newport);
+      clearConsoleLog(); // Clear serial console history
+
+      listSerial(); // Update list to show used port correctly
+    }
   }
 
   return selectedPort;
