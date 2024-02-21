@@ -288,9 +288,9 @@ export class SpectrumPlot {
     lines: <number[]>[]
   };
   gaussSigma = 2;
-  private customDownloadButton = {
-    name: 'downloadPlot',
-    title: 'Download plot as HTML',
+  private customExportButton = {
+    name: 'exportPlot',
+    title: 'Export plot as HTML',
     icon: (<any>window).Plotly.Icons['disk'],
     direction: 'up',
     click: (plotElement: any) => {
@@ -887,7 +887,7 @@ export class SpectrumPlot {
         ['zoomIn2d', 'zoomOut2d'],
         ['autoScale2d', 'resetScale2d'],
         ['toImage'],
-        [this.customDownloadButton],
+        [this.customExportButton],
         [this.customFullscreenButton]
       ]
     };
@@ -1042,7 +1042,7 @@ export class SpectrumPlot {
         ['zoomIn2d', 'zoomOut2d'],
         ['autoScale2d', 'resetScale2d'],
         ['toImage'],
-        [this.customDownloadButton],
+        [this.customExportButton],
         [this.customFullscreenButton]
       ]
     };
@@ -1321,7 +1321,7 @@ export class SpectrumPlot {
         ['zoomIn2d', 'zoomOut2d'],
         ['autoScale2d', 'resetScale2d'],
         ['toImage'],
-        [this.customDownloadButton],
+        [this.customExportButton],
         [this.customFullscreenButton]
       ]
     };

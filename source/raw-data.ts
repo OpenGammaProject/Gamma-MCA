@@ -90,8 +90,8 @@ interface ImportDataMeta {
 }
 
 interface SchemaJSONStorage {
-  NPESv1: any;
-  NPESv2: any;
+  NPESv1: NPESv1 | undefined;
+  NPESv2: NPESv2 | undefined;
 }
 
 interface CSVData {
@@ -268,10 +268,14 @@ export class RawData {
   }
 
   async jsonToObject(data: string): Promise<NPESv1[] | JSONParseError[]> {
-    let json: any;
+    let json: unknown;
 
     try {
       json = JSON.parse(data);
+
+      if (!json || typeof json !== 'object') {
+        throw 'Not a valid object!';
+      }
     } catch (e) {
       console.error(e);
       return [{code: 'JSON_PARSE_ERROR', description: `A problem with the JSON formatting occured when trying to parse the contents of the file: ${e}`}];
@@ -280,11 +284,15 @@ export class RawData {
     let version: 'NPESv1' | 'NPESv2';
 
     try {
-      // Detect schemaVersion (either NPESv1 or NPESv2)
-      if (json.schemaVersion === 'NPESv1' || json.schemaVersion === 'NPESv2') {
-        version = json.schemaVersion;
+      if ('schemaVersion' in json) {
+        // Detect schemaVersion (either NPESv1 or NPESv2)
+        if (json.schemaVersion === 'NPESv1' || json.schemaVersion === 'NPESv2') {
+          version = json.schemaVersion;
+        } else {
+          throw `schemaVersion is neither NPESv1 nor NPESv2, but ${json.schemaVersion}!`;
+        }
       } else {
-        throw `schemaVersion is neither NPESv1 nor NPESv2, but ${json.schemaVersion}!`;
+        throw 'No schemaVersion was supplied, cannot parse data!';
       }
     } catch(e) {
       console.error(e);

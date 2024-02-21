@@ -276,7 +276,8 @@ document.body.onload = async function(): Promise<void> {
   document.getElementById('version-tag')!.innerText += ` ${APP_VERSION}.`;
 
   if (localStorageAvailable) {
-    if (loadJSON('lastVisit') <= 0) {
+    const lastVisit = loadJSON('lastVisit');
+    if (!(typeof lastVisit === 'number' && lastVisit > 0)) {
       new ToastNotification('welcomeMessage'); //popupNotification('welcome-msg');
       if (notificationsAvailable) legacyPopupNotification('ask-notifications'); // Show notifications notification on first visit
 
@@ -289,13 +290,13 @@ document.body.onload = async function(): Promise<void> {
     const sVal = loadJSON('serialDataMode'); // ids: s1, s2
     const rVal = loadJSON('fileDataMode'); // ids: r1, r2
 
-    if (sVal) {
+    if (typeof sVal === 'string') {
       const element = <HTMLInputElement>document.getElementById(sVal);
       element.checked = true;
       selectSerialType(element);
     }
 
-    if (rVal) {
+    if (typeof rVal === 'string') {
       const element = <HTMLInputElement>document.getElementById(rVal);
       element.checked = true;
       selectFileType(element);
@@ -304,7 +305,7 @@ document.body.onload = async function(): Promise<void> {
     document.getElementById('ls-unavailable')?.remove(); // Remove saving alert
 
     const getAutoScrollValue = loadJSON('consoleAutoscrollEnabled');
-    if (getAutoScrollValue) {
+    if (typeof getAutoScrollValue === 'boolean' && getAutoScrollValue) {
       autoscrollEnabled = getAutoScrollValue;
       (<HTMLInputElement>document.getElementById('autoscroll-console')).checked = getAutoScrollValue;
     }
@@ -860,7 +861,7 @@ function getJSONSelectionData(): void {
 
 
 function checkAutosave(): void {
-  const data: string | undefined = loadJSON('autosave');
+  const data = loadJSON('autosave');
 
   if (data) legacyPopupNotification('autosave-dialog'); // Show notification on first visit
 }
@@ -870,12 +871,12 @@ document.getElementById('restore-data-btn')!.onclick = () => loadAutosave(true);
 document.getElementById('discard-data-btn')!.onclick = () => loadAutosave(false);
 
 async function loadAutosave(restore: boolean): Promise<void> {
-  const data: string | undefined = loadJSON('autosave');
+  const data = loadJSON('autosave');
 
   if (data) {
     localStorage.removeItem('autosave'); // Delete autosave data
 
-    if (restore) {
+    if (restore && typeof data === 'string') {
       const objData = await raw.jsonToObject(data);
 
       if (objData.length) {
@@ -2472,7 +2473,7 @@ function saveJSON(name: string, value: string | boolean | number): boolean {
 }
 
 
-function loadJSON(name: string): any {
+function loadJSON(name: string): unknown {
   return JSON.parse(<string>localStorage.getItem(name));
 }
 
@@ -2570,72 +2571,72 @@ function loadSettingsDefault(): void {
 
 function loadSettingsStorage(): void {
   let setting = loadJSON('allowNotifications');
-  if (notificationsAvailable && setting !== null) allowNotifications = setting && (Notification.permission === 'granted');
+  if (notificationsAvailable && typeof setting === 'boolean') allowNotifications = setting && (Notification.permission === 'granted');
 
   setting = loadJSON('customURL');
-  if (setting) isoListURL = new URL(setting).href;
+  if (typeof setting === 'string') isoListURL = new URL(setting).href;
 
   setting = loadJSON('editMode');
-  if (setting !== null) plot.editableMode = setting;
+  if (typeof setting === 'boolean') plot.editableMode = setting;
 
   setting = loadJSON('fileDelimiter');
-  if (setting !== null) raw.delimiter = setting;
+  if (typeof setting === 'string') raw.delimiter = setting;
 
   setting = loadJSON('fileChannels');
-  if (setting !== null) raw.adcChannels = setting;
+  if (typeof setting === 'number') raw.adcChannels = setting;
 
   setting = loadJSON('plotRefreshRate');
-  if (setting !== null) refreshRate = setting;
+  if (typeof setting === 'number') refreshRate = setting;
 
   setting = loadJSON('serBufferSize');
-  if (setting !== null) SerialManager.maxSize = setting;
+  if (typeof setting === 'number') SerialManager.maxSize = setting;
 
   setting = loadJSON('timeLimitBool');
-  if (setting !== null) maxRecTimeEnabled = setting;
+  if (typeof setting === 'boolean') maxRecTimeEnabled = setting;
 
   setting = loadJSON('timeLimit');
-  if (setting !== null) maxRecTime = setting;
+  if (typeof setting === 'number') maxRecTime = setting;
 
   setting = loadJSON('maxIsoDist');
-  if (setting !== null) maxDist = setting;
+  if (typeof setting === 'number') maxDist = setting;
 
   setting = loadJSON('baudRate');
-  if (setting !== null) SerialManager.baudRate = setting;
+  if (typeof setting === 'number') SerialManager.baudRate = setting;
 
   setting = loadJSON('eolChar');
-  if (setting !== null) SerialManager.eolChar = setting;
+  if (typeof setting === 'string') SerialManager.eolChar = setting;
 
   setting = loadJSON('serChannels');
-  if (setting !== null) SerialManager.adcChannels = setting;
+  if (typeof setting === 'number') SerialManager.adcChannels = setting;
 
   setting = loadJSON('smaLength');
-  if (setting !== null) plot.smaLength = setting;
+  if (typeof setting === 'number') plot.smaLength = setting;
 
   setting = loadJSON('peakThres');
-  if (setting !== null) plot.peakConfig.thres = setting;
+  if (typeof setting === 'number') plot.peakConfig.thres = setting;
 
   setting = loadJSON('peakLag');
-  if (setting !== null) plot.peakConfig.lag = setting;
+  if (typeof setting === 'number') plot.peakConfig.lag = setting;
 
   setting = loadJSON('seekWidth');
-  if (setting !== null) SeekClosest.seekWidth = setting;
+  if (typeof setting === 'number') SeekClosest.seekWidth = setting;
 
   setting = loadJSON('plotDownload');
-  if (setting !== null) plot.downloadFormat = setting;
+  if (setting === 'svg' || setting === 'png' || setting === 'jpeg' || setting === 'webp') plot.downloadFormat = setting;
 
   // Setting for dark mode is right at the beginning of the file
 
   setting = loadJSON('gaussSigma');
-  if (setting !== null) plot.gaussSigma = setting;
+  if (typeof setting === 'number') plot.gaussSigma = setting;
 
   setting = loadJSON('showEnergyRes');
-  if (setting !== null) plot.peakConfig.showFWHM = setting;
+  if (typeof setting === 'boolean') plot.peakConfig.showFWHM = setting;
 
   setting = loadJSON('useFWHMFast');
-  if (setting !== null) CalculateFWHM.fastMode = setting;
+  if (typeof setting === 'boolean') CalculateFWHM.fastMode = setting;
 
   setting = loadJSON('newPeakStyle');
-  if (setting !== null) plot.peakConfig.newPeakStyle = setting;
+  if (typeof setting === 'boolean') plot.peakConfig.newPeakStyle = setting;
 }
 
 
