@@ -1,0 +1,7 @@
+{
+    "extends": "../../tsconfig.json",
+    "compilerOptions": {
+        // "outFile": "../built/local/tsc.js",
+        "lib": ["ES2022", "WebWorker"],
+    }
+}

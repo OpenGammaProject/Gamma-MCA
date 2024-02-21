@@ -4,25 +4,26 @@
 
 Progressive web application for gamma spectroscopy (multi-channel analyzer/MCA) including file and live plot support via the serial interface.
 
-![Example spectrum](docs/thumbnail.png)
+[![Example spectrum](docs/thumbnail.png)](https://www.youtube.com/watch?v=dkMhoUwDla0) _(Click image for a short trailer video)_
 
 Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://github.com/plotly/plotly.js), [Font Awesome](https://github.com/FortAwesome/Font-Awesome), [Z-Schema](https://github.com/zaggino/z-schema) and some more.
 
 ## Feature Overview
 
-* No installation required - accessible on every internet-connected device
+* No installation required - accessible through every modern browser
 * Can be easily installed for stand-alone offline use
-* Straightforward interface to get down to business
+* Straightforward interface to get down to business, no hidden submenus
+* Probably one of the most beautiful spectrum analyzers out there, includes dark and light modes
 * File import of common data formats (e.g. CSV, TKA, XML, JSON)
-* Export JSON/XML files combining all the spectra, calibration data and sample info
+* Export JSON and XML all-in-one files (includes sample info, calibration, multiple spectra)
 * Live plotting via the serial interface, compatible with any serial device (e.g. Arduino) on [desktop](https://caniuse.com/web-serial)
-* Compatible with serial FTDI chips on [mobile](https://caniuse.com/webusb)
+* Compatible with serial (FTDI) chips on [mobile](https://caniuse.com/webusb)
 * Serial console to control your device
-* Linear and quadratic energy calibration
-* Gaussian correlation filtering for peak detection
-* Customizable list of common isotopes and their gamma-ray energies
+* Polynomial energy calibration (arbitrary n-th degree)
+* Gaussian correlation filtering for auto peak detection (energy and isotope)
+* Qualitative efficiency compensation for better high-energy peaks
+* Customizable and comprehensive list of common isotopes and their gamma-ray energies
 * Export interactive graphs of your spectrum to embed it into your website
-* Automatic peak detection (energy and isotope)
 * ... and much more!
 
 ![Example spectrum in dark mode](docs/thumbnail_dark.png)
@@ -64,7 +65,17 @@ Example (4096 channels):
 
 Both modes are currently supported by our [Open Gamma Detector](https://github.com/OpenGammaProject/Open-Gamma-Detector) or any other serial device that has been set up to do so.
 
-**Note:** Both APIs are currently mainly supported by Chromium-based browsers, both on desktop and on mobile! This includes most browsers except for Safari and Firefox. The feature is either enabled by default or you have to enable it in the settings yourself. See [Can I Use? Web Serial API](https://caniuse.com/web-serial) and [Can I Use? WebUSB](https://caniuse.com/webusb).
+## Requirements
+
+**Gamma MCA should work in any modern browser version that is no older than roughly the start of 2023.** If you're using an older browser version (it's highly recommended to update) there are some fallbacks to most of the important the functions. The OS of your device doesn't matter.
+
+Some functions such as the [Web Serial API](https://caniuse.com/web-serial) and [WebUSB](https://caniuse.com/webusb) are only supported in **Chromium-based browsers** (Google Chrome, MS Edge, Opera, ...) and not Safari or Firefox. Support on mobile devices can differ so YMMV.
+
+Most of the progressive web app functionality (PWA) is supported by most browsers (Chrome, Firefox, Safari, ...). However, the **full feature set is unfortunately only available in Google Chrome or MS Edge** at the moment of writing. This might change in the future.
+
+**Weaker systems might experience artifacting, a reduced count rate or even spiking in the count rate when switching tabs, plots or changing settings.** Any reasonably powerful machine in 2023 and beyond should be more than capable to run Gamma MCA in any use case, though. Problems can occur for example on **SBCs, mobile or special mini-PCs**. This mostly happens when a lot of data has been collected, i.e. for long live recordings. Most of the processing power actually goes to refreshing the plot, so increasing the `Data Refresh Time` can be helpful there!
+
+**tl;dr:** Use Chrome or Edge on a machine that can play 1080p60 videos on Youtube in the background without you noticing any performance hits.
 
 ## Using Locally
 

@@ -10,8 +10,14 @@
 
 */
 
-import './external/ZSchema-browser-min.js'; // ZSchema to validate JSON Schemas
-import { CoeffObj } from './plot.js';
+// Import all of PolynomialRegression's JS
+import PolynomialRegression from './lib/regression/PolynomialRegression.min';
+
+// Import all of z-schema's JS
+import ZSchema from 'z-schema';
+
+// Import other TS modules
+import { CoeffObj } from './plot';
 
 export interface JSONParseError {
   code: string;
@@ -84,8 +90,13 @@ interface ImportDataMeta {
 }
 
 interface SchemaJSONStorage {
-  NPESv1: any;
-  NPESv2: any;
+  NPESv1: NPESv1 | undefined;
+  NPESv2: NPESv2 | undefined;
+}
+
+interface CSVData {
+  histogramData: number[];
+  calibrationCoefficients: number[] | undefined;
 }
 
 export class RawData {
@@ -134,18 +145,47 @@ export class RawData {
     return xArray;
   }
 
-  csvToArray(data: string): number[] {
+  private parseCalibration(valueArray: string[]): number[] | undefined {
+    if (!this.tempValIndex) return undefined; // Only one column, return no calibration
+    if (valueArray.length < 3) return undefined; // Not enough data to get the coefficients, return no calibration
+
+    const xEnergyData = valueArray.map((value) => parseFloat(value.split(this.delimiter)[0].trim())/*, this*/);
+    const regressionArray: {x: number, y: number}[] = [];
+
+    for (const index in xEnergyData) {
+      const newObj  = {
+        x: parseInt(index),
+        y: xEnergyData[index]
+      };
+      regressionArray.push(newObj);
+    }
+
+    const model = PolynomialRegression.read(regressionArray, 3); // Use degree 3 for a good default calibration
+    const terms = model.getTerms();
+
+    return terms;
+  }
+
+  csvToArray(data: string): CSVData {
     this.tempValIndex = this.valueIndex; // RESET VALUE INDEX
+
+    const returnData: CSVData = {
+      histogramData: [],
+      calibrationCoefficients: undefined
+    };
 
     if (this.fileType === 1) { // HISTOGRAM
       const dataLines = data.split('\n').filter(this.checkLines, this);
 
-      return dataLines.map(this.parseLines, this);
+      returnData.calibrationCoefficients = this.parseCalibration(dataLines); // Get linear calibration data
+      returnData.histogramData = dataLines.map(this.parseLines, this);
     } else { // CHRONOLOGICAL STREAM
       const dataEvents = data.split(this.delimiter).filter(this.checkLines, this);
 
-      return this.histConverter(dataEvents.map(this.parseLines, this));
+      returnData.histogramData = this.histConverter(dataEvents.map(this.parseLines, this));
     }
+
+    return returnData;
   }
 
   xmlToArray(data: string): XMLImportData {
@@ -198,7 +238,7 @@ export class RawData {
         const coeffNumArray = Array.from(calCoeffs).map(item => parseFloat((item.textContent ?? '0')));
 
         for (const i in coeffNumArray) {
-          coeff['c' + (parseInt(i) + 1).toString()] = coeffNumArray[2 - parseInt(i)];
+          coeff['c' + (parseInt(i) + 1).toString()] = coeffNumArray[parseInt(i)];
         }
       }
 
@@ -228,10 +268,14 @@ export class RawData {
   }
 
   async jsonToObject(data: string): Promise<NPESv1[] | JSONParseError[]> {
-    let json: any;
+    let json: unknown;
 
     try {
       json = JSON.parse(data);
+
+      if (!json || typeof json !== 'object') {
+        throw 'Not a valid object!';
+      }
     } catch (e) {
       console.error(e);
       return [{code: 'JSON_PARSE_ERROR', description: `A problem with the JSON formatting occured when trying to parse the contents of the file: ${e}`}];
@@ -240,11 +284,15 @@ export class RawData {
     let version: 'NPESv1' | 'NPESv2';
 
     try {
-      // Detect schemaVersion (either NPESv1 or NPESv2)
-      if (json.schemaVersion === 'NPESv1' || json.schemaVersion === 'NPESv2') {
-        version = json.schemaVersion;
+      if ('schemaVersion' in json) {
+        // Detect schemaVersion (either NPESv1 or NPESv2)
+        if (json.schemaVersion === 'NPESv1' || json.schemaVersion === 'NPESv2') {
+          version = json.schemaVersion;
+        } else {
+          throw `schemaVersion is neither NPESv1 nor NPESv2, but ${json.schemaVersion}!`;
+        }
       } else {
-        throw `schemaVersion is neither NPESv1 nor NPESv2, but ${json.schemaVersion}!`;
+        throw 'No schemaVersion was supplied, cannot parse data!';
       }
     } catch(e) {
       console.error(e);
@@ -265,17 +313,7 @@ export class RawData {
         }
       }
 
-      /* // OLD METHOD
-      const scripts = Array.from(document.querySelectorAll('script')).map(scr => scr.src);
-      if (!scripts.includes('/assets/js/external/ZSchema-browser-min.js')) {
-        const tag = document.createElement('script');
-        tag.src = '/assets/js/external/ZSchema-browser-min.js';
-        tag.async = true;
-        tag.onload =
-        document.getElementsByTagName('head')[0].appendChild(tag);
-      }
-      */
-      const validator = new (<any>window).ZSchema();
+      const validator = new ZSchema({}); // Use empty default options/config
       validator.validate(json, this.schemaJSON[version]);
       const errors = validator.getLastErrors();
 

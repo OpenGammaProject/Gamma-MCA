@@ -7,10 +7,6 @@
 
   ===============================
 
-  Long Term Todo:
-    - Use Webpack to bundle everything
-    - Remove all any types
-
   Possible Future Improvements:
     - (?) Highlight plot lines in ROI selection
     - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with a (right-)click
@@ -22,6 +18,9 @@
     - NPESv2: Create additional save (append) button that allows users to save multiple data packages in one file
     - NPESv2: Let user remove data packages from file in the import selection dialog
     - Automatically close system notifications when the user interacts with the page again
+    - Web Worker for Isotope Seek, FWHM Calculation, Plot update, Gaussian correlation (improved performance?)
+    - Fully-fledged efficiency calibration
+    - Add support for IndexedDB API to store spectra locally inside the browser/app without the need for a filesystem (discussions/227)
 
     - Sound card spectrometry prove of concept
 
@@ -34,12 +33,21 @@
 
 */
 
-import { SpectrumPlot, SeekClosest, DownloadFormat, CalculateFWHM } from './plot.js';
-import { RawData, NPESv1, NPESv1Spectrum, JSONParseError, NPESv2 } from './raw-data.js';
-import { SerialManager, WebSerial, WebUSBSerial } from './serial.js';
-import { WebUSBSerialPort } from './external/webusbserial-min.js'
-import { ToastNotification, launchSysNotification } from './notifications.js';
-import { applyTheming, autoThemeChange } from './global-theming.js';
+// Import the main CSS file
+import './main.scss';
+
+// Import Bootstrap plugins
+import { Modal, Offcanvas, Toast } from 'bootstrap';
+
+// Import Plotly.js
+import Plotly, { PlotHoverEvent, PlotMouseEvent, PlotSelectionEvent, PlotlyHTMLElement } from 'plotly.js-basic-dist-min';
+
+// Import other TS modules
+import { SpectrumPlot, SeekClosest, DownloadFormat, CalculateFWHM, CoeffPoints } from './plot';
+import { RawData, NPESv1, NPESv1Spectrum, JSONParseError, NPESv2 } from './raw-data';
+import { SerialManager, WebSerial, WebUSBSerial } from './serial';
+import { ToastNotification, launchSysNotification } from './notifications';
+import { applyTheming, autoThemeChange } from './global-theming';
 
 export interface IsotopeList {
   [key: string]: number[];
@@ -56,10 +64,9 @@ interface FileSelectData {
 }
 
 export type DataOrder = 'hist' | 'chron';
-type CalType = 'a' | 'b' | 'c';
 type DataType = 'data' | 'background';
 type PortList = (WebSerial | WebUSBSerial | undefined)[];
-type DownloadType = 'CAL' | 'XML' | 'JSON' | 'CSV';
+type DownloadType = 'CAL' | 'XML' | 'JSON' | 'EVOL' | 'CSV';
 type SortTypes = 'asc' | 'desc' | 'none';
 type FileImportType = DataType | 'both';
 
@@ -110,8 +117,8 @@ const plot = new SpectrumPlot('plot');
 const raw = new RawData(1); // 2=raw, 1=hist
 
 // Other "global" vars
-const calClick = { a: false, b: false, c: false };
-const oldCalVals = { a: '', b: '', c: ''};
+const calClick = new Set<number>();
+const oldCalVals: { [key: number ]: number | undefined } = {};
 
 let portsAvail: PortList = [];
 let refreshRate = 1000; // Delay in ms between serial plot updates
@@ -128,7 +135,7 @@ const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2024-01-10';
+const APP_VERSION = '2024-02-19';
 const localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 const wakeLockAvailable = 'wakeLock' in navigator; // Test for Screen Wake Lock API
 const notificationsAvailable = 'Notification' in window; // Test for Notifications API
@@ -154,6 +161,7 @@ const hotkeys = {
   't': 'plot-type',
   'i': 'iso-hover-label',
   'p': 'peak-finder-btn',
+  'e': 'enhance-eff-label',
   '1': 'file-import-tab',
   '2': 'serial-tab',
   '3': 'sound-tab',
@@ -224,15 +232,12 @@ document.body.onload = async function(): Promise<void> {
   isoListURL = new URL(isoListURL, window.location.origin).href;
 
   if (navigator.serial || navigator.usb) { // Web Serial API or fallback Web USB API with FTDx JS driver
-    const serErrDiv = document.getElementById('serial-error')!;
-    serErrDiv.parentNode!.removeChild(serErrDiv); // Delete Serial Not Supported Warning
+    document.getElementById('serial-error')?.remove(); // Delete Serial Not Supported Warning
     navigator[navigator.serial ? 'serial' : 'usb'].addEventListener('connect', serialConnect);
     navigator[navigator.serial ? 'serial' : 'usb'].addEventListener('disconnect', serialDisconnect);
     listSerial(); // List Available Serial Ports
   } else {
-    const serDiv = document.getElementById('serial-div')!;
-    serDiv.parentNode!.removeChild(serDiv); // Delete Serial Control Div
-
+    document.getElementById('serial-div')?.remove(); // Delete Serial Control Div
     const serSettingsElements = document.getElementsByClassName('ser-settings');
     for (const element of serSettingsElements) { // Disable serial settings
       (<HTMLSelectElement | HTMLButtonElement>element).disabled = true;
@@ -254,7 +259,7 @@ document.body.onload = async function(): Promise<void> {
         if (fileSystemWritableAvail) { // Try to use the File System Access API if possible
           if (fileEnding === 'json' || fileEnding === 'xml') {
             dataFileHandle = launchParams.files[0];
-            (<HTMLButtonElement>document.getElementById('overwrite-button')).disabled = false;
+            showSaveButton(dataFileHandle.name); // Only show "Save" button if it can be used
           }
         }
 
@@ -272,7 +277,8 @@ document.body.onload = async function(): Promise<void> {
   document.getElementById('version-tag')!.innerText += ` ${APP_VERSION}.`;
 
   if (localStorageAvailable) {
-    if (loadJSON('lastVisit') <= 0) {
+    const lastVisit = loadJSON('lastVisit');
+    if (!(typeof lastVisit === 'number' && lastVisit > 0)) {
       new ToastNotification('welcomeMessage'); //popupNotification('welcome-msg');
       if (notificationsAvailable) legacyPopupNotification('ask-notifications'); // Show notifications notification on first visit
 
@@ -285,29 +291,27 @@ document.body.onload = async function(): Promise<void> {
     const sVal = loadJSON('serialDataMode'); // ids: s1, s2
     const rVal = loadJSON('fileDataMode'); // ids: r1, r2
 
-    if (sVal) {
+    if (typeof sVal === 'string') {
       const element = <HTMLInputElement>document.getElementById(sVal);
       element.checked = true;
       selectSerialType(element);
     }
 
-    if (rVal) {
+    if (typeof rVal === 'string') {
       const element = <HTMLInputElement>document.getElementById(rVal);
       element.checked = true;
       selectFileType(element);
     }
 
-    const settingsNotSaveAlert = document.getElementById('ls-unavailable')!; // Remove saving alert
-    settingsNotSaveAlert.parentNode!.removeChild(settingsNotSaveAlert);
+    document.getElementById('ls-unavailable')?.remove(); // Remove saving alert
 
     const getAutoScrollValue = loadJSON('consoleAutoscrollEnabled');
-    if (getAutoScrollValue) {
+    if (typeof getAutoScrollValue === 'boolean' && getAutoScrollValue) {
       autoscrollEnabled = getAutoScrollValue;
       (<HTMLInputElement>document.getElementById('autoscroll-console')).checked = getAutoScrollValue;
     }
   } else {
-    const settingsSaveAlert = document.getElementById('ls-available')!; // Remove saving alert
-    settingsSaveAlert.parentNode!.removeChild(settingsSaveAlert);
+    document.getElementById('ls-available')?.remove(); // Remove saving alert
     new ToastNotification('welcomeMessage'); //popupNotification('welcome-msg');
   }
 
@@ -322,10 +326,11 @@ document.body.onload = async function(): Promise<void> {
       const toggleCalChartElement = <HTMLInputElement>document.getElementById('toggle-calibration-chart');
       const toggleEvolChartElement = <HTMLInputElement>document.getElementById('toggle-evolution-chart');
 
-      if (toggleCalChartElement.checked || toggleEvolChartElement.checked) { // Leave cal/evol chart when changing tabs
+      if (toggleCalChartElement && toggleCalChartElement.checked) { // Leave cal/evol chart when changing tabs
         toggleCalChartElement.checked = false;
-        toggleEvolChartElement.checked = false;
         toggleCalChart(false);
+      } else if (toggleEvolChartElement && toggleEvolChartElement.checked) {
+        toggleEvolChartElement.checked = false;
         toogleEvolChart(false);
       } else {
         plot.updatePlot(spectrumData); // Adjust Plot Size For Main Tab Menu Content Size
@@ -346,10 +351,11 @@ document.body.onload = async function(): Promise<void> {
       isoTableSortDirections[columnIndex] = sortDirection === 'asc' ? 'desc' : 'asc';
 
       thList.forEach((loopTableHeader, index) => {
-        const sortIcon = <HTMLElement>loopTableHeader.querySelector('.fa-solid');
-
-        sortIcon.classList.remove(...Object.values(faSortClasses)); // Remove all old icons
-        sortIcon.classList.add(faSortClasses[isoTableSortDirections[index+1]]); // Set new icons
+        const sortIcon = loopTableHeader.querySelector('.fa-solid');
+        if (sortIcon) {
+          sortIcon.classList.remove(...Object.values(faSortClasses)); // Remove all old icons
+          sortIcon.classList.add(faSortClasses[isoTableSortDirections[index+1]]); // Set new icons
+        }
       });
 
       sortTableByColumn(isoTable, columnIndex, isoTableSortDirections[columnIndex]); // Actually sort the table rows
@@ -365,10 +371,11 @@ document.body.onload = async function(): Promise<void> {
 
   bindHotkeys();
 
+  checkAndIncreaseCalibrationEntries(2); // Add at least two calibration bins for linear calibration
+
   if (localStorageAvailable) checkAutosave(); // Check for the last autosaved spectrum
 
-  const loadingOverlay = document.getElementById('loading')!;
-  loadingOverlay.parentNode!.removeChild(loadingOverlay); // Delete Loading Thingymajig
+  document.getElementById('loading')?.remove(); // Delete Loading Thingymajig
 };
 
 
@@ -471,6 +478,13 @@ function toggleNotifications(toggle: boolean): void {
 }
 
 
+function showSaveButton(filename: string): void {
+  const overwriteButton = <HTMLButtonElement>document.getElementById('overwrite-button');
+  overwriteButton.disabled = false;
+  overwriteButton.title = `Overwrite "${filename}" with current data.`;
+}
+
+
 document.getElementById('data')!.onclick = event => clickFileInput(event, 'data');
 document.getElementById('background')!.onclick = event => clickFileInput(event, 'background');
 
@@ -532,9 +546,8 @@ async function clickFileInput(event: MouseEvent, type: DataType): Promise<void> 
       dataFileHandle = fileHandle;
     }
 
-    if (fileSystemWritableAvail) { // Only enable if it can be used
-      (<HTMLButtonElement>document.getElementById('overwrite-button')).disabled = false;
-    }
+    // Only show "Save" button if it can be used
+    if (fileSystemWritableAvail) showSaveButton(fileHandle.name);
   }
 }
 
@@ -614,6 +627,9 @@ function getFileData(file: File, type: FileImportType): void { // Gets called wh
 
         if (importedCount >= 2) {
           resetCal(); // Reset in case of old calibration
+
+          checkAndIncreaseCalibrationEntries(importedCount);
+
           plot.calibration.coeff = coeff;
           plot.calibration.imported = true;
           displayCoeffs();
@@ -628,14 +644,16 @@ function getFileData(file: File, type: FileImportType): void { // Gets called wh
         }
       } else {
         console.error('No DOM parser in this browser!');
+        (<HTMLButtonElement>document.getElementById('overwrite-button')).disabled = true; // Disable save button again, if it could be used
+        return;
       }
     } else if (fileEnding.toLowerCase() === 'json') { // THIS SECTION MAKES EVERYTHING ASYNC DUE TO THE JSON THING!!!
       const jsonData = await raw.jsonToObject(result);
 
       // Check if multiple files/errors were imported
       if (jsonData.length > 1) {
-        const fileSelectModalElement = document.getElementById('file-select-modal');
-        const fileSelectModal = new (<any>window).bootstrap.Modal(fileSelectModalElement);
+        const fileSelectModalElement = document.getElementById('file-select-modal')!;
+        const fileSelectModal = new Modal(fileSelectModalElement);
         const selectElement = (<HTMLSelectElement>document.getElementById('select-spectrum'));
 
         // Delete all previous options
@@ -664,17 +682,39 @@ function getFileData(file: File, type: FileImportType): void { // Gets called wh
         const importData = jsonData[0]; // Select first element to probe for errors
 
         // Check if it's an error
-        if (checkJSONImportError(file.name, importData)) return;
+        if (checkJSONImportError(file.name, importData)) {
+          (<HTMLButtonElement>document.getElementById('overwrite-button')).disabled = true; // Disable save button again, if it could be used
+          return;
+        }
 
         npesFileImport(file.name, <NPESv1>importData, type);
       }
       return; // Nothing else to do, imported successfully or continue doing stuff when the user has finished interacting with the modal
-    } else if (type === 'background') {
-      spectrumData.backgroundTime = 1000;
-      spectrumData.background = raw.csvToArray(result);
+    } else if (type === 'background' || type === 'data') {
+      spectrumData[`${type}Time`] = 1000;
+      const csvData = raw.csvToArray(result);
+      spectrumData[type] = csvData.histogramData;
+
+      if (csvData.calibrationCoefficients) {
+        resetCal(); // Reset in case of old calibration
+
+        checkAndIncreaseCalibrationEntries(csvData.calibrationCoefficients.length);
+
+        for (const index in csvData.calibrationCoefficients) {
+          plot.calibration.coeff[`c${parseInt(index)+1}`] = csvData.calibrationCoefficients[index];
+        }
+        plot.calibration.imported = true;
+        displayCoeffs();
+
+        const calSettings = document.getElementsByClassName('cal-setting');
+        for (const element of calSettings) {
+          (<HTMLInputElement>element).disabled = true;
+        }
+        addImportLabel();
+        toggleCal(true);
+      }
     } else {
-      spectrumData.dataTime = 1000;
-      spectrumData.data = raw.csvToArray(result);
+      console.error('Could not import file, some kind of critical mistake happened. This is very bad and should not have happened!');
     }
 
     finalizeFileImport(file.name, type);
@@ -686,8 +726,8 @@ function checkJSONImportError(filename: string, data: NPESv1 | JSONParseError): 
   if ('code' in data && 'description' in data) {
     //new ToastNotification('npesError'); //popupNotification('npes-error');
     // Pop up modal with more error information instead of just toast with oopsy
-    const importErrorModalElement = document.getElementById('import-error-modal');
-    const fileImportErrorModal = new (<any>window).bootstrap.Modal(importErrorModalElement);
+    const importErrorModalElement = document.getElementById('import-error-modal')!;
+    const fileImportErrorModal = new Modal(importErrorModalElement);
 
     // Change content according to error
     document.getElementById('error-filename')!.innerText = filename;
@@ -761,12 +801,13 @@ function npesFileImport(filename: string, importData: NPESv1, type: FileImportTy
 
   if (calDataObj) {
     const coeffArray: number[] = calDataObj.coefficients;
-    const numCoeff: number = calDataObj.polynomialOrder;
 
     resetCal(); // Reset in case of old calibration
 
+    checkAndIncreaseCalibrationEntries(coeffArray.length);
+
     for (const index in coeffArray) {
-      plot.calibration.coeff[`c${numCoeff-parseInt(index)+1}`] = coeffArray[index];
+      plot.calibration.coeff[`c${parseInt(index) + 1}`] = coeffArray[index];
     }
     plot.calibration.imported = true;
     displayCoeffs();
@@ -821,7 +862,7 @@ function getJSONSelectionData(): void {
 
 
 function checkAutosave(): void {
-  const data: string | undefined = loadJSON('autosave');
+  const data = loadJSON('autosave');
 
   if (data) legacyPopupNotification('autosave-dialog'); // Show notification on first visit
 }
@@ -831,12 +872,12 @@ document.getElementById('restore-data-btn')!.onclick = () => loadAutosave(true);
 document.getElementById('discard-data-btn')!.onclick = () => loadAutosave(false);
 
 async function loadAutosave(restore: boolean): Promise<void> {
-  const data: string | undefined = loadJSON('autosave');
+  const data = loadJSON('autosave');
 
   if (data) {
     localStorage.removeItem('autosave'); // Delete autosave data
 
-    if (restore) {
+    if (restore && typeof data === 'string') {
       const objData = await raw.jsonToObject(data);
 
       if (objData.length) {
@@ -896,7 +937,11 @@ function removeFile(type: FileImportType): void {
 
     if (id === 'data') dataFileHandle = undefined; // Reset File System Access API handlers
     if (id === 'background') backgroundFileHandle = undefined;
-    if (!dataFileHandle && !backgroundFileHandle && fileSystemWritableAvail) {
+    if (dataFileHandle) {
+      showSaveButton(dataFileHandle.name);
+    } else if (backgroundFileHandle) {
+      showSaveButton(backgroundFileHandle.name);
+    } else {
       (<HTMLButtonElement>document.getElementById('overwrite-button')).disabled = true; // Disable save button again, if it could be used
     }
 
@@ -988,6 +1033,9 @@ function toggleSma(value: boolean, thisValue: HTMLInputElement | null = null ): 
 }
 
 
+document.getElementById('sma-val')!.onkeydown = event => {
+  if (event.key === 'Enter') document.getElementById('sma')?.click(); // ENTER key
+};
 document.getElementById('sma-val')!.oninput = event => changeSma(<HTMLInputElement>event.target);
 
 function changeSma(input: HTMLInputElement): void {
@@ -1005,31 +1053,33 @@ function changeSma(input: HTMLInputElement): void {
 function bindPlotEvents(): void {
   if (!plot.plotDiv) return;
 
-  const myPlot = <any>plot.plotDiv; 
+  const myPlot = <PlotlyHTMLElement>plot.plotDiv;
   myPlot.on('plotly_hover', hoverEvent);
   myPlot.on('plotly_unhover', unHover);
   myPlot.on('plotly_click', clickEvent);
   myPlot.on('plotly_selected', selectEvent);
-  myPlot.addEventListener('contextmenu', (event: PointerEvent) => {
+  myPlot.addEventListener('contextmenu', (event: MouseEvent) => {
     event.preventDefault(); // Prevent the context menu from opening inside the plot!
   });
 }
 
 
-function hoverEvent(data: any): void {
-  for (const key in calClick) {
-    const castKey = <CalType>key;
-    if (calClick[castKey]) (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = data.points[0].x.toFixed(2);
-  }
+function hoverEvent(data: PlotHoverEvent): void {
+  const dataPoint = data.points[0].x;
 
-  if (checkNearIso) closestIso(data.points[0].x);
+  if (typeof dataPoint === 'number') {
+    for (const id of calClick) {
+      (<HTMLInputElement>document.getElementById(`bin-${id}`)).value = dataPoint.toFixed(2);
+    }
+  
+    if (checkNearIso) closestIso(dataPoint);
+  }
 }
 
 
-function unHover(/*data: any*/): void {
-  for (const key in calClick) {
-    const castKey = <CalType>key;
-    if (calClick[castKey]) (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = oldCalVals[castKey];
+function unHover(/*data: PlotMouseEvent*/): void {
+  for (const id of calClick) {
+    (<HTMLInputElement>document.getElementById(`bin-${id}`)).value = (oldCalVals[id] ?? '').toString();
   }
   /*
   if (Object.keys(prevIso).length > 0) {
@@ -1041,33 +1091,52 @@ function unHover(/*data: any*/): void {
 
 let prevClickLine: number | undefined;
 
-function clickEvent(data: any): void {
-  document.getElementById('click-data')!.innerText = data.points[0].x.toFixed(2) + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
+function clickEvent(data: PlotMouseEvent): void {
+  const dataPointX = data.points[0].x;
+  const dataPointY = data.points[0].y;
 
-  for (const key in calClick) {
-    const castKey = <CalType>key;
-    if (calClick[castKey]) {
-      (<HTMLInputElement>document.getElementById(`adc-${castKey}`)).value = data.points[0].x.toFixed(2);
-      oldCalVals[castKey] = data.points[0].x.toFixed(2);
-      calClick[castKey] = false;
-      (<HTMLInputElement>document.getElementById(`select-${castKey}`)).checked = calClick[<CalType>key];
+  if (typeof dataPointX === 'number' && typeof dataPointY === 'number') {
+    const xClickData = dataPointX.toFixed(2);
+
+    document.getElementById('click-data')!.innerText = xClickData + data.points[0].xaxis.ticksuffix + ': ' + dataPointY.toFixed(2) + data.points[0].yaxis.ticksuffix;
+
+    for (const id of calClick) {
+      (<HTMLInputElement>document.getElementById(`bin-${id}`)).value = xClickData;
+      oldCalVals[id] = dataPointX;
+      calClick.delete(id);
+      (<HTMLInputElement>document.getElementById(`select-bin-${id}`)).checked = false;
     }
-  }
 
-  if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false); // Delete the last line
+    if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false); // Delete the last line
 
-  if (data.event.button === 0) { // Left-click. spawn a line in the plot
-    const newLine = Math.round(data.points[0].x);
-    plot.toggleLine(newLine, newLine.toString(), true);
-    prevClickLine = newLine;
-  } else if (data.event.button === 2) { // Right-click, delete old line
-    prevClickLine = undefined;
+    if (data.event.button === 0) { // Left-click. spawn a line in the plot
+      const newLine = Math.round(dataPointX);
+      plot.toggleLine(newLine, newLine.toString(), true);
+      prevClickLine = newLine;
+    } else if (data.event.button === 2) { // Right-click, delete old line
+      prevClickLine = undefined;
+    }
+    plot.updatePlot(spectrumData);
   }
-  plot.updatePlot(spectrumData);
 }
 
 
-function selectEvent(data: any): void {
+function selectEvent(data: PlotSelectionEvent): void {
+  /* // Just a reminder on how to modify trace color for a specific selection. Doesn't work as expected though.
+  data.points.forEach(function(pt: any) {
+    x.push(pt.x);
+    y.push(pt.y);
+    colors[pt.pointNumber] = color1;
+  });
+
+  (<any>window).Plotly.restyle(plot.plotDiv, {
+    x: [x, y],
+    xbins: {}
+  }, [1, 2]);
+
+  (<any>window).Plotly.restyle(plot.plotDiv, 'line.color', [colors], [0]);
+  */
+
   const roiElement = document.getElementById('roi-info')!;
   const infoElement = document.getElementById('static-info')!;
 
@@ -1126,6 +1195,140 @@ function selectEvent(data: any): void {
 }
 
 
+function checkAndIncreaseCalibrationEntries(order: number): void {
+  const masterDivElement = document.getElementById('calibration-input')!;
+  const childElements = masterDivElement.children;
+
+  // Generate more bin input elements if there aren't enough
+  for (let i = childElements.length; i <= order; i++) {
+    addEnergyCalibrationEntry(i);
+  }
+}
+
+
+document.getElementById('add-new-cal-bin')!.onclick = () => addEnergyCalibrationEntry();
+
+function addEnergyCalibrationEntry(numberOffset = 0): void {
+  const masterDivElement = document.getElementById('calibration-input')!;
+  const masterCoeffElement = document.getElementById('energy-cal-coeff-list')!;
+
+  const calNumber = Math.round(performance.now()) + numberOffset;
+
+  const headDivElement = document.createElement('div');
+  headDivElement.classList.add('hstack', 'gap-2');
+  headDivElement.id = calNumber.toString();
+
+  // GENERATE LEFT SIDE OF THE CALIBRATION HSTACK
+  const binInputGroupElement = document.createElement('div');
+  binInputGroupElement.classList.add('input-group', 'input-group-sm');
+
+  // Create label element
+  const binLabelElement = document.createElement('label');
+  binLabelElement.classList.add('input-group-text');
+  binLabelElement.htmlFor = `bin-${calNumber}`;
+  binLabelElement.textContent = 'Bin:';
+  binInputGroupElement.appendChild(binLabelElement);
+
+  // Create input element
+  const binInputElement = document.createElement('input');
+  binInputElement.classList.add('form-control', 'form-control-sm', 'cal-setting');
+  binInputElement.type = 'number';
+  binInputElement.id = `bin-${calNumber}`;
+  binInputElement.min = '0';
+  binInputElement.value = '';
+  binInputElement.title = 'Input bin number';
+  binInputElement.placeholder = 'Select Bin Number';
+  binInputGroupElement.appendChild(binInputElement);
+
+  // Create checkbox element
+  const checkboxElement = document.createElement('input');
+  checkboxElement.type = 'checkbox';
+  checkboxElement.classList.add('btn-check', 'cal-setting');
+  checkboxElement.id = `select-bin-${calNumber}`;
+  binInputGroupElement.appendChild(checkboxElement);
+
+  // Add function to click event on select element
+  checkboxElement.onclick = () => toggleCalClick(calNumber, checkboxElement.checked);
+
+  // Create label for checkbox
+  const labelForCheckbox = document.createElement('label');
+  labelForCheckbox.classList.add('btn', 'btn-outline-primary');
+  labelForCheckbox.htmlFor = `select-bin-${calNumber}`;
+  labelForCheckbox.title = 'Select from plot';
+  
+  // Create icon inside the label
+  const iconElement = document.createElement('i');
+  iconElement.classList.add('fa-solid', 'fa-arrow-pointer');
+  labelForCheckbox.appendChild(iconElement);
+  
+  binInputGroupElement.appendChild(labelForCheckbox);
+
+  // GENERATE ARROW ICON IN THE MIDDLE OF THE HSTACK
+  const arrowElement = document.createElement('span');
+  arrowElement.innerHTML = '<i class="fa-solid fa-angles-right"></i>';
+
+  // GENERATE RIGHT SIDE OF THE CALIBRATION HSTACK
+  const energyInputGroupElement = document.createElement('div');
+  energyInputGroupElement.classList.add('input-group', 'input-group-sm');
+
+  // Create input element
+  const energyInputElement = document.createElement('input');
+  energyInputElement.classList.add('form-control', 'form-control-sm', 'cal-setting');
+  energyInputElement.type = 'number';
+  energyInputElement.id = `cal-${calNumber}`;
+  energyInputElement.min = '1';
+  energyInputElement.value = '';
+  energyInputElement.title = 'Target energy for bin';
+  energyInputElement.placeholder = 'Target Bin Energy';
+  energyInputGroupElement.appendChild(energyInputElement);
+
+  // Create label element for keV
+  const energyLabelElement = document.createElement('label');
+  energyLabelElement.classList.add('input-group-text');
+  energyLabelElement.htmlFor = `cal-${calNumber}`;
+  energyLabelElement.textContent = 'keV';
+  energyInputGroupElement.appendChild(energyLabelElement);
+
+  // Create button element for bin removal
+  const removeBinEntry = document.createElement('button');
+  removeBinEntry.classList.add('btn', 'btn-sm', 'btn-primary', 'del-cal-btn');
+  removeBinEntry.type = 'button';
+  //removeBinEntry.htmlFor = `cal-${calNumber}`;
+  removeBinEntry.title = 'Remove bin from calibration'
+  removeBinEntry.innerHTML = '<i class="fa-solid fa-circle-minus"></i>';
+  energyInputGroupElement.appendChild(removeBinEntry);
+
+  // Disable buttons if less than two bins are present for calibration (linear!)
+  if (masterDivElement.children.length <= 2) {
+    removeBinEntry.disabled = true;
+  } else {
+    removeBinEntry.classList.add('cal-setting');
+
+    removeBinEntry.onclick = () => {
+      headDivElement?.remove(); // Remove input HTML element
+      calClick.delete(calNumber); // Remove entry from calClick
+      delete oldCalVals[calNumber]; // Remove entry from oldCalVals
+      masterCoeffElement.lastElementChild?.remove(); // Remove coefficient HTML element
+    }
+  }
+
+  // ADD ALL THREE PARTS
+  headDivElement.appendChild(binInputGroupElement);
+  headDivElement.appendChild(arrowElement);
+  headDivElement.appendChild(energyInputGroupElement);
+
+  // ADD TO HSTACK
+  masterDivElement.insertBefore(headDivElement, document.getElementById('add-new-cal-bin')!.parentElement);
+
+  // GENERATE NEW COEFFICIENT VALUE
+  const coeff = document.createElement('p');
+  coeff.classList.add('mb-1');
+  coeff.innerHTML = `<var>c<sub>${masterCoeffElement.children.length+1}</sub></var>: <span id="coeff-${masterCoeffElement.children.length+1}">0</span>`;
+
+  masterCoeffElement.appendChild(coeff);
+}
+
+
 document.getElementById('apply-cal')!.onclick = event => toggleCal((<HTMLInputElement>event.target).checked);
 
 async function toggleCal(enabled: boolean): Promise<void> {
@@ -1139,48 +1342,50 @@ async function toggleCal(enabled: boolean): Promise<void> {
   */
   if (enabled) {
     if (!plot.calibration.imported) {
+      const masterDivElement = document.getElementById('calibration-input')!;
+      const childElements = masterDivElement.children;
 
-      const readoutArray = [
-        [(<HTMLInputElement>document.getElementById('adc-a')).value, (<HTMLInputElement>document.getElementById('cal-a')).value],
-        [(<HTMLInputElement>document.getElementById('adc-b')).value, (<HTMLInputElement>document.getElementById('cal-b')).value],
-        [(<HTMLInputElement>document.getElementById('adc-c')).value, (<HTMLInputElement>document.getElementById('cal-c')).value]
-      ];
-
-      let invalid = 0;
       const validArray: number[][] = [];
 
-      for (const pair of readoutArray) {
-        const float1 = parseFloat(pair[0]);
-        const float2 = parseFloat(pair[1]);
+      for (const element of childElements) {
+        const id = element.id;
 
-        if (isNaN(float1) || isNaN(float2)) {
-          //validArray.push([-1, -1]);
-          invalid += 1;
-        } else {
-          validArray.push([float1, float2]);
-        }
-        if (invalid > 1) {
-          new ToastNotification('calibrationApplyError'); //popupNotification('cal-error');
+        if (!id) continue; // No idea, skip this element
 
-          const checkbox = <HTMLInputElement>document.getElementById('apply-cal');
-          checkbox.checked = false;
-          toggleCal(checkbox.checked);
+        const binInput = ((<HTMLInputElement>document.getElementById(`bin-${id}`)).value).trim();
+        const energyInput = ((<HTMLInputElement>document.getElementById(`cal-${id}`)).value).trim();
 
-          return;
-        }
+        if (!binInput.length || !energyInput.length) continue; // At least one input is empty
+
+        const bin = parseFloat(binInput);
+        const energy = parseFloat(energyInput);
+
+        if (isNaN(bin) || isNaN(energy)) continue; // Something is not a number
+        
+        validArray.push([bin, energy]);
       }
 
-      plot.calibration.points.aFrom = validArray[0][0];
-      plot.calibration.points.aTo = validArray[0][1];
-      plot.calibration.points.bFrom = validArray[1][0];
-      plot.calibration.points.bTo = validArray[1][1];
+      // Not enough points for at least a linear calibration
+      if (validArray.length < 2) {
+        new ToastNotification('calibrationApplyError'); //popupNotification('cal-error');
 
-      if (validArray.length === 3) {
-        plot.calibration.points.cTo = validArray[2][1];
-        plot.calibration.points.cFrom = validArray[2][0];
-      } else {
-        delete plot.calibration.points.cTo;
-        delete plot.calibration.points.cFrom;
+        const checkbox = <HTMLInputElement>document.getElementById('apply-cal');
+        checkbox.checked = false;
+        toggleCal(checkbox.checked);
+
+        return;
+      }
+
+      // Clear old points
+      for (const key in plot.calibration.points) {
+        delete plot.calibration.points[key];
+      }
+
+      // Add new points
+      for (const index in validArray) {
+        const bin = validArray[index][0];
+        const energy = validArray[index][1];
+        plot.calibration.points[bin] = energy;
       }
 
       await plot.computeCoefficients();
@@ -1195,9 +1400,10 @@ async function toggleCal(enabled: boolean): Promise<void> {
 
 
 function displayCoeffs(): void {
-  const arr = ['c1','c2','c3'];
-  for (const elem of arr) {
-    document.getElementById(`${elem}-coeff`)!.innerText = plot.calibration.coeff[elem].toString();
+  const masterCoeffElement = document.getElementById('energy-cal-coeff-list')!;
+
+  for (let i = 0; i < masterCoeffElement.children.length; i++) {
+    document.getElementById(`coeff-${i+1}`)!.innerText = (plot.calibration.coeff[`c${i+1}`] ?? 0).toString();
   }
 }
 
@@ -1205,15 +1411,28 @@ function displayCoeffs(): void {
 document.getElementById('calibration-reset')!.onclick = () => resetCal();
 
 function resetCal(): void {
-  for (const point in calClick) {
-    calClick[<CalType>point] = false;
-  }
+  calClick.clear(); // Clear all values from set
 
   const calSettings = document.getElementsByClassName('cal-setting');
   for (const element of <HTMLCollectionOf<HTMLInputElement>>calSettings) {
     element.disabled = false;
     element.value = '';
   }
+
+  const masterDivElementChilds = document.getElementById('calibration-input')!.children;
+  const buttonArray: HTMLButtonElement[] = [];
+  for (const child of masterDivElementChilds) {
+    const deleteButtons = child.getElementsByClassName('del-cal-btn');
+    for (const button of deleteButtons) {
+      buttonArray.push(<HTMLButtonElement>button);
+    }
+  }
+
+  for (const button of buttonArray) {
+    button?.click();
+  }
+
+  checkAndIncreaseCalibrationEntries(2); // Add at least two calibration bins for linear calibration
 
   document.getElementById('calibration-title')!.classList.add('d-none');
 
@@ -1222,13 +1441,10 @@ function resetCal(): void {
 }
 
 
-// Pretty ugly, but will get changed when implementing the n-poly calibration
-document.getElementById('select-a')!.onclick = event => toggleCalClick('a', (<HTMLInputElement>event.target).checked);
-document.getElementById('select-b')!.onclick = event => toggleCalClick('b', (<HTMLInputElement>event.target).checked);
-document.getElementById('select-c')!.onclick = event => toggleCalClick('c', (<HTMLInputElement>event.target).checked);
+function toggleCalClick(id: number, add: boolean): void {
+  calClick.delete(id); // Remove value from set
 
-function toggleCalClick(point: CalType, value: boolean): void {
-  calClick[point] = value;
+  if (add) calClick.add(id); // Add value back if needed
 }
 
 
@@ -1274,16 +1490,6 @@ function importCal(file: File): void {
       const result = (<string>reader.result).trim(); // A bit unclean for typescript, I'm sorry
       const obj = JSON.parse(result);
 
-      const readoutArray = [
-        <HTMLInputElement>document.getElementById('adc-a'),
-        <HTMLInputElement>document.getElementById('cal-a'),
-        <HTMLInputElement>document.getElementById('adc-b'),
-        <HTMLInputElement>document.getElementById('cal-b'),
-        <HTMLInputElement>document.getElementById('adc-c'),
-        <HTMLInputElement>document.getElementById('cal-c')
-      ];
-
-
       if (obj.imported) {
 
         const calSettings = document.getElementsByClassName('cal-setting');
@@ -1297,19 +1503,22 @@ function importCal(file: File): void {
         plot.calibration.imported = true;
 
       } else {
+        const masterDivElement = document.getElementById('calibration-input')!;
+        const childElements = masterDivElement.children;
+        
+        checkAndIncreaseCalibrationEntries(Object.keys(obj.points).length);
 
-        const inputArr = ['aFrom', 'aTo', 'bFrom', 'bTo', 'cFrom', 'cTo'];
-        for (const index in inputArr) {
-          if (obj.points === undefined || typeof obj.points === 'number') { // Keep compatability with old calibration files
-            readoutArray[index].value = obj[inputArr[index]];
-          } else { // New calibration files
-            readoutArray[index].value = obj.points[inputArr[index]];
-          }
+        let index = 0;
+
+        for (const [bin, energy] of Object.entries(<CoeffPoints>obj.points)) {
+          const id = childElements[index].id;
+          (<HTMLInputElement>document.getElementById(`bin-${id}`)).value = bin;
+          (<HTMLInputElement>document.getElementById(`cal-${id}`)).value = energy.toString();
+
+          oldCalVals[parseFloat(id)] = parseFloat(bin);
+
+          index++;
         }
-
-        oldCalVals.a = readoutArray[0].value;
-        oldCalVals.b = readoutArray[2].value;
-        oldCalVals.c = readoutArray[4].value;
       }
 
     } catch(e) {
@@ -1383,14 +1592,29 @@ function toLocalIsoString(date: Date) {
 }
 
 
+document.getElementById('evolution-download-btn')!.onclick = () => downloadEvolution();
+
+function downloadEvolution(): void {
+  if (!cpsValues.length) {
+    console.error('Time evolution is empty. No cps values to export!');
+  }
+
+  download(`evolution_${getDateString()}.csv`, cpsValues.join('\n'), 'EVOL');
+}
+
+
 document.getElementById('calibration-download')!.onclick = () => downloadCal();
 
 function downloadCal(): void {
   const calObj = plot.calibration;
-  if (!calObj.points.cFrom) delete calObj.points.cFrom;
-  if (!calObj.points.cTo) delete calObj.points.cTo;
 
-  download(`calibration_${getDateString()}.json`, JSON.stringify(calObj), 'CAL');
+  let outStr = JSON.stringify(calObj);
+
+  if (calObj.coeff.c1 === 0 && calObj.coeff.c2 === 0) {
+    outStr = ''; // Nothing is calibrated, do not save anything
+  }
+
+  download(`calibration_${getDateString()}.json`, outStr, 'CAL');
 }
 
 
@@ -1420,13 +1644,8 @@ function makeXMLSpectrum(type: DataType, name: string): Element {
 
     const c = document.createElementNS(null, 'Coefficients');
     const coeffs: number[] = [];
-    const coeffObj = plot.calibration.coeff;
-
-    for (const index in coeffObj) {
-      coeffs.push(coeffObj[index]);
-    }
-    const coeffsRev = coeffs.reverse();
-    for (const val of coeffsRev) {
+    Object.values(plot.calibration.coeff).forEach(c => coeffs.push(c ?? 0));
+    for (const val of coeffs) {
       const coeff = document.createElementNS(null, 'Coefficient');
       coeff.textContent = val.toString();
       c.appendChild(coeff);
@@ -1600,8 +1819,8 @@ function makeJSONSpectrum(type: DataType): NPESv1Spectrum {
       polynomialOrder: 0,
       coefficients: <number[]>[]
     }
-    calObj.polynomialOrder = 2;
-    calObj.coefficients = [plot.calibration.coeff.c3, plot.calibration.coeff.c2, plot.calibration.coeff.c1];
+    calObj.polynomialOrder = Object.keys(plot.calibration.coeff).length - 1;
+    Object.values(plot.calibration.coeff).forEach(c => calObj.coefficients.push(c ?? 0));
     spec.energyCalibration = calObj;
   }
 
@@ -1730,6 +1949,12 @@ const saveFileTypes: SaveTypeList = {
     description: 'Combination data file (NPESv2, smaller size)',
     accept: {
       'application/json': ['.json']
+    }
+  },
+  'EVOL': {
+    description: 'Count rate time evolution file',
+    accept: {
+      'text/csv': ['.csv']
     }
   },
   'CSV': {
@@ -1926,14 +2151,16 @@ function printReport(): void {
       }
 
       // Last step: Create an image element of the saved plot
-      (<any>window).Plotly.toImage(plot.plotDiv,{format: 'png', height: 400, width: 1000}).then(
-        function (url: string) {
-          const img = <HTMLImageElement>printDocument.getElementById('plot-image');
-          img.src = url;
-
-          img.onload = () => printWindow.print(); // Finally print the window if the image has been loaded
-        }
-      );
+      if (plot.plotDiv) {
+        Plotly.toImage(plot.plotDiv,{format: 'png', height: 400, width: 1000}).then(
+          function (url: string) {
+            const img = <HTMLImageElement>printDocument.getElementById('plot-image');
+            img.src = url;
+  
+            img.onload = () => printWindow.print(); // Finally print the window if the image has been loaded
+          }
+        );
+      }
     };
 
     printWindow.onafterprint = () => printWindow.close(); // Close the new print tab after printing
@@ -1944,14 +2171,20 @@ function printReport(): void {
 
 
 function legacyPopupNotification(id: string): void { // Uses Bootstrap Toasts already defined in HTML
-  const toast = new (<any>window).bootstrap.Toast(document.getElementById(id));
-  if (!toast.isShown()) toast.show();
+  const element = document.getElementById(id);
+  if (element) {
+    const toast = new Toast(element);
+    if (!toast.isShown()) toast.show();
+  }
 }
 
 
 function hideNotification(id: string): void {
-  const toast = new (<any>window).bootstrap.Toast(document.getElementById(id));
-  if (toast.isShown()) toast.hide();
+  const element = document.getElementById(id);
+  if (element) {
+    const toast = new Toast(element);
+    if (toast.isShown()) toast.hide();
+  }
 }
 
 
@@ -2204,7 +2437,7 @@ function bindHotkeys(): void {
       const offcanvasElement = document.getElementById('offcanvas');
       if (offcanvasElement && !offcanvasElement.classList.contains('show')) { // Exists and is not shown currently
         if (!offcanvasElement.classList.contains('showing')) { // Don't toggle while in transition
-          new (<any>window).bootstrap.Offcanvas(offcanvasElement).show(); // Offcanvas is closed, open it
+          new Offcanvas(offcanvasElement).show(); // Offcanvas is closed, open it
         }
       }
     }
@@ -2225,6 +2458,15 @@ function bindHotkeys(): void {
   }
 }
 
+
+document.getElementById('enhance-eff')!.onclick = (event) => toggelEfficiencyEnhancer(<HTMLInputElement>event.target);
+
+function toggelEfficiencyEnhancer(target: HTMLInputElement): void {
+  plot.enhanceEfficiency = target.checked;
+
+  plot.updatePlot(spectrumData);
+}
+
 /*
 =========================================
   LOADING AND SAVING
@@ -2243,22 +2485,12 @@ function saveJSON(name: string, value: string | boolean | number): boolean {
 }
 
 
-function loadJSON(name: string): any {
+function loadJSON(name: string): unknown {
   return JSON.parse(<string>localStorage.getItem(name));
 }
 
 
 function bindInputs(): void {
-  const nonSettingsEnterPressElements = {
-    'sma-val': 'sma',
-    'ser-command': 'send-command'
-  }
-  for (const [inputId, buttonId] of Object.entries(nonSettingsEnterPressElements)) {
-    document.getElementById(inputId)!.onkeydown = event => {
-      if (event.key === 'Enter') document.getElementById(buttonId)?.click(); // ENTER key
-    };
-  }
-
   // Bind settings button onclick events and enter press, format: {settingsValueElement: settingsName}
   const settingsEnterPressElements = {
     'iso-hover-prox': 'maxIsoDist',
@@ -2351,72 +2583,72 @@ function loadSettingsDefault(): void {
 
 function loadSettingsStorage(): void {
   let setting = loadJSON('allowNotifications');
-  if (notificationsAvailable && setting !== null) allowNotifications = setting && (Notification.permission === 'granted');
+  if (notificationsAvailable && typeof setting === 'boolean') allowNotifications = setting && (Notification.permission === 'granted');
 
   setting = loadJSON('customURL');
-  if (setting) isoListURL = new URL(setting).href;
+  if (typeof setting === 'string') isoListURL = new URL(setting).href;
 
   setting = loadJSON('editMode');
-  if (setting !== null) plot.editableMode = setting;
+  if (typeof setting === 'boolean') plot.editableMode = setting;
 
   setting = loadJSON('fileDelimiter');
-  if (setting !== null) raw.delimiter = setting;
+  if (typeof setting === 'string') raw.delimiter = setting;
 
   setting = loadJSON('fileChannels');
-  if (setting !== null) raw.adcChannels = setting;
+  if (typeof setting === 'number') raw.adcChannels = setting;
 
   setting = loadJSON('plotRefreshRate');
-  if (setting !== null) refreshRate = setting;
+  if (typeof setting === 'number') refreshRate = setting;
 
   setting = loadJSON('serBufferSize');
-  if (setting !== null) SerialManager.maxSize = setting;
+  if (typeof setting === 'number') SerialManager.maxSize = setting;
 
   setting = loadJSON('timeLimitBool');
-  if (setting !== null) maxRecTimeEnabled = setting;
+  if (typeof setting === 'boolean') maxRecTimeEnabled = setting;
 
   setting = loadJSON('timeLimit');
-  if (setting !== null) maxRecTime = setting;
+  if (typeof setting === 'number') maxRecTime = setting;
 
   setting = loadJSON('maxIsoDist');
-  if (setting !== null) maxDist = setting;
+  if (typeof setting === 'number') maxDist = setting;
 
   setting = loadJSON('baudRate');
-  if (setting !== null) SerialManager.baudRate = setting;
+  if (typeof setting === 'number') SerialManager.baudRate = setting;
 
   setting = loadJSON('eolChar');
-  if (setting !== null) SerialManager.eolChar = setting;
+  if (typeof setting === 'string') SerialManager.eolChar = setting;
 
   setting = loadJSON('serChannels');
-  if (setting !== null) SerialManager.adcChannels = setting;
+  if (typeof setting === 'number') SerialManager.adcChannels = setting;
 
   setting = loadJSON('smaLength');
-  if (setting !== null) plot.smaLength = setting;
+  if (typeof setting === 'number') plot.smaLength = setting;
 
   setting = loadJSON('peakThres');
-  if (setting !== null) plot.peakConfig.thres = setting;
+  if (typeof setting === 'number') plot.peakConfig.thres = setting;
 
   setting = loadJSON('peakLag');
-  if (setting !== null) plot.peakConfig.lag = setting;
+  if (typeof setting === 'number') plot.peakConfig.lag = setting;
 
   setting = loadJSON('seekWidth');
-  if (setting !== null) SeekClosest.seekWidth = setting;
+  if (typeof setting === 'number') SeekClosest.seekWidth = setting;
 
   setting = loadJSON('plotDownload');
-  if (setting !== null) plot.downloadFormat = setting;
+  if (setting === 'svg' || setting === 'png' || setting === 'jpeg' || setting === 'webp') plot.downloadFormat = setting;
 
   // Setting for dark mode is right at the beginning of the file
 
   setting = loadJSON('gaussSigma');
-  if (setting !== null) plot.gaussSigma = setting;
+  if (typeof setting === 'number') plot.gaussSigma = setting;
 
   setting = loadJSON('showEnergyRes');
-  if (setting !== null) plot.peakConfig.showFWHM = setting;
+  if (typeof setting === 'boolean') plot.peakConfig.showFWHM = setting;
 
   setting = loadJSON('useFWHMFast');
-  if (setting !== null) CalculateFWHM.fastMode = setting;
+  if (typeof setting === 'boolean') CalculateFWHM.fastMode = setting;
 
   setting = loadJSON('newPeakStyle');
-  if (setting !== null) plot.peakConfig.newPeakStyle = setting;
+  if (typeof setting === 'boolean') plot.peakConfig.newPeakStyle = setting;
 }
 
 
@@ -2650,7 +2882,7 @@ function serialConnect(/*event: Event*/): void {
 
 
 function serialDisconnect(event: Event): void {
-  if (serRecorder?.isThisPort(<SerialPort | WebUSBSerialPort>event.target)) disconnectPort(true);
+  if (serRecorder?.isThisPort(<SerialPort | USBDevice>event.target)) disconnectPort(true);
 
   listSerial();
 
@@ -2690,7 +2922,9 @@ async function listSerial(): Promise<void> {
     option.text = `Port ${index} (${portsAvail[index]?.getInfo()})`;
     portSelector.add(option, parseInt(index));
 
-    if (serRecorder?.isThisPort(portsAvail[index]?.getPort())) {
+    const newPort = portsAvail[index]?.getPort();
+
+    if (newPort && serRecorder?.isThisPort(newPort)) {
       selectIndex = parseInt(index);
       option.text = '> ' + option.text;
     }
@@ -2738,9 +2972,17 @@ function selectPort(): number {
   const selectedPort = (<HTMLSelectElement>document.getElementById('port-selector')).selectedIndex;
   const newport = portsAvail[selectedPort];
 
-  if (newport && !serRecorder?.isThisPort(newport.getPort())) { // serRecorder?.port != newport
-    serRecorder = new SerialManager(newport);
-    clearConsoleLog(); // Clear serial console history
+  if (newport) {
+    const newPortPort = newport.getPort();
+
+    if (!serRecorder?.isThisPort(newPortPort)) { // serRecorder?.port != newport
+      if (serRecorder?.recording) disconnectPort(true); // Important for serial console: Stop recording when opening another device in the console
+
+      serRecorder = new SerialManager(newport);
+      clearConsoleLog(); // Clear serial console history
+
+      listSerial(); // Update list to show used port correctly
+    }
   }
 
   return selectedPort;
@@ -2891,6 +3133,38 @@ async function readSerial(): Promise<void> {
 }
 
 
+document.getElementById('ser-command')!.onkeydown = (event) => {
+  if (event.key === 'Enter') document.getElementById('send-command')?.click(); // ENTER key
+  
+  if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+    event.preventDefault();
+    handleArrowKey(event.key);
+  }
+  //event.preventDefault();
+}
+
+
+const consoleHistory = {
+  history: <string[]>[],
+  currentIndex: -1
+}
+
+function handleArrowKey(key: string): void {
+  const element = <HTMLInputElement>document.getElementById('ser-command');
+  if (key === 'ArrowUp' && consoleHistory.currentIndex < consoleHistory.history.length - 1) {
+    consoleHistory.currentIndex++;
+  } else if (key === 'ArrowDown' && consoleHistory.currentIndex > -1) {
+    consoleHistory.currentIndex--;
+  }
+
+  if (consoleHistory.currentIndex >= 0 && consoleHistory.currentIndex < consoleHistory.history.length) {
+    element.value = consoleHistory.history[consoleHistory.currentIndex];
+  } else {
+    element.value = '';
+  }
+}
+
+
 document.getElementById('send-command')!.onclick = () => sendSerial();
 
 async function sendSerial(): Promise<void> {
@@ -2901,6 +3175,14 @@ async function sendSerial(): Promise<void> {
     console.error('Connection Error:', err);
     new ToastNotification('serialConnectError'); //popupNotification('serial-connect-error');
     return;
+  }
+
+  // Add message to console history
+  const inputValue = element.value.trim();
+
+  if (inputValue.length) {
+    consoleHistory.history.unshift(inputValue);
+    consoleHistory.currentIndex = -1;
   }
 
   element.value = '';
@@ -2926,7 +3208,7 @@ function toggleAutoscroll(enabled: boolean) {
 }
 
 
-let consoleTimeout: number;
+let consoleTimeout: ReturnType<typeof setTimeout>;
 
 function refreshConsole(): void {
   if (serRecorder?.port?.isOpen) {
@@ -2938,7 +3220,7 @@ function refreshConsole(): void {
 }
 
 
-let autosaveTimeout: number;
+let autosaveTimeout: ReturnType<typeof setTimeout>;
 
 function autoSaveData(): void {
   const autosaveBadgeElement = document.getElementById('autosave-badge')!;
@@ -2974,7 +3256,7 @@ function getRecordTimeStamp(time: number): string {
 }
 
 
-let metaTimeout: number;
+let metaTimeout: ReturnType<typeof setTimeout>;
 
 function refreshMeta(type: DataType): void {
   if (serRecorder?.port?.isOpen) {
@@ -3019,7 +3301,7 @@ function refreshMeta(type: DataType): void {
 
 
 let lastUpdate = performance.now();
-let refreshTimeout: number;
+let refreshTimeout: ReturnType<typeof setTimeout>;
 
 function refreshRender(type: DataType, firstLoad = false): void {
   if (serRecorder?.port?.isOpen) {
@@ -3084,4 +3366,29 @@ function refreshRender(type: DataType, firstLoad = false): void {
 =========================================
 */
 
-// Looks to be a PITA just to get the raw data/volume/amplitude from the microphone in the browser
+/*
+  STILL A LOT TO DO.
+    - See: https://web.dev/articles/media-recording-audio
+    - See: https://developer.mozilla.org/en-US/docs/Web/API/MediaStream
+*/
+async function handleSuccess(stream: MediaStream): Promise<void> {
+  const context = new AudioContext();
+  const source = context.createMediaStreamSource(stream);
+
+  await context.audioWorklet.addModule('./webworker/audio-worker'); // URL DOES NOT WORK! See https://github.com/webpack/webpack/issues/11543
+  
+  const worklet = new AudioWorkletNode(context, 'worklet-processor');
+
+  source.connect(worklet);
+  worklet.connect(context.destination);
+
+  console.log('MediaStream', stream);
+  console.log('AudioTracks', stream.getAudioTracks());
+}
+
+
+document.getElementById('sound-start-btn')!.onclick = () => openMic();
+
+function openMic(): void {
+  navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(handleSuccess);
+}
