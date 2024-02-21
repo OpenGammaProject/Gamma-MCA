@@ -12,12 +12,12 @@ import { WebUSBSerialPort } from './lib/webusbserial-min';
 
 export class WebUSBSerial {
   private port: WebUSBSerialPort | undefined;
-  private device: any;
+  private device: USBDevice;
   isOpen = false;
   
   static deviceFilters = [{ 'vendorId': 0x0403 }]; // Allow ALL FTDI chips //, 'productId': 0x6015 }]; // Filter FTDx Chips
 
-  constructor(device: any) {
+  constructor(device: USBDevice) {
     this.device = device;
 
     console.info('WebUSB product name:', device.productName);
@@ -70,16 +70,16 @@ export class WebUSBSerial {
     this.port?.disconnect();
   }
 
-  isThisPort(port: SerialPort | WebUSBSerialPort): boolean  {
+  isThisPort(port: SerialPort | USBDevice): boolean  {
     return (this.device === port);
   }
 
   getInfo(): string {
-    return this.device.productName;
+    return this.device.productName ?? 'Undefined';
     //return 'WebUSB';
   }
 
-  getPort(): any {
+  getPort(): USBDevice {
     return this.device;
   }
 }
@@ -93,7 +93,7 @@ export class WebSerial {
     this.port = port;
   }
 
-  isThisPort(port: SerialPort | WebUSBSerialPort): boolean {
+  isThisPort(port: SerialPort | USBDevice): boolean {
     return this.port === port;
   }
 
@@ -171,10 +171,10 @@ import { DataOrder } from './main';
 export class SerialManager {
   // SECTION: Serial Manager
   readonly port: WebSerial | WebUSBSerial;
+  recording = false;
 
   //private reader: ReadableStreamDefaultReader | undefined;
   private closed: Promise<void> | undefined;
-  private recording = false;
   private onlyConsole = true;
   private startTime = 0;
   private timeDone = 0;
@@ -200,7 +200,7 @@ export class SerialManager {
     this.port = port;
   }
 
-  isThisPort(port: SerialPort | WebUSBSerialPort): boolean {
+  isThisPort(port: SerialPort | USBDevice): boolean {
     return this.port.isThisPort(port);
   }
 

@@ -22,14 +22,14 @@ function saveJSON(name: string, value: string | boolean | number): boolean {
 */
 
 
-function loadJSON(name: string): any {
+function loadJSON(name: string): unknown {
 	return JSON.parse(<string>localStorage.getItem(name));
 }
 
 
 function getPreferredTheme(): Theme {
 	const storedTheme = loadJSON('theme');
-	if (storedTheme !== 'auto') return storedTheme;
+	if (storedTheme === 'dark' || storedTheme === 'light') return storedTheme;
 
 	return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }

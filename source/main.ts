@@ -18,12 +18,11 @@
     - NPESv2: Create additional save (append) button that allows users to save multiple data packages in one file
     - NPESv2: Let user remove data packages from file in the import selection dialog
     - Automatically close system notifications when the user interacts with the page again
-    - Web Worker for Isotope Seek, FWHM Calculation, Plot update, Gaussian correlation
+    - Web Worker for Isotope Seek, FWHM Calculation, Plot update, Gaussian correlation (improved performance?)
     - Fully-fledged efficiency calibration
+    - Add support for IndexedDB API to store spectra locally inside the browser/app without the need for a filesystem (discussions/227)
 
     - Sound card spectrometry prove of concept
-    - Add support for IndexedDB API to store spectra locally inside the browser/app without the need for a filesystem
-    - Migrate Plotly.JS to npm package
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
@@ -40,11 +39,13 @@ import './main.scss';
 // Import Bootstrap plugins
 import { Modal, Offcanvas, Toast } from 'bootstrap';
 
+// Import Plotly.js
+import Plotly, { PlotHoverEvent, PlotMouseEvent, PlotSelectionEvent, PlotlyHTMLElement } from 'plotly.js-basic-dist-min';
+
 // Import other TS modules
 import { SpectrumPlot, SeekClosest, DownloadFormat, CalculateFWHM, CoeffPoints } from './plot';
 import { RawData, NPESv1, NPESv1Spectrum, JSONParseError, NPESv2 } from './raw-data';
 import { SerialManager, WebSerial, WebUSBSerial } from './serial';
-import { WebUSBSerialPort } from './lib/webusbserial-min'
 import { ToastNotification, launchSysNotification } from './notifications';
 import { applyTheming, autoThemeChange } from './global-theming';
 
@@ -276,7 +277,8 @@ document.body.onload = async function(): Promise<void> {
   document.getElementById('version-tag')!.innerText += ` ${APP_VERSION}.`;
 
   if (localStorageAvailable) {
-    if (loadJSON('lastVisit') <= 0) {
+    const lastVisit = loadJSON('lastVisit');
+    if (!(typeof lastVisit === 'number' && lastVisit > 0)) {
       new ToastNotification('welcomeMessage'); //popupNotification('welcome-msg');
       if (notificationsAvailable) legacyPopupNotification('ask-notifications'); // Show notifications notification on first visit
 
@@ -289,13 +291,13 @@ document.body.onload = async function(): Promise<void> {
     const sVal = loadJSON('serialDataMode'); // ids: s1, s2
     const rVal = loadJSON('fileDataMode'); // ids: r1, r2
 
-    if (sVal) {
+    if (typeof sVal === 'string') {
       const element = <HTMLInputElement>document.getElementById(sVal);
       element.checked = true;
       selectSerialType(element);
     }
 
-    if (rVal) {
+    if (typeof rVal === 'string') {
       const element = <HTMLInputElement>document.getElementById(rVal);
       element.checked = true;
       selectFileType(element);
@@ -304,7 +306,7 @@ document.body.onload = async function(): Promise<void> {
     document.getElementById('ls-unavailable')?.remove(); // Remove saving alert
 
     const getAutoScrollValue = loadJSON('consoleAutoscrollEnabled');
-    if (getAutoScrollValue) {
+    if (typeof getAutoScrollValue === 'boolean' && getAutoScrollValue) {
       autoscrollEnabled = getAutoScrollValue;
       (<HTMLInputElement>document.getElementById('autoscroll-console')).checked = getAutoScrollValue;
     }
@@ -860,7 +862,7 @@ function getJSONSelectionData(): void {
 
 
 function checkAutosave(): void {
-  const data: string | undefined = loadJSON('autosave');
+  const data = loadJSON('autosave');
 
   if (data) legacyPopupNotification('autosave-dialog'); // Show notification on first visit
 }
@@ -870,12 +872,12 @@ document.getElementById('restore-data-btn')!.onclick = () => loadAutosave(true);
 document.getElementById('discard-data-btn')!.onclick = () => loadAutosave(false);
 
 async function loadAutosave(restore: boolean): Promise<void> {
-  const data: string | undefined = loadJSON('autosave');
+  const data = loadJSON('autosave');
 
   if (data) {
     localStorage.removeItem('autosave'); // Delete autosave data
 
-    if (restore) {
+    if (restore && typeof data === 'string') {
       const objData = await raw.jsonToObject(data);
 
       if (objData.length) {
@@ -1051,27 +1053,31 @@ function changeSma(input: HTMLInputElement): void {
 function bindPlotEvents(): void {
   if (!plot.plotDiv) return;
 
-  const myPlot = <any>plot.plotDiv; 
+  const myPlot = <PlotlyHTMLElement>plot.plotDiv;
   myPlot.on('plotly_hover', hoverEvent);
   myPlot.on('plotly_unhover', unHover);
   myPlot.on('plotly_click', clickEvent);
   myPlot.on('plotly_selected', selectEvent);
-  myPlot.addEventListener('contextmenu', (event: PointerEvent) => {
+  myPlot.addEventListener('contextmenu', (event: MouseEvent) => {
     event.preventDefault(); // Prevent the context menu from opening inside the plot!
   });
 }
 
 
-function hoverEvent(data: any): void {
-  for (const id of calClick) {
-    (<HTMLInputElement>document.getElementById(`bin-${id}`)).value = data.points[0].x.toFixed(2);
-  }
+function hoverEvent(data: PlotHoverEvent): void {
+  const dataPoint = data.points[0].x;
 
-  if (checkNearIso) closestIso(data.points[0].x);
+  if (typeof dataPoint === 'number') {
+    for (const id of calClick) {
+      (<HTMLInputElement>document.getElementById(`bin-${id}`)).value = dataPoint.toFixed(2);
+    }
+  
+    if (checkNearIso) closestIso(dataPoint);
+  }
 }
 
 
-function unHover(/*data: any*/): void {
+function unHover(/*data: PlotMouseEvent*/): void {
   for (const id of calClick) {
     (<HTMLInputElement>document.getElementById(`bin-${id}`)).value = (oldCalVals[id] ?? '').toString();
   }
@@ -1085,32 +1091,37 @@ function unHover(/*data: any*/): void {
 
 let prevClickLine: number | undefined;
 
-function clickEvent(data: any): void {
-  const xClickData = data.points[0].x.toFixed(2);
+function clickEvent(data: PlotMouseEvent): void {
+  const dataPointX = data.points[0].x;
+  const dataPointY = data.points[0].y;
 
-  document.getElementById('click-data')!.innerText = xClickData + data.points[0].xaxis.ticksuffix + ': ' + data.points[0].y.toFixed(2) + data.points[0].yaxis.ticksuffix;
+  if (typeof dataPointX === 'number' && typeof dataPointY === 'number') {
+    const xClickData = dataPointX.toFixed(2);
 
-  for (const id of calClick) {
-    (<HTMLInputElement>document.getElementById(`bin-${id}`)).value = xClickData;
-    oldCalVals[id] = xClickData;
-    calClick.delete(id);
-    (<HTMLInputElement>document.getElementById(`select-bin-${id}`)).checked = false;
+    document.getElementById('click-data')!.innerText = xClickData + data.points[0].xaxis.ticksuffix + ': ' + dataPointY.toFixed(2) + data.points[0].yaxis.ticksuffix;
+
+    for (const id of calClick) {
+      (<HTMLInputElement>document.getElementById(`bin-${id}`)).value = xClickData;
+      oldCalVals[id] = dataPointX;
+      calClick.delete(id);
+      (<HTMLInputElement>document.getElementById(`select-bin-${id}`)).checked = false;
+    }
+
+    if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false); // Delete the last line
+
+    if (data.event.button === 0) { // Left-click. spawn a line in the plot
+      const newLine = Math.round(dataPointX);
+      plot.toggleLine(newLine, newLine.toString(), true);
+      prevClickLine = newLine;
+    } else if (data.event.button === 2) { // Right-click, delete old line
+      prevClickLine = undefined;
+    }
+    plot.updatePlot(spectrumData);
   }
-
-  if (prevClickLine) plot.toggleLine(prevClickLine, prevClickLine.toString(), false); // Delete the last line
-
-  if (data.event.button === 0) { // Left-click. spawn a line in the plot
-    const newLine = Math.round(data.points[0].x);
-    plot.toggleLine(newLine, newLine.toString(), true);
-    prevClickLine = newLine;
-  } else if (data.event.button === 2) { // Right-click, delete old line
-    prevClickLine = undefined;
-  }
-  plot.updatePlot(spectrumData);
 }
 
 
-function selectEvent(data: any): void {
+function selectEvent(data: PlotSelectionEvent): void {
   /* // Just a reminder on how to modify trace color for a specific selection. Doesn't work as expected though.
   data.points.forEach(function(pt: any) {
     x.push(pt.x);
@@ -2140,14 +2151,16 @@ function printReport(): void {
       }
 
       // Last step: Create an image element of the saved plot
-      (<any>window).Plotly.toImage(plot.plotDiv,{format: 'png', height: 400, width: 1000}).then(
-        function (url: string) {
-          const img = <HTMLImageElement>printDocument.getElementById('plot-image');
-          img.src = url;
-
-          img.onload = () => printWindow.print(); // Finally print the window if the image has been loaded
-        }
-      );
+      if (plot.plotDiv) {
+        Plotly.toImage(plot.plotDiv,{format: 'png', height: 400, width: 1000}).then(
+          function (url: string) {
+            const img = <HTMLImageElement>printDocument.getElementById('plot-image');
+            img.src = url;
+  
+            img.onload = () => printWindow.print(); // Finally print the window if the image has been loaded
+          }
+        );
+      }
     };
 
     printWindow.onafterprint = () => printWindow.close(); // Close the new print tab after printing
@@ -2472,7 +2485,7 @@ function saveJSON(name: string, value: string | boolean | number): boolean {
 }
 
 
-function loadJSON(name: string): any {
+function loadJSON(name: string): unknown {
   return JSON.parse(<string>localStorage.getItem(name));
 }
 
@@ -2570,72 +2583,72 @@ function loadSettingsDefault(): void {
 
 function loadSettingsStorage(): void {
   let setting = loadJSON('allowNotifications');
-  if (notificationsAvailable && setting !== null) allowNotifications = setting && (Notification.permission === 'granted');
+  if (notificationsAvailable && typeof setting === 'boolean') allowNotifications = setting && (Notification.permission === 'granted');
 
   setting = loadJSON('customURL');
-  if (setting) isoListURL = new URL(setting).href;
+  if (typeof setting === 'string') isoListURL = new URL(setting).href;
 
   setting = loadJSON('editMode');
-  if (setting !== null) plot.editableMode = setting;
+  if (typeof setting === 'boolean') plot.editableMode = setting;
 
   setting = loadJSON('fileDelimiter');
-  if (setting !== null) raw.delimiter = setting;
+  if (typeof setting === 'string') raw.delimiter = setting;
 
   setting = loadJSON('fileChannels');
-  if (setting !== null) raw.adcChannels = setting;
+  if (typeof setting === 'number') raw.adcChannels = setting;
 
   setting = loadJSON('plotRefreshRate');
-  if (setting !== null) refreshRate = setting;
+  if (typeof setting === 'number') refreshRate = setting;
 
   setting = loadJSON('serBufferSize');
-  if (setting !== null) SerialManager.maxSize = setting;
+  if (typeof setting === 'number') SerialManager.maxSize = setting;
 
   setting = loadJSON('timeLimitBool');
-  if (setting !== null) maxRecTimeEnabled = setting;
+  if (typeof setting === 'boolean') maxRecTimeEnabled = setting;
 
   setting = loadJSON('timeLimit');
-  if (setting !== null) maxRecTime = setting;
+  if (typeof setting === 'number') maxRecTime = setting;
 
   setting = loadJSON('maxIsoDist');
-  if (setting !== null) maxDist = setting;
+  if (typeof setting === 'number') maxDist = setting;
 
   setting = loadJSON('baudRate');
-  if (setting !== null) SerialManager.baudRate = setting;
+  if (typeof setting === 'number') SerialManager.baudRate = setting;
 
   setting = loadJSON('eolChar');
-  if (setting !== null) SerialManager.eolChar = setting;
+  if (typeof setting === 'string') SerialManager.eolChar = setting;
 
   setting = loadJSON('serChannels');
-  if (setting !== null) SerialManager.adcChannels = setting;
+  if (typeof setting === 'number') SerialManager.adcChannels = setting;
 
   setting = loadJSON('smaLength');
-  if (setting !== null) plot.smaLength = setting;
+  if (typeof setting === 'number') plot.smaLength = setting;
 
   setting = loadJSON('peakThres');
-  if (setting !== null) plot.peakConfig.thres = setting;
+  if (typeof setting === 'number') plot.peakConfig.thres = setting;
 
   setting = loadJSON('peakLag');
-  if (setting !== null) plot.peakConfig.lag = setting;
+  if (typeof setting === 'number') plot.peakConfig.lag = setting;
 
   setting = loadJSON('seekWidth');
-  if (setting !== null) SeekClosest.seekWidth = setting;
+  if (typeof setting === 'number') SeekClosest.seekWidth = setting;
 
   setting = loadJSON('plotDownload');
-  if (setting !== null) plot.downloadFormat = setting;
+  if (setting === 'svg' || setting === 'png' || setting === 'jpeg' || setting === 'webp') plot.downloadFormat = setting;
 
   // Setting for dark mode is right at the beginning of the file
 
   setting = loadJSON('gaussSigma');
-  if (setting !== null) plot.gaussSigma = setting;
+  if (typeof setting === 'number') plot.gaussSigma = setting;
 
   setting = loadJSON('showEnergyRes');
-  if (setting !== null) plot.peakConfig.showFWHM = setting;
+  if (typeof setting === 'boolean') plot.peakConfig.showFWHM = setting;
 
   setting = loadJSON('useFWHMFast');
-  if (setting !== null) CalculateFWHM.fastMode = setting;
+  if (typeof setting === 'boolean') CalculateFWHM.fastMode = setting;
 
   setting = loadJSON('newPeakStyle');
-  if (setting !== null) plot.peakConfig.newPeakStyle = setting;
+  if (typeof setting === 'boolean') plot.peakConfig.newPeakStyle = setting;
 }
 
 
@@ -2869,7 +2882,7 @@ function serialConnect(/*event: Event*/): void {
 
 
 function serialDisconnect(event: Event): void {
-  if (serRecorder?.isThisPort(<SerialPort | WebUSBSerialPort>event.target)) disconnectPort(true);
+  if (serRecorder?.isThisPort(<SerialPort | USBDevice>event.target)) disconnectPort(true);
 
   listSerial();
 
@@ -2909,7 +2922,9 @@ async function listSerial(): Promise<void> {
     option.text = `Port ${index} (${portsAvail[index]?.getInfo()})`;
     portSelector.add(option, parseInt(index));
 
-    if (serRecorder?.isThisPort(portsAvail[index]?.getPort())) {
+    const newPort = portsAvail[index]?.getPort();
+
+    if (newPort && serRecorder?.isThisPort(newPort)) {
       selectIndex = parseInt(index);
       option.text = '> ' + option.text;
     }
@@ -2957,9 +2972,17 @@ function selectPort(): number {
   const selectedPort = (<HTMLSelectElement>document.getElementById('port-selector')).selectedIndex;
   const newport = portsAvail[selectedPort];
 
-  if (newport && !serRecorder?.isThisPort(newport.getPort())) { // serRecorder?.port != newport
-    serRecorder = new SerialManager(newport);
-    clearConsoleLog(); // Clear serial console history
+  if (newport) {
+    const newPortPort = newport.getPort();
+
+    if (!serRecorder?.isThisPort(newPortPort)) { // serRecorder?.port != newport
+      if (serRecorder?.recording) disconnectPort(true); // Important for serial console: Stop recording when opening another device in the console
+
+      serRecorder = new SerialManager(newport);
+      clearConsoleLog(); // Clear serial console history
+
+      listSerial(); // Update list to show used port correctly
+    }
   }
 
   return selectedPort;
@@ -3343,4 +3366,29 @@ function refreshRender(type: DataType, firstLoad = false): void {
 =========================================
 */
 
-// Looks to be a PITA just to get the raw data/volume/amplitude from the microphone in the browser
+/*
+  STILL A LOT TO DO.
+    - See: https://web.dev/articles/media-recording-audio
+    - See: https://developer.mozilla.org/en-US/docs/Web/API/MediaStream
+*/
+async function handleSuccess(stream: MediaStream): Promise<void> {
+  const context = new AudioContext();
+  const source = context.createMediaStreamSource(stream);
+
+  await context.audioWorklet.addModule('./webworker/audio-worker'); // URL DOES NOT WORK! See https://github.com/webpack/webpack/issues/11543
+  
+  const worklet = new AudioWorkletNode(context, 'worklet-processor');
+
+  source.connect(worklet);
+  worklet.connect(context.destination);
+
+  console.log('MediaStream', stream);
+  console.log('AudioTracks', stream.getAudioTracks());
+}
+
+
+document.getElementById('sound-start-btn')!.onclick = () => openMic();
+
+function openMic(): void {
+  navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(handleSuccess);
+}

@@ -8,6 +8,9 @@
 
 */
 
+// Import Plotly.js
+import Plotly, { Annotations, Config, Data, Layout, PlotlyHTMLElement, Shape } from 'plotly.js-basic-dist-min';
+
 import PolynomialRegression from './lib/regression/PolynomialRegression.min';
 import { SpectrumData, IsotopeList } from './main';
 
@@ -33,7 +36,7 @@ interface GaussData {
   sigma: number;
 }
 
-interface Shape {
+type ShapePlus = Partial<Shape> & {
   type: string;
   xref: string;
   yref: string;
@@ -41,16 +44,14 @@ interface Shape {
   y0: number;
   x1: number;
   y1: number;
-  editable?: boolean;
   line: {
       color: string;
       width: number;
       dash: string;
   };
-  opacity?: number;
 }
 
-interface Anno {
+type AnnoPlus = Partial<Annotations> & {
   x: number;
   y: number;
   xref: string;
@@ -58,42 +59,50 @@ interface Anno {
   text: string;
   showarrow: boolean;
   arrowhead: number;
-  arrowcolor?: string;
   ax: number;
   ay: number;
-  editable?: boolean;
-  arrowsize?: number;
   hovertext: string;
   font: {
     size: number;
   };
-  bgcolor?: string;
 }
 
-interface Trace {
+type Trace = Partial<Data> & {
   name: string;
-  stackgroup?: string;
   x: number[];
   y: number[];
   type: 'scatter';
-  yaxis?: string;
   mode: 'lines' | 'markers' | 'lines+markers' | 'text+markers';
-  fill?: string;
-  opacity?: number;
   line?: {
-    color?: string;
-    width?: number;
     shape?: 'linear' | 'hvh' | 'spline'
   };
-  marker?: {
-    color?: string;
-    size?: number;
-    symbol?: string
-  },
-  width?: number;
   text?: string[];
-  textposition?: string;
-}
+};
+
+type LayoutPlus = Partial<Layout> & { // Implement stuff from the docs that are not in the Plotly Types?!
+  xaxis: {
+    autorangeoptions?: {
+      minallowed?: number;
+    }
+  };
+  yaxis: {
+    autorangeoptions?: {
+      minallowed?: number;
+    }
+  };
+  activeselection?: {
+    fillcolor?: string;
+    opacity?: number;
+  };
+  newselection?: {
+    line?: {
+      color?: string;
+      width?: number;
+      dash?: string;
+    };
+  };
+  annotations: AnnoPlus[];
+};
 
 /*
   Seek the closest matching isotope by energy from an isotope list
@@ -274,8 +283,8 @@ export class SpectrumPlot {
   };
   cps = false;
   enhanceEfficiency = false;
-  private shapes: Shape[] = [];
-  private annotations: Anno[] = [];
+  private shapes: ShapePlus[] = [];
+  private annotations: AnnoPlus[] = [];
   editableMode = false;
   isotopeSeeker: SeekClosest | undefined;
   peakConfig = {
@@ -288,12 +297,12 @@ export class SpectrumPlot {
     lines: <number[]>[]
   };
   gaussSigma = 2;
-  private customDownloadButton = {
-    name: 'downloadPlot',
-    title: 'Download plot as HTML',
-    icon: (<any>window).Plotly.Icons['disk'],
+  private customExportButton = {
+    name: 'exportPlot',
+    title: 'Export plot as HTML',
+    icon: Plotly.Icons.disk,
     direction: 'up',
-    click: (plotElement: any) => {
+    click: (plotElement: PlotlyHTMLElement) => {
       const newLayout = JSON.parse(JSON.stringify(plotElement.layout));
       newLayout.images[0].source = new URL('/assets/logo.svg', window.location.origin).href;
 
@@ -349,11 +358,11 @@ export class SpectrumPlot {
   private customFullscreenButton = {
     name: 'fullscreen',
     title: 'Toggle Fullscreen',
-    icon: (<any>window).Plotly.Icons['drawrect'],
+    icon: Plotly.Icons.drawrect,
     direction: 'up',
-    click: (plotElement: any) => {
+    click: (plotElement: PlotlyHTMLElement) => {
       plotElement.classList.toggle('fullscreen');
-      (<any>window).Plotly.update(plotElement);
+      Plotly.update(plotElement, {}, {});
   }};
   gaussValues: GaussData = {
     dataArray: [],
@@ -576,7 +585,7 @@ export class SpectrumPlot {
     const hovertext = energy.toFixed(2);
 
     if (enabled) {
-      const newLine: Shape = {
+      const newLine: ShapePlus = {
         type: 'line',
         xref: 'x',
         yref: 'paper',
@@ -585,7 +594,6 @@ export class SpectrumPlot {
         x1: energy,
         y1: 1,
         //fillcolor: 'black',
-        editable: false,
         line: {
           color: 'blue',
           width: 0.8,
@@ -593,7 +601,7 @@ export class SpectrumPlot {
         },
         opacity: 0.66
       };
-      const newAnno: Anno = {
+      const newAnno: AnnoPlus = {
         x: this.xAxis === 'log' ? Math.log10(energy) : energy,
         y: 1,
         xref: 'x',
@@ -604,7 +612,6 @@ export class SpectrumPlot {
         arrowhead: 7,
         ax: 0,
         ay: -20,
-        editable: false,
         hovertext: hovertext,
         font: {
           size: 11,
@@ -761,6 +768,8 @@ export class SpectrumPlot {
     Plot Radiation Evolution Chart
   */
   private plotEvolution(cpsValues: number[], update: boolean): void {
+    if (!this.plotDiv) return; // No valid HTMLElement for the plot to show
+
     const targetSize = Math.ceil(cpsValues.length / this.evolutionPointLimit);
     const xAxis = this.getXAxis(cpsValues.length, targetSize);
     const yAxis = this.limitArraySize(cpsValues, targetSize);
@@ -795,7 +804,7 @@ export class SpectrumPlot {
       }
     };
 
-    const layout = {
+    const layout: LayoutPlus = {
       uirevision: 1,
       autosize: true, // Needed for resizing on update
       title: 'Radiation Evolution',
@@ -869,10 +878,10 @@ export class SpectrumPlot {
         yanchor: 'top',
         yref: 'paper',
       }],
-      annotations: <Anno[]>[]
+      annotations: []
     };
 
-    const config = {
+    const config: Partial<Config> = {
       responsive: true,
       scrollZoom: false,
       //displayModeBar: true,
@@ -882,22 +891,24 @@ export class SpectrumPlot {
         filename: 'gamma_mca_evolution',
       },
       editable: this.editableMode,
-      modeBarButtons: <any[][]>[
+      modeBarButtons: [
         ['zoom2d'],
         ['zoomIn2d', 'zoomOut2d'],
         ['autoScale2d', 'resetScale2d'],
         ['toImage'],
-        [this.customDownloadButton],
+        [this.customExportButton],
         [this.customFullscreenButton]
       ]
     };
 
-    (<any>window).Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, averageTrace], layout, config);
+    Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, averageTrace], layout, config);
   }
   /*
     Plot Calibration Chart
   */
   private plotCalibration(dataObj: SpectrumData, update: boolean): void {
+    if (!this.plotDiv) return; // No valid HTMLElement for the plot to show
+
     let axisSize = dataObj.data.length;
 
     if (Object.keys(this.calibration.points).length) {
@@ -947,7 +958,7 @@ export class SpectrumPlot {
       index++;
     }
 
-    const layout = {
+    const layout: LayoutPlus = {
       uirevision: 1,
       autosize: true, // Needed for resizing on update
       title: 'Calibration',
@@ -1024,10 +1035,10 @@ export class SpectrumPlot {
         yanchor: 'top',
         yref: 'paper',
       }],
-      annotations: <Anno[]>[]
+      annotations: []
     };
 
-    const config = {
+    const config: Partial<Config> = {
       responsive: true,
       scrollZoom: false,
       //displayModeBar: true,
@@ -1037,17 +1048,17 @@ export class SpectrumPlot {
         filename: 'gamma_mca_calibration',
       },
       editable: this.editableMode,
-      modeBarButtons: <any[][]>[
+      modeBarButtons: [
         ['zoom2d'],
         ['zoomIn2d', 'zoomOut2d'],
         ['autoScale2d', 'resetScale2d'],
         ['toImage'],
-        [this.customDownloadButton],
+        [this.customExportButton],
         [this.customFullscreenButton]
       ]
     };
 
-    (<any>window).Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, markersTrace], layout, config);
+    Plotly[update ? 'react' : 'newPlot'](this.plotDiv, [trace, markersTrace], layout, config);
   }
   /*
     Compute data for pulse height histogram with cps, sma, gauss filter and others
@@ -1190,12 +1201,13 @@ export class SpectrumPlot {
     Plot All The Data
   */
   private plotData(dataObj: SpectrumData, update: boolean): void {
+    if (!this.plotDiv) return; // No valid HTMLElement for the plot to show
     if (this.type !== 'default') return; // Ignore this if the calibration chart is currently shown
 
     /*
       All The Layout Stuff
     */
-    const layout = {
+    const layout: LayoutPlus = {
       uirevision: 1,
       autosize: true, // Needed for resizing on update
       title: 'Energy Spectrum',
@@ -1292,8 +1304,8 @@ export class SpectrumPlot {
         yanchor: 'top',
         yref: 'paper',
       }],
-      shapes: <Shape[]>[],
-      annotations: <Anno[]>[],
+      shapes: [],
+      annotations: [],
       //shapes: this.shapes,
       //annotations: JSON.parse(JSON.stringify(this.annotations)), // Copy array but do not reference
     };
@@ -1305,7 +1317,7 @@ export class SpectrumPlot {
       layout.xaxis.ticksuffix = ' keV';
     }
 
-    const config = {
+    const config: Partial<Config> = {
       responsive: true,
       scrollZoom: false,
       //displayModeBar: true,
@@ -1315,13 +1327,13 @@ export class SpectrumPlot {
         filename: 'gamma_mca_spectrum',
       },
       editable: this.editableMode,
-      modeBarButtons: <any[][]>[
+      modeBarButtons: [
         ['select2d'],
         ['zoom2d'],
         ['zoomIn2d', 'zoomOut2d'],
         ['autoScale2d', 'resetScale2d'],
         ['toImage'],
-        [this.customDownloadButton],
+        [this.customExportButton],
         [this.customFullscreenButton]
       ]
     };
@@ -1378,7 +1390,7 @@ export class SpectrumPlot {
       }
     }
 
-    //setTimeout((<any>window).Plotly[update ? 'react' : 'newPlot'], 1, this.plotDiv, data, layout, config); // Make plot update async
-    (<any>window).Plotly[update ? 'react' : 'newPlot'](this.plotDiv, data, layout, config);
+    //setTimeout(Plotly[update ? 'react' : 'newPlot'], 1, this.plotDiv, data, layout, config); // Make plot update async
+    Plotly[update ? 'react' : 'newPlot'](this.plotDiv, data, layout, config);
   }
 }
