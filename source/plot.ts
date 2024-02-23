@@ -11,7 +11,9 @@
 // Import Plotly.js
 import Plotly, { Annotations, Config, Data, Layout, PlotlyHTMLElement, Shape } from 'plotly.js-basic-dist-min';
 
-import PolynomialRegression from './lib/regression/PolynomialRegression.min';
+// Import Regression JS
+import regression, { DataPoint } from 'regression';
+
 import { SpectrumData, IsotopeList } from './main';
 
 export interface CoeffObj {
@@ -400,18 +402,15 @@ export class SpectrumPlot {
     Compute the coefficients used for calibration
   */
   async computeCoefficients(): Promise<void> {
-    const data: { x: number, y: number }[] = [];
+    const data: DataPoint[] = [];
 
     for (const [bin, energy] of Object.entries(this.calibration.points)) {
-      data.push({
-        x: parseFloat(bin),
-        y: energy
-      });
+      data.push([parseFloat(bin), energy]);
     }
 
-    const model = PolynomialRegression.read(data, data.length - 1);
-    const terms = model.getTerms();
-
+    const result = regression.polynomial(data, { order: data.length - 1, precision: 10 });
+    const terms = result.equation.reverse();
+    
     for (let i = 0; i < data.length; i++) {
       this.calibration.coeff[`c${i+1}`] = terms[i];
     }
