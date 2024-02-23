@@ -23,6 +23,7 @@
     - Add support for IndexedDB API to store spectra locally inside the browser/app without the need for a filesystem (discussions/227)
 
     - Sound card spectrometry prove of concept
+    - Switch WebUSB Serial implementation to google/web-serial-polyfill: https://www.npmjs.com/package/web-serial-polyfill and https://github.com/google/web-serial-polyfill
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
