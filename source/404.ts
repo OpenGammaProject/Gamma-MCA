@@ -9,7 +9,7 @@
 */
 
 // Import the main CSS file
-import './main.scss';
+import './css/main.scss';
 
 import { applyTheming, autoThemeChange } from './global-theming';
 

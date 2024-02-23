@@ -10,8 +10,8 @@
 
 */
 
-// Import all of PolynomialRegression's JS
-import PolynomialRegression from './lib/regression/PolynomialRegression.min';
+// Import Regression JS
+import regression, { DataPoint } from 'regression';
 
 // Import all of z-schema's JS
 import ZSchema from 'z-schema';
@@ -150,20 +150,15 @@ export class RawData {
     if (valueArray.length < 3) return undefined; // Not enough data to get the coefficients, return no calibration
 
     const xEnergyData = valueArray.map((value) => parseFloat(value.split(this.delimiter)[0].trim())/*, this*/);
-    const regressionArray: {x: number, y: number}[] = [];
+    const regressionArray: DataPoint[] = [];
 
     for (const index in xEnergyData) {
-      const newObj  = {
-        x: parseInt(index),
-        y: xEnergyData[index]
-      };
-      regressionArray.push(newObj);
+      regressionArray.push([parseInt(index), xEnergyData[index]]);
     }
 
-    const model = PolynomialRegression.read(regressionArray, 3); // Use degree 3 for a good default calibration
-    const terms = model.getTerms();
+    const result = regression.polynomial(regressionArray, { order: 4, precision: 10 }); // Use degree 4 for a good default calibration
 
-    return terms;
+    return result.equation.reverse();
   }
 
   csvToArray(data: string): CSVData {
