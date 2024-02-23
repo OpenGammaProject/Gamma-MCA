@@ -34,7 +34,7 @@
 */
 
 // Import the main CSS file
-import './main.scss';
+import './css/main.scss';
 
 // Import Bootstrap plugins
 import { Modal, Offcanvas, Toast } from 'bootstrap';
