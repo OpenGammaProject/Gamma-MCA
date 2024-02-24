@@ -13,7 +13,7 @@
     "autoprefixer": "^10.4.17",
     "css-loader": "^6.10.0",
     "css-minimizer-webpack-plugin": "^6.0.0",
-    "eslint": "^8.56.0",
+    "eslint": "^8.57.0",
     "mini-css-extract-plugin": "^2.8.0",
     "postcss-loader": "^8.1.0",
     "sass": "^1.71.1",
