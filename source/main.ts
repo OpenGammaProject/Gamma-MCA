@@ -23,14 +23,12 @@
     - Add support for IndexedDB API to store spectra locally inside the browser/app without the need for a filesystem (discussions/227)
 
     - Sound card spectrometry prove of concept
-    - Switch WebUSB Serial implementation to google/web-serial-polyfill: https://www.npmjs.com/package/web-serial-polyfill and https://github.com/google/web-serial-polyfill
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
     - Plotly.js: Plot updates takes forever, but there is no real way to improve it (?)
     - Plotly.js: Would love to use ScatterGL (WebGL) that VASTLY improves performance, but stackgroups don't work there: https://github.com/plotly/plotly.js/issues/5365
     - Plotly.js: Selection Box is technically not supported on scatter traces w/o text or markers, that's why it's spamming errors : https://github.com/plotly/plotly.js/issues/170
-    - Service Worker: Somehow fetching and caching the hits tracker does not work in Edge for me (hits.seeyoufarm.com). Works fine with FF.
 
 */
 
