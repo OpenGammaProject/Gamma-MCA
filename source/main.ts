@@ -3471,3 +3471,73 @@ function openMic(): void {
   navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(handleSuccess);
 }
 */
+/*
+  LOAD WAV FILE TO TEST DATA PROCESSING
+*/
+/*
+async function readWavFile(file: File): Promise<Float32Array | null> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      const result = event.target?.result as ArrayBuffer;
+      const audioContext = new (window.AudioContext || (<any>window).webkitAudioContext)();
+
+      audioContext.decodeAudioData(result, (buffer) => {
+        const channelData = buffer.getChannelData(0); // Assuming mono audio
+
+        const float32Array = new Float32Array(channelData);
+        resolve(float32Array);
+      }, (decodeError) => {
+        reject(decodeError);
+      });
+    };
+
+    reader.onerror = (error) => {
+      reject(error);
+    };
+
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+
+function generateCSV(data: Float32Array, maxLength = 10_000_000): void {
+  // Limit the length of the data
+  const truncatedData = data.subarray(0, maxLength);
+
+  // Convert the truncated Float32Array to a CSV string
+  const csvContent = truncatedData.join('\n');
+
+  // Create a Blob and trigger a download
+  const blob = new Blob([csvContent], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'raw_audio_data.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+
+const inputElement = <HTMLInputElement>document.getElementById('audio-input');
+
+inputElement.addEventListener('change', async (event) => {
+  const file = (event.target as HTMLInputElement).files?.[0];
+
+  if (file) {
+    try {
+      const rawData = await readWavFile(file);
+      console.log(rawData);
+      // Now you can use `rawData` for further analysis or processing
+
+      if (rawData) generateCSV(rawData);
+    } catch (error) {
+      console.error('Error reading WAV file:', error);
+    }
+  }
+});
+
+*/
