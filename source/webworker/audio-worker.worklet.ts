@@ -3,13 +3,22 @@
 */
 
 class WorkletProcessor extends AudioWorkletProcessor {
-	process(inputs: any, outputs: any, parameters: any) {
-		// Do something with the data, e.g. convert it to WAV
-		console.log('input', inputs);
-		console.log('output', outputs);
-		console.log('params', parameters);
-		return true;
-	}
+  process(inputs: Float32Array[][], outputs: Float32Array[][]/*, parameters: unknown*/) {
+    // Assuming mono input for simplicity
+    const input = inputs[0][0];
+    const output = outputs[0][0];
+
+    // Send raw audio data to the main thread
+    this.port.postMessage({ rawData: input });
+
+    // Process audio data if needed
+    // ...
+
+    // Copy input to output (for simplicity)
+    output.set(input);
+
+    return true;
+  }
 }
 
 // Register the AudioWorklet processor

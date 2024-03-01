@@ -3369,20 +3369,99 @@ function refreshRender(type: DataType, firstLoad = false): void {
   STILL A LOT TO DO.
     - See: https://web.dev/articles/media-recording-audio
     - See: https://developer.mozilla.org/en-US/docs/Web/API/MediaStream
+
+  Getting the raw audio data from the mic already works.
+  Need to analyze the data now to generate a hist.
 */
+/*
+let context: AudioContext | null = null;
+let worklet: AudioWorkletNode | null = null;
+let mediaStream: MediaStream | null = null;
+let rawDataArray: Float32Array[] = [];
+
 async function handleSuccess(stream: MediaStream): Promise<void> {
-  const context = new AudioContext();
+  context = new AudioContext();
+
+  // Get the sample rate of the audio context
+  console.log('Sample Rate:', context.sampleRate);
+
   const source = context.createMediaStreamSource(stream);
 
-  await context.audioWorklet.addModule('./webworker/audio-worker'); // URL DOES NOT WORK! See https://github.com/webpack/webpack/issues/11543
-  
-  const worklet = new AudioWorkletNode(context, 'worklet-processor');
+  await context.audioWorklet.addModule('/source/webworker/audio-worker.worklet.js'); // MUST BE COMPILED SEPARATELY! See https://github.com/webpack/webpack/issues/11543
+
+  worklet = new AudioWorkletNode(context, 'worklet-processor');
+
+  // Message handler to receive raw audio data from the AudioWorkletProcessor
+  worklet.port.onmessage = (event: any) => {
+    const rawData: Float32Array = event.data.rawData;
+    
+    // Process the raw audio data as needed
+    // ...
+
+    //console.log('Data:', rawData);
+
+    //const view = new Int32Array(rawData);
+
+    //console.log(view);
+
+    // Store the raw audio data
+    rawDataArray.push(rawData);
+  };
 
   source.connect(worklet);
   worklet.connect(context.destination);
 
+  mediaStream = stream;
+
   console.log('MediaStream', stream);
   console.log('AudioTracks', stream.getAudioTracks());
+}
+
+
+function generateCSV(): void {
+  // Flatten the rawDataArray into a single Float32Array
+  const flattenedData = new Float32Array(rawDataArray.length * rawDataArray[0].length);
+  rawDataArray.forEach((data, index) => flattenedData.set(data, index * data.length));
+
+  // Convert the Float32Array to a CSV string
+  const csvContent = flattenedData.join('\n');
+
+  // Create a Blob and trigger a download
+  const blob = new Blob([csvContent], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'raw_audio_data.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  // Reset rawDataArray
+  rawDataArray = [];
+}
+
+
+document.getElementById('sound-stop-btn')!.onclick = () => stopAudioProcessing();
+
+function stopAudioProcessing(): void {
+  if (context && worklet && mediaStream) {
+    // Disconnect nodes
+    worklet.disconnect();
+    context.close();
+
+    // Stop the MediaStream tracks
+    mediaStream.getAudioTracks().forEach((track) => track.stop());
+
+    // Save the raw audio data to a CSV file
+    generateCSV();
+
+    // Reset variables
+    context = null;
+    worklet = null;
+    mediaStream = null;
+    rawDataArray = [];
+  }
 }
 
 
@@ -3391,3 +3470,4 @@ document.getElementById('sound-start-btn')!.onclick = () => openMic();
 function openMic(): void {
   navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(handleSuccess);
 }
+*/
