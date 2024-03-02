@@ -2,7 +2,7 @@
 
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/OpenGammaProject/Gamma-MCA?style=flat-square) ![GitHub](https://img.shields.io/github/license/OpenGammaProject/Gamma-MCA?style=flat-square) ![GitHub deployments](https://img.shields.io/github/deployments/OpenGammaProject/Gamma-MCA/github-pages?label=GitHub%20%20pages&style=flat-square) ![Website](https://img.shields.io/website?url=https%3A%2F%2Fspectrum.nuclearphoenix.xyz&style=flat-square)  ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/OpenGammaProject/Gamma-MCA/codeql.yml?label=CodeQL&style=flat-square) ![Dependencies](https://img.shields.io/librariesio/github/OpenGammaProject/Gamma-MCA?style=flat-square)
 
-Progressive web application for gamma spectroscopy (multi-channel analyzer/MCA) including file and live plot support via the serial interface.
+Progressive web application for gamma spectroscopy (multi-channel analyzer/MCA) including file import/export of various formats and live plot support via the serial interface. Designed to be straightforward and easy to use.
 
 [![Example spectrum](docs/thumbnail.png)](https://www.youtube.com/watch?v=dkMhoUwDla0) _(Click image for a short trailer video)_
 
@@ -30,14 +30,16 @@ Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://
 
 ## Importing Spectra
 
-There are essentially two types of files you can use - both being text files, e.g. CSVs, XMLs or JSONs:
+There are essentially two types of files you can use - both being text files, e.g. `CSV`, `XML` or `JSON`:
 
-1. _Chronological streams_ where each new detected event gets printed to the file after the previous one. This includes streams from our [Open Gamma Detector](https://github.com/OpenGammaProject/Open-Gamma-Detector) or any other serial device that has been set up to do so. **Important:** The whole file will be read and the individual events are confined using the delimiter. Whitespace or newlines do not matter. The delimiter can be changed in the settings.
-2. Ready-to-use _histograms_. This includes common file types like TKAs, CSVs and also, e.g., RadiaCode 101 XML exports. **Important:** If your file has more than one element per line (CSV), the first one will be regarded as channel index/energy and the second as the number of counts. If there's one element only, it will be regarded as the number of counts instead.
+1. _Chronological streams_ where each new detected event gets printed to the file after the previous one. This includes raw streams from the [Open Gamma Detector](https://github.com/OpenGammaProject/Open-Gamma-Detector) or any other serial device that has been set up to do so. **Important:** The whole file will be read and the individual events are confined using the delimiter. Whitespace or newlines do not matter. The delimiter can be changed in the settings.
+2. Ready-to-use _histograms_. This includes common file types like `TKA`, `CSV`, `TXT`, `JSON` and also, e.g., RadiaCode-101/Becqmoni `XML` exports. This is the more common format for files. **Important:** If your `CSV`/`TXT` file has more than one element per line, the first one will be regarded as channel index/energy and the second as the number of counts. If there's one element only, it will be regarded as the number of counts instead.
 
 Gamma MCA can import JSON files complying with the [NPES JSON Schema](https://github.com/OpenGammaProject/NPES-JSON).
 
 ## Using Serial
+
+Serial connections are designed to be very simple to use, so you don't need some crazy complicated or obscure format. Just send over the raw bin data in one of the two following forms and Gamma MCA will handle the rest.
 
 Thanks to the WebSerial API and WebUSB you can use any serial device capable of doing gamma spectroscopy or processing the data to plot your spectra. The are two types of prints supported:
 
@@ -67,40 +69,40 @@ Both modes are currently supported by our [Open Gamma Detector](https://github.c
 
 ## Requirements
 
-**Gamma MCA should work in any modern browser version that is no older than roughly the start of 2023.** If you're using an older browser version (it's highly recommended to update) there are some fallbacks to most of the important the functions. The OS of your device doesn't matter.
+**Gamma MCA should work in any modern browser version that is no older than the first quarter of 2023 (roughly).** If you're using an older browser version (it's highly recommended to update) there are some fallbacks to most of the important the functions. The OS of your device doesn't matter.
 
 Some functions such as the [Web Serial API](https://caniuse.com/web-serial) and [WebUSB](https://caniuse.com/webusb) are only supported in **Chromium-based browsers** (Google Chrome, MS Edge, Opera, ...) and not Safari or Firefox. Support on mobile devices can differ so YMMV.
 
-Most of the progressive web app functionality (PWA) is supported by most browsers (Chrome, Firefox, Safari, ...). However, the **full feature set is unfortunately only available in Google Chrome or MS Edge** at the moment of writing. This might change in the future.
+Most of the progressive web app functionality (PWA) is supported by most browsers (Chrome, Firefox, Safari, ...). However, the **full feature set is unfortunately only available in Google Chrome or MS Edge** at the moment of writing (02/2024). This might change in the future.
 
-**Weaker systems might experience artifacting, a reduced count rate or even spiking in the count rate when switching tabs, plots or changing settings.** Any reasonably powerful machine in 2023 and beyond should be more than capable to run Gamma MCA in any use case, though. Problems can occur for example on **SBCs, mobile or special mini-PCs**. This mostly happens when a lot of data has been collected, i.e. for long live recordings. Most of the processing power actually goes to refreshing the plot, so increasing the `Data Refresh Time` can be helpful there!
+**Weaker systems might experience artifacting, a reduced count rate or even spiking in the count rate when switching tabs, plots or changing settings.** Any reasonably powerful machine in 2023 and beyond should be more than capable to run Gamma MCA in any use case, though. Problems can occur for example on **SBCs, mobile or special low-power mini-PCs**. This mostly happens when a lot of data has been collected, i.e. for long live recordings. Most of the processing power actually goes to refreshing the plot, so increasing the `Data Refresh Time` can be helpful there!
 
-**tl;dr:** Use Chrome or Edge on a machine that can play 1080p60 videos on Youtube in the background without you noticing any performance hits.
+**tl;dr:** Use the latest Chrome or Edge on a machine that is capable of playing 1080p60 videos on Youtube without you noticing any performance hits and you'll be fine.
 
 ## Using Locally
 
-You can use most if not all features of Gamma MCA locally on your machine. All it takes you to do is download this repository and install Python 3.
+You can use most if not all features of Gamma MCA locally on your machine if you don't want to or aren't able to access the internet. All it takes you to do is download this repository and install the latest version of Python 3.
 
-You can then execute the `run_locally.py` script that will create a web server on your local machine and navigate to `http://127.0.0.1` in a browser of your choice.
+You can then execute the `run_locally.py` script that will create a web server on your local machine and navigate to `http://127.0.0.1` in a browser of your choice. This does **not** require any actual internet connection.
 
 Keep in mind that Gamma MCA will not be able to automatically update itself anymore. Also, this will oviously only work inside the same network as the web server except if you do some port forwarding or stuff.
 
-Nothing will be tested for this specific use case, so use at your own risk.
+Nothing will be tested for this specific use case, so your mileage may vary.
 
 ## Contributing
 
-The PWA is written with TypeScript. To make changes to the code, please only commit to and make pull requests for the `dev` branch! `main` will only pull changes from `dev` once I approve it.
+The PWA is written with TypeScript. To make changes to the code, please only commit to and make pull requests for the `dev` branch! `main` will only pull changes from `dev` once I approve a new version.
 
-You can find all the `.ts` files inside the `source` folder. The `tsconfig.json` as well as the `package.json` for installation of the node packages and compilation is in the root directory. The `index.html` is the only HTML file and can also be found there. To change other files like the CSS, fonts or so, head to `assets`. Other JS libs used in this app can be found in `assets/js/external`.
+You can find all the relevant `.ts` and `.(s)css` files inside the `source` folder. The `tsconfig.json` as well as the `package.json` for installation of the node packages and compilation is in the root directory. `index.html` and `print.html` are the only HTML files worth editing and can also be found there.
 
-To make changes to the service worker, have a look at `service-worker.js`. It is written in vanilla JS, because compiling it in TS is absolute pain and totally not worth it.
+To make changes to the service worker, have a look at `service-worker.js` in the root directory. It is written in vanilla JS, because it works and compiling it in TS is absolute pain and totally not worth it.
 
 ## Branding
 
-The [LICENSE](/LICENSE) does not apply to the name _Gamma MCA_ and especially the Gamma MCA/OpenGammaProject [logo](assets/logo.svg). This also includes any derivatives that contain the same logo, such as the images inside `assets/favicon` or `assets/files`.
+The [LICENSE](/LICENSE) does **not** apply to the name _Gamma MCA_ and especially the Gamma MCA/OpenGammaProject [logo](assets/logo.svg). This also includes any derivatives that contain the same or similar logos, such as the images inside `assets/favicon` or `assets/files`.
 
 * Do not use them in any way that suggests you are the OpenGammaProject or Gamma MCA or that the OpenGammaProject is endorsing you or your offering or project.
 * Do not use the OpenGammaProject logo as the icon or logo for your business/organization, offering, project, domain name, social media account, or website.
 * Do not modify the OpenGammaProject logo.
 
-Feel free to fork this repository to archive it or create pull requests here and contribute. However, if you're forking the project, then make (significant) changes without the purpose of contribution these here, please remove the branding (_Gamma MCA_ name and all OpenGammaProject-related logos).
+Please follow the [LICENSE](/LICENSE) for anything else.
