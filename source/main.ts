@@ -17,20 +17,18 @@
 
     - NPESv2: Create additional save (append) button that allows users to save multiple data packages in one file
     - NPESv2: Let user remove data packages from file in the import selection dialog
-    - Automatically close system notifications when the user interacts with the page again
     - Web Worker for Isotope Seek, FWHM Calculation, Plot update, Gaussian correlation (improved performance?)
-    - Fully-fledged efficiency calibration
+    - Add full custom efficiency calibration
     - Add support for IndexedDB API to store spectra locally inside the browser/app without the need for a filesystem (discussions/227)
 
+    - Automatically close system notifications when the user interacts with the page again
     - Sound card spectrometry prove of concept
-    - Switch WebUSB Serial implementation to google/web-serial-polyfill: https://www.npmjs.com/package/web-serial-polyfill and https://github.com/google/web-serial-polyfill
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
     - Plotly.js: Plot updates takes forever, but there is no real way to improve it (?)
     - Plotly.js: Would love to use ScatterGL (WebGL) that VASTLY improves performance, but stackgroups don't work there: https://github.com/plotly/plotly.js/issues/5365
     - Plotly.js: Selection Box is technically not supported on scatter traces w/o text or markers, that's why it's spamming errors : https://github.com/plotly/plotly.js/issues/170
-    - Service Worker: Somehow fetching and caching the hits tracker does not work in Edge for me (hits.seeyoufarm.com). Works fine with FF.
 
 */
 
@@ -38,7 +36,13 @@
 import './css/main.scss';
 
 // Import Bootstrap plugins
-import { Modal, Offcanvas, Toast } from 'bootstrap';
+import 'bootstrap/js/dist/alert';
+import 'bootstrap/js/dist/button';
+import 'bootstrap/js/dist/collapse';
+import 'bootstrap/js/dist/tab';
+import Modal from 'bootstrap/js/dist/modal';
+import Offcanvas from 'bootstrap/js/dist/offcanvas';
+import Toast from 'bootstrap/js/dist/toast';
 
 // Import Plotly.js
 import Plotly, { PlotHoverEvent, PlotMouseEvent, PlotSelectionEvent, PlotlyHTMLElement } from 'plotly.js-basic-dist-min';
@@ -136,7 +140,7 @@ const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2024-02-19';
+const APP_VERSION = '2024-03-03';
 const localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 const wakeLockAvailable = 'wakeLock' in navigator; // Test for Screen Wake Lock API
 const notificationsAvailable = 'Notification' in window; // Test for Notifications API
@@ -3371,20 +3375,99 @@ function refreshRender(type: DataType, firstLoad = false): void {
   STILL A LOT TO DO.
     - See: https://web.dev/articles/media-recording-audio
     - See: https://developer.mozilla.org/en-US/docs/Web/API/MediaStream
+
+  Getting the raw audio data from the mic already works.
+  Need to analyze the data now to generate a hist.
 */
+/*
+let context: AudioContext | null = null;
+let worklet: AudioWorkletNode | null = null;
+let mediaStream: MediaStream | null = null;
+let rawDataArray: Float32Array[] = [];
+
 async function handleSuccess(stream: MediaStream): Promise<void> {
-  const context = new AudioContext();
+  context = new AudioContext();
+
+  // Get the sample rate of the audio context
+  console.log('Sample Rate:', context.sampleRate);
+
   const source = context.createMediaStreamSource(stream);
 
-  await context.audioWorklet.addModule('./webworker/audio-worker'); // URL DOES NOT WORK! See https://github.com/webpack/webpack/issues/11543
-  
-  const worklet = new AudioWorkletNode(context, 'worklet-processor');
+  await context.audioWorklet.addModule('/source/webworker/audio-worker.worklet.js'); // MUST BE COMPILED SEPARATELY! See https://github.com/webpack/webpack/issues/11543
+
+  worklet = new AudioWorkletNode(context, 'worklet-processor');
+
+  // Message handler to receive raw audio data from the AudioWorkletProcessor
+  worklet.port.onmessage = (event: any) => {
+    const rawData: Float32Array = event.data.rawData;
+    
+    // Process the raw audio data as needed
+    // ...
+
+    //console.log('Data:', rawData);
+
+    //const view = new Int32Array(rawData);
+
+    //console.log(view);
+
+    // Store the raw audio data
+    rawDataArray.push(rawData);
+  };
 
   source.connect(worklet);
   worklet.connect(context.destination);
 
+  mediaStream = stream;
+
   console.log('MediaStream', stream);
   console.log('AudioTracks', stream.getAudioTracks());
+}
+
+
+function generateCSV(): void {
+  // Flatten the rawDataArray into a single Float32Array
+  const flattenedData = new Float32Array(rawDataArray.length * rawDataArray[0].length);
+  rawDataArray.forEach((data, index) => flattenedData.set(data, index * data.length));
+
+  // Convert the Float32Array to a CSV string
+  const csvContent = flattenedData.join('\n');
+
+  // Create a Blob and trigger a download
+  const blob = new Blob([csvContent], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'raw_audio_data.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  // Reset rawDataArray
+  rawDataArray = [];
+}
+
+
+document.getElementById('sound-stop-btn')!.onclick = () => stopAudioProcessing();
+
+function stopAudioProcessing(): void {
+  if (context && worklet && mediaStream) {
+    // Disconnect nodes
+    worklet.disconnect();
+    context.close();
+
+    // Stop the MediaStream tracks
+    mediaStream.getAudioTracks().forEach((track) => track.stop());
+
+    // Save the raw audio data to a CSV file
+    generateCSV();
+
+    // Reset variables
+    context = null;
+    worklet = null;
+    mediaStream = null;
+    rawDataArray = [];
+  }
 }
 
 
@@ -3393,3 +3476,74 @@ document.getElementById('sound-start-btn')!.onclick = () => openMic();
 function openMic(): void {
   navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then(handleSuccess);
 }
+*/
+/*
+  LOAD WAV FILE TO TEST DATA PROCESSING
+*/
+/*
+async function readWavFile(file: File): Promise<Float32Array | null> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      const result = event.target?.result as ArrayBuffer;
+      const audioContext = new (window.AudioContext || (<any>window).webkitAudioContext)();
+
+      audioContext.decodeAudioData(result, (buffer) => {
+        const channelData = buffer.getChannelData(0); // Assuming mono audio
+
+        const float32Array = new Float32Array(channelData);
+        resolve(float32Array);
+      }, (decodeError) => {
+        reject(decodeError);
+      });
+    };
+
+    reader.onerror = (error) => {
+      reject(error);
+    };
+
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+
+function generateCSV(data: Float32Array, maxLength = 10_000_000): void {
+  // Limit the length of the data
+  const truncatedData = data.subarray(0, maxLength);
+
+  // Convert the truncated Float32Array to a CSV string
+  const csvContent = truncatedData.join('\n');
+
+  // Create a Blob and trigger a download
+  const blob = new Blob([csvContent], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'raw_audio_data.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+
+const inputElement = <HTMLInputElement>document.getElementById('audio-input');
+
+inputElement.addEventListener('change', async (event) => {
+  const file = (event.target as HTMLInputElement).files?.[0];
+
+  if (file) {
+    try {
+      const rawData = await readWavFile(file);
+      console.log(rawData);
+      // Now you can use `rawData` for further analysis or processing
+
+      if (rawData) generateCSV(rawData);
+    } catch (error) {
+      console.error('Error reading WAV file:', error);
+    }
+  }
+});
+
+*/
