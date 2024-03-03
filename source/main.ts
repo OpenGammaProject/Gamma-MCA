@@ -36,7 +36,13 @@
 import './css/main.scss';
 
 // Import Bootstrap plugins
-import { Modal, Offcanvas, Toast } from 'bootstrap';
+import 'bootstrap/js/dist/alert';
+import 'bootstrap/js/dist/button';
+import 'bootstrap/js/dist/collapse';
+import 'bootstrap/js/dist/tab';
+import Modal from 'bootstrap/js/dist/modal';
+import Offcanvas from 'bootstrap/js/dist/offcanvas';
+import Toast from 'bootstrap/js/dist/toast';
 
 // Import Plotly.js
 import Plotly, { PlotHoverEvent, PlotMouseEvent, PlotSelectionEvent, PlotlyHTMLElement } from 'plotly.js-basic-dist-min';
