@@ -23,7 +23,7 @@
 
     - Automatically close system notifications when the user interacts with the page again
     - Sound card spectrometry prove of concept
-    - Improve FWHM Calculation with better smoothing and interpolation between bins 
+    - Improve FWHM Calculation with better smoothing and interpolation between bins
 
   Known Issues/Problems/Limitations:
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
