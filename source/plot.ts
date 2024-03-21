@@ -180,6 +180,12 @@ export class CalculateFWHM {
     return binPeaks;
   }
 
+  linearInterp(x1: number, y1: number, x2: number, y2: number, yTarget: number): number {
+    const k = (y1 - y2) / (x1 - x2);
+    const d = y1 - k * x1;
+    return (yTarget - d) / k;
+  }
+
   compute(): {[key: number]: number} {
     const peakBins = this.energyToBin();
     const peakFWHMs: {[key: number]: number} = {};
@@ -203,8 +209,7 @@ export class CalculateFWHM {
         heightLeft = this.yAxis[binLeft];
       }
 
-      const avgLeft = (energyLeft + this.calibratedBins[binLeft + 1]) / 2;
-      const fwhmPartLeft = peakEnergy - avgLeft;
+      const fwhmPartLeft = peakEnergy - this.linearInterp(energyLeft, heightLeft, this.calibratedBins[binLeft+1], this.yAxis[binLeft+1], halfHeight);
 
       if (CalculateFWHM.fastMode) {
         peakFWHMs[peakEnergy] = fwhmPartLeft * 2; // Assume perfectly symmetrical peak and FWHM
@@ -225,8 +230,7 @@ export class CalculateFWHM {
         heightRight = this.yAxis[binRight];
       }
 
-      const avgRight = (energyRight + this.calibratedBins[binRight - 1]) / 2;
-      const fwhmPartRight = avgRight - peakEnergy;
+      const fwhmPartRight = this.linearInterp(energyRight, heightRight, this.calibratedBins[binRight-1], this.yAxis[binRight-1], halfHeight) - peakEnergy;
       peakFWHMs[peakEnergy] = fwhmPartLeft + fwhmPartRight;
       //peakFWHMs.push(fwhmPartLeft + fwhmPartRight);
     }
