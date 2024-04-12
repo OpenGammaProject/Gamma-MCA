@@ -3528,6 +3528,62 @@ function generateCSV(data: Float32Array, maxLength = 10_000_000): void {
 }
 
 
+function computeMovingAverage(target: number[], length: number): number[] {
+  const newData: number[] = Array(target.length);
+  const half = Math.round(length/2);
+
+  for (let i = 0; i < newData.length; i++) { // Compute the central moving average
+    if (i >= half && i <= target.length - half - 1) { // Shortcut
+      const remainderIndexFactor = length % 2;
+
+      const addVal = target[i+half-remainderIndexFactor];
+      const removeVal = target[i-half];
+
+      newData[i] = newData[i - 1] + (addVal - removeVal) / length;
+      continue; // Skip other computation.
+    }
+
+    let val = 0;
+    let divider = 0;
+
+    for (let j = 0; j < length; j++) { // Slightly asymetrical to the right with even numbers of smaLength
+      if (j < half) {
+        if ((i - j) >= 0) {
+          val += target[i - j];
+          divider++;
+        }
+      } else {
+        if ((i - half+1 + j) < newData.length) {
+          val += target[i - half+1 + j];
+          divider++;
+        }
+      }
+    }
+    newData[i] = val / divider;
+  }
+  return newData;
+}
+
+
+// Function to map values from 0...1 to 0...4096
+function mapToUnsignedIntegers(inputArray: number[]): number[] {
+  const newArray: number[] = [];
+
+  for (const value of inputArray) {
+      // Scale the floating-point value to the range 0...4096
+      const scaledValue = value * 4096 * 2**3;
+
+      // Round the scaled value to the nearest integer
+      const roundedValue = Math.round(scaledValue);
+
+      // Store the rounded value in the new array
+      newArray.push(roundedValue);
+  }
+
+  return newArray;
+}
+
+
 const inputElement = <HTMLInputElement>document.getElementById('audio-input');
 
 inputElement.addEventListener('change', async (event) => {
@@ -3536,14 +3592,63 @@ inputElement.addEventListener('change', async (event) => {
   if (file) {
     try {
       const rawData = await readWavFile(file);
-      console.log(rawData);
+      //console.log(rawData);
+      
       // Now you can use `rawData` for further analysis or processing
 
-      if (rawData) generateCSV(rawData);
+      if (rawData) {
+        const desiredLength = 10_000_000; // Specify the desired length to truncate to
+        // Truncate the array
+        const truncatedArray = new Float32Array(desiredLength);
+        truncatedArray.set(rawData.subarray(0, desiredLength)); // Copy elements from the original array
+
+        // truncatedArray now contains the first 1000 elements of the original array
+        //console.log(truncatedArray);
+        //
+
+        const numArray = Array.from(truncatedArray);
+
+        const a = computeMovingAverage(numArray, 10);
+        const b = computeMovingAverage(numArray, 1000);
+
+        let peak = false;
+        let max = 0;
+        const resultPeaks: number[] = [];
+
+        for (const i in a) {
+          const vala = a[i];
+          const valb = b[i];
+
+          if (vala > valb) { // Currently a peak
+            peak = true;
+            const diff = vala - valb;
+            if (diff > max) max = diff;
+          } else { // Not (anymore) a peak
+            if (peak) { // Was a peak previously
+              peak = false;
+              resultPeaks.push(max); // Push last peak
+              max = 0; // Clear peak area
+            }
+          }
+        }
+
+        const lel = mapToUnsignedIntegers(resultPeaks);
+        console.log(lel);
+        const arr = Array(4096).fill(0);
+
+        for (const val of lel) {
+          arr[val]++;
+        }
+
+        spectrumData.data = arr;
+
+        plot.updatePlot(spectrumData);
+      }
+
+      //if (rawData) generateCSV(rawData);
     } catch (error) {
       console.error('Error reading WAV file:', error);
     }
   }
 });
-
 */
