@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "@types/audioworklet": "^0.0.54",
+    "@types/audioworklet": "^0.0.55",
     "@types/bootstrap": "^5.2.10",
     "@types/dom-screen-wake-lock": "^1.0.3",
     "@types/plotly.js-basic-dist-min": "^2.12.4",
