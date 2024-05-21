@@ -1593,9 +1593,10 @@ function toLocalIsoString(date: Date) {
     + addLeadingZero(date.getSeconds().toString());
 
   localIsoString += (-date.getTimezoneOffset() < 0) ? '-' : '+';
-  const tzDate = new Date(Math.abs(date.getTimezoneOffset()));
+  const tzDate = new Date(0);
+  tzDate.setMinutes(Math.abs(date.getTimezoneOffset()));
 
-  localIsoString += addLeadingZero(tzDate.getHours().toString()) + ':' + addLeadingZero(tzDate.getMinutes().toString());
+  localIsoString += addLeadingZero(tzDate.getUTCHours().toString()) + ':' + addLeadingZero(tzDate.getUTCMinutes().toString());
   return localIsoString;
 }
 
