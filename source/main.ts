@@ -140,7 +140,7 @@ const isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2024-03-21';
+const APP_VERSION = '2024-05-21';
 const localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 const wakeLockAvailable = 'wakeLock' in navigator; // Test for Screen Wake Lock API
 const notificationsAvailable = 'Notification' in window; // Test for Notifications API
@@ -259,18 +259,19 @@ document.body.onload = async function(): Promise<void> {
         if (!launchParams.files.length) return;
 
         const file: File = await launchParams.files[0].getFile();
-        const fileEnding = file.name.split('.')[1].toLowerCase();
+        const filenameSplitArr: string[] = file.name.split('.');
+        const fileExtension = filenameSplitArr[filenameSplitArr.length - 1].toLowerCase();
 
         if (fileSystemWritableAvail) { // Try to use the File System Access API if possible
-          if (fileEnding === 'json' || fileEnding === 'xml') {
+          if (fileExtension === 'json' || fileExtension === 'xml') {
             dataFileHandle = launchParams.files[0];
             showSaveButton(dataFileHandle.name); // Only show "Save" button if it can be used
           }
         }
 
         const spectrumEndings = ['csv', 'tka', 'xml', 'txt', 'json'];
-        if (spectrumEndings.includes(fileEnding)) getFileData(file, 'data');
-        /* else if (fileEnding === 'json') {
+        if (spectrumEndings.includes(fileExtension)) getFileData(file, 'data');
+        /* else if (fileExtension === 'json') {
           importCal(file);
         } */
         console.warn('File could not be imported!');
@@ -537,7 +538,8 @@ async function clickFileInput(event: MouseEvent, type: DataType): Promise<void> 
 
     getFileData(file, type);
 
-    const fileExtension = file.name.split('.')[1].toLowerCase();
+    const filenameSplitArr: string[] = file.name.split('.');
+    const fileExtension = filenameSplitArr[filenameSplitArr.length - 1].toLowerCase();
 
     if (fileExtension !== 'json' && fileExtension !== 'xml') {
       //console.info('The "Save" action is not supported on the imported file.');
@@ -569,7 +571,8 @@ function importFile(input: HTMLInputElement, type: DataType): void {
 function getFileData(file: File, type: FileImportType): void { // Gets called when a file has been selected.
   const reader = new FileReader();
 
-  const fileEnding = file.name.split('.')[1];
+  const filenameSplitArr: string[] = file.name.split('.');
+  const fileExtension = filenameSplitArr[filenameSplitArr.length - 1].toLowerCase();
 
   reader.readAsText(file);
 
@@ -581,7 +584,7 @@ function getFileData(file: File, type: FileImportType): void { // Gets called wh
   reader.onload = async () => {
     const result = (<string>reader.result).trim(); // A bit unclean for typescript, I'm sorry
 
-    if (fileEnding.toLowerCase() === 'xml') {
+    if (fileExtension === 'xml') {
       if (window.DOMParser) {
         // Only grabs the first spectrum if there are multiple
         // Use JSON (NPES) if you want to have the option to select the spectrum to show
@@ -652,7 +655,7 @@ function getFileData(file: File, type: FileImportType): void { // Gets called wh
         (<HTMLButtonElement>document.getElementById('overwrite-button')).disabled = true; // Disable save button again, if it could be used
         return;
       }
-    } else if (fileEnding.toLowerCase() === 'json') { // THIS SECTION MAKES EVERYTHING ASYNC DUE TO THE JSON THING!!!
+    } else if (fileExtension === 'json') { // THIS SECTION MAKES EVERYTHING ASYNC DUE TO THE JSON THING!!!
       const jsonData = await raw.jsonToObject(result);
 
       // Check if multiple files/errors were imported
@@ -1590,9 +1593,10 @@ function toLocalIsoString(date: Date) {
     + addLeadingZero(date.getSeconds().toString());
 
   localIsoString += (-date.getTimezoneOffset() < 0) ? '-' : '+';
-  const tzDate = new Date(Math.abs(date.getTimezoneOffset()));
+  const tzDate = new Date(0);
+  tzDate.setMinutes(Math.abs(date.getTimezoneOffset()));
 
-  localIsoString += addLeadingZero(tzDate.getHours().toString()) + ':' + addLeadingZero(tzDate.getMinutes().toString());
+  localIsoString += addLeadingZero(tzDate.getUTCHours().toString()) + ':' + addLeadingZero(tzDate.getUTCMinutes().toString());
   return localIsoString;
 }
 
