@@ -11,7 +11,7 @@
     "@typescript-eslint/eslint-plugin": "^7.11.0",
     "@typescript-eslint/parser": "^7.10.0",
     "autoprefixer": "^10.4.19",
-    "css-loader": "^7.1.1",
+    "css-loader": "^7.1.2",
     "css-minimizer-webpack-plugin": "^7.0.0",
     "eslint": "^8.57.0",
     "mini-css-extract-plugin": "^2.9.0",
