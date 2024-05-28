@@ -9,7 +9,7 @@
     "@types/w3c-web-usb": "^1.0.10",
     "@types/wicg-file-system-access": "^2023.10.5",
     "@typescript-eslint/eslint-plugin": "^7.11.0",
-    "@typescript-eslint/parser": "^7.10.0",
+    "@typescript-eslint/parser": "^7.11.0",
     "autoprefixer": "^10.4.19",
     "css-loader": "^7.1.2",
     "css-minimizer-webpack-plugin": "^7.0.0",
