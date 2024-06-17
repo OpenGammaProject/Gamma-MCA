@@ -16,7 +16,7 @@
     "eslint": "^8.57.0",
     "mini-css-extract-plugin": "^2.9.0",
     "postcss-loader": "^8.1.1",
-    "sass": "^1.77.4",
+    "sass": "^1.77.6",
     "sass-loader": "^14.2.1",
     "ts-loader": "^9.5.1",
     "typescript": "^5.4.5",
