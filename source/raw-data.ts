@@ -117,7 +117,6 @@ export class RawData {
   constructor(valueIndex: number, delimiter = ',') {
     this.valueIndex = valueIndex;
     this.delimiter = delimiter;
-    this.adcChannels;
     this.fileType = valueIndex;
     this.tempValIndex = valueIndex;
   }
