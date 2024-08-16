@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /*
 
   Gamma MCA: free, open-source web-MCA for gamma spectroscopy
@@ -3057,6 +3056,7 @@ async function startRecord(pause = false, type: DataType): Promise<void> {
   autoSaveData(); // Start data autosaving
 
   // Check if pause ? Last cps value after pausing is always 0, remove! : Empty if just started to record
+  // eslint-disable-next-line @typescript-eslint/no-unused-expressions
   pause ? cpsValues.pop() : cpsValues = [];
 
   //plot.updatePlot(spectrumData); // Prevent the plot from moving all over the screen due to other things popping-up

@@ -1,6 +1,8 @@
 {
   "devDependencies": {
-    "@types/audioworklet": "^0.0.57",
+    "@eslint/eslintrc": "^3.1.0",
+    "@eslint/js": "^9.9.0",
+    "@types/audioworklet": "^0.0.59",
     "@types/bootstrap": "^5.2.10",
     "@types/dom-screen-wake-lock": "^1.0.3",
     "@types/plotly.js-basic-dist-min": "^2.12.4",
@@ -8,16 +10,17 @@
     "@types/w3c-web-serial": "^1.0.6",
     "@types/w3c-web-usb": "^1.0.10",
     "@types/wicg-file-system-access": "^2023.10.5",
-    "@typescript-eslint/eslint-plugin": "^7.17.0",
-    "@typescript-eslint/parser": "^7.17.0",
-    "autoprefixer": "^10.4.19",
+    "@typescript-eslint/eslint-plugin": "^8.1.0",
+    "@typescript-eslint/parser": "^8.1.0",
+    "autoprefixer": "^10.4.20",
     "css-loader": "^7.1.2",
     "css-minimizer-webpack-plugin": "^7.0.0",
-    "eslint": "^8.57.0",
+    "eslint": "^9.9.0",
+    "globals": "^15.9.0",
     "mini-css-extract-plugin": "^2.9.0",
     "postcss-loader": "^8.1.1",
     "sass": "^1.77.8",
-    "sass-loader": "^14.2.1",
+    "sass-loader": "^16.0.0",
     "ts-loader": "^9.5.1",
     "typescript": "^5.5.4",
     "webpack": "^5.93.0",
@@ -33,6 +36,6 @@
     "bootstrap": "^5.3.3",
     "plotly.js-basic-dist-min": "^2.34.0",
     "regression": "^2.0.1",
-    "z-schema": "^6.0.1"
+    "z-schema": "^6.0.2"
   }
 }

@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 /*
 
   Manage fetch requests, return cached data and control offline behaviour.
