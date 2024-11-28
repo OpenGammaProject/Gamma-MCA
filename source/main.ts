@@ -387,6 +387,8 @@ document.body.onload = async function(): Promise<void> {
 // Exit website confirmation alert
 window.onbeforeunload = (event): string => {
   event.preventDefault();
+
+  // Included for legacy support, e.g. Chrome/Edge < 119
   return event.returnValue = 'Are you sure you want to exit?';
 };
 
