@@ -32,7 +32,7 @@
     "start": "webpack serve --mode development"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^6.7.1",
+    "@fortawesome/fontawesome-free": "^6.7.2",
     "bootstrap": "^5.3.3",
     "plotly.js-basic-dist-min": "^2.35.2",
     "regression": "^2.0.1",
