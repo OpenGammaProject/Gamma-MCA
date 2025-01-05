@@ -331,7 +331,7 @@ export class SpectrumPlot {
       //let newConfig = JSON.parse(JSON.stringify(plotElement.config));
       //delete newConfig.modeBarButtonsToAdd; // remove this section, otherwise there will be problems!
 
-      const scriptUrl = new URL('https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.29.0/plotly-basic.min.js', window.location.origin);
+      const scriptUrl = new URL('https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.35.3/plotly-basic.min.js', window.location.origin);
       const config = {
         responsive: true,
         displaylogo: false,
