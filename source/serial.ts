@@ -58,7 +58,7 @@ export class WebUSBSerial {
       this.buffer.set(data,this.pos);
       this.pos += data.length;
     }, error => {
-      console.error('Error receiving data!' + error)
+      console.error('Error receiving data! ' + error)
       this.isOpen = false;
     });
     this.isOpen = true;
