@@ -2,7 +2,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.19.0",
-    "@types/audioworklet": "^0.0.68",
+    "@types/audioworklet": "^0.0.69",
     "@types/bootstrap": "^5.2.10",
     "@types/dom-screen-wake-lock": "^1.0.3",
     "@types/plotly.js-basic-dist-min": "^2.12.4",
@@ -19,7 +19,7 @@
     "globals": "^15.14.0",
     "mini-css-extract-plugin": "^2.9.2",
     "postcss-loader": "^8.1.1",
-    "sass": "^1.83.4",
+    "sass": "^1.84.0",
     "sass-loader": "^16.0.4",
     "ts-loader": "^9.5.2",
     "typescript": "^5.7.3",
