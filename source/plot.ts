@@ -829,7 +829,7 @@ export class SpectrumPlot {
       },
       xaxis: {
         title: {
-          text: 'Measurement Point [1]'
+          text: 'Data Point [1]'
         },
         mirror: true,
         linewidth: 2,
