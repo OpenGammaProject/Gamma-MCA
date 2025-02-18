@@ -106,4 +106,25 @@
   * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
   */
 
-/*! For license information please see plotly-basic.min.js.LICENSE.txt */
+/*! Bundled license information:
+
+native-promise-only/lib/npo.src.js:
+  (*! Native Promise Only
+      v0.8.1 (c) Kyle Simpson
+      MIT License: http://getify.mit-license.org
+  *)
+
+polybooljs/index.js:
+  (*
+   * @copyright 2016 Sean Connelly (@voidqk), http://syntheti.cc
+   * @license MIT
+   * @preserve Project Home: https://github.com/voidqk/polybooljs
+   *)
+
+object-assign/index.js:
+  (*
+  object-assign
+  (c) Sindre Sorhus
+  @license MIT
+  *)
+*/

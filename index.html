@@ -11,13 +11,13 @@
   	<meta name="language" content="English">
     <!--
       CSP: Only allow loading resources from this website.
-      Style-src: unsafe-inline needed for Plotly.js styles.
+      Style-src: unsafe-inline needed for Plotly.js and bootstrap styles.
       Img-src needs data: and blob: otherwise it cannot load some images.
       Connect-src is used for fetch (Custom isotope list URL) - * allow all.
     -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self';
                                                         style-src 'self' 'unsafe-inline';
-                                                        img-src 'self' data: blob: https://hits.seeyoufarm.com/api/count/incr/badge.svg;
+                                                        img-src 'self' data: blob:;
                                                         connect-src * ">
 
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/favicon/apple-touch-icon.png">
