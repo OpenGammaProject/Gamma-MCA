@@ -82,14 +82,23 @@ type Trace = Partial<Data> & {
 };
 
 type LayoutPlus = Partial<Layout> & { // Implement stuff from the docs that are not in the Plotly Types?!
+  title: {
+    text?: string;
+  };
   xaxis: {
     autorangeoptions?: {
       minallowed?: number;
+    },
+    title: {
+      text?: string;
     }
   };
   yaxis: {
     autorangeoptions?: {
       minallowed?: number;
+    },
+    title: {
+      text?: string;
     }
   };
   activeselection?: {
@@ -810,14 +819,18 @@ export class SpectrumPlot {
     const layout: LayoutPlus = {
       uirevision: 1,
       autosize: true, // Needed for resizing on update
-      title: 'Radiation Evolution',
+      title: {
+        text: 'Radiation Evolution',
+      },
       hovermode: 'x',
       legend: {
         orientation: 'h',
-        y: -0.35,
+        y: -0.35
       },
       xaxis: {
-        title: 'Measurement Point [1]',
+        title: {
+          text: 'Measurement Point [1]'
+        },
         mirror: true,
         linewidth: 2,
         autorange: true,
@@ -839,7 +852,9 @@ export class SpectrumPlot {
         gridcolor: this.darkMode ? this.gridColorDark : this.gridColorLight
       },
       yaxis: {
-        title: 'Counts Per Second [s<sup>-1</sup>]',
+        title: {
+         text: 'Counts Per Second [s<sup>-1</sup>]' 
+        },
         mirror: true,
         linewidth: 2,
         autorange: true,
@@ -964,14 +979,18 @@ export class SpectrumPlot {
     const layout: LayoutPlus = {
       uirevision: 1,
       autosize: true, // Needed for resizing on update
-      title: 'Calibration',
+      title: {
+        text: 'Calibration',        
+      },
       hovermode: 'x',
       legend: {
         orientation: 'h',
         y: -0.35,
       },
       xaxis: {
-        title: 'Bin [1]',
+        title: {
+          text: 'Bin [1]'
+        },
         mirror: true,
         linewidth: 2,
         autorange: true,
@@ -993,7 +1012,9 @@ export class SpectrumPlot {
         gridcolor: this.darkMode ? this.gridColorDark : this.gridColorLight
       },
       yaxis: {
-        title: 'Energy [keV]',
+        title: {
+          text: 'Energy [keV]'
+        },
         mirror: true,
         linewidth: 2,
         autorange: true, //'max',
@@ -1213,7 +1234,9 @@ export class SpectrumPlot {
     const layout: LayoutPlus = {
       uirevision: 1,
       autosize: true, // Needed for resizing on update
-      title: 'Energy Spectrum',
+      title: {
+        text: 'Energy Spectrum',
+      },
       hovermode: 'x',
       legend: {
         orientation: 'h',
@@ -1232,7 +1255,9 @@ export class SpectrumPlot {
         }
       },
       xaxis: {
-        title: 'Bin [1]',
+        title: {
+          text: 'Bin [1]'
+        },
         mirror: true,
         linewidth: 2,
         autorange: true,
@@ -1257,7 +1282,9 @@ export class SpectrumPlot {
         gridcolor: this.darkMode ? this.gridColorDark : this.gridColorLight
       },
       yaxis: {
-        title: 'Counts [1]',
+        title: {
+          text: 'Counts [1]'
+        },
         mirror: true,
         linewidth: 2,
         autorange: true,
@@ -1316,7 +1343,7 @@ export class SpectrumPlot {
       Set calibrated x-axis
     */
     if (this.calibration.enabled) {
-      layout.xaxis.title = 'Energy [keV]';
+      layout.xaxis.title.text = 'Energy [keV]';
       layout.xaxis.ticksuffix = ' keV';
     }
 
@@ -1352,10 +1379,10 @@ export class SpectrumPlot {
           for (const trace of data) {
             trace.y = trace.y.map(value => value * 60);
           }
-          layout.yaxis.title = 'Counts Per Minute [60 s<sup>-1</sup>]';
+          layout.yaxis.title.text = 'Counts Per Minute [60 s<sup>-1</sup>]';
           layout.yaxis.ticksuffix = 'cpm';
         } else { // Enough counts for cpm
-          layout.yaxis.title = 'Counts Per Second [s<sup>-1</sup>]';
+          layout.yaxis.title.text = 'Counts Per Second [s<sup>-1</sup>]';
           layout.yaxis.ticksuffix = 'cps';
         }
       }
