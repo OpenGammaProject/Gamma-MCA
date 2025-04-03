@@ -9,7 +9,7 @@
     "@types/regression": "^2.0.6",
     "@types/w3c-web-serial": "^1.0.8",
     "@types/w3c-web-usb": "^1.0.10",
-    "@types/wicg-file-system-access": "^2023.10.5",
+    "@types/wicg-file-system-access": "^2023.10.6",
     "@typescript-eslint/eslint-plugin": "^8.29.0",
     "@typescript-eslint/parser": "^8.29.0",
     "autoprefixer": "^10.4.21",
@@ -19,7 +19,7 @@
     "globals": "^16.0.0",
     "mini-css-extract-plugin": "^2.9.2",
     "postcss-loader": "^8.1.1",
-    "sass": "^1.86.1",
+    "sass": "^1.86.2",
     "sass-loader": "^16.0.5",
     "ts-loader": "^9.5.2",
     "typescript": "^5.8.2",
@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",
-    "bootstrap": "^5.3.3",
+    "bootstrap": "^5.3.4",
     "plotly.js-basic-dist-min": "^3.0.1",
     "regression": "^2.0.1",
     "z-schema": "^6.0.2"
