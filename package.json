@@ -19,11 +19,11 @@
     "globals": "^16.0.0",
     "mini-css-extract-plugin": "^2.9.2",
     "postcss-loader": "^8.1.1",
-    "sass": "^1.86.2",
+    "sass": "^1.86.3",
     "sass-loader": "^16.0.5",
     "ts-loader": "^9.5.2",
-    "typescript": "^5.8.2",
-    "webpack": "^5.99.1",
+    "typescript": "^5.8.3",
+    "webpack": "^5.99.2",
     "webpack-cli": "^6.0.1",
     "webpack-dev-server": "^5.2.1"
   },
@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",
-    "bootstrap": "^5.3.4",
+    "bootstrap": "^5.3.5",
     "plotly.js-basic-dist-min": "^3.0.1",
     "regression": "^2.0.1",
     "z-schema": "^6.0.2"
