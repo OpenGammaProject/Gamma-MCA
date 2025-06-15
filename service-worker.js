@@ -8,7 +8,7 @@
   https://nuclearphoenix.xyz
 
 */
-const APP_VERSION = '2024-05-21';
+const APP_VERSION = '2025-06-15';
 const CACHE_NAME = 'gamma-static'; // A random name for the cache
 
 const OFFLINE_RESOURCES = [
@@ -28,6 +28,8 @@ const OFFLINE_RESOURCES = [
                           '/assets/favicon/favicon-32x32.png',
                           '/assets/favicon/favicon.ico',
                           '/assets/isotopes_energies_min.json',
+                          '/assets/isotopes_energies_norm_min.json',
+                          '/assets/isotopes_energies_artificial_min.json',
                           '/assets/notifications/badge.png',
                           '/assets/notifications/icon.png',
                           '/assets/npes-1.schema.json',
