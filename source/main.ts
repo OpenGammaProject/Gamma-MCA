@@ -136,12 +136,16 @@ const AUTOSAVE_TIME = 900_000; // Milliseconds === 15 minutes
 
 let cpsValues: number[] = [];
 
-let isoListURL = 'assets/isotopes_energies_min.json';
-const isoList: IsotopeList = {};
+// Default isotope lists
+const defaultIsotopeLists: string[] = ['assets/isotopes_energies_min.json', 'assets/isotopes_energies_norm_min.json', 'assets/isotopes_energies_artificial_min.json'];
+
+let currentIsoListURL = defaultIsotopeLists[0]; // Use default isotope list URL
+let customIsoListURL = ''; // Custom isotope list URL, set by user in settings
+let isoList: IsotopeList = {};
 let checkNearIso = false;
 let maxDist = 100; // Max energy distance to highlight
 
-const APP_VERSION = '2024-05-21';
+const APP_VERSION = '2025-06-15';
 const localStorageAvailable = 'localStorage' in self; // Test for localStorage, for old browsers
 const wakeLockAvailable = 'wakeLock' in navigator; // Test for Screen Wake Lock API
 const notificationsAvailable = 'Notification' in window; // Test for Notifications API
@@ -235,7 +239,7 @@ document.body.onload = async function(): Promise<void> {
     document.title += ' web application';
   }
 
-  isoListURL = new URL(isoListURL, window.location.origin).href;
+  currentIsoListURL = new URL(currentIsoListURL, window.location.origin).href; // Make sure the isotope list URL is absolute
 
   if (navigator.serial || navigator.usb) { // Web Serial API or fallback Web USB API with FTDx JS driver
     document.getElementById('serial-error')?.remove(); // Delete Serial Not Supported Warning
@@ -2249,11 +2253,14 @@ async function loadIsotopes(reload = false): Promise<boolean> { // Load Isotope 
   let successFlag = true; // Ideally no errors
 
   try {
-    const response = await fetch(isoListURL, options);
+    const response = await fetch(currentIsoListURL, options);
 
     if (response.ok) { // If HTTP-status is 200-299
       const json: IsotopeList = await response.json();
       loadedIsos = true;
+
+      // Clear old isotope list
+      isoList = {}; // Reset the isotope list
 
       const table = <HTMLTableElement>document.getElementById('table');
       const tableElement = <HTMLTableElement>table.querySelector('#iso-table');
@@ -2540,6 +2547,7 @@ function bindInputs(): void {
   document.getElementById('toggle-time-limit')!.onclick = event => changeSettings('timeLimitBool', <HTMLInputElement>event.target); // Checkbox
   document.getElementById('download-format')!.onchange = event => changeSettings('plotDownload', <HTMLSelectElement>event.target); // Select
   document.getElementById('theme-select')!.onchange = event => changeSettings('theme', <HTMLSelectElement>event.target); // Select
+  document.getElementById('list-select')!.onchange = event => changeSettings('list', <HTMLSelectElement>event.target); // Select
 }
 
 
@@ -2548,7 +2556,7 @@ function loadSettingsDefault(): void {
     (<HTMLInputElement>document.getElementById('notifications-toggle')).checked = allowNotifications && (Notification.permission === 'granted');
   }
   
-  (<HTMLInputElement>document.getElementById('custom-url')).value = isoListURL;
+  (<HTMLInputElement>document.getElementById('custom-url')).value = customIsoListURL;
   (<HTMLInputElement>document.getElementById('edit-plot')).checked = plot.editableMode;
   (<HTMLInputElement>document.getElementById('custom-delimiter')).value = raw.delimiter;
   (<HTMLInputElement>document.getElementById('custom-file-adc')).value = raw.adcChannels.toString();
@@ -2583,13 +2591,6 @@ function loadSettingsDefault(): void {
   for (let i = 0; i < formatLen; i++) {
     if (formatSelector.options[i].value === format) formatSelector.selectedIndex = i;
   }
-
-  const themeSelector = <HTMLSelectElement>document.getElementById('theme-select');
-  const themeLen = themeSelector.options.length;
-  const theme = loadJSON('theme');
-  for (let i = 0; i < themeLen; i++) {
-    if (themeSelector.options[i].value === theme) themeSelector.selectedIndex = i;
-  }
 }
 
 
@@ -2598,7 +2599,7 @@ function loadSettingsStorage(): void {
   if (notificationsAvailable && typeof setting === 'boolean') allowNotifications = setting && (Notification.permission === 'granted');
 
   setting = loadJSON('customURL');
-  if (typeof setting === 'string') isoListURL = new URL(setting).href;
+  if (typeof setting === 'string') customIsoListURL = new URL(setting).href;
 
   setting = loadJSON('editMode');
   if (typeof setting === 'boolean') plot.editableMode = setting;
@@ -2661,6 +2662,31 @@ function loadSettingsStorage(): void {
 
   setting = loadJSON('newPeakStyle');
   if (typeof setting === 'boolean') plot.peakConfig.newPeakStyle = setting;
+
+  // All of the below is a bit janky, but it works for now
+  const themeSelector = <HTMLSelectElement>document.getElementById('theme-select');
+  const themeLen = themeSelector.options.length;
+  const theme = loadJSON('theme');
+  for (let i = 0; i < themeLen; i++) {
+    if (themeSelector.options[i].value === theme) themeSelector.selectedIndex = i;
+  }
+
+  const listSelector = <HTMLSelectElement>document.getElementById('list-select');
+  const listLen = listSelector.options.length;
+  const list = loadJSON('list');
+  for (let i = 0; i < listLen; i++) {
+    if (listSelector.options[i].value === list) listSelector.selectedIndex = i;
+  }
+
+  // Set the current isotope list URL from settings
+  if (list === 'custom') { // Custom URL selected
+    if (customIsoListURL) {
+      currentIsoListURL = customIsoListURL;
+    }
+  } else {
+    const isoListURL = defaultIsotopeLists[listSelector.selectedIndex];
+    currentIsoListURL = new URL(isoListURL, window.location.origin).href;
+  }
 }
 
 
@@ -2693,11 +2719,11 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
           tmpStringCopy = tmpStringCopy.toWellFormed();
         }
         */
-        isoListURL = new URL(stringValue).href;
+        customIsoListURL = new URL(stringValue).href;
 
         loadIsotopes(true);
 
-        result = saveJSON(name, isoListURL);
+        result = saveJSON(name, customIsoListURL);
 
       } catch(e) {
         new ToastNotification('settingError'); //popupNotification('setting-error');
@@ -2816,6 +2842,27 @@ function changeSettings(name: string, element: HTMLInputElement | HTMLSelectElem
 
       plot.darkMode = applyTheming() === 'dark';
       resetPlot(false);
+
+      break;
+    }
+    case 'list': {
+      const isoListSelector = <HTMLSelectElement>document.getElementById('list-select');
+      const selectedValue = isoListSelector.options[isoListSelector.selectedIndex].value;
+      if (selectedValue === 'custom') { // Custom URL selected
+        if (customIsoListURL) {
+          currentIsoListURL = customIsoListURL;
+        } else {
+          new ToastNotification('settingError'); //popupNotification('setting-error');
+          break;
+        }
+      } else {
+        const isoListURL = defaultIsotopeLists[isoListSelector.selectedIndex];
+        currentIsoListURL = new URL(isoListURL, window.location.origin).href;
+      }
+
+      loadIsotopes(true);
+
+      result = saveJSON(name, stringValue);
 
       break;
     }

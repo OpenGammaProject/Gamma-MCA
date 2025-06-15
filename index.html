@@ -817,7 +817,7 @@
             <br>
 
             <h3 class="fs-5">
-              Common Gamma-Ray Energies <button type="button" class="btn btn-outline-primary btn-sm float-end" id="reload-isos-btn" title="Reload Isotope List"><i class="fa-solid fa-arrow-rotate-right"></i></button>
+              Isotope Photon Energies <button type="button" class="btn btn-outline-primary btn-sm float-end" id="reload-isos-btn" title="Reload Isotope List"><i class="fa-solid fa-arrow-rotate-right"></i></button>
             </h3>
             <br>
 
@@ -913,13 +913,6 @@
                       <button class="btn btn-primary" type="button" id="iso-hover-prox-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <p><small>Any positive integer is valid.</small></p>
-
-                    <div class="input-group input-group-sm">
-                      <label class="input-group-text" for="custom-url">Isotope List</label>
-                      <input type="url" class="form-control" id="custom-url" spellcheck="false">
-                      <button class="btn btn-primary" type="button" id="custom-url-btn" title="Apply"> <i class="fas fa-check"></i> </button>
-                    </div>
-                    <p><small>File must be of valid JSON format. Use only trusted sources!</small></p>
 
                     <div class="input-group input-group-sm">
                       <label class="input-group-text" for="download-format">Download Plot</label>
@@ -1078,6 +1071,36 @@
                       <button class="btn btn-primary" type="button" id="seek-width-btn" title="Apply"> <i class="fas fa-check"></i> </button>
                     </div>
                     <p><small>Maximum distance to search for isotopes around the peak energy. Any positive float is valid.</small></p>
+
+                  </div>
+                </div>
+              </div>
+              <div class="accordion-item">
+                <h3 class="accordion-header" id="panel5-heading">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panel5-collaps" aria-expanded="true" aria-controls="panel5-collaps">
+                    Isotope Lists
+                  </button>
+                </h3>
+                <div id="panel5-collaps" class="accordion-collapse collapse" aria-labelledby="panel5-heading">
+                  <div class="accordion-body">
+
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="list-select">Default List</label>
+                      <select class="form-select form-select-sm" id="list-select" aria-label="Select what default list to use">
+                        <option value="all" selected>Default All</option>
+                        <option value="natural">Natural only</option>
+                        <option value="artificial">Artificial only</option>
+                        <option value="custom">Custom</option>
+                      </select>
+                    </div>
+                    <p><small>Select an isotope list for Gamma MCA.</small></p>
+
+                    <div class="input-group input-group-sm">
+                      <label class="input-group-text" for="custom-url">Custom List</label>
+                      <input type="url" class="form-control" id="custom-url" spellcheck="false">
+                      <button class="btn btn-primary" type="button" id="custom-url-btn" title="Apply"> <i class="fas fa-check"></i> </button>
+                    </div>
+                    <p><small>Your own custom list URL. File must be of valid <code>JSON</code> format (<a class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover" title="Example file" href="https://gist.github.com/NuclearPhoenixx/755849920472bd12b4bdd7954b405d4e" target="_blank">example</a>). Use only trusted sources!</small></p>
 
                   </div>
                 </div>
