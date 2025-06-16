@@ -2361,9 +2361,13 @@ async function closestIso(value: number): Promise<void> {
   if (energy && name) {
     const newIso: [string, number] = [name, energy];
 
-    if (prevIso !== newIso) prevIso = newIso;
+    const isNewToggleLine = plot.toggleLine(energy, name);
 
-    plot.toggleLine(energy, name);
+    // Check if there is already a line for this energy
+    if (prevIso !== newIso && isNewToggleLine) prevIso = newIso;
+
+    // If there was a duplicate, the line was not toggled, so we don't set prevIso
+    if (!isNewToggleLine) prevIso = undefined;
   }
   plot.updatePlot(spectrumData);
 }
