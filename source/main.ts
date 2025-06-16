@@ -8,7 +8,7 @@
 
   Possible Future Improvements:
     - (?) Highlight plot lines in ROI selection
-    - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with a (right-)click
+    - (?) Isotope list: Add grouped display, e.g. show all Bi-214 lines with a (right-)click. Also see discussions #520
     - (?) Add pulse limit analog to time limit for serial recordings
     - (?) Use Window Controls Overlay API
     - (?) Dead time correction for cps
@@ -29,7 +29,7 @@
     - Plot.ts: Gaussian Correlation Filtering still has pretty bad performance despite many optimizations already.
     - Plotly.js: Plot updates takes forever, but there is no real way to improve it (?)
     - Plotly.js: Would love to use ScatterGL (WebGL) that VASTLY improves performance, but stackgroups don't work there: https://github.com/plotly/plotly.js/issues/5365
-    - Plotly.js: Selection Box is technically not supported on scatter traces w/o text or markers, that's why it's spamming errors : https://github.com/plotly/plotly.js/issues/170
+    - Plotly.js: Selection Box is technically not supported on scatter traces w/o text or markers, that's why there can be warnings: https://github.com/plotly/plotly.js/issues/170
 
 */
 
