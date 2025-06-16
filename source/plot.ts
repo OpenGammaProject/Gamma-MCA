@@ -592,7 +592,7 @@ export class SpectrumPlot {
   /*
     Add a line
   */
-  toggleLine(energy: number, name: string, enabled = true, height = -1): void {
+  toggleLine(energy: number, name: string, enabled = true, height = -1): boolean {
     //name = name.replaceAll('-',''); // Remove - to save space
     const hovertext = energy.toFixed(2);
 
@@ -646,15 +646,16 @@ export class SpectrumPlot {
         newAnno.bgcolor = this.darkMode ? this.annoBgDark : this.annoBgLight;
       }
 
+      // Check if the line or annotation already exists. If it exists, do not add it again!
       for (const shape of this.shapes) {
-        if (shape.x0 === newLine.x0) return;
+        if (shape.x0 === newLine.x0) return false;
       }
 
       for (const anno of this.annotations) {
-        if (anno.hovertext === newAnno.hovertext) return;
+        if (anno.hovertext === newAnno.hovertext) return false;
       }
 
-      // Not a duplicate
+      // Not a duplicate, add the line and annotation
       this.shapes.push(newLine);
       this.annotations.push(newAnno);
     } else {
@@ -665,6 +666,7 @@ export class SpectrumPlot {
         if (this.annotations[i].hovertext === hovertext) this.annotations.splice(parseInt(i),1);
       }
     }
+    return true; // Return true if the line was added or removed, return false if it was already there (duplicate)
   }
   /*
     Clear annotations and shapes
