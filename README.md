@@ -8,6 +8,8 @@ Progressive web application for gamma spectroscopy (multi-channel analyzer/MCA) 
 
 Built using [Bootstrap](https://github.com/twbs/bootstrap), [Plotly.js](https://github.com/plotly/plotly.js), [Font Awesome](https://github.com/FortAwesome/Font-Awesome), [Z-Schema](https://github.com/zaggino/z-schema) and some more.
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/J3J61GLR3G)
+
 ## Feature Overview
 
 * No installation required - accessible through every modern browser
