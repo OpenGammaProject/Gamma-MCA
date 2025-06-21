@@ -10,47 +10,47 @@
 
 /* Import some of Bootstrap's CSS */
 // Configuration
-@import "~bootstrap/scss/functions";
-@import "~bootstrap/scss/variables";
-@import "~bootstrap/scss/maps";
-@import "~bootstrap/scss/mixins";
-@import "~bootstrap/scss/utilities";
+@import '~bootstrap/scss/functions';
+@import '~bootstrap/scss/variables';
+@import '~bootstrap/scss/maps';
+@import '~bootstrap/scss/mixins';
+@import '~bootstrap/scss/utilities';
 /* BS Layout & components */
-@import "~bootstrap/scss/root";
-@import "~bootstrap/scss/reboot";
-@import "~bootstrap/scss/type";
+@import '~bootstrap/scss/root';
+@import '~bootstrap/scss/reboot';
+@import '~bootstrap/scss/type';
 //@import "~bootstrap/scss/images";
-@import "~bootstrap/scss/containers";
-@import "~bootstrap/scss/grid";
-@import "~bootstrap/scss/tables";
-@import "~bootstrap/scss/forms";
-@import "~bootstrap/scss/buttons";
-@import "~bootstrap/scss/transitions";
+@import '~bootstrap/scss/containers';
+@import '~bootstrap/scss/grid';
+@import '~bootstrap/scss/tables';
+@import '~bootstrap/scss/forms';
+@import '~bootstrap/scss/buttons';
+@import '~bootstrap/scss/transitions';
 //@import "~bootstrap/scss/dropdown";
 //@import "~bootstrap/scss/button-group";
-@import "~bootstrap/scss/nav";
+@import '~bootstrap/scss/nav';
 //@import "~bootstrap/scss/navbar";
 //@import "~bootstrap/scss/card";
-@import "~bootstrap/scss/accordion";
+@import '~bootstrap/scss/accordion';
 //@import "~bootstrap/scss/breadcrumb";
 //@import "~bootstrap/scss/pagination";
-@import "~bootstrap/scss/badge";
-@import "~bootstrap/scss/alert";
-@import "~bootstrap/scss/progress";
+@import '~bootstrap/scss/badge';
+@import '~bootstrap/scss/alert';
+@import '~bootstrap/scss/progress';
 //@import "~bootstrap/scss/list-group";
-@import "~bootstrap/scss/close";
-@import "~bootstrap/scss/toasts";
-@import "~bootstrap/scss/modal";
+@import '~bootstrap/scss/close';
+@import '~bootstrap/scss/toasts';
+@import '~bootstrap/scss/modal';
 //@import "~bootstrap/scss/tooltip";
 //@import "~bootstrap/scss/popover";
 //@import "~bootstrap/scss/carousel";
-@import "~bootstrap/scss/spinners";
-@import "~bootstrap/scss/offcanvas";
+@import '~bootstrap/scss/spinners';
+@import '~bootstrap/scss/offcanvas';
 //@import "~bootstrap/scss/placeholders";
 /* BS Helpers */
-@import "~bootstrap/scss/helpers";
+@import '~bootstrap/scss/helpers';
 /* BS Utilities */
-@import "~bootstrap/scss/utilities/api";
+@import '~bootstrap/scss/utilities/api';
 
 /* Import some of Font Awesome's CSS */
 @import '@fortawesome/fontawesome-free/css/fontawesome.css';
@@ -71,16 +71,16 @@ body {
   /*max-height: 1200px;*/
 }
 
-@media (max-width: 767.98px) { /* bootstrap md breakpoint */
+@media (max-width: 767.98px) {
+  /* bootstrap md breakpoint */
 
   .plot-div {
     min-height: 500px;
     /*max-height: 1200px;*/
   }
-
 }
 
-.fullscreen{
+.fullscreen {
   z-index: 999;
   width: 100%;
   height: 100%;
@@ -139,6 +139,11 @@ body {
 
 .calibration-form {
   max-height: 140px;
+}
+
+.kofi-banner {
+  border: 0px;
+  height: 36px;
 }
 
 /* SEEMS LIKE NOT NEEDED ANYMORE
