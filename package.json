@@ -8,7 +8,7 @@
     "@types/plotly.js-basic-dist-min": "^2.12.4",
     "@types/regression": "^2.0.6",
     "@types/w3c-web-serial": "^1.0.8",
-    "@types/w3c-web-usb": "^1.0.10",
+    "@types/w3c-web-usb": "^1.0.12",
     "@types/wicg-file-system-access": "^2023.10.6",
     "@typescript-eslint/eslint-plugin": "^8.41.0",
     "@typescript-eslint/parser": "^8.41.0",
