@@ -1,7 +1,7 @@
 {
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
-    "@eslint/js": "^9.34.0",
+    "@eslint/js": "^9.35.0",
     "@types/audioworklet": "^0.0.83",
     "@types/bootstrap": "^5.2.10",
     "@types/dom-screen-wake-lock": "^1.0.3",
@@ -10,8 +10,8 @@
     "@types/w3c-web-serial": "^1.0.8",
     "@types/w3c-web-usb": "^1.0.12",
     "@types/wicg-file-system-access": "^2023.10.6",
-    "@typescript-eslint/eslint-plugin": "^8.41.0",
-    "@typescript-eslint/parser": "^8.41.0",
+    "@typescript-eslint/eslint-plugin": "^8.43.0",
+    "@typescript-eslint/parser": "^8.43.0",
     "autoprefixer": "^10.4.21",
     "css-loader": "^7.1.2",
     "css-minimizer-webpack-plugin": "^7.0.2",
