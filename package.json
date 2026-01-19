@@ -17,7 +17,7 @@
     "css-minimizer-webpack-plugin": "^7.0.4",
     "eslint": "^9.39.2",
     "globals": "^17.0.0",
-    "mini-css-extract-plugin": "^2.9.4",
+    "mini-css-extract-plugin": "^2.10.0",
     "postcss-loader": "^8.2.0",
     "sass": "^1.97.2",
     "sass-loader": "^16.0.6",
