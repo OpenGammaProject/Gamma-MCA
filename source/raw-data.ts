@@ -14,7 +14,7 @@
 import regression, { DataPoint } from 'regression';
 
 // Import all of z-schema's JS
-import ZSchema from 'z-schema';
+import ZSchema, { JsonSchema } from 'z-schema';
 
 // Import other TS modules
 import { CoeffObj } from './plot';
@@ -307,15 +307,15 @@ export class RawData {
         }
       }
 
-      const validator = new ZSchema({}); // Use empty default options/config
-      validator.validate(json, this.schemaJSON[version]);
-      const errors = validator.getLastErrors();
+      const validator = ZSchema.create({ safe: true }); // Use empty default options/config
+      const result = validator.validate(json, this.schemaJSON[version] as JsonSchema); // { valid: boolean, err?: ValidateError }
 
-      if (errors) {
+      if (!result.valid) {
         //throw errors; // Catch validation errors
         const errorMessages: JSONParseError[] = [];
 
-        for (const error of errors) {
+        const details = result.err?.details ?? [];
+        for (const error of details) {
           errorMessages.push({
             'code': error.code,
             'description': error.message
