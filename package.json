@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.4",
+    "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^10.0.1",
     "@types/audioworklet": "^0.0.96",
     "@types/bootstrap": "^5.2.10",
