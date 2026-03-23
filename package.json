@@ -2,7 +2,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^10.0.1",
-    "@types/audioworklet": "^0.0.96",
+    "@types/audioworklet": "^0.0.97",
     "@types/bootstrap": "^5.2.10",
     "@types/dom-screen-wake-lock": "^1.0.3",
     "@types/plotly.js-basic-dist-min": "^2.12.4",
@@ -15,7 +15,7 @@
     "autoprefixer": "^10.4.27",
     "css-loader": "^7.1.4",
     "css-minimizer-webpack-plugin": "^8.0.0",
-    "eslint": "^10.0.3",
+    "eslint": "^10.1.0",
     "globals": "^17.4.0",
     "mini-css-extract-plugin": "^2.10.1",
     "postcss-loader": "^8.2.1",
@@ -24,7 +24,7 @@
     "ts-loader": "^9.5.4",
     "typescript": "^5.9.3",
     "webpack": "^5.105.4",
-    "webpack-cli": "^7.0.1",
+    "webpack-cli": "^7.0.2",
     "webpack-dev-server": "^5.2.3"
   },
   "scripts": {
@@ -36,6 +36,6 @@
     "bootstrap": "^5.3.8",
     "plotly.js-basic-dist-min": "^3.4.0",
     "regression": "^2.0.1",
-    "z-schema": "^12.0.2"
+    "z-schema": "^12.1.0"
   }
 }
