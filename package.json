@@ -34,7 +34,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.2.0",
     "bootstrap": "^5.3.8",
-    "plotly.js-basic-dist-min": "^3.4.0",
+    "plotly.js-basic-dist-min": "^3.5.0",
     "regression": "^2.0.1",
     "z-schema": "^12.1.1"
   }
