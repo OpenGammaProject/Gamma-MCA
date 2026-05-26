@@ -19,7 +19,7 @@
     "globals": "^17.6.0",
     "mini-css-extract-plugin": "^2.10.2",
     "postcss-loader": "^8.2.1",
-    "sass": "^1.99.0",
+    "sass": "^1.100.0",
     "sass-loader": "^17.0.0",
     "ts-loader": "^9.5.7",
     "typescript": "^5.9.3",
