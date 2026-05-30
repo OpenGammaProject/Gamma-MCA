@@ -73,7 +73,7 @@ Both modes are currently supported by our [Open Gamma Detector](https://github.c
 
 **Gamma MCA should work in any modern browser version that is no older than the first quarter of 2023 (roughly).** If you're using an older browser version (it's highly recommended to update) there are some fallbacks to most of the important the functions. The OS of your device doesn't matter.
 
-Some functions such as the [Web Serial API](https://caniuse.com/web-serial) and [WebUSB](https://caniuse.com/webusb) are only supported in **Chromium-based browsers** (Google Chrome, MS Edge, Opera, ...) and not Safari or Firefox. Support on mobile devices can differ so YMMV.
+Some functions such as the [Web Serial API](https://caniuse.com/web-serial) and [WebUSB](https://caniuse.com/webusb) are only supported in **Chromium-based browsers** (Google Chrome, MS Edge, Opera, ...) and latest **Firefox** (Version 151+), but not Safari! Support on mobile devices can differ so YMMV. Currently (05/26), only Chrome for Android supports the Web Serial API on mobile, so that would be your best bet!
 
 Most of the progressive web app functionality (PWA) is supported by most browsers (Chrome, Firefox, Safari, ...). However, the **full feature set is unfortunately only available in Google Chrome or MS Edge** at the moment of writing (02/2024). This might change in the future.
 
