@@ -11,7 +11,7 @@
     "@types/w3c-web-usb": "^1.0.14",
     "@types/wicg-file-system-access": "^2023.10.7",
     "@typescript-eslint/eslint-plugin": "^8.61.0",
-    "@typescript-eslint/parser": "^8.60.1",
+    "@typescript-eslint/parser": "^8.61.0",
     "autoprefixer": "^10.5.0",
     "css-loader": "^7.1.4",
     "css-minimizer-webpack-plugin": "^8.0.0",
@@ -24,12 +24,10 @@
     "ts-loader": "^9.6.0",
     "typescript": "^5.9.3",
     "webpack": "^5.107.2",
-    "webpack-cli": "^7.0.3",
-    "webpack-dev-server": "^5.2.4"
+    "webpack-cli": "^7.0.3"
   },
   "scripts": {
-    "build": "webpack",
-    "start": "webpack serve --mode development"
+    "build": "webpack"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.2.0",
