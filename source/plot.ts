@@ -4,7 +4,7 @@
 
   Gamma MCA: free, open-source web-MCA for gamma spectroscopy
   2022, NuclearPhoenix.- Phoenix1747
-  https://nuclearphoenix.xyz
+  https://nuclearphoenix.net
 
 */
 
@@ -351,7 +351,7 @@ export class SpectrumPlot {
 
       const text = `\
       <!DOCTYPE html>
-      <!-- Gamma MCA Interactive Export Version 1.2 by NuclearPhoenix. https://spectrum.nuclearphoenix.xyz. -->
+      <!-- Gamma MCA Interactive Export Version 1.2 by NuclearPhoenix. https://spectrum.nuclearphoenix.net. -->
       <html>
         <head>
           <meta charset="utf-8">

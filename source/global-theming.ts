@@ -8,7 +8,7 @@
 
   Gamma MCA: free, open-source web-MCA for gamma spectroscopy
   2023, NuclearPhoenix.- Phoenix1747
-  https://nuclearphoenix.xyz
+  https://nuclearphoenix.net
 
 */
 
