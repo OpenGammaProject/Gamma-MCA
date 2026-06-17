@@ -4,7 +4,7 @@
 
   Gamma MCA: free, open-source web-MCA for gamma spectroscopy
   2022, NuclearPhoenix.- Phoenix1747
-  https://nuclearphoenix.xyz
+  https://nuclearphoenix.net
 
   Do not touch my garbage. All the CSV-related stuff is ugly asf.
 
