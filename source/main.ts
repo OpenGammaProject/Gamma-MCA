@@ -34,6 +34,7 @@
 */
 
 // Import the main CSS file
+// @ts-expect-error SCSS-Import is not recognized by TypeScript, but it works with the build system Webpack/sass-loader
 import './css/main.scss';
 
 // Import Bootstrap plugins
