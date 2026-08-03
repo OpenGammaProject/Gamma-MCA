@@ -22,7 +22,7 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.65.0",
     "webpack": "^5.109.1",
-    "webpack-cli": "^7.2.1"
+    "webpack-cli": "^7.2.2"
   },
   "scripts": {
     "build": "webpack"
