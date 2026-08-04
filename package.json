@@ -12,17 +12,17 @@
     "autoprefixer": "^10.5.4",
     "css-loader": "^7.1.4",
     "css-minimizer-webpack-plugin": "^8.0.0",
-    "eslint": "^10.7.0",
-    "globals": "^17.7.0",
+    "eslint": "^10.8.0",
+    "globals": "^17.9.0",
     "mini-css-extract-plugin": "^2.10.2",
     "postcss-loader": "^8.2.1",
-    "sass": "^1.101.3",
+    "sass": "^1.102.0",
     "sass-loader": "^17.0.0",
     "ts-loader": "^9.6.2",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.65.0",
-    "webpack": "^5.108.4",
-    "webpack-cli": "^7.2.1"
+    "typescript-eslint": "^8.66.0",
+    "webpack": "^5.109.2",
+    "webpack-cli": "^7.2.2"
   },
   "scripts": {
     "build": "webpack"
@@ -32,6 +32,6 @@
     "bootstrap": "^5.3.8",
     "plotly.js-basic-dist-min": "^3.7.0",
     "regression": "^2.0.1",
-    "z-schema": "^12.4.0"
+    "z-schema": "^12.4.1"
   }
 }
