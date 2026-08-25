@@ -32,6 +32,6 @@
     "bootstrap": "^5.3.8",
     "plotly.js-basic-dist-min": "^3.7.0",
     "regression": "^2.0.1",
-    "z-schema": "^12.4.2"
+    "z-schema": "^12.4.3"
   }
 }
