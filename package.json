@@ -20,7 +20,7 @@
     "sass-loader": "^17.0.1",
     "ts-loader": "^9.6.2",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.69.0",
+    "typescript-eslint": "^8.70.0",
     "webpack": "^5.110.3",
     "webpack-cli": "^7.2.3"
   },
@@ -30,7 +30,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.3.1",
     "bootstrap": "^5.3.8",
-    "plotly.js-basic-dist-min": "^4.0.0",
+    "plotly.js-basic-dist-min": "^4.1.0",
     "regression": "^2.0.1",
     "z-schema": "^12.4.5"
   }
