@@ -14,6 +14,8 @@
     - (?) Dead time correction for cps
     - (?) Hist mode: First cps value is always zero?
 
+    - Plotly.js: Add an opt-in modebar button for downloading Plotly figures as JSON
+
     - NPESv2: Create additional save (append) button that allows users to save multiple data packages in one file
     - NPESv2: Let user remove data packages from file in the import selection dialog
     - Web Worker for Isotope Seek, FWHM Calculation, Plot update, Gaussian correlation (improved performance?)
